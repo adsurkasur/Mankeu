@@ -1,4 +1,4 @@
-﻿package com.arinahub.arinaagri.calculator.exporter
+package com.arinahub.arinaagri.calculator.exporter
 
 import com.arinahub.arinaagri.calculator.importer.XlsxWorkbookReader
 import org.junit.Assert.assertEquals
@@ -41,5 +41,23 @@ class XlsxWorkbookWriterTest {
         val names = XlsxWorkbookReader().read(bytes.inputStream()).sheets.map { it.name }
         assertEquals(2, names.distinct().size)
         assertTrue(names.all { it.length <= 31 && '/' !in it && ':' !in it })
+    }
+
+    @Test
+    fun `writer uses Mankeu application branding and Material 3 Blue header fill`() {
+        val bytes = XlsxWorkbookWriter().write(
+            listOf(WorkbookTable("Test", listOf("Col1"), listOf(listOf("Val1")))),
+        )
+        val zip = java.util.zip.ZipInputStream(bytes.inputStream())
+        val entries = mutableMapOf<String, String>()
+        var entry = zip.nextEntry
+        while (entry != null) {
+            entries[entry.name] = zip.readBytes().toString(Charsets.UTF_8)
+            entry = zip.nextEntry
+        }
+
+        assertTrue(entries.getValue("docProps/app.xml").contains("<Application>Mankeu</Application>"))
+        assertTrue(entries.getValue("docProps/core.xml").contains("<dc:creator>Mankeu</dc:creator>"))
+        assertTrue(entries.getValue("xl/styles.xml").contains("FF0061A4"))
     }
 }

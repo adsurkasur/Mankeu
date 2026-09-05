@@ -45,7 +45,7 @@ object CategoryClassifier {
     // "iuran pengairan" is a fee, not the wage row "upah pengairan" it shares a word with; it is
     // caught by "iuran" and never reaches the shared word.
     private val EXPENSE_KEYWORDS: List<Pair<String, List<String>>> = listOf(
-        "Tenaga Kerja" to listOf("upah", "hok", "tenaga kerja", "buruh", "borongan", "gaji", "karyawan", "lembur", "pegawai", "kasir", "koki"),
+        "Tenaga Kerja" to listOf("upah", "hok", "tenaga kerja", "buruh", "borongan", "gaji", "karyawan", "lembur", "pegawai", "kasir", "koki", "staf", "barista", "teknisi", "waiter", "pramusaji"),
         "Benih dan Bibit" to listOf("benih", "bibit", "semai"),
         "Pupuk" to listOf("pupuk", "npk", "urea", "za", "dolomit", "kapur", "kompos", "organik"),
         "Obat dan Pestisida" to listOf("herbisida", "pestisida", "fungisida", "insektisida", "obat", "hpt", "racun"),
@@ -54,14 +54,18 @@ object CategoryClassifier {
             "jasa", "traktor", "transplanter", "combine", "harvester", "alsintan",
             "pengolahan tanah", "pompa",
         ),
-        "Transport" to listOf("transport", "angkut", "ongkos kirim", "kirim", "ongkir", "ekspedisi", "kurir"),
-        "Sewa Lahan" to listOf("sewa"),
-        "Lain-lain" to listOf("karung", "rafia", "tali", "administrasi", "atk", "kantong"),
+        "Transport" to listOf("transport", "angkut", "ongkos kirim", "kirim", "ongkir", "ekspedisi", "kurir", "bensin", "solar", "bbm"),
+        "Sewa Lahan" to listOf("sewa", "kontrak tempat", "kontrak kios"),
+        "Lain-lain" to listOf(
+            "karung", "rafia", "tali", "administrasi", "atk", "kantong", "kardus", "kresek", "plastik",
+            "kemasan", "box", "kebersihan", "sampah", "parkir", "listrik", "pln", "air", "pdam", "pulsa", "kuota",
+            "gas", "lpg", "iklan", "promosi", "alat", "peralatan", "kulakan", "belanja dagangan", "stok", "bahan baku"
+        ),
     )
 
     private val REVENUE_KEYWORDS: List<Pair<String, List<String>>> = listOf(
         "Hasil Panen" to listOf("gabah", "gkp", "gkg", "panen", "hasil", "padi", "beras"),
-        "Penjualan Lain" to listOf("jual", "penjualan", "sewa keluar", "omzet", "pesanan", "order", "katering", "servis", "service"),
+        "Penjualan Lain" to listOf("jual", "penjualan", "sewa keluar", "omzet", "pesanan", "order", "katering", "servis", "service", "pendapatan", "fee", "ongkos kerja"),
     )
 
     /**

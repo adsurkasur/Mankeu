@@ -39,3 +39,5 @@ exports/
 Thumbs.db
 *.swp
 *.tmp
+*.png
+__pycache__/

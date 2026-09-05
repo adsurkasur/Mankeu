@@ -4,5 +4,5 @@
       visibly changes shade the moment Compose takes over. Generated with the rest of the system;
       see docs/evidence/theme/generate_palette.py and presentation/Theme.kt.
     -->
-    <color name="splash_background">#F5FBF5</color>
+    <color name="splash_background">#F8F9FF</color>
 </resources>

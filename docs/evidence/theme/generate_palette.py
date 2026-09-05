@@ -23,8 +23,8 @@ from materialyoucolor.hct import Hct
 from materialyoucolor.palettes.tonal_palette import TonalPalette
 from materialyoucolor.scheme.scheme_tonal_spot import SchemeTonalSpot
 
-# The brand green: `palette.primary.main` in arina-agri/lib/theme.ts, and the app icon's green.
-SEED = 0xFF2D6A4F
+# The brand blue for Mankeu financial management.
+SEED = 0xFF0061A4
 
 # TonalSpot is Material 3's default variant — it keeps the seed's hue and gives it a restrained
 # chroma, which is what a finance app wants. Fidelity/Content preserve more of the seed's own

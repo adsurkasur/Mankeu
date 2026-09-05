@@ -1,8 +1,8 @@
 {
-  "name": "arina-agri-calculator",
+  "name": "mankeu",
   "version": "0.0.7",
   "private": true,
-  "description": "Arina Agri Calculator - offline-first farm finance management for Android",
+  "description": "Mankeu - offline-first MSME finance management for Android",
   "scripts": {
     "release:patch": "node scripts/bump-version.js patch",
     "release:minor": "node scripts/bump-version.js minor",
@@ -10,7 +10,8 @@
   },
   "keywords": [
     "android",
-    "agriculture",
+    "msme",
+    "umkm",
     "finance",
     "kotlin",
     "jetpack-compose"

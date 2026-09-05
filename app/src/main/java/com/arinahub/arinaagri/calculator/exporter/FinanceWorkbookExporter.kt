@@ -1,4 +1,4 @@
-﻿package com.arinahub.arinaagri.calculator.exporter
+package com.arinahub.arinaagri.calculator.exporter
 
 import com.arinahub.arinaagri.calculator.data.BookEntity
 import com.arinahub.arinaagri.calculator.data.BudgetItemEntity
@@ -63,9 +63,9 @@ class FinanceWorkbookExporter(
         name = "Metadata",
         headers = listOf("Kunci", "Nilai"),
         rows = listOf(
-            listOf("Format", "ARINA_AGRI_FINANCE_XLSX"),
+            listOf("Format", "MANKEU_FINANCE_XLSX"),
             listOf("Versi format", 1),
-            listOf("Dibuat oleh", "Arina Agri Calculator"),
+            listOf("Dibuat oleh", "Mankeu"),
             listOf("Dibuat pada", Instant.ofEpochMilli(bundle.generatedAtEpochMillis).toString()),
             listOf("ID usaha", bundle.business.id),
             listOf("Nama usaha", bundle.business.name),

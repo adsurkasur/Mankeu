@@ -1,4 +1,4 @@
 <resources>
     <!-- Dark `surface` from the generated Material 3 scheme; see values/colors.xml. -->
-    <color name="splash_background">#0F1511</color>
+    <color name="splash_background">#111418</color>
 </resources>

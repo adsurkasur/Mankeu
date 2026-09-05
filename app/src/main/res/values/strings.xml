@@ -6,8 +6,8 @@
       never English accounting jargon (revenue/expense/equity/asset/liability). See
       docs/IMPLEMENTATION_PROGRESS.md for the terminology decision.
     -->
-    <string name="app_name">UMKM Man Keu</string>
-    <string name="app_title">UMKM Man Keu</string>
+    <string name="app_name">Mankeu</string>
+    <string name="app_title">Mankeu</string>
     <string name="app_subtitle">Manajemen Keuangan Usaha</string>
 
     <!-- Navigation -->
@@ -18,9 +18,9 @@
 
     <!-- Scope header -->
     <string name="scope_loading_business">Memuat usaha…</string>
-    <string name="scope_loading_project">Memuat lahan…</string>
+    <string name="scope_loading_project">Memuat proyek…</string>
     <string name="scope_empty_business">Belum ada usaha</string>
-    <string name="scope_empty_project">Belum ada lahan</string>
+    <string name="scope_empty_project">Belum ada proyek</string>
     <string name="scope_offline">Tersimpan di perangkat ini</string>
     <string name="scope_mode_plan">Proyeksi</string>
     <string name="scope_mode_actual">Realisasi</string>
@@ -40,7 +40,7 @@
     <!-- Home -->
     <string name="home_balance_actual">Uang kas realisasi</string>
     <string name="home_balance_plan">Uang kas proyeksi</string>
-    <string name="home_balance_sub_actual">Sisa uang dari semua transaksi nyata di lahan ini</string>
+    <string name="home_balance_sub_actual">Sisa uang dari semua transaksi nyata di proyek ini</string>
     <string name="home_balance_sub_plan">Perkiraan saldo kas dari simulasi rencana/proyeksi</string>
     <string name="home_profit">Untung / Rugi</string>
     <string name="home_cash_flow">Uang masuk bersih</string>
@@ -92,10 +92,10 @@
     <string name="entry_err_counterparty">Nama orang/toko wajib diisi untuk transaksi belum dibayar.</string>
     <string name="entry_err_due">Tanggal janji bayar harus berformat YYYY-MM-DD.</string>
     <string name="entry_err_quantity">Volume harus berupa angka lebih dari nol (contoh: 2,5).</string>
-    <string name="entry_err_no_project">Gagal mencatat: Harap pilih Lahan terlebih dahulu.</string>
-    <string name="entry_no_project_banner_title">Belum Ada Lahan yang Dipilih</string>
-    <string name="entry_no_project_banner_body">Pilih atau buat Lahan terlebih dahulu sebelum menyimpan catatan transaksi.</string>
-    <string name="entry_action_add_project">Pilih / Tambah Lahan</string>
+    <string name="entry_err_no_project">Gagal mencatat: Harap pilih Proyek terlebih dahulu.</string>
+    <string name="entry_no_project_banner_title">Belum Ada Proyek yang Dipilih</string>
+    <string name="entry_no_project_banner_body">Pilih atau buat Proyek terlebih dahulu sebelum menyimpan catatan transaksi.</string>
+    <string name="entry_action_add_project">Pilih / Tambah Proyek</string>
     <string name="entry_auto_calculated">Dihitung otomatis: %1$s %2$s × %3$s</string>
     <string name="entry_auto_unit_price">Dihitung dari Total ÷ Volume (%1$s / %2$s)</string>
     <string name="entry_unit_default">satuan</string>
@@ -203,15 +203,15 @@
 
     <!-- Entry kinds -->
     <string name="kind_cash_in">Uang masuk</string>
-    <string name="kind_cash_in_help">Hasil panen atau jasa yang langsung dibayar</string>
+    <string name="kind_cash_in_help">Penjualan produk atau jasa yang langsung dibayar</string>
     <string name="kind_cash_out">Uang keluar</string>
-    <string name="kind_cash_out_help">Belanja atau upah yang langsung dibayar</string>
+    <string name="kind_cash_out_help">Belanja stok, operasional, atau gaji yang langsung dibayar</string>
     <string name="kind_sale_unpaid">Dijual, belum dibayar</string>
     <string name="kind_sale_unpaid_help">Barang sudah diambil, uang menyusul</string>
     <string name="kind_buy_unpaid">Dibeli, belum dibayar</string>
     <string name="kind_buy_unpaid_help">Barang sudah diterima, bayar menyusul</string>
     <string name="kind_tool_unpaid">Alat, belum dibayar</string>
-    <string name="kind_tool_unpaid_help">Alat/mesin diambil dulu, bayar menyusul</string>
+    <string name="kind_tool_unpaid_help">Aset atau peralatan kerja dibeli tempo</string>
     <string name="kind_capital_in">Tambah modal sendiri</string>
     <string name="kind_capital_in_help">Uang pribadi masuk ke usaha</string>
     <string name="kind_capital_out">Ambil untuk pribadi</string>
@@ -223,7 +223,7 @@
     <string name="kind_loan_interest">Bayar bunga</string>
     <string name="kind_loan_interest_help">Bunga pinjaman</string>
     <string name="kind_tool_cash">Beli alat tunai</string>
-    <string name="kind_tool_cash_help">Alat/mesin dibayar langsung</string>
+    <string name="kind_tool_cash_help">Beli aset atau peralatan kerja tunai</string>
 
     <!-- Akun dan pengaturan -->
     <string name="settings_title">Pengaturan</string>
@@ -269,37 +269,37 @@
     <string name="msg_sign_in_failed">Gagal masuk dengan Google.</string>
     <string name="msg_sign_out_ok">Berhasil keluar akun.</string>
 
-    <!-- Usaha dan lahan -->
-    <string name="manage_title">Usaha dan Lahan</string>
+    <!-- Usaha dan proyek -->
+    <string name="manage_title">Usaha dan Proyek</string>
     <string name="manage_business">Usaha</string>
-    <string name="manage_project">Lahan / musim tanam</string>
+    <string name="manage_project">Proyek / Periode pembukuan</string>
     <string name="manage_categories">Kategori dan satuan</string>
 
     <!-- Tur panduan dan tentang aplikasi -->
-    <string name="tour_title_scope_business">Kelola Usaha dan Lahan</string>
-    <string name="tour_desc_scope_business">Pilih dan kelola berbagai unit usaha agribisnis dan petak lahan aktif Anda. Data setiap usaha terisolasi total — transaksi, laporan, dan cadangan masing-masing independen. Menghapus satu usaha tidak memengaruhi usaha lain.</string>
+    <string name="tour_title_scope_business">Kelola Usaha dan Proyek</string>
+    <string name="tour_desc_scope_business">Pilih dan kelola berbagai unit usaha dan proyek aktif Anda. Data setiap usaha terisolasi total — transaksi, laporan, dan cadangan masing-masing independen. Menghapus satu usaha tidak memengaruhi usaha lain.</string>
     <string name="tour_title_scope_book">Proyeksi vs Realisasi</string>
-    <string name="tour_desc_scope_book">Buku Proyeksi (Rencana/RAB) dan Realisasi (Kas Nyata) terisolasi penuh. Isi Proyeksi sebelum tanam sebagai simulasi biaya, catat Realisasi selama musim berjalan, lalu bandingkan keduanya di menu Laporan → tab Perbandingan untuk menilai akurasi perencanaan.</string>
+    <string name="tour_desc_scope_book">Buku Proyeksi (Rencana/RAB) dan Realisasi (Kas Nyata) terisolasi penuh. Isi Proyeksi sebagai simulasi anggaran dan target usaha, catat Realisasi selama periode usaha berjalan, lalu bandingkan keduanya di menu Laporan → tab Perbandingan untuk menilai akurasi perencanaan.</string>
     <string name="tour_title_hero_summary">Ringkasan Kas &amp; Kesehatan Usaha</string>
     <string name="tour_desc_hero_summary">Pantau saldo kas operasional, laba bersih berjalan, arus kas masuk/keluar, serta piutang dan utang secara instan. Jika saldo tampak negatif padahal di tangan masih ada uang, kemungkinan modal awal belum dicatat — masukkan \"Modal Sendiri\" di menu Catatan agar saldo sesuai kenyataan.</string>
     <string name="tour_title_nav_entry">Menu Catatan Transaksi</string>
-    <string name="tour_desc_nav_entry">Catat mutasi kas masuk/keluar, pembelian tempo, dan penjualan panen, serta pantau riwayat pembukuan lengkap pada tab Daftar Catatan.</string>
+    <string name="tour_desc_nav_entry">Catat mutasi kas masuk/keluar, pembelian tempo, dan penjualan produk/jasa, serta pantau riwayat pembukuan lengkap pada tab Daftar Catatan.</string>
     <string name="tour_title_nav_reports">Menu Laporan &amp; Analisis Kelayakan</string>
-    <string name="tour_desc_nav_reports">Akses laporan laba rugi, arus kas, dan indikator kelayakan agribisnis otomatis: BEP (Titik Impas), HPP, B/C Ratio, serta ekspor PDF &amp; Excel.</string>
+    <string name="tour_desc_nav_reports">Akses laporan laba rugi, arus kas, dan indikator kelayakan finansial otomatis: BEP (Titik Impas), HPP, B/C Ratio, serta ekspor PDF &amp; Excel.</string>
     <string name="tour_title_nav_more">Menu Berkas &amp; Data</string>
     <string name="tour_desc_nav_more">Impor/ekspor catatan Excel (.xlsx), lakukan pencadangan terenkripsi AES-256-GCM ke Google Drive, dan kelola pengaturan akun.</string>
-    <string name="tour_title_scope">Usaha, Lahan, dan Mode</string>
-    <string name="tour_desc_scope">Pilih usaha dan lahan yang aktif, serta beralih antara mode Proyeksi (Rencana/Simulasi) dan Realisasi (Catatan Nyata).</string>
+    <string name="tour_title_scope">Usaha, Proyek, dan Mode</string>
+    <string name="tour_desc_scope">Pilih usaha dan proyek yang aktif, serta beralih antara mode Proyeksi (Rencana/Simulasi) dan Realisasi (Catatan Nyata).</string>
     <string name="tour_title_summary">Ringkasan Kas dan Biaya</string>
-    <string name="tour_desc_summary">Pantau saldo kas operasional, laba/rugi, dan komposisi pengeluaran agribisnis secara real-time.</string>
+    <string name="tour_desc_summary">Pantau saldo kas operasional, laba/rugi, dan komposisi pengeluaran usaha secara real-time.</string>
     <string name="tour_title_nav">Navigasi Fitur Utama</string>
     <string name="tour_desc_nav">Gunakan menu bawah untuk mencatat transaksi harian, menyusun rencana anggaran (RAB), dan melihat analisis kelayakan usaha (BEP dan B/C Ratio).</string>
     <string name="tour_title_cost_chart">Komposisi Biaya</string>
-    <string name="tour_desc_cost_chart">Semua pengeluaran dikelompokkan otomatis ke sembilan kategori: Benih, Pupuk, Obat, Tenaga Kerja, Jasa Alsintan, Sewa Lahan, Pengairan, Transport, dan Lain-lain. Lihat mana yang paling besar — pada padi sawah biasanya Jasa Alsintan dan Sewa Lahan menelan lebih dari separuh biaya, dan di situlah penghematan paling terasa.</string>
+    <string name="tour_desc_cost_chart">Semua pengeluaran dikelompokkan otomatis berdasarkan kategori akun usaha Anda (seperti Gaji &amp; Upah, Belanja Stok &amp; Bahan, Sewa Tempat, Operasional, dll.). Pantau pos pengeluaran terbesar agar efisiensi biaya dapat dioptimalkan.</string>
     <string name="tour_entry_tabs_title">Buat Catatan atau Lihat Riwayat</string>
-    <string name="tour_entry_tabs_desc">Tab kiri untuk mencatat transaksi baru, tab kanan untuk melihat semua catatan yang sudah masuk beserta jumlahnya. Angka di tab kanan adalah banyaknya catatan pada lahan dan buku yang sedang aktif.</string>
+    <string name="tour_entry_tabs_desc">Tab kiri untuk mencatat transaksi baru, tab kanan untuk melihat semua catatan yang sudah masuk beserta jumlahnya. Angka di tab kanan adalah banyaknya catatan pada proyek dan buku yang sedang aktif.</string>
     <string name="tour_entry_kinds_title">Pilih Jenis Transaksi</string>
-    <string name="tour_entry_kinds_desc">Uang masuk dan Uang keluar untuk transaksi tunai sehari-hari. Ketuk \"Jenis lain\" untuk Modal Sendiri, Pinjaman, pembelian alat, serta penjualan atau pembelian tempo yang menimbulkan piutang dan utang. Setiap jenis otomatis menghasilkan jurnal yang tepat: Kas Masuk = debit Kas + kredit Pendapatan, Pembelian Tempo = debit Beban + kredit Utang Usaha. Isi volume dan satuan (kg, sak, HOK) bila ingin harga satuan ikut dihitung.</string>
+    <string name="tour_entry_kinds_desc">Uang masuk dan Uang keluar untuk transaksi tunai sehari-hari. Ketuk \"Jenis lain\" untuk Modal Sendiri, Pinjaman, pembelian alat, serta penjualan atau pembelian tempo yang menimbulkan piutang dan utang. Setiap jenis otomatis menghasilkan jurnal yang tepat: Kas Masuk = debit Kas + kredit Pendapatan, Pembelian Tempo = debit Beban + kredit Utang Usaha. Isi volume dan satuan (pcs, kg, unit, porsi) bila ingin harga satuan ikut dihitung.</string>
     <string name="tour_entry_history_title">Riwayat dan Koreksi</string>
     <string name="tour_entry_history_desc">Setiap catatan bisa dibalik dengan jurnal pembalik: nilainya dinetralkan tetapi jejaknya tetap ada, sehingga laporan tetap bisa diaudit. Selain itu, tersedia opsi "Hapus" yang menghapus catatan secara permanen — gunakan jika catatan tersebut benar-benar salah masuk dan tidak perlu jejak koreksi.</string>
     <string name="tour_reports_tabs_title">Tiga Sudut Pandang</string>
@@ -307,7 +307,7 @@
     <string name="tour_reports_profit_title">Laba Rugi dan Arus Kas</string>
     <string name="tour_reports_profit_desc">Laba Bersih = Pendapatan Operasional − Biaya Operasional. Angka ini memakai basis akrual: penjualan tempo sudah dihitung sebagai pendapatan walau uangnya belum diterima. Arus Kas Operasi hanya menghitung uang yang benar-benar bergerak, jadi wajar bila keduanya berbeda.</string>
     <string name="tour_reports_feasibility_title">BEP, HPP, dan B/C Ratio</string>
-    <string name="tour_reports_feasibility_desc">BEP Rupiah: omzet minimum agar tidak rugi. BEP Volume: berapa kg hasil panen minimum untuk menutup semua biaya. HPP per Satuan: biaya pokok setiap kg gabah — jual di bawah angka ini berarti rugi. B/C Ratio: penerimaan dibagi biaya; di atas 1 berarti usaha layak, di bawah 1 berarti biaya melebihi hasil. Isi Asumsi (jumlah dan harga panen) agar keempatnya terhitung. Keempat indikator ini yang membedakan pembukuan tani dari catatan biasa — petani bisa tahu apakah usahanya layak dilanjutkan, bukan sekadar untung atau rugi.</string>
+    <string name="tour_reports_feasibility_desc">BEP Rupiah: omzet minimum agar tidak rugi. BEP Volume: berapa jumlah volume penjualan/output minimum untuk menutup semua biaya. HPP per Satuan: biaya pokok setiap satuan produk/jasa — jual di bawah angka ini berarti rugi. B/C Ratio: penerimaan dibagi biaya; di atas 1 berarti usaha layak, di bawah 1 berarti biaya melebihi hasil. Isi Asumsi (jumlah volume dan harga jual) agar keempatnya terhitung. Keempat indikator ini yang membedakan pembukuan finansial dari catatan biasa — pemilik usaha bisa tahu apakah usahanya layak dilanjutkan, bukan sekadar untung atau rugi.</string>
     <string name="tour_replay">Panduan halaman ini</string>
     <string name="settings_tour_reset">Ulangi Semua Panduan</string>
     <string name="settings_tour_reset_help">Tandai semua panduan sebagai belum dilihat, sehingga tiap halaman menjelaskan dirinya lagi saat dibuka.</string>
@@ -328,32 +328,32 @@
     <string name="tour_settings_security_desc">Semua cadangan dienkripsi dengan kata sandi Anda menggunakan AES-256-GCM. Tanpa kata sandi ini, cadangan tidak bisa dibuka — bahkan oleh pengembang aplikasi. Simpan kata sandi di tempat yang aman. Data lokal juga dapat diatur ulang sewaktu-waktu.</string>
 
     <string name="tour_scope_business_title">Tambah &amp; Kelola Usaha</string>
-    <string name="tour_scope_business_desc">Buat unit usaha agribisnis baru — misalnya satu usaha \"Padi Sawah\", satu usaha \"Kebun Jeruk\", satu \"Peternakan Ayam\". Setiap usaha memiliki master kategori, satuan, dan lahan sendiri yang tidak saling bercampur.</string>
-    <string name="tour_scope_field_title">Petak Lahan &amp; Musim Tanam</string>
-    <string name="tour_scope_field_desc">Tambahkan petak lahan spesifik, luas area, serta tanggal awal dan akhir musim tanam aktif. Setiap petak punya kalender musim sendiri. Laporan kelayakan (BEP, HPP) dihitung per petak per musim.</string>
+    <string name="tour_scope_business_desc">Buat unit usaha baru — misalnya \"Toko Sembako\", \"Warung Kopi\", atau \"Bengkel Motor\". Setiap unit usaha memiliki kategori akun, satuan barang, dan proyek/periode sendiri yang tidak saling bercampur.</string>
+    <string name="tour_scope_field_title">Proyek &amp; Periode Pembukuan</string>
+    <string name="tour_scope_field_desc">Tambahkan proyek, cabang, atau periode pembukuan spesifik serta tanggal awal dan akhirnya. Laporan kelayakan (BEP, HPP) dihitung per proyek atau periode pembukuan.</string>
 
     <string name="tour_import_picker_title">Pilih File Excel (.xlsx)</string>
-    <string name="tour_import_picker_desc">Pilih workbook Excel catatan tani Anda. Format kolom dan lembar kerja akan dianalisis dan dicocokkan secara cerdas. Kolom yang tidak dikenali dapat dipetakan manual sebelum impor final.</string>
+    <string name="tour_import_picker_desc">Pilih workbook Excel catatan keuangan usaha Anda. Format kolom dan lembar kerja akan dianalisis dan dicocokkan secara cerdas. Kolom yang tidak dikenali dapat dipetakan manual sebelum impor final.</string>
     <string name="tour_import_target_title">Pemilihan Target Buku</string>
     <string name="tour_import_target_desc">Tentukan apakah data Excel dimasukkan ke Buku Proyeksi (Rencana) atau Buku Realisasi (Kas Nyata). Impor ke Proyeksi untuk memindahkan RAB yang sudah ada; impor ke Realisasi untuk memindahkan catatan kas nyata dari musim sebelumnya.</string>
 
     <string name="tour_reports_cashflow_title">Arus Kas Operasional</string>
-    <string name="tour_reports_cashflow_desc">Arus kas menunjukkan uang yang benar-benar masuk dan keluar — bukan janji atau piutang. Kas Operasi mencatat aktivitas inti usaha tani; Kas Investasi mencatat pembelian aset (traktor, pompa); Kas Pendanaan mencatat modal sendiri dan pinjaman. Jika kas operasi negatif tetapi laba positif, artinya banyak penjualan yang belum dibayar.</string>
+    <string name="tour_reports_cashflow_desc">Arus kas menunjukkan uang yang benar-benar masuk dan keluar — bukan janji atau piutang. Kas Operasi mencatat aktivitas inti operasional usaha; Kas Investasi mencatat pembelian peralatan dan aset kerja; Kas Pendanaan mencatat modal sendiri dan pinjaman. Jika kas operasi negatif tetapi laba positif, artinya banyak penjualan yang belum dibayar.</string>
     <string name="tour_data_export_title">Ekspor &amp; Cadangan Data</string>
-    <string name="tour_data_export_desc">Ekspor catatan ke file Excel (.xlsx) atau laporan PDF untuk arsip cetak. Cadangan lokal terenkripsi AES-256-GCM bisa disimpan ke penyimpanan ponsel, dan cadangan cloud ke Google Drive pribadi. Lakukan pencadangan rutin — terutama sebelum ganti ponsel atau akhir musim tanam.</string>
+    <string name="tour_data_export_desc">Ekspor catatan ke file Excel (.xlsx) atau laporan PDF untuk arsip cetak. Cadangan lokal terenkripsi AES-256-GCM bisa disimpan ke penyimpanan ponsel, dan cadangan cloud ke Google Drive pribadi. Lakukan pencadangan rutin — terutama sebelum ganti ponsel atau akhir periode pembukuan.</string>
     <string name="tour_settings_display_title">Tampilan &amp; Bahasa</string>
     <string name="tour_settings_display_desc">Ganti tema Terang, Gelap, atau ikut Sistem. Pilih bahasa Indonesia atau Inggris. Atur kecepatan animasi: Penuh untuk transisi mulus, Dikurangi untuk perangkat lambat. Getar dan suara ketuk juga bisa dimatikan di sini.</string>
-    <string name="about_desc">Arina Agri Calculator adalah aplikasi kalkulator dan pembukuan keuangan agribisnis offline-first. Dirancang untuk membantu petani, kelompok tani, dan pelaku agribisnis mencatat transaksi, menyusun RAB proyeksi, menghitung titik impas (BEP), HPP, kebutuhan modal kerja, dan rasio kelayakan usaha tanpa tergantung koneksi internet.</string>
+    <string name="about_desc">Mankeu adalah aplikasi manajemen keuangan dan pembukuan UMKM offline-first. Dirancang untuk membantu pemilik usaha, pengelola UMKM, dan wirausaha mencatat transaksi harian, menyusun rencana anggaran (RAB), menghitung titik impas (BEP), HPP per unit, kebutuhan modal kerja, dan rasio kelayakan usaha secara akurat tanpa tergantung koneksi internet.</string>
     <string name="about_version">Versi %s</string>
 
     <!-- Explicit workspace bootstrap: the app never invents a business/field on the user's behalf. -->
     <string name="scope_add_business">Tambah Usaha</string>
-    <string name="scope_add_project">Tambah Lahan</string>
+    <string name="scope_add_project">Tambah Proyek / Periode</string>
     <string name="scope_no_options">Belum ada data</string>
     <string name="setup_business_title">Mulai dengan menambah usaha</string>
-    <string name="setup_business_body">Beri nama usaha kamu sendiri, misalnya \"Tani Padi Pak Ade\". Aplikasi tidak membuatkan nama otomatis supaya catatan tetap milik kamu.</string>
-    <string name="setup_project_title">Tambah lahan atau musim tanam</string>
-    <string name="setup_project_body">Setiap lahan punya buku Proyeksi dan Realisasi sendiri. Tambahkan satu lahan dulu sebelum mencatat transaksi.</string>
+    <string name="setup_business_body">Beri nama usaha kamu sendiri, misalnya \"Toko Maju Jaya\" atau \"Warung Berkah\". Aplikasi tidak membuatkan nama otomatis supaya catatan tetap milik kamu.</string>
+    <string name="setup_project_title">Tambah proyek atau periode pembukuan</string>
+    <string name="setup_project_body">Setiap proyek atau periode pembukuan memiliki buku Proyeksi dan Realisasi sendiri. Tambahkan satu proyek dulu sebelum mencatat transaksi.</string>
 
     <!-- Tur panduan -->
     <string name="tour_step_counter">Langkah %1$d dari %2$d</string>
@@ -386,9 +386,9 @@
     <string name="budget_err_amount">Isi total acuan, atau jumlah dan harga satuan.</string>
 
     <!-- Berkas dan Data / Files and Data -->
-    <string name="data_manage_count">%1$d usaha • %2$d lahan pada usaha aktif</string>
+    <string name="data_manage_count">%1$d usaha • %2$d proyek pada usaha aktif</string>
     <string name="data_rename_business">Ubah nama usaha</string>
-    <string name="data_rename_project">Ubah nama lahan</string>
+    <string name="data_rename_project">Ubah nama proyek / periode</string>
     <string name="data_master_count">%1$d kategori • %2$d satuan aktif</string>
     <string name="data_import_history">Riwayat pengambilan</string>
     <string name="data_import_history_sub">Sekali ambil bisa dibatalkan tanpa menghapus catatan aslinya.</string>
@@ -423,7 +423,7 @@
     <string name="import_ready_enriched">Dipulihkan otomatis</string>
     <string name="import_total_income">Total pendapatan</string>
     <string name="import_target_label">Masukkan ke buku</string>
-    <string name="import_target_from_file">Buku diambil dari berkas: ekspor Arina sudah menyebut baris mana milik Proyeksi dan mana milik Realisasi.</string>
+    <string name="import_target_from_file">Buku diambil dari berkas: ekspor Mankeu sudah menyebut baris mana milik Proyeksi dan mana milik Realisasi.</string>
     <string name="import_total_expense">Total pengeluaran</string>
     <string name="import_review">Perlu ditinjau</string>
     <string name="import_commit">Setujui dan impor %1$d baris</string>
@@ -461,7 +461,7 @@
     <string name="restore_schema">Versi basis data</string>
     <string name="restore_tables">Tabel</string>
     <string name="restore_businesses">Usaha</string>
-    <string name="restore_projects">Lahan</string>
+    <string name="restore_projects">Proyek</string>
     <string name="restore_budget_items">Item anggaran</string>
     <string name="restore_events">Transaksi</string>
     <string name="restore_rows">Total baris</string>
@@ -477,18 +477,18 @@
     <string name="compare_actual">Realisasi %1$s</string>
     <string name="compare_delta">Selisih %1$s</string>
     <string name="entry_clear">Hapus</string>
-    <string name="entry_hint_income">Contoh: Penjualan gabah kering panen</string>
-    <string name="entry_hint_expense">Contoh: Pembelian pupuk NPK subsidi</string>
+    <string name="entry_hint_income">Contoh: Penjualan barang dagangan atau jasa</string>
+    <string name="entry_hint_expense">Contoh: Belanja stok dagangan atau gaji</string>
 
     <!-- Snackbar / status messages emitted by AppViewModel (see UiText) -->
-    <string name="msg_business_created">Usaha dibuat. Tambahkan lahan atau musim tanam untuk mulai mencatat.</string>
+    <string name="msg_business_created">Usaha dibuat. Tambahkan proyek atau periode untuk mulai mencatat.</string>
     <string name="msg_business_create_failed">Usaha tidak dapat dibuat.</string>
-    <string name="msg_project_created">Lahan dibuat dengan buku Proyeksi dan Realisasi.</string>
-    <string name="msg_project_create_failed">Lahan tidak dapat dibuat.</string>
+    <string name="msg_project_created">Proyek dibuat dengan buku Proyeksi dan Realisasi.</string>
+    <string name="msg_project_create_failed">Proyek tidak dapat dibuat.</string>
     <string name="msg_business_renamed">Nama usaha diperbarui.</string>
     <string name="msg_business_rename_failed">Nama usaha tidak dapat diperbarui.</string>
-    <string name="msg_project_renamed">Nama lahan diperbarui.</string>
-    <string name="msg_project_rename_failed">Nama lahan tidak dapat diperbarui.</string>
+    <string name="msg_project_renamed">Nama proyek diperbarui.</string>
+    <string name="msg_project_rename_failed">Nama proyek tidak dapat diperbarui.</string>
     <string name="msg_category_added">Kategori %1$s ditambahkan.</string>
     <string name="msg_category_add_failed">Kategori tidak dapat ditambahkan.</string>
     <string name="msg_category_archived">Kategori diarsipkan; transaksi lama tetap utuh.</string>
@@ -538,55 +538,55 @@
     <string name="event_reverse_body">%1$s tidak dihapus. Aplikasi membuat jurnal kebalikan agar jejak audit tetap lengkap.</string>
 
     <!-- Manajemen scope dan kontak / scope management and contact -->
-    <string name="scope_manage_title">Usaha dan Lahan</string>
-    <string name="scope_manage_subtitle">Kelola semua usaha dan lahan, lalu pilih mana yang sedang dikerjakan.</string>
-    <string name="scope_manage_open">Kelola usaha dan lahan</string>
+    <string name="scope_manage_title">Usaha dan Proyek</string>
+    <string name="scope_manage_subtitle">Kelola semua usaha dan proyek, lalu pilih mana yang sedang dikerjakan.</string>
+    <string name="scope_manage_open">Kelola usaha dan proyek</string>
     <string name="scope_section_business">Usaha</string>
-    <string name="scope_section_project">Lahan pada %1$s</string>
+    <string name="scope_section_project">Proyek pada %1$s</string>
     <string name="scope_active">Sedang dipakai</string>
     <string name="scope_select">Pakai ini</string>
-    <string name="scope_business_fields">%1$d lahan</string>
-    <string name="scope_empty_business_body">Belum ada usaha. Satu usaha bisa memuat banyak lahan atau musim tanam.</string>
-    <string name="scope_empty_project_body">Usaha ini belum punya lahan. Tambahkan satu untuk mulai mencatat.</string>
+    <string name="scope_business_fields">%1$d proyek</string>
+    <string name="scope_empty_business_body">Belum ada usaha. Satu usaha bisa memuat banyak proyek atau periode pembukuan.</string>
+    <string name="scope_empty_project_body">Usaha ini belum punya proyek. Tambahkan satu untuk mulai mencatat.</string>
     <string name="scope_edit">Ubah</string>
     <string name="scope_archive">Arsipkan</string>
     <string name="scope_archive_business_title">Arsipkan usaha ini?</string>
-    <string name="scope_archive_business_body">%1$s dan seluruh lahannya disembunyikan dari pilihan. Tidak ada catatan yang dihapus, dan datanya tetap ikut terekspor.</string>
-    <string name="scope_archive_project_title">Arsipkan lahan ini?</string>
+    <string name="scope_archive_business_body">%1$s dan seluruh proyeknya disembunyikan dari pilihan. Tidak ada catatan yang dihapus, dan datanya tetap ikut terekspor.</string>
+    <string name="scope_archive_project_title">Arsipkan proyek ini?</string>
     <string name="scope_archive_project_body">%1$s disembunyikan dari pilihan. Transaksi, anggaran, dan jurnalnya tetap tersimpan utuh.</string>
-    <string name="scope_project_edit_title">Ubah lahan</string>
-    <string name="scope_project_name">Nama lahan / musim tanam</string>
+    <string name="scope_project_edit_title">Ubah proyek / periode</string>
+    <string name="scope_project_name">Nama proyek / periode pembukuan</string>
     <string name="scope_project_note">Catatan (opsional)</string>
-    <string name="scope_project_note_hint">Misal komoditas, blok, atau luas lahan.</string>
-    <string name="scope_project_start">Mulai tanam (opsional)</string>
-    <string name="scope_project_end">Perkiraan selesai (opsional)</string>
+    <string name="scope_project_note_hint">Misal cabang toko, pesanan batch, atau periode bulan/tahun.</string>
+    <string name="scope_project_start">Mulai periode (opsional)</string>
+    <string name="scope_project_end">Selesai periode (opsional)</string>
     <string name="scope_project_period">%1$s – %2$s</string>
     <string name="scope_project_period_open">Mulai %1$s</string>
     <string name="msg_business_archived">Usaha diarsipkan; catatannya tetap tersimpan.</string>
     <string name="msg_business_archive_failed">Usaha tidak dapat diarsipkan.</string>
-    <string name="msg_project_archived">Lahan diarsipkan; catatannya tetap tersimpan.</string>
-    <string name="msg_project_archive_failed">Lahan tidak dapat diarsipkan.</string>
-    <string name="msg_project_updated">Lahan diperbarui.</string>
-    <string name="msg_project_update_failed">Lahan tidak dapat diperbarui.</string>
+    <string name="msg_project_archived">Proyek diarsipkan; catatannya tetap tersimpan.</string>
+    <string name="msg_project_archive_failed">Proyek tidak dapat diarsipkan.</string>
+    <string name="msg_project_updated">Proyek diperbarui.</string>
+    <string name="msg_project_update_failed">Proyek tidak dapat diperbarui.</string>
     <string name="settings_feedback">Getaran dan suara</string>
     <string name="settings_haptics">Getaran saat menyentuh</string>
     <string name="settings_haptics_help">Getaran pendek saat menyimpan atau memilih. Mengikuti pengaturan getaran sentuh di HP kamu.</string>
     <string name="settings_sound">Suara saat menyentuh</string>
     <string name="settings_sound_help">Bunyi pendek saat menyimpan atau memilih. Mengikuti pengaturan suara sentuh di HP kamu.</string>
     <string name="settings_contact_title">Hubungi Kami</string>
-    <string name="settings_contact_desc">Ada pertanyaan, masukan, atau menemukan hitungan yang janggal? Kirim pesan; sertakan nama lahan dan tanggal transaksinya agar mudah ditelusuri.</string>
+    <string name="settings_contact_desc">Ada pertanyaan, masukan, atau menemukan hitungan yang janggal? Kirim pesan; sertakan nama proyek dan tanggal transaksinya agar mudah ditelusuri.</string>
     <string name="settings_contact_email_label">Email</string>
     <string name="settings_contact_btn">Kirim email</string>
-    <string name="settings_contact_subject">Masukan Arina Agri %1$s</string>
+    <string name="settings_contact_subject">Masukan Mankeu %1$s</string>
     <string name="settings_contact_no_app">Belum ada aplikasi email di HP ini. Salin alamatnya secara manual.</string>
 
     <!-- Owner-provided support mailbox (2026-08-28). Not translated: an address is an address. -->
-    <string name="settings_contact_email" translatable="false">main@arinahub.com</string>
+    <string name="settings_contact_email" translatable="false">support@mankeu.id</string>
 
     <string name="language_switching">Mengganti bahasa…</string>
 
     <string name="msg_business_deleted">Usaha kosong dihapus.</string>
-    <string name="msg_project_deleted">Lahan kosong dihapus.</string>
+    <string name="msg_project_deleted">Proyek kosong dihapus.</string>
     <string name="scope_remove">Hapus</string>
     <string name="scope_remove_title">Hapus %1$s?</string>
     <string name="scope_remove_body">Kalau belum ada catatan sama sekali, ini dihapus permanen. Kalau sudah ada transaksi atau anggaran, ini hanya diarsipkan — catatan keuangan tidak pernah dihapus diam-diam.</string>

@@ -394,7 +394,7 @@ fun ArinaAppLogo(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_arina_logo),
+                painter = painterResource(R.drawable.ic_mankeu_logo),
                 contentDescription = stringResource(R.string.app_name),
                 tint = logoTint,
                 modifier = Modifier.fillMaxSize(),
@@ -402,7 +402,7 @@ fun ArinaAppLogo(
         }
     } else {
         Icon(
-            painter = painterResource(R.drawable.ic_arina_logo),
+            painter = painterResource(R.drawable.ic_mankeu_logo),
             contentDescription = stringResource(R.string.app_name),
             tint = logoTint,
             modifier = modifier.size(size),

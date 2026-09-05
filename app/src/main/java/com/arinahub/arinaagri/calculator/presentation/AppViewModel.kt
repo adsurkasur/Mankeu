@@ -845,7 +845,7 @@ class AppViewModel(
             withContext(Dispatchers.IO) {
                 val bytes = backupManager.create(password)
                 val sha256 = computeSha256Hex(bytes)
-                val filename = "arina-agri-backup-${LocalDate.now()}.aabk"
+                val filename = "mankeu-backup-${LocalDate.now()}.aabk"
                 cloudBackupClient.uploadBackup(accessToken, filename, bytes, sha256)
                 bytes.size
             }

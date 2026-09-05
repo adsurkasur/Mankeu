@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Circular outer ring badge -->
+    <path
+        android:fillColor="#0061A4"
+        android:fillType="evenOdd"
+        android:pathData="M48,6A42,42 0 1,0 48,90A42,42 0 1,0 48,6Z M48,12A36,36 0 1,1 48,84A36,36 0 1,1 48,12Z" />
+    <!-- Bar 1 (Left growth bar) -->
+    <path
+        android:fillColor="#0061A4"
+        android:pathData="M32.5,54A4.5,4.5 0 0,1 37,58.5V67.5A4.5,4.5 0 0,1 32.5,72A4.5,4.5 0 0,1 28,67.5V58.5A4.5,4.5 0 0,1 32.5,54Z" />
+    <!-- Bar 2 (Middle growth bar) -->
+    <path
+        android:fillColor="#0061A4"
+        android:pathData="M48,42A4.5,4.5 0 0,1 52.5,46.5V67.5A4.5,4.5 0 0,1 48,72A4.5,4.5 0 0,1 43.5,67.5V46.5A4.5,4.5 0 0,1 48,42Z" />
+    <!-- Bar 3 (Right growth bar) -->
+    <path
+        android:fillColor="#0061A4"
+        android:pathData="M63.5,30A4.5,4.5 0 0,1 68,34.5V67.5A4.5,4.5 0 0,1 63.5,72A4.5,4.5 0 0,1 59,67.5V34.5A4.5,4.5 0 0,1 63.5,30Z" />
+    <!-- Rising Trend Line (positioned above bars with clear margin) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0061A4"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M26,43L60,21" />
+    <!-- Arrowhead Wedge -->
+    <path
+        android:fillColor="#0061A4"
+        android:pathData="M72,15L56,18L66,27Z" />
+</vector>

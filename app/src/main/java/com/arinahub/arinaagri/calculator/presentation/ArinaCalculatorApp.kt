@@ -321,19 +321,19 @@ fun ArinaCalculatorApp(viewModel: AppViewModel) {
         else password?.fill(' ')
     }
 
-    val export: () -> Unit = { workbookExporter.launch("arina-agri-${LocalDate.now()}.xlsx") }
-    val exportPdf: () -> Unit = { pdfExporter.launch("laporan-arina-agri-${LocalDate.now()}.pdf") }
+    val export: () -> Unit = { workbookExporter.launch("mankeu-${LocalDate.now()}.xlsx") }
+    val exportPdf: () -> Unit = { pdfExporter.launch("laporan-mankeu-${LocalDate.now()}.pdf") }
     val createBackup: (String) -> Unit = { password ->
         pendingBackupPassword?.fill(' ')
         pendingBackupPassword = password.toCharArray()
-        backupCreator.launch("arina-agri-backup-${LocalDate.now()}.aabk")
+        backupCreator.launch("mankeu-backup-${LocalDate.now()}.aabk")
     }
     val restoreBackup: (String) -> Unit = { password ->
         pendingRestorePassword?.fill(' ')
         pendingRestorePassword = password.toCharArray()
         backupPicker.launch("*/*")
     }
-    val exportRecovery: () -> Unit = { recoveryExporter.launch("arina-sebelum-pemulihan-${LocalDate.now()}.aabk") }
+    val exportRecovery: () -> Unit = { recoveryExporter.launch("mankeu-sebelum-pemulihan-${LocalDate.now()}.aabk") }
 
     val dismissTour: () -> Unit = {
         when (activeTourType) {

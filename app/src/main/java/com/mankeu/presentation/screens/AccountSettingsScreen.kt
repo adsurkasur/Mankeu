@@ -27,6 +27,10 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.filled.DeleteForever
+import com.mankeu.presentation.components.MankeuSheet
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -110,6 +114,9 @@ fun SettingsScreen(
     tourOffersEnabled: Boolean,
     onTourOffersChange: (Boolean) -> Unit,
     onResetTours: () -> Unit,
+    /** "Hapus semua data" (DEC-020); the flag says whether Drive and the sign-in account go too. */
+    onEraseAllData: (includeCloud: Boolean) -> Unit,
+    isErasing: Boolean,
 ) {
     LazyColumn(
         state = rememberTourListState(),
@@ -223,6 +230,10 @@ fun SettingsScreen(
             }
         }
 
+        item {
+            EraseAllDataCard(signedIn = authUser != null, isErasing = isErasing, onErase = onEraseAllData)
+        }
+
         // Contact card. Sits directly above About so the two "who made this / how do I reach them"
         // questions are answered in one place at the bottom of the screen.
         item {
@@ -311,6 +322,84 @@ fun SettingsScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Deleting everything is the one action here that cannot be undone, so it asks twice: a sheet
+ * that names what goes, then the word typed out. Typing beats a second "Ya" button, which a thumb
+ * taps through without reading.
+ */
+@Composable
+private fun EraseAllDataCard(signedIn: Boolean, isErasing: Boolean, onErase: (Boolean) -> Unit) {
+    val feedback = LocalFeedback.current
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.settings_erase_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Text(
+                stringResource(R.string.settings_erase_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(
+                onClick = { feedback(FeedbackEvent.WARN); confirming = true },
+                enabled = !isErasing,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            ) {
+                Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.settings_erase_btn), fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+    if (confirming) {
+        var includeCloud by rememberSaveable { mutableStateOf(true) }
+        var typed by rememberSaveable { mutableStateOf("") }
+        val word = stringResource(R.string.dialog_erase_word)
+        MankeuSheet(
+            title = stringResource(R.string.dialog_erase_title),
+            onDismiss = { confirming = false },
+            confirmLabel = stringResource(R.string.action_erase),
+            confirmEnabled = typed.trim() == word && !isErasing,
+            destructive = true,
+            onConfirm = {
+                onErase(signedIn && includeCloud)
+                confirming = false
+            },
+        ) {
+            Text(stringResource(R.string.dialog_erase_body))
+            if (signedIn) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .toggleable(value = includeCloud, role = Role.Checkbox, onValueChange = { includeCloud = it }),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Checkbox(checked = includeCloud, onCheckedChange = null)
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(stringResource(R.string.dialog_erase_cloud), fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.dialog_erase_cloud_help),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = typed,
+                onValueChange = { typed = it },
+                label = { Text(stringResource(R.string.dialog_erase_type, word)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

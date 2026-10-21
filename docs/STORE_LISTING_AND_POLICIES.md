@@ -87,7 +87,8 @@ Fill in the Google Play Data Safety form with the following answers:
 * **Is all of the user data collected by your app encrypted in transit?**
   * Select **"Yes"** (HTTPS / OAuth 2.0).
 * **Do you provide a way for users to request that their data be deleted?**
-  * Select **"Yes"** (Users delete records in the app with Hapus, remove all local data by clearing the app's storage or uninstalling, and remove Drive backups from Google Drive's app data settings).
+  * Select **"Yes"**. In the app: Pengaturan → **Hapus semua data** deletes all local data and, when signed in, every Mankeu file in the Drive app folder, the Firebase sign-in account, and the Drive grant (DEC-020). Outside the app: section 7 of the privacy policy (clear app storage, Drive "Delete hidden app data", or an email request).
+  * **Delete account URL** (asked because Google Sign-In creates a Firebase account): `https://adsurkasur.my.id/mankeu/privacy-policy` (section 7, "Penghapusan Data").
 
 #### 2. Data Types & Purposes:
 * **Personal Info > Name & Email Address:**
@@ -237,7 +238,7 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 ## 5. Contact & Support Information
 
 * **Developer Name:** Mankeu
-* **Support Email:** `adsurkasur.dev@gmail.com`
+* **Support Email:** `adesur@arinahub.com`
 * **Website / Privacy Policy:** `https://adsurkasur.github.io/umkm-man-keu/privacy-policy.html`
 * **Target Category:** Productivity / Business / Tools
 * **Primary Tags:** Agriculture, Farm Finance, Calculator, Bookkeeping, Agribusiness, Feasibility

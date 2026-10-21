@@ -48,6 +48,7 @@ flowchart LR
             ucExport["Ekspor Excel, PDF, atau templat kosong"]
             ucBackup["Buat cadangan terenkripsi"]
             ucRestore["Pulihkan cadangan"]
+            ucErase["Hapus semua data<br/>HP, Drive, dan akun masuk"]
         end
 
         subgraph helpModule ["7. Bantuan"]
@@ -76,6 +77,7 @@ flowchart LR
     owner --> ucExport
     owner --> ucBackup
     owner --> ucRestore
+    owner --> ucErase
     owner --> ucTour
     owner --> ucHelp
 
@@ -90,6 +92,8 @@ flowchart LR
     ucBackup -.->|"opsional, ciphertext"| googleDrive
     googleDrive -.->|"unduh"| ucRestore
     firebaseAuth -.->|"identitas untuk Drive"| ucBackup
+    ucErase -.->|"hapus folder aplikasi"| googleDrive
+    ucErase -.->|"hapus akun"| firebaseAuth
 ```
 
 | Use case | Tujuan bagi pemilik usaha |
@@ -100,5 +104,6 @@ flowchart LR
 | Stok | Mengetahui sisa barang per unit dan kapan harus belanja lagi. |
 | Impor templat | Memasukkan banyak catatan sekaligus ke unit terpilih. Batalkan impor menghapus catatan batch itu, dan berkas yang sama boleh diimpor ulang. |
 | Cadangan terenkripsi | Memindahkan atau menyelamatkan data tanpa pihak mana pun dapat membaca isinya. |
+| Hapus semua data | Menyerahkan HP atau berhenti memakai Mankeu tanpa meninggalkan data, termasuk di Google Drive dan akun masuk (DEC-020). |
 
 Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, tetapi belum dapat dijalankan pemilik dari UI, sehingga tidak muncul sebagai use case.

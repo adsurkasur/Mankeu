@@ -30,6 +30,7 @@ V1 is an offline native Android cash book and business planner for small busines
 8. Export the template-format workbook or a PDF; import a filled template into the selected unit and undo it if needed.
 9. Create a password-encrypted backup to a file or Google Drive and restore it after a preview.
 10. Find help: offered page tours and the Pusat Bantuan.
+11. Delete all data from Pengaturan, including the Mankeu files on Google Drive and the sign-in account (DEC-020).
 
 ## Native information architecture
 
@@ -100,6 +101,7 @@ All amounts are derived at read time. No report total is a writable source of tr
 - Logs never contain descriptions, amounts, workbook contents, passwords, or backup plaintext.
 - Imported files are read through the system file picker and are not copied.
 - Firebase Auth and Drive are optional and only carry encrypted backups (D-033, D-040). No analytics.
+- **Hapus semua data** (DEC-020) empties every table, the sync outbox and state, the recovery copy and the local name; when signed in it also deletes every file in the Drive app folder, the Firebase user, and the Google grant. Drive is deleted first, so a failure leaves the phone untouched.
 
 ## Definition of v1 complete
 

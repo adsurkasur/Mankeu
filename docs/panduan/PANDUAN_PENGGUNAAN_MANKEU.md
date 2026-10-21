@@ -554,6 +554,19 @@ Cadangan menyimpan **seluruh** data di HP dalam satu berkas yang dikunci kata sa
 Sebelum memulihkan, aplikasi otomatis menyalin data yang ada sekarang. Bila ternyata salah berkas,
 data lama bisa dikembalikan lewat **Ekspor data sebelum pemulihan terakhir**.
 
+### 9.6 Menghapus semua data
+
+Untuk menyerahkan HP ke orang lain atau berhenti memakai Mankeu:
+
+1. Buat cadangan dulu bila datanya masih ingin disimpan (bagian 9.4).
+2. Buka **Pengaturan → Hapus semua data**, lalu ketuk **Hapus semua data…**.
+3. Bila Anda masuk dengan Google, biarkan **Hapus juga semua cadangan Mankeu di Google Drive** tercentang
+   agar cadangan di Drive dan akun masuk Mankeu ikut terhapus. Berkas lain di Drive Anda tidak tersentuh.
+4. Ketik **HAPUS** dengan huruf besar, lalu ketuk **Hapus semua**.
+
+Semua usaha, unit, catatan, rencana, stok, riwayat impor, dan salinan pemulihan otomatis hilang dan
+tidak bisa dikembalikan, kecuali dari cadangan yang Anda buat sendiri. Tema dan bahasa tetap.
+
 ---
 
 ## 10. Bantuan di Dalam Aplikasi

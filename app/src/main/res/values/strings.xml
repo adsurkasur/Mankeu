@@ -166,7 +166,7 @@
     <string name="account_signed_in_as">Tersambung sebagai %1$s</string>
     <string name="account_signed_out_status">Belum masuk akun Google</string>
     <string name="account_offline_notice">Data kamu tetap tersimpan aman di HP ini (offline-first). Masuk akun Google memudahkan pencadangan terenkripsi ke Google Drive.</string>
-    <string name="account_drive_note">Cadangan Google Drive selalu dienkripsi dengan kata sandi Anda sebelum diunggah (AES-256-GCM). Google maupun pihak lain tidak dapat membaca isi pembukuan.</string>
+    <string name="account_drive_note">Cadangan Google Drive selalu dienkripsi dengan kata sandi kamu sebelum diunggah (AES-256-GCM). Google maupun pihak lain tidak dapat membaca isi pembukuan.</string>
     <string name="account_prototype_notice">Akun dan Pencadangan Cloud</string>
 
     <!-- Berkas dan data -->
@@ -205,7 +205,7 @@
 
 
 
-    <string name="about_desc">Mankeu adalah aplikasi manajemen keuangan dan pencatatan kas UMKM offline-first. Dirancang untuk membantu pelaku usaha mikro, kecil, dan menengah mencatat transaksi harian, menyusun anggaran (RAB), menghitung titik impas (BEP), HPP, margin laba, dan kebutuhan modal kerja tanpa tergantung koneksi internet.</string>
+    <string name="about_desc">Mankeu adalah buku kas dan rencana usaha offline untuk pelaku usaha mikro, kecil, dan menengah: catat uang masuk dan keluar, susun rencana usaha, hitung titik impas (BEP) dan kebutuhan modal, dan pantau stok tanpa tergantung koneksi internet.</string>
     <string name="about_version">Versi %s</string>
 
     <!-- Explicit workspace bootstrap: the app never invents a business/field on the user's behalf. -->
@@ -385,9 +385,22 @@
     <string name="settings_contact_btn">Kirim email</string>
     <string name="settings_contact_subject">Masukan Mankeu %1$s</string>
     <string name="settings_contact_no_app">Belum ada aplikasi email di HP ini. Salin alamatnya secara manual.</string>
+    <string name="settings_erase_title">Hapus semua data</string>
+    <string name="settings_erase_desc">Menghapus semua usaha, catatan, rencana, stok, dan riwayat impor di HP ini. Bila kamu masuk dengan Google, cadangan Mankeu di Google Drive juga bisa ikut dihapus. Tema dan bahasa tetap.</string>
+    <string name="settings_erase_btn">Hapus semua data…</string>
+    <string name="dialog_erase_title">Hapus semua data?</string>
+    <string name="dialog_erase_body">Semua usaha, unit, catatan, rencana usaha, stok, riwayat impor, salinan pemulihan otomatis, dan nama lokal di HP ini akan dihapus. Ini tidak dapat dibatalkan. Buat cadangan dulu bila datanya masih ingin disimpan.</string>
+    <string name="dialog_erase_cloud">Hapus juga semua cadangan Mankeu di Google Drive dan akun masuk Mankeu</string>
+    <string name="dialog_erase_cloud_help">Berkas lain di Google Drive kamu tidak tersentuh. Setelah ini kamu keluar dari akun Google di Mankeu.</string>
+    <string name="dialog_erase_type">Ketik %1$s (huruf besar) untuk melanjutkan</string>
+    <string name="dialog_erase_word">HAPUS</string>
+    <string name="action_erase">Hapus semua</string>
+    <string name="msg_erase_ok">Semua data Mankeu sudah dihapus.</string>
+    <string name="msg_erase_ok_account_kept">Data sudah dihapus dan kamu sudah keluar. Akun masuk Mankeu belum terhapus karena Google meminta masuk ulang: masuk lagi, lalu ulangi Hapus semua data.</string>
+    <string name="msg_erase_failed">Data belum dihapus. Coba lagi.</string>
 
     <!-- Support mailbox. Not translated: an address is an address. -->
-    <string name="settings_contact_email" translatable="false">support@mankeu.com</string>
+    <string name="settings_contact_email" translatable="false">adesur@arinahub.com</string>
 
     <string name="language_switching">Mengganti bahasa…</string>
 

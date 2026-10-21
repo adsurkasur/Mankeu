@@ -489,6 +489,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
             ucExport[&quot;Ekspor Excel, PDF, atau templat kosong&quot;]
             ucBackup[&quot;Buat cadangan terenkripsi&quot;]
             ucRestore[&quot;Pulihkan cadangan&quot;]
+            ucErase[&quot;Hapus semua data&lt;br/&gt;HP, Drive, dan akun masuk&quot;]
         end
 
         subgraph helpModule [&quot;7. Bantuan&quot;]
@@ -517,6 +518,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     owner --&gt; ucExport
     owner --&gt; ucBackup
     owner --&gt; ucRestore
+    owner --&gt; ucErase
     owner --&gt; ucTour
     owner --&gt; ucHelp
 
@@ -530,7 +532,9 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     ucExport -.-&gt;|&quot;menghasilkan&quot;| workbookFile
     ucBackup -.-&gt;|&quot;opsional, ciphertext&quot;| googleDrive
     googleDrive -.-&gt;|&quot;unduh&quot;| ucRestore
-    firebaseAuth -.-&gt;|&quot;identitas untuk Drive&quot;| ucBackup</pre>
+    firebaseAuth -.-&gt;|&quot;identitas untuk Drive&quot;| ucBackup
+    ucErase -.-&gt;|&quot;hapus folder aplikasi&quot;| googleDrive
+    ucErase -.-&gt;|&quot;hapus akun&quot;| firebaseAuth</pre>
 <script type="text/markdown">| Use case | Tujuan bagi pemilik usaha |
 | --- | --- |
 | Catat uang masuk atau keluar | Mengganti buku kas tulis dengan beberapa ketukan. Kategori menentukan jenisnya (pemasukan, pengeluaran, setoran modal, ambil pribadi, beli aset), tanpa istilah debit dan kredit. |
@@ -539,6 +543,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
 | Stok | Mengetahui sisa barang per unit dan kapan harus belanja lagi. |
 | Impor templat | Memasukkan banyak catatan sekaligus ke unit terpilih. Batalkan impor menghapus catatan batch itu, dan berkas yang sama boleh diimpor ulang. |
 | Cadangan terenkripsi | Memindahkan atau menyelamatkan data tanpa pihak mana pun dapat membaca isinya. |
+| Hapus semua data | Menyerahkan HP atau berhenti memakai Mankeu tanpa meninggalkan data, termasuk di Google Drive dan akun masuk (DEC-020). |
 
 Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, tetapi belum dapat dijalankan pemilik dari UI, sehingga tidak muncul sebagai use case.</script>
 </section>
@@ -681,6 +686,7 @@ Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, te
         +reviewImport(businessId, projectId, preview) ImportReview
         +commitImport(businessId, projectId, preview) Int
         +undoImportBatch(batchId) ImportUndo
+        +eraseAllData()
         +eventsForBook(bookId) Flow
         +cashFlowRecords(bookId) Flow
         +accountingSummary(bookId) Flow
@@ -713,6 +719,7 @@ Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, te
         +create(password) ByteArray
         +prepareRestore(envelope, password) PreparedRestore
         +restore(prepared, recoveryPassword) RestoreResult
+        +deleteLatestRecovery()
     }
     class SyncEngine {
         +collectLocalChanges() LocalChanges
@@ -730,6 +737,7 @@ Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, te
         +recordStockMovement(itemId, type, quantity, notes)
         +commitImport()
         +undoImportBatch(id)
+        +eraseAllData(driveAccessToken, onErased)
         -mutating(block) Job
     }
     class AppUiState {

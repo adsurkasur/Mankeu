@@ -107,6 +107,7 @@ One Gradle module, `:app`, with packages `domain`, `data`, `importer`, `exporter
 ## Backup, Drive, sync, and authentication
 
 - **Backup/restore** (implemented): `EncryptedBackupManager` snapshots every table in `AppDatabase.DATA_TABLES`, encrypts it with AES-256-GCM under a PBKDF2-HMAC-SHA256 key, and writes it to a user-chosen file or to Drive `appDataFolder` (latest five kept). Restore validates the schema (3 to current), keeps an encrypted recovery copy, and upgrades old snapshots with the same cleanups as the migrations.
+- **Erase all data** (implemented, DEC-020): `FinanceRepository.eraseAllData` empties every data table and the sync state; `GoogleDriveBackupClient.deleteAllAppData` removes every file in the app folder; `FirebaseAuthManager.deleteAccount` removes the sign-in user.
 - **Authentication** (implemented, optional): Firebase Auth with Google Sign-In, only to reach the user's Drive (D-033, D-040).
 - **Synchronization** (framework, not wired): SQLite triggers record changes in `sync_outbox`; `SyncEngine` and `SyncCoordinator` exchange encrypted change sets over Drive with row-level last-writer-wins (DEC-013). Details and open owner questions in `docs/SYNC_ARCHITECTURE.md`.
 

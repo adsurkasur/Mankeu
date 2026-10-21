@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- **Hapus semua data** in Pengaturan: deletes every business, record, plan, stock item, import history, the automatic recovery copy and the local name on this phone after typing HAPUS; when signed in with Google it can also delete every Mankeu file on Google Drive, the sign-in account, and the Drive permission (DEC-020).
 - **Ubah** on every record card: the entry form opens filled in and saving corrects the record in place (DEC-019).
 - User guide for small-business owners (`docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`): step-by-step use of every feature with 47 screenshots generated from the real app, quick and full reading paths, appendices for seasonal farming and multi-branch stock.
 - Pusat Bantuan: 27 task-based articles (ID/EN) with search, numbered steps, a screenshot and "Tunjukkan di aplikasi", which opens the right page and highlights the place. The ? button now opens a help sheet for the current page (DEC-018).

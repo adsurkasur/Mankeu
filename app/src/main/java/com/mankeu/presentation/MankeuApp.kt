@@ -293,6 +293,35 @@ fun MankeuApp(
         }
     }
 
+    // "Hapus semua data" (DEC-020). The ViewModel deletes Drive, the account and the database; what
+    // only this layer holds (the local name, the app's Google grant) is cleared once that succeeded.
+    val eraseAllData: (Boolean) -> Unit = { includeCloud ->
+        val clearUiState = {
+            prefs.updateAccountName("")
+            if (includeCloud) {
+                GoogleSignIn.getClient(context, GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build())
+                    .revokeAccess()
+            }
+        }
+        if (!includeCloud) {
+            viewModel.eraseAllData(driveAccessToken = null, onErased = clearUiState)
+        } else {
+            coroutineScope.launch {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        val account = GoogleSignIn.getLastSignedInAccount(context)?.account
+                            ?: authUser?.email?.let { Account(it, "com.google") }
+                            ?: error("Belum masuk akun Google.")
+                        GoogleAuthUtil.getToken(context, account, "oauth2:https://www.googleapis.com/auth/drive.appdata")
+                    }
+                }.fold(
+                    onSuccess = { token -> viewModel.eraseAllData(driveAccessToken = token, onErased = clearUiState) },
+                    onFailure = { viewModel.message.value = UiText.fromError(it, R.string.msg_erase_failed) },
+                )
+            }
+        }
+    }
+
     val workbookPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.previewWorkbook(context.contentResolver, uri)
     }
@@ -547,6 +576,8 @@ fun MankeuApp(
                                             overlay = Overlay.NONE
                                             destination = Destination.HOME
                                         },
+                                        onEraseAllData = eraseAllData,
+                                        isErasing = isSaving,
                                     )
                                 }
 

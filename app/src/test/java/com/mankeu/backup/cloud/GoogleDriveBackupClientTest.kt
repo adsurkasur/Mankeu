@@ -7,6 +7,15 @@ import org.junit.Test
 
 class GoogleDriveBackupClientTest {
 
+    /** "Hapus semua data" lists every file in appDataFolder, backups and sync change sets alike. */
+    @Test
+    fun parseFileIds_keepsEveryFileAndSkipsBlankIds() {
+        val json = """{"files":[{"id":"backup-1"},{"id":"sync-1","appProperties":{"kind":"sync"}},{"id":""},{}]}"""
+
+        assertEquals(listOf("backup-1", "sync-1"), GoogleDriveBackupClient.parseFileIds(json))
+        assertEquals(emptyList<String>(), GoogleDriveBackupClient.parseFileIds("{}"))
+    }
+
     @Test
     fun parseBackupListJson_validResponse_parsesCorrectly() {
         val sampleJson = """

@@ -34,6 +34,7 @@ import com.mankeu.exporter.FinancePdfExporter
 import com.mankeu.exporter.FinanceWorkbookExporter
 import com.mankeu.importer.MankeuTemplate
 import com.mankeu.importer.WorkbookImportPreview
+import com.mankeu.sync.SyncSchema
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -613,6 +614,21 @@ class FinanceRepository(private val database: AppDatabase) {
         notes: String,
     ): BigDecimal = database.withTransaction {
         RecordStockMovementUseCase(stockDao).execute(stockItemId, type, quantity, date, notes).getOrThrow()
+    }
+
+    /**
+     * "Hapus semua data" (DEC-020): every user table emptied in one transaction, children first.
+     * Change capture is off while deleting, then the outbox and sync state are cleared and the
+     * device gets a new sync identity, so nothing of the old data is left to push anywhere.
+     */
+    suspend fun eraseAllData() = database.withTransaction {
+        val db = database.openHelper.writableDatabase
+        SyncSchema.quietly(db) {
+            AppDatabase.DATA_TABLES.asReversed().forEach { table -> db.execSQL("DELETE FROM `$table`") }
+        }
+        db.execSQL("DELETE FROM sync_outbox")
+        db.execSQL("DELETE FROM sync_meta")
+        SyncSchema.ensureDeviceId(db)
     }
 
     /**

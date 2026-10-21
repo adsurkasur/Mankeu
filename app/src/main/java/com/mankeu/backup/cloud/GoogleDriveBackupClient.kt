@@ -139,6 +139,27 @@ class GoogleDriveBackupClient(
         }
     }
 
+    /**
+     * "Hapus semua data" (DEC-020): deletes every file this app keeps in `appDataFolder`, backups
+     * and sync change sets alike, page by page until none is left. The scope only reaches this
+     * app's own folder, so nothing else in the owner's Drive can be touched. Returns the count.
+     */
+    suspend fun deleteAllAppData(accessToken: String): Int = withContext(Dispatchers.IO) {
+        var deleted = 0
+        repeat(MAX_DELETE_ROUNDS) {
+            val ids = call(
+                "$apiBaseUrl/files?spaces=appDataFolder&pageSize=1000&fields=files(id)",
+                "GET", accessToken, SHORT_TIMEOUT_MS, "mengambil daftar berkas",
+            ) { conn -> parseFileIds(conn.readBody()) }
+            if (ids.isEmpty()) return@withContext deleted
+            ids.forEach { id ->
+                check(deleteBackup(accessToken, id)) { "Gagal menghapus berkas di Google Drive. Coba lagi." }
+                deleted += 1
+            }
+        }
+        error("Google Drive masih berisi berkas Mankeu setelah $MAX_DELETE_ROUNDS putaran. Coba lagi.")
+    }
+
     private inline fun <T> call(
         url: String,
         method: String,
@@ -180,6 +201,12 @@ class GoogleDriveBackupClient(
 
         private const val KIND = "kind"
         private const val KIND_SYNC = "sync"
+        private const val MAX_DELETE_ROUNDS = 20
+
+        fun parseFileIds(jsonText: String): List<String> {
+            val files = JSONObject(jsonText).optJSONArray("files") ?: return emptyList()
+            return (0 until files.length()).mapNotNull { files.optJSONObject(it)?.optString("id")?.ifBlank { null } }
+        }
 
         fun parseBackupListJson(jsonText: String): List<DriveBackupFile> {
             val files = JSONObject(jsonText).optJSONArray("files") ?: return emptyList()

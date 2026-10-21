@@ -1,5 +1,18 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-020] "Hapus semua data" in Pengaturan, Including Google Drive and the Sign-In Account
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner asked whether the app can comply with "delete all data"); implemented and tested.
+- **Context**: The Play data-safety form and the privacy policy said users can delete all their data in Settings, but no such action existed: records could only be deleted one by one, Drive backups only through Google Drive's own settings, and signing in with Google creates a Firebase Authentication user that nothing could remove.
+- **Decision**:
+  1. Pengaturan gets a **Hapus semua data** card. A sheet names what goes and the owner types `HAPUS` (`DELETE` in English), exactly and in capitals, before **Hapus semua** is enabled.
+  2. On the phone (`FinanceRepository.eraseAllData`): every table in `AppDatabase.DATA_TABLES` emptied in one transaction with change capture off, then `sync_outbox` and `sync_meta` cleared and a new sync device id created, so nothing of the old data can be pushed later. The encrypted recovery copy is deleted and the local display name cleared. Theme, language and tour preferences stay (device settings, not user data).
+  3. When signed in, a checkbox (on by default) also deletes **every** file in the app's Drive `appDataFolder` (backups and sync change sets, `GoogleDriveBackupClient.deleteAllAppData`), deletes the Firebase user (`FirebaseAuthManager.deleteAccount`), signs out, and revokes the app's Google grant. The `drive.appdata` scope cannot reach any other file.
+  4. Order: Drive first. If it fails, nothing on the phone has been deleted and the owner can retry. If Firebase refuses to delete the user ("requires recent login"), the data is still deleted, the user is signed out, and the message says to sign in again and repeat.
+  5. The privacy policy (section 7) describes the in-app path, the out-of-app paths (clear app storage, Drive "Delete hidden app data") and an email request, and serves as the account-deletion URL in Play Console.
+- **Alternatives considered**: separate buttons for local and Drive deletion (rejected: one place to answer "delete everything" is what the policy promises; the checkbox keeps the choice); a second "Ya" confirmation instead of typing (rejected: a thumb taps through it); also resetting theme and tours (rejected: not personal data).
+- **Affected components**: `data/FinanceRepository`, `backup/EncryptedBackupManager`, `backup/cloud/GoogleDriveBackupClient`, `auth/FirebaseAuthManager`, `presentation/AppViewModel`, `MankeuApp`, `screens/AccountSettingsScreen`, strings ID/EN, `docs/privacy-policy.html`, store listing and Play Console guides, user guide 9.6, tests (`EraseAllDataTest`, `GoogleDriveBackupClientTest`).
+
 ### [DEC-019] Ubah and Hapus Replace "Balik Transaksi"; Reversal Removed Entirely (Schema 11)
 - **Date**: 2026-10-22
 - **Status**: Accepted (owner: "hapus aja keseluruhan pembalikan itu karena memang belum perlu fiturnya"). Implemented; unit, instrumented and screenshot runs green.

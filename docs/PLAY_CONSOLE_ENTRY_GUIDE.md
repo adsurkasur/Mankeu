@@ -36,7 +36,7 @@ Buka menu: **Policy and programs** > **App content** (atau ikuti daftar tugas pa
 * **Jawaban:** Pilih **"No, my app does not contain ads"** *(Tidak, aplikasi saya bebas iklan)*.
 
 ### D. Rating Konten (IARC Content Rating)
-* Masukkan email kontak pengembang: `adsurkasur.dev@gmail.com`
+* Masukkan email kontak pengembang: `adesur@arinahub.com`
 * Kategori aplikasi: **Utility, Productivity, Communication, or Other** *(Utilitas/Produktivitas)*
 * Kuesioner:
   * Kekerasan (Violence): **No**
@@ -62,7 +62,8 @@ Buka menu: **Policy and programs** > **App content** (atau ikuti daftar tugas pa
 ### H. Keamanan Data (Data Safety Form)
 * **Apakah aplikasi mengumpulkan data:** **Yes** *(Hanya untuk metadata login opsional jika mencadangkan ke Google Drive pribadi)*.
 * **Apakah data dienkripsi in-transit:** **Yes** (HTTPS).
-* **Apakah pengguna dapat meminta penghapusan data:** **Yes**.
+* **Apakah pengguna dapat meminta penghapusan data:** **Yes**. Di aplikasi: Pengaturan → **Hapus semua data** (data di HP, dan bila masuk Google juga berkas Mankeu di Drive, akun masuk Firebase, dan izin Drive; DEC-020). Di luar aplikasi: bagian 7 kebijakan privasi.
+* **URL penghapusan akun** (diminta karena masuk Google membuat akun Firebase): `https://adsurkasur.my.id/mankeu/privacy-policy`, bagian 7.
 * **Rincian Data yang Dikumpulkan:**
   * **Personal Info > Name & Email:**
     * Dikumpulkan? **Yes** (Opsional, hanya jika pengguna memilih *Sign in with Google*).
@@ -81,7 +82,7 @@ Buka menu: **Grow** > **Store presence** > **Main store listing**.
 ### A. Pengaturan Toko & Kontak
 * **App category:** **Business** (atau **Finance** / **Productivity**)
 * **Tags (Label):** Bisnis, Finansial, Pembukuan Kas, Usaha Kecil
-* **Email kontak pengembang:** `adsurkasur.dev@gmail.com`
+* **Email kontak pengembang:** `adesur@arinahub.com`
 * **Website:** `https://adsurkasur.my.id`
 
 ### B. Teks Listing Toko

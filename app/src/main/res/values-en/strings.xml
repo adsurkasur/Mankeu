@@ -215,7 +215,7 @@
 
 
 
-    <string name="about_desc">Mankeu is an offline-first financial management and bookkeeping app for micro, small, and medium enterprises (MSMEs). It helps shop owners, food stalls, restaurants, and service providers record transactions, build a projected budget, and calculate break-even (BEP), unit cost (HPP), profit margins, and working capital without an internet connection.</string>
+    <string name="about_desc">Mankeu is an offline cash book and business planner for micro, small and medium businesses: record money in and out, plan the business, find the break-even point (BEP) and the capital needed, and track stock without an internet connection.</string>
     <string name="about_version">Version %s</string>
 
     <!-- Anggaran / Budget -->
@@ -382,9 +382,22 @@
     <string name="settings_contact_btn">Send an email</string>
     <string name="settings_contact_subject">Mankeu feedback %1$s</string>
     <string name="settings_contact_no_app">No email app on this phone. Copy the address manually.</string>
+    <string name="settings_erase_title">Delete all data</string>
+    <string name="settings_erase_desc">Deletes every business, record, plan, stock item and import history on this phone. If you signed in with Google, Mankeu backups on Google Drive can be deleted too. Theme and language stay.</string>
+    <string name="settings_erase_btn">Delete all data…</string>
+    <string name="dialog_erase_title">Delete all data?</string>
+    <string name="dialog_erase_body">Every business, unit, record, business plan, stock item, import history, automatic recovery copy and local name on this phone will be deleted. This cannot be undone. Make a backup first if you still want to keep the data.</string>
+    <string name="dialog_erase_cloud">Also delete every Mankeu backup on Google Drive and the Mankeu sign-in account</string>
+    <string name="dialog_erase_cloud_help">Other files in your Google Drive are not touched. You are signed out of Google in Mankeu afterwards.</string>
+    <string name="dialog_erase_type">Type %1$s (capital letters) to continue</string>
+    <string name="dialog_erase_word">DELETE</string>
+    <string name="action_erase">Delete all</string>
+    <string name="msg_erase_ok">All Mankeu data has been deleted.</string>
+    <string name="msg_erase_ok_account_kept">Data deleted and you are signed out. The Mankeu sign-in account was not deleted because Google asked for a fresh sign-in: sign in again, then repeat Delete all data.</string>
+    <string name="msg_erase_failed">Nothing was deleted. Try again.</string>
 
     <!-- Support mailbox. Not translated: an address is an address. -->
-    <string name="settings_contact_email" translatable="false">support@mankeu.com</string>
+    <string name="settings_contact_email" translatable="false">adesur@arinahub.com</string>
 
     <string name="language_switching">Switching language…</string>
 

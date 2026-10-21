@@ -900,6 +900,38 @@ class AppViewModel(
         message.value = UiText.of(R.string.msg_sign_out_ok)
     }
 
+    /**
+     * "Hapus semua data" (DEC-020). With [driveAccessToken], Drive goes first: if it fails, nothing
+     * on the phone has been touched yet and the owner can retry. Then the Firebase user record, the
+     * database, and the recovery copy. [onErased] clears what the UI layer owns (local name,
+     * Google grant).
+     */
+    fun eraseAllData(driveAccessToken: String?, onErased: () -> Unit) = mutating {
+        cancelPreparedRestore()
+        val result = runCatching {
+            val accountDeleted = if (driveAccessToken != null) {
+                cloudBackupClient.deleteAllAppData(driveAccessToken)
+                authService.deleteAccount()
+            } else {
+                true
+            }
+            repository.eraseAllData()
+            withContext(Dispatchers.IO) { backupManager.deleteLatestRecovery() }
+            accountDeleted
+        }
+        result.fold(
+            onSuccess = { accountDeleted ->
+                driveBackups.value = emptyList()
+                importState.value = ImportUiState.Idle
+                selectedProjectId.value = null
+                selectedBusinessId.value = null
+                onErased()
+                message.value = UiText.of(if (accountDeleted) R.string.msg_erase_ok else R.string.msg_erase_ok_account_kept)
+            },
+            onFailure = { message.value = UiText.fromError(it, R.string.msg_erase_failed) },
+        )
+    }
+
     fun fetchDriveBackups(accessToken: String) = viewModelScope.launch {
         isDriveLoading.value = true
         val result = runCatching {

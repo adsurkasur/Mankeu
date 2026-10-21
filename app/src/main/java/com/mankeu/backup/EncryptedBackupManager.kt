@@ -326,6 +326,11 @@ class EncryptedBackupManager(
 
     fun hasLatestRecovery(): Boolean = recoveryFile.isFile && recoveryFile.length() > 0
 
+    /** Part of "Hapus semua data" (DEC-020): the recovery copy is a full snapshot of the old data. */
+    fun deleteLatestRecovery() {
+        check(!recoveryFile.exists() || recoveryFile.delete()) { "Salinan pemulihan otomatis tidak dapat dihapus." }
+    }
+
     fun readLatestRecovery(): ByteArray {
         check(hasLatestRecovery()) { "Belum ada salinan otomatis sebelum pemulihan." }
         require(recoveryFile.length() <= MAX_RECOVERY_BYTES) { "Salinan pemulihan otomatis melebihi batas aman." }

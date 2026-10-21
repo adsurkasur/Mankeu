@@ -92,6 +92,7 @@ Every rule lives in `FinanceRepository`, inside the same transaction as the writ
 | Record an event | amount > 0; scope, book and category agree | Event + balanced journal |
 | Edit an event (Ubah) | the same checks as recording | Same id, import batch and creation time; journal and postings rebuilt from the corrected values |
 | Delete an event (Hapus) | always | Event, journal and postings removed by cascade |
+| Erase all data (Hapus semua data) | the owner typed HAPUS | Every data table emptied in one transaction with change capture off; sync outbox and state cleared, new device id (DEC-020) |
 | Undo an import batch | the batch is `COMMITTED` | Its events deleted (edited ones included), plan lines archived, products and stock it added removed, the plan period it set cleared if unchanged; the batch row stays, marked undone, and the same file may be imported again (D-076) |
 
 ## Money and quantity

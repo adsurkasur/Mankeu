@@ -55,6 +55,17 @@ class FirebaseAuthManager(
         _currentUser.value = null
     }
 
+    /**
+     * "Hapus semua data" (DEC-020): removes the Firebase user record, then signs out. Firebase may
+     * refuse with "requires recent login"; the caller is then told, and the user is still signed out.
+     * Returns whether the record was deleted (true when there was none).
+     */
+    suspend fun deleteAccount(): Boolean {
+        val deleted = runCatching { auth.currentUser?.delete()?.awaitTask() }.isSuccess
+        signOut()
+        return deleted
+    }
+
     private fun FirebaseUser.toAuthUser(): AuthUser = AuthUser(
         uid = uid,
         email = email,

@@ -13,6 +13,7 @@ sensitivity: internal
 > - Pembalikan transaksi ("Balik", jurnal pembalik, tampilan DIBALIK; D-042 sebagian, D-077, D-078, D-086, bagian pembalikan D-084 dan D-087) dihapus oleh **DEC-019** (Ubah dan Hapus). D-076 (impor ulang setelah dibatalkan) tetap berlaku.
 > - Pembacaan workbook referensi, pencocokan semantik, dan pengayaan otomatis digantikan oleh **DEC-012** (hanya templat Mankeu).
 > - Kalkulator asumsi kelayakan (`scenario_assumptions`) digantikan oleh rencana usaha **DEC-014**.
+> - Alamat dukungan D-032 (`support@mankeu.com`) diganti `adesur@arinahub.com` atas permintaan pemilik (2026-10-22).
 
 ## Accepted decisions
 

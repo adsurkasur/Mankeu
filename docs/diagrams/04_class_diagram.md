@@ -139,6 +139,7 @@ classDiagram
         +reviewImport(businessId, projectId, preview) ImportReview
         +commitImport(businessId, projectId, preview) Int
         +undoImportBatch(batchId) ImportUndo
+        +eraseAllData()
         +eventsForBook(bookId) Flow
         +cashFlowRecords(bookId) Flow
         +accountingSummary(bookId) Flow
@@ -171,6 +172,7 @@ classDiagram
         +create(password) ByteArray
         +prepareRestore(envelope, password) PreparedRestore
         +restore(prepared, recoveryPassword) RestoreResult
+        +deleteLatestRecovery()
     }
     class SyncEngine {
         +collectLocalChanges() LocalChanges
@@ -188,6 +190,7 @@ classDiagram
         +recordStockMovement(itemId, type, quantity, notes)
         +commitImport()
         +undoImportBatch(id)
+        +eraseAllData(driveAccessToken, onErased)
         -mutating(block) Job
     }
     class AppUiState {

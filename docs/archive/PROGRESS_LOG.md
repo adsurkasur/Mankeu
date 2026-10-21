@@ -185,9 +185,9 @@ Executed `.\gradlew.bat testDebugUnitTest`:
 - **Build:** `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL in 5s`.
 - **On-Device ADB Testing (`emulator-5554`):**
   - App installed & launched smoothly with zero runtime errors in Logcat.
-  - Verified `BackupDialog` rendering Local Cadangan & Google Drive sections (`docs/evidence/firebase_backup_dialog.png`).
-  - Verified `SettingsScreen` rendering unauthenticated offline-first account card (`docs/evidence/firebase_auth_settings_screen.png`).
-  - Verified "Masuk dengan Google" action launching Google Play Services sign-in system prompt (`docs/evidence/firebase_google_signin_prompt.png`).
+  - Verified `BackupDialog` rendering Local Cadangan & Google Drive sections (`docs/archive/evidence/firebase_backup_dialog.png`).
+  - Verified `SettingsScreen` rendering unauthenticated offline-first account card (`docs/archive/evidence/firebase_auth_settings_screen.png`).
+  - Verified "Masuk dengan Google" action launching Google Play Services sign-in system prompt (`docs/archive/evidence/firebase_google_signin_prompt.png`).
 
 ---
 
@@ -224,14 +224,14 @@ Executed `.\gradlew.bat testDebugUnitTest`:
 - **Automated Tests:** `.\gradlew.bat testDebugUnitTest` -> **`BUILD SUCCESSFUL` (41/41 unit tests passing)** including `GoldenWorkbookImportTest` and `GoldenWorkbookEndToEndTest`.
 - **On-Device ADB Testing (`emulator-5554`):**
   - Pushed `CATATAN KEUANGAN PADI 1 Ha ADE.xlsx` to `/sdcard/Download/test_padi.xlsx`.
-  - Opened "Berkas dan Data" and launched document picker (`docs/evidence/import_doc_picker.png`).
-  - Selected `test_padi.xlsx` and verified preview populated with 38 rows and 1 deterministic enrichment (`docs/evidence/import_preview_ready.png`).
-  - Tapped "Setujui dan impor 38 baris" -> transitioned cleanly to `ImportUiState.Committed` ("Impor selesai: 38 baris, 1 dipulihkan otomatis", `docs/evidence/import_committed_success.png`).
-  - Returned to Home screen (`docs/evidence/import_home_with_data.png`) and verified:
+  - Opened "Berkas dan Data" and launched document picker (`docs/archive/evidence/import_doc_picker.png`).
+  - Selected `test_padi.xlsx` and verified preview populated with 38 rows and 1 deterministic enrichment (`docs/archive/evidence/import_preview_ready.png`).
+  - Tapped "Setujui dan impor 38 baris" -> transitioned cleanly to `ImportUiState.Committed` ("Impor selesai: 38 baris, 1 dipulihkan otomatis", `docs/archive/evidence/import_committed_success.png`).
+  - Returned to Home screen (`docs/archive/evidence/import_home_with_data.png`) and verified:
     - Auto-provisioned Usaha ("test_padi") & Lahan ("Lahan Utama").
     - Kas Realisasi: Rp23.341.000 (Rp45.500.000 income - Rp22.159.000 expense).
     - Expense breakdown chart fully populated with 9 categories.
-  - Verified Laporan screen (`docs/evidence/import_laporan_screen.png`) with operational income and profit/loss.
+  - Verified Laporan screen (`docs/archive/evidence/import_laporan_screen.png`) with operational income and profit/loss.
   - Verified Logcat `adb logcat -d *:E` clean with 0 app runtime errors.
 
 ---

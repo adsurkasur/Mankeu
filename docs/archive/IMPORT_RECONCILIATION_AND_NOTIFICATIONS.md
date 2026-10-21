@@ -5,7 +5,7 @@ audience: human-and-ai
 sensitivity: internal
 evidence_basis:
   - owner-confirmed enrichment-notification requirement dated 2026-08-15
-  - docs/REFERENCE_WORKBOOK_CONTRACT.md
+  - docs/archive/REFERENCE_WORKBOOK_CONTRACT.md
 ---
 
 > **Status: superseded (2026-10-20, DEC-012).** Mankeu now imports only its own Excel template; see `docs/audit/2026-10-20_RENCANA_PERBAIKAN.md` F-01. Kept as historical research evidence.

@@ -27,7 +27,7 @@ Aplikasi ini ditargetkan final hari ini. Kode dasar telah diaudit secara menyelu
      - R/C Ratio = Total Revenue / Total Cost (ambang batas >= 1.0)
      - B/C Ratio = Net Profit / Total Cost (ambang batas >= 0.0)
   4. Navigasi: Tepat 3 Tab utama (Beranda, Catatan, Laporan). Tab Riwayat telah dihapus.
-  5. Kerapian Root: File simulasi berada di docs/evidence/verification-workbook/simulasi_kelayakan_umkm_verifikasi.xlsx.
+  5. Kerapian Root: File simulasi berada di docs/archive/evidence/verification-workbook/simulasi_kelayakan_umkm_verifikasi.xlsx.
 
 ================================================================================
 2. DOKUMEN RUJUKAN UTAMA

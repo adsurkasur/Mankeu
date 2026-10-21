@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 16:10] [Claude Code (Opus 5.5) — Chore: dokumen basi dipindah ke docs/archive]
+- **Goal**: Owner: restructure the stale documents and tidy up.
+- **Actions**: `git mv` of every historical document into `docs/archive/` (4 root reports, the old root CHANGELOG as `CHANGELOG_until-2026-09.md`, 10 superseded `docs/*.md`, `agent_sessions/`, 53 old evidence images/PDF and the legacy verification workbook under `archive/evidence/`). Path mentions fixed in the archive, the audit plan, the BEP design doc, `BusinessPlanTest`, the strings.xml header comment, `EVIDENCE_INDEX`, `QUALITY_GATES` and `AGENTS.md` (import work now points to DEC-012 and `MankeuTemplate`). New `docs/README.md` (map of current docs), `docs/archive/README.md` (what is archived and why), README "Dokumentasi" section, and `scripts/check_doc_links.py` (fails on a Markdown link to a missing file).
+- **Files**: moved files above, `docs/README.md`, `docs/archive/README.md`, `scripts/check_doc_links.py`, README.md, AGENTS.md, docs/EVIDENCE_INDEX.md, docs/QUALITY_GATES.md, docs/audit/2026-10-20_RENCANA_PERBAIKAN.md, docs/design/2026-10-20_RENCANA_USAHA_DAN_BEP.md, app/src/main/res/values/strings.xml (comment), app/src/test/.../BusinessPlanTest.kt (comment), logs.
+- **Verification**: `py -I scripts/check_doc_links.py` → 66 Markdown files, 0 broken links; `git grep` finds no remaining path to a moved file outside the archive. Only comments changed in code.
+
 ### [2026-10-22 15:30] [Claude Code (Opus 5.5) — Pembersihan menyeluruh dokumen dan komentar yang basi]
 - **Goal**: Owner: "total cleanup ... yang stale semua dibersihkan" so that docs and code describe the app as it is on schema 11.
 - **Actions**:

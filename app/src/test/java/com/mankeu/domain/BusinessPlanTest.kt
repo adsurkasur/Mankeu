@@ -8,7 +8,7 @@ import org.junit.Test
 import java.math.BigDecimal
 import java.time.YearMonth
 
-/** DEC-014 plan & actual BEP, pinned to the lecturer's benchmark (`paket_audit_agentic_ai_mankeu.md`). */
+/** DEC-014 plan & actual BEP, pinned to the lecturer's benchmark (`docs/archive/paket_audit_agentic_ai_mankeu.md`). */
 class BusinessPlanTest {
     private val month = YearMonth.of(2026, 11)
     private val kopi = PlanProduct(

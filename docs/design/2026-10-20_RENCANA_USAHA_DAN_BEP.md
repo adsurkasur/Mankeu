@@ -2,7 +2,7 @@
 
 > **Status**: disetujui pemilik (brainstorm 20 Okt 2026, `[DEC-014]`). R-1…R-6 diimplementasikan dan diuji 21 Okt 2026 (lihat §8); dasar BEP dan kebutuhan modal disempurnakan di DEC-016.
 > **Menggantikan** F-06 (metode BEP) dan F-11 (editor RAB) di `docs/audit/2026-10-20_RENCANA_PERBAIKAN.md`, serta bagian rencana dari F-04.
-> **Rujukan akademik**: `paket_audit_agentic_ai_mankeu.md` (benchmark Kedai Kopi: BEP 400 cup / Rp4.000.000, R/C 1,27, B/C 0,27).
+> **Rujukan akademik**: `docs/archive/paket_audit_agentic_ai_mankeu.md` (benchmark Kedai Kopi: BEP 400 cup / Rp4.000.000, R/C 1,27, B/C 0,27).
 
 ## 1. Masalah
 

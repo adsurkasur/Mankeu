@@ -108,6 +108,12 @@ Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Andro
 
 ---
 
+## 📚 Dokumentasi
+
+Peta seluruh dokumen ada di [`docs/README.md`](docs/README.md). Panduan untuk pemilik usaha: [`docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`](docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md). Keputusan produk dan teknis: [`logs/DECISION_LOG.md`](logs/DECISION_LOG.md).
+
+---
+
 ## 💻 Membangun & Menjalankan Proyek (Build Guide)
 
 ### Prasyarat

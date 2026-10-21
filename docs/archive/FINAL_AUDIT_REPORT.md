@@ -96,7 +96,7 @@ Setiap perubahan di bawah ini telah terverifikasi (*verified*) secara langsung p
 5. **Infrastruktur Emulator Interaktif**:
    - Script `run_emulator.bat` dikonfigurasi menggunakan Windows Task Scheduler (`schtasks /it`) agar emulator Android selalu muncul interaktif di desktop pengguna (bukan headless di background).
 6. **Kerapian Direktori Repositori**:
-   - File simulasi verifikasi `simulasi_kelayakan_umkm_verifikasi.xlsx` yang sebelumnya berserak di root telah dipindahkan ke direktori semestinya (`docs/evidence/verification-workbook/`), dengan penyesuaian otomatis pada `VerificationWorkbookTest.kt` dan `scripts/generate_verification_workbook.py` sehingga seluruh unit test tetap lolos 100%.
+   - File simulasi verifikasi `simulasi_kelayakan_umkm_verifikasi.xlsx` yang sebelumnya berserak di root telah dipindahkan ke direktori semestinya (`docs/archive/evidence/verification-workbook/`), dengan penyesuaian otomatis pada `VerificationWorkbookTest.kt` dan `scripts/generate_verification_workbook.py` sehingga seluruh unit test tetap lolos 100%.
 
 ---
 
@@ -195,7 +195,7 @@ Meskipun fondasi di atas sudah teruji, audit menyeluruh menemukan celah fungsion
 | **Unit Test Suite** | ✅ Lolos 100% | Verified | 34 tasks lolos di `./gradlew testDebugUnitTest`. |
 | **AndroidTest Suite** | ❌ **Gagal Build** | **Gap Kritis** | `LedgerIntegrityTest.kt` gagal kompilasi karena referensi method utang/piutang yang telah dihapus. |
 | **Lokalisasi (Strings)** | ⚠️ Minor Defect | Verified | Kunci `reports_rc_ratio` belum ada di `values-en/strings.xml`. |
-| **Kerapian Root Direktori** | ✅ Bersih | Verified | `simulasi_kelayakan_umkm_verifikasi.xlsx` dipindahkan ke `docs/evidence/verification-workbook/`. |
+| **Kerapian Root Direktori** | ✅ Bersih | Verified | `simulasi_kelayakan_umkm_verifikasi.xlsx` dipindahkan ke `docs/archive/evidence/verification-workbook/`. |
 | **Dokumentasi `docs/`** | ⚠️ Belum Sinkron | Perlu Update | Dokumen di `docs/` masih mencatat Skema 5 (v0.0.6), belum mencatat Skema 7 & Pure Cash. |
 
 ---

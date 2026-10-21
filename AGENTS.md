@@ -34,7 +34,7 @@ These rules apply to every future code, documentation, test, migration, import, 
 ## Start here
 
 1. Read `README.md`, `docs/PROJECT_GUIDE.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/DOMAIN_MODEL.md`, and `docs/QUALITY_GATES.md`.
-2. For import work, also read `docs/REFERENCE_WORKBOOK_CONTRACT.md` and `docs/IMPORT_RECONCILIATION_AND_NOTIFICATIONS.md`.
+2. For import or export work, also read DEC-012 in `logs/DECISION_LOG.md` and the `MankeuTemplate` contract in `app/src/main/java/com/mankeu/importer/ImportModels.kt`. Superseded import docs are in `docs/archive/`.
 3. Inspect the current Git status and preserve unrelated changes.
 4. Classify every important statement as `verified`, `user-confirmed`, `inferred`, `proposed`, or `unknown`.
 

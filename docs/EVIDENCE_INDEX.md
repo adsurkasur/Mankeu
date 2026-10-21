@@ -29,7 +29,7 @@ sensitivity: internal
 | Submission discipline | `../jurnal_sus_test_arina_agri/SUBMISSION_GUIDE.md` | Mobile request is not proof of solution effectiveness | Publication guide, not product validation |
 | Owner decisions | [D-log](DECISION_LOG.md) (D-001 to D-087) and [`logs/DECISION_LOG.md`](../logs/DECISION_LOG.md) (DEC-001 on) | Scope, local-first, multi-business/unit, strict cash, template import, business plan, edit/delete | Product authority; DEC entries state implementation status |
 
-The former reference workbook identity is kept in [Reference Workbook Contract](REFERENCE_WORKBOOK_CONTRACT.md) (historical). Record future fixtures by hash, version, sensitivity, and permitted storage location.
+The former reference workbook identity is kept in [Reference Workbook Contract](archive/REFERENCE_WORKBOOK_CONTRACT.md) (historical). Record future fixtures by hash, version, sensitivity, and permitted storage location.
 
 ## Official technical evidence
 

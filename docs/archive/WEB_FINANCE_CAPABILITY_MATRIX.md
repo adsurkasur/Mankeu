@@ -7,7 +7,7 @@ evidence_basis:
   - owner-confirmed scope and accounting decisions dated 2026-08-15
   - ../arina-agri source and tests at commit 949a9da26a1f35f5579ab0a8c7692197f01aabe1
   - ../arina-agri/AUDIT_REVISI_MANAJEMEN_KEUANGAN.md
-  - docs/REFERENCE_WORKBOOK_CONTRACT.md
+  - docs/archive/REFERENCE_WORKBOOK_CONTRACT.md
 ---
 
 # Web Finance Capability Matrix

@@ -54,7 +54,7 @@ The Mankeu template is the only import format (DEC-012). `TemplateImportTest` an
 - older template versions with optional columns absent still import;
 - commit is atomic, a duplicate file shows a warning, and undo deletes exactly the batch's records.
 
-The earlier reference-workbook golden fixture is kept only as history in `docs/evidence/verification-workbook/legacy-reference-format/`.
+The earlier reference-workbook golden fixture is kept only as history in `docs/archive/evidence/verification-workbook-legacy/`.
 
 ### Persistence and migration tests
 

@@ -4,7 +4,7 @@
       Wording rule for this app: use the vocabulary the owner's own reference workbook uses
       ("CATATAN KEUANGAN PADI 1 Ha ADE.xlsx" — Pemasukan/Pengeluaran/Laba-Rugi/Arus Kas),
       never English accounting jargon (revenue/expense/equity/asset/liability). See
-      docs/IMPLEMENTATION_PROGRESS.md for the terminology decision.
+      docs/archive/IMPLEMENTATION_PROGRESS.md for the terminology decision.
     -->
     <string name="app_name">Mankeu</string>
     <string name="app_title">Mankeu</string>

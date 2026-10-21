@@ -89,7 +89,7 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - The ledger now has keyword and cash-direction filters. Budget items can be edited or archived. Active businesses/projects can be renamed, and category/unit master data can be added or archived from the app. These management surfaces likewise await the current final UI smoke test.
 - The Android Gradle Plugin is intentionally left at `8.13.2` with Gradle `8.13`; no upgrade or daemon-toolchain migration is part of this product finalization unless a verified build requirement emerges.
 - Android Studio must use a compatible JDK such as its bundled JVM 21, not JVM 25, for the current Gradle baseline.
-- The audited web capability set and native treatment are recorded in `docs/WEB_FINANCE_CAPABILITY_MATRIX.md`. It includes projects, projection/realization, budget/RAB, ledger CRUD/batch/master data, budget links, grouped income statement, cash flow, financing, feasibility, comparison, Excel, PDF, and legacy migration evidence.
+- The audited web capability set and native treatment are recorded in `docs/archive/WEB_FINANCE_CAPABILITY_MATRIX.md`. It includes projects, projection/realization, budget/RAB, ledger CRUD/batch/master data, budget links, grouped income statement, cash flow, financing, feasibility, comparison, Excel, PDF, and legacy migration evidence.
 - The native visual source of truth is explicit: warm off-white `#FAFAF8`, white surfaces, Arina green `#2D6A4F`, deep green `#1B4332`, pale green `#D8F3DC`, terracotta `#E07A5F`, charcoal `#2C2A29`, 24 dp major cards, and 8–16 dp control/panel radii.
 - `docs/V1_IMPLEMENTATION_SPEC.md` freezes the native information architecture, canonical records, accrual/cash journal policy, report contract, generic Excel stages/sheets, encrypted backup contract, and completion criteria before schema changes.
 - Room schema 2 now contains businesses, projects, projection/realization books, units, stable-role categories, budget items, expanded financial events, journals/postings, obligations/settlements, scenario assumptions, import/audit records, and saved mappings.
@@ -99,14 +99,14 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 
 ## Files changed in the active session
 
-- `docs/IMPLEMENTATION_PROGRESS.md` — created as this interruption-safe checkpoint.
+- `docs/archive/IMPLEMENTATION_PROGRESS.md` — created as this interruption-safe checkpoint.
 - `README.md` — adds this checkpoint as the first document in the reading order.
 - `.gitignore` — anchors the local runtime-data exclusion so it no longer hides a Kotlin `data` source package.
 - `app/src/main/java/com/example/arinaagri/calculator/data/AppDatabase.kt` — previously local-only Room database definition, now brought under version control.
 - `app/src/main/java/com/example/arinaagri/calculator/data/Entities.kt` — previously local-only Room entities, now brought under version control.
 - `app/src/main/java/com/example/arinaagri/calculator/data/FinanceDao.kt` — previously local-only DAO, now brought under version control.
 - `app/src/main/java/com/example/arinaagri/calculator/data/FinanceRepository.kt` — previously local-only repository, now brought under version control.
-- `docs/WEB_FINANCE_CAPABILITY_MATRIX.md` — evidence-backed inventory and native treatment for every audited web-finance capability.
+- `docs/archive/WEB_FINANCE_CAPABILITY_MATRIX.md` — evidence-backed inventory and native treatment for every audited web-finance capability.
 - `docs/V1_IMPLEMENTATION_SPEC.md` — implementation contract for domain, UX, Excel, backup, privacy, and acceptance.
 - `app/src/main/java/com/example/arinaagri/calculator/domain/*` — expanded accrual/cash event model, journal/reversal policy, obligation status, and posting-derived report engine.
 - `app/src/main/java/com/example/arinaagri/calculator/data/*` — Room schema 2, DAO projections, scope-safe repository, budget, AR/AP, settlement, reversal, and audit persistence.
@@ -117,15 +117,15 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - `app/src/main/java/com/example/arinaagri/calculator/presentation/AppViewModel.kt` — explicit business/project/book state plus budget, event, obligation, report, assumptions, reversal, and import orchestration.
 - `app/src/main/java/com/example/arinaagri/calculator/data/FinanceRepository.kt` — UI-facing obligation/assumption operations plus source-role-preserving reversal classification.
 - `app/src/test/java/com/example/arinaagri/calculator/domain/PostingReportCalculatorTest.kt` — cash-flow reversal regression added after the API 30 runtime exercise.
-- `docs/evidence/v2-phone-api30-home.png` and `docs/evidence/v2-tablet-api30-home.png` — runtime visual evidence from fresh Android 11 compatibility devices.
+- `docs/archive/evidence/v2-phone-api30-home.png` and `docs/archive/evidence/v2-tablet-api30-home.png` — runtime visual evidence from fresh Android 11 compatibility devices.
 - `app/src/main/java/com/example/arinaagri/calculator/exporter/*` — dependency-free OOXML writer and finance workbook composition.
 - `app/src/main/java/com/example/arinaagri/calculator/backup/EncryptedBackupManager.kt` — bounded portable snapshot codec, authenticated password encryption, capture, and atomic restore.
 - `app/src/test/java/com/example/arinaagri/calculator/exporter/*`, `backup/*`, and `importer/GenericWorkbookImportTest.kt` — workbook readability, generic/canonical import, encryption, tamper, and wrong-password regressions.
 - `app/src/main/java/com/example/arinaagri/calculator/domain/BusinessAnalysis.kt` — deterministic financing, feasibility, and filled-month cash-flow calculations with explicit unavailable states.
 - `app/src/test/java/com/example/arinaagri/calculator/domain/BusinessAnalysisTest.kt` — financing/feasibility and monthly-period regressions.
 - `app/src/main/java/com/example/arinaagri/calculator/presentation/ArinaCalculatorApp.kt` — adds report tabs, ledger search/filter, budget editing, master-data maintenance, rename actions, Excel actions, encrypted-backup actions, and import-batch history/reversal controls.
-- `docs/evidence/v1-tablet-api30-*.png` — gated runtime evidence for financing, feasibility, ledger search, budget editing, and the expanded management screen.
-- `docs/evidence/v1-tablet-api30-restore-preview.png` — verified, pre-mutation restore summary on Android 11.
+- `docs/archive/evidence/v1-tablet-api30-*.png` — gated runtime evidence for financing, feasibility, ledger search, budget editing, and the expanded management screen.
+- `docs/archive/evidence/v1-tablet-api30-restore-preview.png` — verified, pre-mutation restore summary on Android 11.
 - `app/src/main/java/com/example/arinaagri/calculator/presentation/Theme.kt` — rewritten: web-aligned `ArinaWebPalette`, `ArinaSemanticColors`/`LocalArinaSemanticColors` for success/danger/warning tones.
 - `app/src/main/java/com/example/arinaagri/calculator/presentation/Formatting.kt` — new; `toRupiah()`/`toDisplayDate()` extensions and `IndonesianLocale`, extracted so every screen file shares one definition.
 - `app/src/main/java/com/example/arinaagri/calculator/presentation/components/SharedComponents.kt` — new; cross-screen composables (`NoticeCard`, `EmptyCard`, `SectionTitle`, `EventCard`, `ReportCard`, `ReportRow`, `ComparisonRow`, `SimpleMetricGrid`/`SimpleMetricCard`/`MetricTone`/`SimpleMetric`).
@@ -166,8 +166,8 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 
 - Replaced the technical MVP screens with the frozen five-destination information architecture and exact documented Arina color/shape tokens.
 - Built and installed the debug application on both newly created Android 11/API 30 AVDs.
-- Phone evidence: `docs/evidence/v2-phone-api30-home.png`, 1080 x 2400 at density 420.
-- Tablet evidence: `docs/evidence/v2-tablet-api30-home.png`, 2560 x 1600 at density 320; visual review confirms navigation rail and two-column adaptive layout rather than a stretched phone surface.
+- Phone evidence: `docs/archive/evidence/v2-phone-api30-home.png`, 1080 x 2400 at density 420.
+- Tablet evidence: `docs/archive/evidence/v2-tablet-api30-home.png`, 2560 x 1600 at density 320; visual review confirms navigation rail and two-column adaptive layout rather than a stretched phone surface.
 - The fresh phone opened Android Settings without the legacy AVD's System UI fatal-stop pattern.
 - First complete post-UI command `gradlew.bat testDebugUnitTest lintDebug assembleDebug --stacktrace`: **BUILD SUCCESSFUL in 35s**; 58 tasks, 17 executed and 41 up-to-date; **14 tests, 0 failures/errors, 0 skipped** across six suites. APK size: 19,776,115 bytes.
 - Tablet workflow exercise created a Rp150,000 cash sale, a Rp200,000 credit sale, and a Rp75,000 partial collection. Observed states were correct before reversal: cash Rp225,000, profit Rp350,000, receivable Rp125,000. Revenue was not duplicated by collection.
@@ -203,7 +203,7 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - Added a Rp2,000,000 realization budget item (`PompaUji`, 2 buah × Rp1,000,000), opened its edit dialog with all source values prefilled, renamed it to `PompaUjiEdit`, and observed the update confirmation and unchanged exact total.
 - Added temporary category `UjiKategori`, observed the active count increase, then archived it and observed it disappear while the active count returned to eight. This validates add/archive without touching built-in master data.
 - Force-stop/cold restart retained `PompaUjiEdit` and Rp2,000,000. The Android crash buffer was empty after the complete exercise.
-- Runtime evidence: `v1-tablet-api30-financing.png`, `v1-tablet-api30-feasibility.png`, `v1-tablet-api30-ledger-search.png`, `v1-tablet-api30-budget-edit.png`, and `v1-tablet-api30-more.png` under `docs/evidence/`.
+- Runtime evidence: `v1-tablet-api30-financing.png`, `v1-tablet-api30-feasibility.png`, `v1-tablet-api30-ledger-search.png`, `v1-tablet-api30-budget-edit.png`, and `v1-tablet-api30-more.png` under `docs/archive/evidence/`.
 - The latest report/management additions have therefore passed both code and API 30 tablet gates. Remaining matrix gaps are still listed honestly under Risks and unknowns.
 
 ### 2026-08-15 offline PDF follow-up (completed)
@@ -216,7 +216,7 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - The second render confirmed correct geometry with `pdfplumber`, but its text extraction represented bullet separators as replacement glyphs. All PDF-only separators are now ASCII hyphens/pipes to improve search, copy/paste, and compatibility with older readers; a final device export/render remains required.
 - The third device export is the accepted visual: 372,776 bytes, two A4 pages, PDF 1.4, with no JavaScript, forms, or encryption. Both pages were rendered at 120 dpi and page 2 was rechecked at 240 dpi. Headings, aligned amounts, pagination, dividers, Indonesian transaction labels, footers, and long audit copy are legible with no clipping/overlap.
 - `pdfplumber` extraction contains zero replacement glyphs and confirms `Realisasi`, `Rp350.000`, `Penjualan kredit`, `Piutang - PakBudi`, and `Halaman 2 | laporan lokal` as searchable text.
-- Accepted device artifact and first-page render are tracked as `docs/evidence/v1-tablet-api30-offline-report.pdf` and `docs/evidence/v1-tablet-api30-offline-report-page1.png`.
+- Accepted device artifact and first-page render are tracked as `docs/archive/evidence/v1-tablet-api30-offline-report.pdf` and `docs/archive/evidence/v1-tablet-api30-offline-report-page1.png`.
 - Final quality command `gradlew.bat testDebugUnitTest lintDebug assembleDebug --stacktrace`: **BUILD SUCCESSFUL in 42s**; 58 tasks, 12 executed and 46 up-to-date. The existing ten suites remain **23 tests, 0 failures/errors, 0 skipped**. Offline PDF is ready for checkpoint commit/push.
 
 ### 2026-08-15 restore preview and recovery-copy hardening (device accepted; final gate pending)
@@ -230,7 +230,7 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - The backup dialog then exposed an enabled recovery-export action. Android SAF exported `arina-sebelum-pemulihan-2026-08-15.aabk` at the same 14,126 bytes; a host-side verification copy is retained at `E:\Android\temp\arina-recovery-export.aabk`.
 - Trying that recovery with `WrongPass2026` was rejected during preparation with the authenticated-decryption error. No preview appeared and cash/profit/receivable remained Rp150,000/Rp350,000/Rp200,000.
 - Preparing the same recovery with the correct password showed 16 tables, 62 rows, two projects, one budget item, and eight transactions. Confirming restored `PompaUjiEdit` and Rp2,000,000 exactly. Android's crash buffer remained empty through both restore cycles.
-- Device evidence is tracked at `docs/evidence/v1-tablet-api30-restore-preview.png`. A final complete unit/lint/build gate remains before commit/push.
+- Device evidence is tracked at `docs/archive/evidence/v1-tablet-api30-restore-preview.png`. A final complete unit/lint/build gate remains before commit/push.
 - The implementation currently awaits compilation, lint, a real Android SAF export, and independent PDF inspection. It is not yet part of the latest verified checkpoint `2af4a9d`.
 
 ## Risks and unknowns
@@ -268,7 +268,7 @@ Latest verified implementation checkpoints, both pushed to private `origin/main`
 - This review is evidence of "no obvious defect found by inspection," not evidence of "compiles cleanly." Kotlin/Compose generic-type inference, missing `@Composable` context propagation, and Material3 API signature drift between versions are all classes of error a manual read will not reliably catch. A real `gradlew` run remains required before this checkpoint can be called verified.
 - **Network update:** the owner enabled "Allow network egress" with domain allowlist set to "All domains" in Cowork capability settings (Settings → Capabilities → Code execution and file creation) partway through this session. This was not yet re-tested before the session was paused. The next session's first action should be to confirm `dl.google.com`/`maven.google.com`/`services.gradle.org`/`repo1.maven.org` are now reachable, then proceed with the Android SDK setup that was previously blocked.
 - A scratch workspace was prepared for this purpose: `.claude-workspace/` at the root of the parent `Managed Projects` repository (sibling to `Arina/`, `ARSC/`, etc.), containing empty `android-sdk/` and `gradle-home/` subfolders. It is listed in the parent repository's `.gitignore` (`.claude-workspace/`) so it can never be accidentally committed. It is safe to delete and regenerate at any time; nothing of record lives there.
-- Current uncommitted state in this repository (`git status --short`): modified `ArinaCalculatorApplication.kt`, `EncryptedBackupManager.kt`, `AppViewModel.kt`, `ArinaCalculatorApp.kt`, `Theme.kt`, `EncryptedBackupCodecTest.kt`, `docs/IMPLEMENTATION_PROGRESS.md`, `gradlew.bat`; new untracked `Formatting.kt`, `presentation/components/`, `presentation/screens/`, and `docs/evidence/v1-tablet-api30-restore-preview.png`. Nothing has been committed since the last pushed checkpoint (`6d4c8c6`, restore-preview hardening still pending its own gate — see the prior "restore preview and recovery-copy hardening" entry above, which was already pending before this session's presentation refactor started). Do not assume these two pending changesets are the same work; both are real and both are awaiting the same build gate.
+- Current uncommitted state in this repository (`git status --short`): modified `ArinaCalculatorApplication.kt`, `EncryptedBackupManager.kt`, `AppViewModel.kt`, `ArinaCalculatorApp.kt`, `Theme.kt`, `EncryptedBackupCodecTest.kt`, `docs/archive/IMPLEMENTATION_PROGRESS.md`, `gradlew.bat`; new untracked `Formatting.kt`, `presentation/components/`, `presentation/screens/`, and `docs/archive/evidence/v1-tablet-api30-restore-preview.png`. Nothing has been committed since the last pushed checkpoint (`6d4c8c6`, restore-preview hardening still pending its own gate — see the prior "restore preview and recovery-copy hardening" entry above, which was already pending before this session's presentation refactor started). Do not assume these two pending changesets are the same work; both are real and both are awaiting the same build gate.
 - A stray `index.lock` file was observed under the parent repository's `.git/modules/Arina/arina-agri-calculator/` during a `git status` call in this sandbox, with an "Operation not permitted" unlink warning. This did not block the status read and no git write was attempted in this session, but if a future session's git command hangs or fails claiming the index is locked, check for and manually remove that stale lock file first.
 
 ### 2026-08-15 real build gate achieved for the presentation-layer refactor (code/test/lint green; device/visual check still owner-only)
@@ -504,7 +504,7 @@ Known gaps left open on purpose:
 
 ## Round 6 — one seed, one colour system (2026-08-28)
 
-- The palette is generated, not transcribed: `docs/evidence/theme/generate_palette.py` runs Material
+- The palette is generated, not transcribed: `docs/archive/evidence/theme/generate_palette.py` runs Material
   Color Utilities over the brand green and prints both the Kotlin tokens and the WCAG audit. 96
   pairs measured, 0 failures. D-028.
 - Money roles (income, expense, plan) and the six chart hues are harmonised toward the seed rather

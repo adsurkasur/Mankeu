@@ -219,7 +219,7 @@ putaran lanjutan; lihat D-020 dan D-021.
 - Seluruh palet kini dihasilkan dari satu warna benih — hijau merek `#2D6A4F` — oleh algoritma
   Material 3 (Material Color Utilities, `SchemeTonalSpot`, spesifikasi 2021), bukan disalin tangan
   dari tema MUI web lalu ditambal token per token (D-028). Skrip pembangkit sekaligus pengaudit
-  kontras ada di `docs/evidence/theme/generate_palette.py`; 96 pasangan yang benar-benar digambar
+  kontras ada di `docs/archive/evidence/theme/generate_palette.py`; 96 pasangan yang benar-benar digambar
   aplikasi diukur, seluruhnya lolos.
 - Peran lengkap kedua tema dihasilkan: primary/secondary/tertiary/error beserta pasangan `on`,
   container dan `on…Container`; background dan surface; `surfaceVariant`, `surfaceDim`,

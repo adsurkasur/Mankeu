@@ -8,7 +8,7 @@
 
 | Fix | Status | Catatan |
 |---|---|---|
-| F-01 Template tunggal | ✅ selesai | Importer hanya baca template; ekspor = template terisi (+ lembar Laporan/Kelayakan); tolak + unduh template; impor ke unit terpilih; duplikat boleh dengan peringatan. Workbook bukti lama dipindah ke `docs/evidence/verification-workbook/legacy-reference-format/`; studi kasus baru dalam format template **belum** dibuat. |
+| F-01 Template tunggal | ✅ selesai | Importer hanya baca template; ekspor = template terisi (+ lembar Laporan/Kelayakan); tolak + unduh template; impor ke unit terpilih; duplikat boleh dengan peringatan. Workbook bukti lama dipindah ke `docs/archive/evidence/verification-workbook-legacy/`; studi kasus baru dalam format template **belum** dibuat. |
 | F-02 Migrasi 7→8 | ✅ selesai | Termasuk tabel & trigger sync (DEC-013) dan `stock_items.importBatchId`. Diuji `MigrationTest` dan pada data emulator nyata. |
 | F-03 Hapus konsep non-kas | ✅ selesai | Sisa: string tak terpakai (masuk F-25). |
 | F-08 Validasi impor | ✅ selesai | Identitas usaha dari nama file dihapus. Lembar `Parameter BEP` diganti `Produk` + `Resep Produk` (template v3); resep yang menyebut produk di luar berkas, sifat biaya, berulang, dan umur pakai yang salah ditolak per sel. |
@@ -74,7 +74,7 @@ Fase 1 harus selesai dulu: semua fase berikutnya menganggap tipe non-kas sudah t
 
 **Dihapus (K-8)**: dukungan workbook referensi 5 lembar dan semua penebakan: `parseRabBudget`, `parseDailyLedger`, `recognizeRoles`, `parseAssumptions`, `parseGenericBudget`, `findDeterministicEnrichments`, `inferMonthFromRow`, `inferYear`, `aggregationCompatible`, pemetaan kata non-kas di `ImportModels.kt:63-80`, `SemanticMatcher.kt`, `CategoryClassifier.kt` (bila tidak dipakai di luar impor), dan `MsmeTemplateExporter.kt` (template kini = `FinanceWorkbookExporter.template()`). Perkiraan: importer ±900 → ±250 baris, ±300 baris lain hilang.
 
-**Dokumen yang harus ikut diperbarui**: `AGENTS.md` bagian *Import and enrichment rules* (sudah diperbarui 20 Okt), `docs/REFERENCE_WORKBOOK_CONTRACT.md`, `docs/IMPORT_RECONCILIATION_AND_NOTIFICATIONS.md`, dan `docs/SEMANTIC_MATCHING.md` diberi status *superseded*. Workbook bukti `docs/evidence/verification-workbook/` dibuat ulang dalam format template (`scripts/generate_verification_workbook.py`).
+**Dokumen yang harus ikut diperbarui**: `AGENTS.md` bagian *Import and enrichment rules* (sudah diperbarui 20 Okt), `docs/archive/REFERENCE_WORKBOOK_CONTRACT.md`, `docs/archive/IMPORT_RECONCILIATION_AND_NOTIFICATIONS.md`, dan `docs/archive/SEMANTIC_MATCHING.md` diberi status *superseded*. Workbook bukti `docs/evidence/verification-workbook/` dibuat ulang dalam format template (`scripts/generate_verification_workbook.py`).
 
 **Uji**:
 - `CanonicalRoundTripTest` menjadi uji inti: ekspor bundel lengkap (4 lembar) → impor → kandidat identik.

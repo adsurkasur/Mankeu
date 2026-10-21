@@ -13,12 +13,17 @@ Panduan ini menjelaskan cara memakai setiap bagian aplikasi Mankeu. Semua gambar
 contoh usaha, **Kedai Kopi Senja**, sehingga angka di satu bagian bisa dicocokkan dengan bagian lain.
 Data contoh ini fiktif.
 
+Urutan bagian mengikuti urutan membuka usaha: menyiapkan aplikasi, merencanakan, menjalankan dan mencatat,
+memantau lewat laporan, lalu mengamankan data. Setiap bagian hanya memakai hal yang sudah dijelaskan di bagian
+sebelumnya, sehingga panduan bisa dibaca lurus dari awal sampai akhir. Contoh untuk usaha tani musiman dan usaha
+dengan beberapa cabang ada di lampiran.
+
 Pilih jalur yang sesuai kebutuhan Anda:
 
 | Jalur | Untuk siapa | Bagian yang dibaca |
 |---|---|---|
-| **Jalur cepat** | Anda yang ingin langsung mencatat uang masuk dan keluar setiap hari | [1](#1-memasang-mankeu), [2](#2-mengenal-mankeu), [3](#3-memulai-usaha-dan-unit), [4](#4-mencatat-uang-masuk-dan-keluar), [8.1](#81-beranda), [9.4](#94-cadangan-terenkripsi) |
-| **Jalur lengkap** | Anda yang juga ingin menyusun rencana usaha, menghitung titik impas, mengelola stok, dan memakai Excel | Semua bagian, berurutan |
+| **Jalur cepat** | Anda yang ingin langsung mencatat uang masuk dan keluar setiap hari | [1](#1-memasang-mankeu), [2](#2-mengenal-mankeu), [3](#3-memulai-usaha-dan-unit), [6](#6-mencatat-uang-masuk-dan-keluar), [8.1](#81-beranda), [9.4](#94-cadangan-terenkripsi) |
+| **Jalur lengkap** | Anda yang juga ingin menyusun rencana usaha, menghitung titik impas, mengelola stok, dan memakai Excel | Semua bagian, berurutan dari 1 sampai 14 |
 
 Tanda yang dipakai:
 
@@ -35,9 +40,9 @@ Tanda yang dipakai:
 1. [Memasang Mankeu](#1-memasang-mankeu)
 2. [Mengenal Mankeu](#2-mengenal-mankeu)
 3. [Memulai: Usaha dan Unit](#3-memulai-usaha-dan-unit)
-4. [Mencatat Uang Masuk dan Keluar](#4-mencatat-uang-masuk-dan-keluar)
-5. [Menyusun Rencana Usaha](#5-menyusun-rencana-usaha)
-6. [Membaca Kelayakan, BEP, dan Kebutuhan Modal](#6-membaca-kelayakan-bep-dan-kebutuhan-modal)
+4. [Menyusun Rencana Usaha](#4-menyusun-rencana-usaha)
+5. [Membaca Kelayakan, BEP, dan Kebutuhan Modal](#5-membaca-kelayakan-bep-dan-kebutuhan-modal)
+6. [Mencatat Uang Masuk dan Keluar](#6-mencatat-uang-masuk-dan-keluar)
 7. [Mengelola Stok Barang](#7-mengelola-stok-barang)
 8. [Membaca Laporan](#8-membaca-laporan)
 9. [Berkas dan Data: Impor, Ekspor, Cadangan](#9-berkas-dan-data-impor-ekspor-cadangan)
@@ -141,111 +146,11 @@ mengingat unit terakhir yang dipakai, sehingga saat dibuka lagi Anda langsung be
 sama.
 
 > **Tips.** Buat unit terpisah untuk setiap cabang atau setiap musim tanam. Angka setiap unit tidak
-> tercampur, sehingga Anda tahu cabang mana yang untung. Lihat [Lampiran B](#lampiran-b-usaha-dengan-beberapa-cabang).
+> tercampur, sehingga Anda tahu cabang mana yang untung.
 
 ---
 
-## 4. Mencatat Uang Masuk dan Keluar
-
-Semua transaksi harian dicatat di buku **Realisasi**. Pastikan **Realisasi** terpilih di bagian
-atas sebelum mencatat.
-
-### 4.1 Tombol Catat
-
-Ketuk tombol **+** di kanan bawah. Muncul dua pilihan: **Catat Pemasukan** dan **Catat
-Pengeluaran**.
-
-![Pilihan Catat Pemasukan dan Catat Pengeluaran](gambar/07_tombol_catat.jpg)
-
-### 4.2 Mencatat modal awal
-
-Aplikasi hanya mengetahui uang yang Anda catat. Karena itu, catat dulu uang yang Anda siapkan untuk
-usaha.
-
-1. Ketuk **+**, lalu **Catat Pemasukan**.
-2. Isi **Jumlah uang** tanpa titik, misalnya `15000000`. Di bawahnya muncul ejaan rupiahnya untuk
-   dicek: Rp15.000.000.
-3. Isi **Keterangan**, misalnya *Modal awal*.
-4. Pilih **Kategori**: **Setoran Modal Pemilik**.
-5. Periksa **Tanggal**, lalu ketuk **Simpan catatan**.
-
-![Form modal awal](gambar/08_form_modal_awal.jpg)
-
-> **Perhatian.** Setoran modal menambah **uang kas**, tetapi **bukan pendapatan**. Laba tidak
-> berubah.
-
-### 4.3 Mencatat penjualan
-
-1. Ketuk **+**, lalu **Catat Pemasukan**.
-2. Pilih **Kategori**: **Penjualan & Jasa**.
-3. Bila produk Anda sudah ada di Rencana Usaha ([bagian 5](#5-menyusun-rencana-usaha)), pilih
-   **Produk (opsional)**, misalnya *Kopi Susu*, lalu isi **Volume** (jumlah terjual), misalnya
-   `460`. Jumlah uang terisi otomatis sebesar volume × harga: 460 × Rp10.000 = Rp4.600.000.
-4. Isi keterangan, lalu ketuk **Simpan catatan**.
-
-![Form penjualan dengan produk dan volume](gambar/17_form_penjualan.jpg)
-
-> **Tips.** Memilih produk saat mencatat penjualan membuat aplikasi bisa menghitung **Status BEP
-> bulan ini** per produk ([bagian 8.2](#82-status-bep-bulan-ini)). Tanpa produk pun penjualan tetap
-> tercatat.
-
-### 4.4 Mencatat pengeluaran
-
-1. Ketuk **+**, lalu **Catat Pengeluaran**.
-2. Isi jumlah, keterangan, dan kategori, misalnya **Bahan Baku & Stok**.
-3. Setiap kategori biaya punya **sifat biaya**:
-   - **Tetap**: dibayar berapa pun penjualannya, misalnya sewa, gaji, dan listrik;
-   - **Variabel**: naik turun mengikuti penjualan, misalnya bahan baku dan kemasan.
-
-   Bila satu pengeluaran berbeda dari biasanya, ubah sifatnya di form ini.
-4. Ketuk **Simpan catatan**.
-
-![Form pengeluaran bahan baku](gambar/18_form_pengeluaran.jpg)
-
-### 4.5 Membeli alat atau aset
-
-Alat yang dipakai bertahun-tahun, seperti mesin, etalase, atau pompa, **bukan biaya bulan ini**.
-
-1. Ketuk **+**, lalu **Catat Pengeluaran**.
-2. Pilih kategori **Beli Peralatan & Aset**.
-3. Isi **Umur pakai (bulan)**, misalnya `36` untuk tiga tahun. Aplikasi membagi harga alat menjadi
-   **penyusutan bulanan**: Rp7.200.000 ÷ 36 = Rp200.000 per bulan.
-4. Ketuk **Simpan catatan**.
-
-![Form beli alat dengan umur pakai](gambar/19_form_beli_alat.jpg)
-
-### 4.6 Ringkasan kategori
-
-| Kejadian | Jenis | Kategori | Pengaruh |
-|---|---|---|---|
-| Menjual barang/jasa | Pemasukan | Penjualan & Jasa | Kas dan laba naik |
-| Belanja bahan, gaji, sewa, listrik | Pengeluaran | Kategori biaya | Kas dan laba turun |
-| Uang pribadi dimasukkan ke usaha | Pemasukan | Setoran Modal Pemilik | Kas naik, laba tetap |
-| Uang usaha dipakai untuk keperluan rumah | Pengeluaran | Ambil untuk Pribadi (Prive) | Kas turun, laba tetap |
-| Membeli alat tahan lama | Pengeluaran | Beli Peralatan & Aset | Kas turun, laba berkurang lewat penyusutan |
-
-### 4.7 Melihat dan memperbaiki catatan
-
-Buka **Catatan** di bilah bawah. Semua catatan tampil, yang terbaru di atas. Gunakan kolom cari dan
-saringan **Semua / Masuk / Keluar**.
-
-![Daftar catatan](gambar/20_daftar_catatan.jpg)
-
-Bila ada catatan yang salah jumlah, misalnya *Salah ketik listrik*:
-
-1. Ketuk ikon **Balik Transaksi** (panah melingkar) di kartu catatan itu.
-2. Baca penjelasannya, lalu ketuk **Balik Transaksi**. Aplikasi membuat catatan pembalik yang
-   menetralkan jumlahnya. Catatan aslinya tetap terlihat, sehingga jejaknya jelas.
-3. Catat ulang transaksi dengan jumlah yang benar.
-
-![Dialog balik transaksi](gambar/21_dialog_balik.jpg)
-
-> **Perhatian.** Gunakan **Balik Transaksi** untuk catatan yang memang terjadi tetapi salah isi.
-> Ikon tempat sampah hanya untuk catatan yang tidak pernah terjadi.
-
----
-
-## 5. Menyusun Rencana Usaha
+## 4. Menyusun Rencana Usaha
 
 Rencana Usaha menjawab pertanyaan *berapa yang harus terjual agar tidak rugi, dan berapa modal yang
 dibutuhkan*. Rencana disusun di buku **Proyeksi**.
@@ -258,7 +163,7 @@ dibutuhkan*. Rencana disusun di buku **Proyeksi**.
 Rencana terdiri atas enam bagian: periode, produk, biaya tetap per bulan, biaya dan pendapatan
 lain, aset, serta setoran modal.
 
-### 5.1 Periode rencana
+### 4.1 Periode rencana
 
 Periode adalah lamanya rencana berjalan, misalnya 12 bulan. Biaya sekali bayar, seperti izin usaha,
 dibagi rata ke bulan-bulan ini.
@@ -268,7 +173,7 @@ dibagi rata ke bulan-bulan ini.
 
 ![Mengatur periode rencana](gambar/10_periode_rencana.jpg)
 
-### 5.2 Produk dan resep biaya
+### 4.2 Produk dan resep biaya
 
 Resep adalah **biaya bahan untuk satu satuan produk**. Untuk bahan yang dibeli per kemasan, cukup
 tulis harga kemasan dan berapa satuan yang dihasilkan.
@@ -276,7 +181,8 @@ tulis harga kemasan dan berapa satuan yang dihasilkan.
 1. Ketuk **Tambah** di bagian **Produk**.
 2. Isi **Nama produk**, **Satuan**, **Target per bulan**, dan **Harga jual per satuan**.
 3. Isi **Mulai dijual bulan ke-**. Biarkan `1` bila produk dijual sejak bulan pertama. Untuk hasil
-   panen yang baru dijual beberapa bulan kemudian, lihat [Lampiran A](#lampiran-a-usaha-tani-musiman).
+   panen yang baru dijual beberapa bulan kemudian, isi bulan panen pertama, misalnya `4`. Bulan
+   sebelumnya dihitung tanpa penjualan.
 4. Isi resep. Untuk kopi susu:
    - Susu: biaya Rp18.000 **untuk 6 cup**, jadi Rp3.000 per cup;
    - Kopi dan cup: biaya Rp2.000 untuk 1 cup.
@@ -288,7 +194,7 @@ tulis harga kemasan dan berapa satuan yang dihasilkan.
 
 ![Form produk dengan resep](gambar/11_form_produk.jpg)
 
-### 5.3 Biaya tetap per bulan
+### 4.3 Biaya tetap per bulan
 
 1. Ketuk **Tambah** di bagian **Biaya Tetap per Bulan**.
 2. Isi nama (misalnya *Sewa lapak*), pilih kategori (*Sewa Tempat*), lalu isi nominal per bulan.
@@ -296,13 +202,13 @@ tulis harga kemasan dan berapa satuan yang dihasilkan.
 
 ![Form biaya tetap](gambar/12_form_biaya_tetap.jpg)
 
-### 5.4 Biaya dan pendapatan lain
+### 4.4 Biaya dan pendapatan lain
 
 Gunakan bagian ini untuk biaya atau pendapatan **sekali waktu**, misalnya izin usaha atau renovasi,
 atau untuk biaya variabel di luar resep, misalnya bibit dan pupuk. Pilih **Sekali** atau **Bulanan**,
 lalu isi bulannya bila perlu.
 
-### 5.5 Aset dan penyusutan
+### 4.5 Aset dan penyusutan
 
 1. Ketuk **Tambah** di bagian **Aset dan Penyusutan**.
 2. Isi nama alat, kategori **Beli Peralatan & Aset**, nominal, dan **Umur pakai (bulan)**.
@@ -311,7 +217,7 @@ lalu isi bulannya bila perlu.
 
 ![Form aset](gambar/13_form_aset.jpg)
 
-### 5.6 Setoran modal
+### 4.6 Setoran modal
 
 Di bagian **Setoran Modal**, tambahkan uang yang akan Anda masukkan ke usaha beserta bulannya.
 Setoran modal **tidak mengubah laba**, tetapi menutup kebutuhan modal.
@@ -335,7 +241,7 @@ Setelah semua bagian terisi, daftar rencana tampak seperti ini:
 
 ---
 
-## 6. Membaca Kelayakan, BEP, dan Kebutuhan Modal
+## 5. Membaca Kelayakan, BEP, dan Kebutuhan Modal
 
 Kartu **Kelayakan & Titik Impas (BEP)** di atas Rencana Usaha dihitung otomatis setiap kali isian
 rencana berubah.
@@ -372,6 +278,107 @@ rencana berubah.
 
 ---
 
+## 6. Mencatat Uang Masuk dan Keluar
+
+Setelah rencana siap, usaha mulai berjalan dan uang mulai bergerak. Semua transaksi harian dicatat di
+buku **Realisasi**. Ketuk **Realisasi** di bagian atas sebelum mencatat.
+
+### 6.1 Tombol Catat
+
+Ketuk tombol **+** di kanan bawah. Muncul dua pilihan: **Catat Pemasukan** dan **Catat
+Pengeluaran**.
+
+![Pilihan Catat Pemasukan dan Catat Pengeluaran](gambar/07_tombol_catat.jpg)
+
+### 6.2 Mencatat modal awal
+
+Aplikasi hanya mengetahui uang yang Anda catat. Karena itu, catat dulu uang yang Anda siapkan untuk
+usaha. Bila Anda sudah menyusun rencana, setoran modal yang direncanakan di bagian 4.6 baru masuk
+ke kas setelah dicatat di sini, saat uangnya benar-benar disetor.
+
+1. Ketuk **+**, lalu **Catat Pemasukan**.
+2. Isi **Jumlah uang** tanpa titik, misalnya `15000000`. Di bawahnya muncul ejaan rupiahnya untuk
+   dicek: Rp15.000.000.
+3. Isi **Keterangan**, misalnya *Modal awal*.
+4. Pilih **Kategori**: **Setoran Modal Pemilik**.
+5. Periksa **Tanggal**, lalu ketuk **Simpan catatan**.
+
+![Form modal awal](gambar/08_form_modal_awal.jpg)
+
+> **Perhatian.** Setoran modal menambah **uang kas**, tetapi **bukan pendapatan**. Laba tidak
+> berubah.
+
+### 6.3 Mencatat penjualan
+
+1. Ketuk **+**, lalu **Catat Pemasukan**.
+2. Pilih **Kategori**: **Penjualan & Jasa**.
+3. Bila produk Anda sudah dibuat di Rencana Usaha ([bagian 4](#4-menyusun-rencana-usaha)), pilih
+   **Produk (opsional)**, misalnya *Kopi Susu*, lalu isi **Volume** (jumlah terjual), misalnya
+   `460`. Jumlah uang terisi otomatis sebesar volume × harga: 460 × Rp10.000 = Rp4.600.000.
+4. Isi keterangan, lalu ketuk **Simpan catatan**.
+
+![Form penjualan dengan produk dan volume](gambar/17_form_penjualan.jpg)
+
+> **Tips.** Memilih produk saat mencatat penjualan membuat aplikasi bisa menghitung jumlah terjual
+> per produk dan apakah penjualan bulan ini sudah melewati titik impas. Tanpa produk pun penjualan
+> tetap tercatat.
+
+### 6.4 Mencatat pengeluaran
+
+1. Ketuk **+**, lalu **Catat Pengeluaran**.
+2. Isi jumlah, keterangan, dan kategori, misalnya **Bahan Baku & Stok**.
+3. Setiap kategori biaya punya **sifat biaya**:
+   - **Tetap**: dibayar berapa pun penjualannya, misalnya sewa, gaji, dan listrik;
+   - **Variabel**: naik turun mengikuti penjualan, misalnya bahan baku dan kemasan.
+
+   Bila satu pengeluaran berbeda dari biasanya, ubah sifatnya di form ini.
+4. Ketuk **Simpan catatan**.
+
+![Form pengeluaran bahan baku](gambar/18_form_pengeluaran.jpg)
+
+### 6.5 Membeli alat atau aset
+
+Alat yang dipakai bertahun-tahun, seperti mesin, etalase, atau pompa, **bukan biaya bulan ini**.
+
+1. Ketuk **+**, lalu **Catat Pengeluaran**.
+2. Pilih kategori **Beli Peralatan & Aset**.
+3. Isi **Umur pakai (bulan)**, misalnya `36` untuk tiga tahun. Aplikasi membagi harga alat menjadi
+   **penyusutan bulanan**: Rp7.200.000 ÷ 36 = Rp200.000 per bulan.
+4. Ketuk **Simpan catatan**.
+
+![Form beli alat dengan umur pakai](gambar/19_form_beli_alat.jpg)
+
+### 6.6 Ringkasan kategori
+
+| Kejadian | Jenis | Kategori | Pengaruh |
+|---|---|---|---|
+| Menjual barang/jasa | Pemasukan | Penjualan & Jasa | Kas dan laba naik |
+| Belanja bahan, gaji, sewa, listrik | Pengeluaran | Kategori biaya | Kas dan laba turun |
+| Uang pribadi dimasukkan ke usaha | Pemasukan | Setoran Modal Pemilik | Kas naik, laba tetap |
+| Uang usaha dipakai untuk keperluan rumah | Pengeluaran | Ambil untuk Pribadi (Prive) | Kas turun, laba tetap |
+| Membeli alat tahan lama | Pengeluaran | Beli Peralatan & Aset | Kas turun, laba berkurang lewat penyusutan |
+
+### 6.7 Melihat dan memperbaiki catatan
+
+Buka **Catatan** di bilah bawah. Semua catatan tampil, yang terbaru di atas. Gunakan kolom cari dan
+saringan **Semua / Masuk / Keluar**.
+
+![Daftar catatan](gambar/20_daftar_catatan.jpg)
+
+Bila ada catatan yang salah jumlah, misalnya *Salah ketik listrik*:
+
+1. Ketuk ikon **Balik Transaksi** (panah melingkar) di kartu catatan itu.
+2. Baca penjelasannya, lalu ketuk **Balik Transaksi**. Aplikasi membuat catatan pembalik yang
+   menetralkan jumlahnya. Catatan aslinya tetap terlihat, sehingga jejaknya jelas.
+3. Catat ulang transaksi dengan jumlah yang benar.
+
+![Dialog balik transaksi](gambar/21_dialog_balik.jpg)
+
+> **Perhatian.** Gunakan **Balik Transaksi** untuk catatan yang memang terjadi tetapi salah isi.
+> Ikon tempat sampah hanya untuk catatan yang tidak pernah terjadi.
+
+---
+
 ## 7. Mengelola Stok Barang
 
 Buka **Stok** di bilah bawah. Stok mencatat barang yang disimpan beserta nilainya.
@@ -404,7 +411,7 @@ semua unit*, dan barang di bawah batas minimum diberi tanda peringatan.
 ![Mencatat barang masuk](gambar/27_mutasi_stok.jpg)
 
 > **Perhatian.** Mutasi stok tidak mencatat uang. Belanja barang tetap dicatat sebagai
-> **Pengeluaran** ([bagian 4.4](#44-mencatat-pengeluaran)).
+> **Pengeluaran** ([bagian 6.4](#64-mencatat-pengeluaran)).
 
 ---
 
@@ -482,12 +489,24 @@ Ketuk **ikon map** di bagian atas untuk membuka **Berkas dan Data**.
 
 ![Berkas dan Data](gambar/32_berkas_data.jpg)
 
-### 9.1 Impor dari Excel
+### 9.1 Ekspor Excel, PDF, dan template
+
+Di **Ekspor dan cadangan**:
+
+- **Excel**: seluruh data unit ini dalam format template Mankeu. Berkas ini bisa diimpor lagi tanpa
+  kehilangan data, misalnya untuk dipindah ke unit atau HP lain.
+- **PDF**: laporan yang siap dibaca, dibagikan, atau dicetak.
+- **Template Excel**: berkas kosong berformat Mankeu, untuk diisi di Excel lalu diimpor ke
+  aplikasi.
+
+Nama berkas memuat nama unit dan tanggal, misalnya `mankeu-gerai-utama-2026-10-21.xlsx`.
+
+### 9.2 Impor dari Excel
 
 Impor berguna bila Anda sudah punya catatan di Excel, atau ingin mengetik banyak transaksi di
 komputer.
 
-1. Di bagian **Ekspor dan cadangan**, ketuk **Template Excel**, lalu simpan berkasnya.
+1. Unduh **Template Excel** seperti pada bagian 9.1.
 2. Isi template di Excel. Jangan ubah nama lembar atau judul kolom. Tulis tanggal dengan format
    `YYYY-MM-DD`, misalnya `2026-10-21`.
 3. Kembali ke Berkas dan Data, pastikan unit tujuan sudah terpilih, lalu ketuk **Pilih file .xlsx**.
@@ -501,21 +520,11 @@ komputer.
 > transaksi bisa tercatat dobel. Bila berkas ditolak, pesannya menyebut lembar dan sel yang salah,
 > misalnya `Transaksi!A3`.
 
-### 9.2 Membatalkan impor
+### 9.3 Membatalkan impor
 
 Setiap impor tercatat di **Riwayat pengambilan**. Ketuk **Balik batch** pada berkas yang salah.
 Semua transaksinya dinetralkan, baris rencananya diarsipkan, produk dan stok yang ditambahkan
 dihapus, dan periode rencana yang diisinya dikosongkan kembali.
-
-### 9.3 Ekspor Excel dan PDF
-
-Di **Ekspor dan cadangan**:
-
-- **Excel**: seluruh data unit ini dalam format template Mankeu. Berkas ini bisa diimpor lagi tanpa
-  kehilangan data, misalnya untuk dipindah ke unit atau HP lain.
-- **PDF**: laporan yang siap dibaca, dibagikan, atau dicetak.
-
-Nama berkas memuat nama unit dan tanggal, misalnya `mankeu-gerai-utama-2026-10-21.xlsx`.
 
 ### 9.4 Cadangan terenkripsi
 
@@ -592,11 +601,11 @@ dengan Mankeu di bulan pertama.
 | Urutan | Yang dilakukan | Bagian |
 |---|---|---|
 | 1 | Membuat usaha *Kedai Kopi Senja* dan unit *Gerai Utama* | [3](#3-memulai-usaha-dan-unit) |
-| 2 | Mencatat modal awal Rp15.000.000 | [4.2](#42-mencatat-modal-awal) |
-| 3 | Menyusun rencana 12 bulan: dua produk, tiga biaya tetap, mesin espresso, modal | [5](#5-menyusun-rencana-usaha) |
-| 4 | Membaca kelayakan: layak, omzet impas Rp4.040.816, kebutuhan modal Rp4.300.000 sudah tertutup | [6](#6-membaca-kelayakan-bep-dan-kebutuhan-modal) |
-| 5 | Mencatat transaksi harian: jualan, bahan, mesin, sewa, gaji, listrik | [4](#4-mencatat-uang-masuk-dan-keluar) |
-| 6 | Membalik catatan listrik yang salah ketik, lalu mencatat ulang | [4.7](#47-melihat-dan-memperbaiki-catatan) |
+| 2 | Menyusun rencana 12 bulan: dua produk, tiga biaya tetap, mesin espresso, modal | [4](#4-menyusun-rencana-usaha) |
+| 3 | Membaca kelayakan: layak, omzet impas Rp4.040.816, kebutuhan modal Rp4.300.000 sudah tertutup | [5](#5-membaca-kelayakan-bep-dan-kebutuhan-modal) |
+| 4 | Mencatat modal awal Rp15.000.000 | [6.2](#62-mencatat-modal-awal) |
+| 5 | Mencatat transaksi harian: jualan, bahan, mesin, sewa, gaji, listrik | [6](#6-mencatat-uang-masuk-dan-keluar) |
+| 6 | Membalik catatan listrik yang salah ketik, lalu mencatat ulang | [6.7](#67-melihat-dan-memperbaiki-catatan) |
 | 7 | Mencatat stok susu dan biji kopi | [7](#7-mengelola-stok-barang) |
 | 8 | Di akhir bulan, membaca Status BEP bulan ini dan Realisasi vs Target | [8](#8-membaca-laporan) |
 | 9 | Membuat cadangan terenkripsi | [9.4](#94-cadangan-terenkripsi) |
@@ -776,4 +785,6 @@ setiap cabang tidak tercampur.
 
 *Gambar layar dalam panduan ini diambil otomatis dari aplikasi dengan data contoh fiktif. Untuk
 memperbaruinya setelah tampilan aplikasi berubah, jalankan `scripts/capture_module_screenshots.ps1`
-dengan emulator Android menyala.*
+dengan emulator Android menyala. Setelah mengubah naskah, jalankan
+`python scripts/check_guide_flow.py docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md` untuk memastikan tidak
+ada rujukan ke bagian yang belum dibaca, dan semua gambar serta tautan masih lengkap.*

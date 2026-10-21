@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 00:20] [Claude Code (Opus 5.5) — Panduan penggunaan: alur dibuat lurus]
+- **Goal**: Owner found the guide's flow going back and forth (e.g. recording sales sent the reader ahead to the plan section and back).
+- **Actions**: Reordered to the real order of opening a business (prepare → plan → run/record → monitor → secure): Rencana Usaha becomes 4, Kelayakan 5, Mencatat 6; in Berkas dan Data, export/template comes before import. Removed in-text jumps to later sections and appendices; added a backward link from recording capital to the planned capital; one-month example reordered to match. New `scripts/check_guide_flow.py` fails on any in-text reference to a later section, missing/unused images or broken anchors.
+- **Files**: `docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`, `scripts/check_guide_flow.py`, `docs/WORK_IN_PROGRESS.md`, logs.
+- **Verification**: `check_guide_flow.py` → no forward references, 47 images and all anchors valid. The quick path (1, 2, 3, 6, 8.1, 9.4) only skips forward.
+
 ### [2026-10-21 23:50] [Claude Code (Opus 5.5) — Panduan penggunaan Mankeu untuk pelaku UMKM]
 - **Goal**: Owner asked for a complete Markdown user guide with screenshots and step-by-step instructions; the concept was grilled (Q1–Q11: usage guide not a training module, Markdown only, "Anda", quick/full paths, kopi example + two appendices, honest install note).
 - **Actions**:

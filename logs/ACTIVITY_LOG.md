@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 19:30] [Claude Code (Opus 5.5) — Halaman kebijakan privasi diperbarui tiap 10 menit]
+- **Goal**: Owner: faster propagation of policy changes; options measured (hourly, 10 minutes, on-demand via GitHub Action).
+- **Actions**: Site schedule shortened to 10 minutes (in adsurkasur-aura); `docs/privacy-policy/README.md` and the store listing now say about 15 minutes and name Vercel Redeploy for an immediate update; DEC-021 records the measured alternative.
+- **Files**: `docs/privacy-policy/README.md`, `docs/STORE_LISTING_AND_POLICIES.md`, logs.
+- **Verification**: see the adsurkasur-aura activity log for the build and deploy.
+
 ### [2026-10-22 19:00] [Claude Code (Opus 5.5) — Email support kembali ke adsurkasur.dev@gmail.com]
 - **Goal**: Owner: do not put this under the Arina name yet; use adsurkasur.dev@gmail.com for every reference instead of adesur@arinahub.com.
 - **Actions**: Replaced in the app (Hubungi Kami, ID/EN), the privacy policy (`docs/privacy-policy/id.md`, `en.md`), the Play Console guide, the store listing, the D-log banner and DEC-021. Earlier activity entries keep the address they recorded at the time.

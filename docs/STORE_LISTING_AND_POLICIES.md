@@ -8,7 +8,7 @@ This guide provides the complete, authoritative compliance declarations, store l
 
 ### Live URL
 - **Public Privacy Policy URL:** `https://adsurkasur.my.id/mankeu/privacy-policy`
-*(Content source: `docs/privacy-policy/id.md` and `en.md` in this repository; the page reads them from GitHub and refreshes within an hour of a push to `main`.)*
+*(Content source: `docs/privacy-policy/id.md` and `en.md` in this repository; the page reads them from GitHub and refreshes within about 15 minutes of a push to `main`.)*
 
 ---
 

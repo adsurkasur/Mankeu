@@ -1,5 +1,7 @@
 # Checklist Tindakan Final Rilis "Mankeu" (Release TODOs)
 
+> **Dokumen riwayat.** Daftar tugas 2026-10-20. Butirnya sudah dikerjakan atau digantikan oleh DEC-011 s.d. DEC-019. **Jangan dijalankan lagi.** Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 Dokumen ini berisi daftar tugas tindakan konkret, lokasi baris kode, rancangan solusi teknis, dan perintah verifikasi untuk menyelesaikan aplikasi Mankeu hari ini hingga 100% siap rilis (*production-ready*).
 
 ---

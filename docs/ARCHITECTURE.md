@@ -1,6 +1,6 @@
 ---
-status: proposed-baseline
-last_verified: 2026-08-15
+status: implemented
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
@@ -17,20 +17,22 @@ Build the Android application in **Kotlin with Jetpack Compose**, using native A
 
 This choice can be revisited if an iOS requirement becomes funded and concrete. It is not a judgment that Flutter is a WebView.
 
-## Proposed stack
+## Stack in use
 
-| Concern | Baseline |
+| Concern | In use (schema 11) |
 | --- | --- |
 | Language | Kotlin |
 | UI | Jetpack Compose + Material 3 adaptive layouts |
-| State | Immutable UI state, ViewModel, coroutines, and Flow |
-| Local structured data | Room over SQLite |
-| Preferences | DataStore |
-| Background work | WorkManager for deferred backup/export/sync tasks |
+| State | One `AppViewModel` exposing `StateFlow<AppUiState>`; coroutines and Room `Flow` |
+| Local structured data | Room over SQLite, schema 11, exported schemas in `app/schemas/` |
+| Preferences | `SharedPreferences` via `AppPreferencesState` (DataStore considered and rejected, D-082) |
+| Background work | None scheduled; backup, export and import run on user action in coroutines |
 | File selection/export | Android Storage Access Framework |
-| Dependency injection | Select during skeleton ADR; avoid framework coupling in domain tests |
-| Serialization | Versioned, explicit schema selected during implementation |
-| Tests | Kotlin unit/property tests, Room integration/migration tests, Compose UI tests, device end-to-end tests |
+| Dependency injection | Manual, a lazy container in `MankeuApplication` and `viewModelFactory` (Hilt rejected, D-082) |
+| Serialization | `PortableBackupCodec` (versioned binary snapshot) for backups and sync change sets; `org.json` for Drive |
+| Charts | Vico |
+| Identity and cloud backup | Firebase Auth, Google Drive REST `appDataFolder` (optional) |
+| Tests | JVM unit tests, Room integration and migration tests (`MigrationTestHelper`), screenshot walks on the emulator |
 
 Official references:
 
@@ -53,12 +55,12 @@ Pure domain model and calculation policies
 Repositories ── Room / files / importers / optional remote adapters
 ```
 
-- **Domain:** money, balanced events, budgets, projection/realization, obligations, calculations, reconciliation classifications. No Android dependency.
-- **Application:** use cases, transaction boundaries, authorization of destructive actions, import orchestration, backup/restore.
-- **Data:** Room entities/mappers, files, import/export adapters, migrations, optional sync adapters.
+- **Domain** (`domain/`): money, five cash event types, balanced journals (`LedgerPolicy`), business plan and break-even (`PlanCalculator`, `ActualBepCalculator`), stock, cash-flow schedules. No Android dependency.
+- **Data** (`data/`): Room entities and DAO, `FinanceRepository` as the single write funnel (every rule enforced inside `withTransaction`), migrations, legacy cleanups for old schemas and backups.
+- **I/O** (`importer/`, `exporter/`, `backup/`, `sync/`): template import and export, PDF, encrypted backup, Drive client, sync framework.
 - **Presentation:** Compose routes, state holders, formatting, adaptive layout, accessibility.
 
-Import parsing must not write directly to production tables. It builds a candidate model and provenance set, then the application layer commits them atomically after reconciliation.
+Import parsing never writes to the database. `FinanceWorkbookImporter` builds a preview from the Mankeu template only (DEC-012); `FinanceRepository.reviewImport` adds what only the database knows, and `commitImport` writes everything in one transaction under a recorded import batch.
 
 ## Presentation-layer cross-cutting concerns
 
@@ -90,26 +92,9 @@ Presentation state that is not accounting data (theme, motion, language, local d
 the tour has been seen) lives in `SharedPreferences` via `AppPreferencesState`, deliberately outside
 the audited Room schema, its migrations, and its export/backup contract.
 
-## Suggested module shape
+## Module shape
 
-```text
-:app
-:core:model
-:core:money
-:core:database
-:core:designsystem
-:feature:business
-:feature:transactions
-:feature:budget
-:feature:reports
-:feature:receivables
-:feature:payables
-:feature:importexport
-:feature:backup
-:import:reference-workbook
-```
-
-Start with fewer Gradle modules if build overhead outweighs separation, but preserve dependency direction. Domain code must remain independently testable.
+One Gradle module, `:app`, with packages `domain`, `data`, `importer`, `exporter`, `backup`, `sync`, `auth` and `presentation`. The dependency direction is kept by package: `domain` imports no Android or other app package. Split into Gradle modules only when build time or reuse calls for it.
 
 ## Local-first data ownership
 
@@ -119,23 +104,18 @@ Start with fewer Gradle modules if build overhead outweighs separation, but pres
 - Backups have a version, database/schema version, creation time, checksum, encryption metadata, and manifest of included businesses.
 - Restore validates integrity and compatibility before changing the active database and retains a recovery copy where storage permits.
 
-## Backup, Drive, and authentication
+## Backup, Drive, sync, and authentication
 
-The first backup is an encrypted local export chosen through the system file picker. A later Google Drive adapter may use each user's storage so the product does not require an application-owned financial database server.
-
-Drive backup and multi-device synchronization are different products:
-
-- **backup/restore** can begin as explicit snapshot upload/download;
-- **synchronization** requires record identities, conflict policy, deletion semantics, encryption/key recovery, and observable sync state.
-
-Firebase authentication may be explored for a future account experience, but local use cannot depend on it. No Firebase or Drive project should be created before an owner-approved ADR states data flow, cost, privacy, and failure behavior.
+- **Backup/restore** (implemented): `EncryptedBackupManager` snapshots every table in `AppDatabase.DATA_TABLES`, encrypts it with AES-256-GCM under a PBKDF2-HMAC-SHA256 key, and writes it to a user-chosen file or to Drive `appDataFolder` (latest five kept). Restore validates the schema (3 to current), keeps an encrypted recovery copy, and upgrades old snapshots with the same cleanups as the migrations.
+- **Authentication** (implemented, optional): Firebase Auth with Google Sign-In, only to reach the user's Drive (D-033, D-040).
+- **Synchronization** (framework, not wired): SQLite triggers record changes in `sync_outbox`; `SyncEngine` and `SyncCoordinator` exchange encrypted change sets over Drive with row-level last-writer-wins (DEC-013). Details and open owner questions in `docs/SYNC_ARCHITECTURE.md`.
 
 ## Security and privacy baseline
 
 - No real workbook, database, research response, backup, credential, API key, signing key, service configuration, or token belongs in Git.
 - Use Android Keystore-backed key protection for secrets where applicable; select the database/file encryption implementation only after a small threat model and maintenance review.
 - Export and backup are explicit user actions with destination and sensitivity warnings.
-- Logs redact descriptions, counterparties, amounts where not required, file paths, tokens, and personal data.
+- Logs redact descriptions, amounts where not required, file paths, tokens, and personal data.
 - Analytics is off by default until events, consent, retention, and research separation are approved.
 - Debug builds and test fixtures must not share production signing or cloud projects.
 
@@ -144,18 +124,9 @@ Firebase authentication may be explored for a future account experience, but loc
 - Use APKs for local installation and device testing.
 - Publish new Google Play applications as Android App Bundles (`.aab`).
 - As of the planning date, Google Play states that new apps and updates must target Android 16 / API level 36 from 31 August 2026. Reverify policy immediately before release: [target API requirements](https://support.google.com/googleplay/android-developer/answer/11926878).
-- Minimum SDK and representative low/mid-range device baseline remain open decisions requiring user-device evidence.
-- Package identifier, application signing ownership, Play Console owner, privacy policy URL, and final product name remain intentionally unset.
+- Package `com.mankeu`, minSdk 26, targetSdk 36 are set. A representative low/mid-range device baseline still needs user-device evidence.
+- Signing custody and Play Console ownership: see `docs/PLAY_STORE_DEPLOYMENT.md`.
 
-## Architecture decision records still required
+## Architecture decisions
 
-Before implementation passes the foundation phase, write ADRs for:
-
-1. package identifier and minimum SDK;
-2. dependency injection and serialization;
-3. exact decimal and rounding policies;
-4. backup schema and encryption;
-5. database migration/rollback;
-6. optional Drive authorization and sync conflict resolution;
-7. analytics/crash reporting, if any;
-8. signing custody and release ownership.
+Recorded in `docs/DECISION_LOG.md` (D-001 to D-087) and, from DEC-001 on, in `logs/DECISION_LOG.md`. Still open: representative device baseline, analytics/crash reporting (off; none planned), signing custody and release ownership, and how sync is offered to users.

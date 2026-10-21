@@ -24,7 +24,7 @@ Follow these exact steps and answers in Google Play Console under **Policy and p
 ### B. App Access (Akses Aplikasi)
 * **Question:** Is all or part of your app restricted based on login credentials, memberships, or other authentication?
 * **Answer:** Select **"All functionality is available without special access"** (*Semua fungsi tersedia tanpa batasan khusus*).
-* **Rationale:** The entire core financial functionality (budgeting, actual expense recording, feasibility metrics calculation, BEP/HPP/BCR, Excel workbook import, PDF export) operates 100% locally on device without registration or login. Google Sign-In is strictly optional for Drive backup.
+* **Rationale:** The entire core financial functionality (budgeting, actual expense recording, business plan and break-even, stock, Excel template import, PDF export) operates 100% locally on device without registration or login. Google Sign-In is strictly optional for Drive backup.
 
 ---
 
@@ -67,7 +67,7 @@ Fill in the IARC Content Rating questionnaire as follows:
 * **Answer:** Select **"Personal/Business accounting and expense tracking"** (*Akuntansi pribadi/bisnis dan pelacakan pengeluaran*).
 * **Important Guardrails:**
   * **DO NOT** select: Banking, P2P Lending, Crypto, Digital Wallet, Money Transfer, or Investment Brokerage.
-  * **Declaration Note:** Mankeu is an on-device MSME cost bookkeeping tool, business financial feasibility calculator (BEP, HPP, Gross/Net Margins), and Excel spreadsheet reconciler. It does not process financial transactions, loan applications, banking, or money transfers.
+  * **Declaration Note:** Mankeu is an on-device MSME cost bookkeeping tool, business plan and break-even calculator (BEP, R/C, B/C, capital need), and stock tracker. It records cash only and has no lending, credit, or payment features. It does not process financial transactions, loan applications, banking, or money transfers.
 
 ---
 
@@ -87,17 +87,17 @@ Fill in the Google Play Data Safety form with the following answers:
 * **Is all of the user data collected by your app encrypted in transit?**
   * Select **"Yes"** (HTTPS / OAuth 2.0).
 * **Do you provide a way for users to request that their data be deleted?**
-  * Select **"Yes"** (Users can delete all local data in Settings and delete cloud backups from Google Drive).
+  * Select **"Yes"** (Users delete records in the app with Hapus, remove all local data by clearing the app's storage or uninstalling, and remove Drive backups from Google Drive's app data settings).
 
 #### 2. Data Types & Purposes:
 * **Personal Info > Name & Email Address:**
   * **Collected?** Yes (Optional, collected only if the user explicitly signs in with Google).
   * **Shared?** No (Never shared with third parties or developer servers).
-  * **Ephemeral?** No (Cached locally in Room/DataStore).
+  * **Ephemeral?** No (Cached locally by Firebase Auth on the device).
   * **Required or Optional?** **Optional** (Users can use 100% of calculation/import features offline without signing in).
   * **Purpose:** **Account Management** & **App Functionality** (Drive backup sync identity).
 * **Financial Info (User payment info, Purchase history, Credit score):**
-  * **Collected?** **No** (Farm transaction records and budgets are stored exclusively on device in local SQLite Room database).
+  * **Collected?** **No** (Cash records, plans, and stock are stored exclusively on device in the local SQLite Room database).
 * **Files and Docs:**
   * **Collected?** **No** (Excel workbooks and backups are processed on-device; cloud backups are uploaded directly to the user's personal Google Drive without developer server intermediation).
 * **Device or Other IDs:**
@@ -116,48 +116,51 @@ Mankeu
 
 #### Deskripsi Singkat (Maks 80 Karakter)
 ```text
-Kalkulator keuangan UMKM, analisis kelayakan BEP/HPP, dan pembukuan kas offline.
+Buku kas UMKM, rencana usaha & titik impas (BEP), dan stok. Offline & privat.
 ```
 
 #### Deskripsi Lengkap (Maks 4000 Karakter)
 ```text
-Mankeu adalah aplikasi manajemen keuangan dan pencatatan kas modern yang dirancang khusus untuk pelaku UMKM (Usaha Mikro, Kecil, dan Menengah), pedagang, wirausaha kuliner, dan penyedia jasa di Indonesia.
+Mankeu adalah aplikasi buku kas dan rencana usaha untuk pelaku UMKM (Usaha Mikro, Kecil, dan Menengah), pedagang, wirausaha kuliner, penyedia jasa, dan petani di Indonesia.
 
-Kelola rencana anggaran biaya (RAB), catat transaksi kas harian, dan hitung kelayakan bisnis Anda secara otomatis, akurat, dan 100% offline!
+Catat uang masuk dan keluar, susun rencana usaha, hitung titik impas, dan pantau stok. Semua 100% offline!
 
 📊 FITUR UTAMA MANKEU:
 
-1. KALKULATOR KELAYAKAN USAHA & METRIK UMKM OTOMATIS
-• Hitung Titik Impas (BEP Rupiah Omzet & BEP Volume Penjualan).
-• Hitung Harga Pokok Penjualan / Produksi (HPP per Unit/Porsi/Barang).
-• Analisis Margin Laba Kotor (Gross Profit Margin) dan Laba Bersih (Net Profit Margin).
-• Evaluasi keuntungan operasional riil berjalan secara real-time.
+1. BUKU KAS YANG SEDERHANA
+• Dua tombol saja: Uang Masuk dan Uang Keluar. Kategori menentukan apakah itu penjualan, biaya, setoran modal, ambil pribadi, atau beli aset.
+• Salah isi? Ketuk Ubah untuk membetulkan, atau Hapus.
+• Mencatat uang yang benar-benar berpindah. Tanpa utang, piutang, atau pinjaman.
 
-2. PEMBUKUAN KAS TERISOLASI (PROYEKSI VS REALISASI)
-• Kelola Buku Realisasi (transaksi nyata berjalan) terpisah dari Buku Proyeksi (simulasi/anggaran RAB).
-• Bandingkan selisih biaya aktual vs anggaran secara langsung untuk mencegah pembengkakan biaya.
-• Kategorisasi fleksibel per sektor usaha: Stok Dagang, Bahan Baku, Gaji/Upah, Sewa Tempat, Kemasan, dan Operasional.
+2. RENCANA USAHA & TITIK IMPAS (BEP)
+• Buku Proyeksi terpisah dari Buku Realisasi.
+• Produk dengan resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana.
+• BEP unit dan rupiah (juga untuk banyak produk), laba per bulan, R/C, B/C, dan kebutuhan modal.
+• Bandingkan realisasi dengan target per bulan.
 
-3. IMPOR & EKSPOR CERDAS SPREADSHEET EXCEL (.XLSX)
-• Impor catatan keuangan harian langsung dari berkas Excel (.xlsx).
-• Pencocok Semantik Otomatis yang mengklasifikasikan transaksi kas secara cerdas di perangkat.
-• Ekspor laporan keuangan lengkap ke format PDF dan Excel (.xlsx) siap cetak/arsip.
+3. STOK BARANG
+• Barang masuk, keluar, dan opname, dengan peringatan stok menipis.
+• Stok per cabang atau dipakai bersama.
 
-4. 100% OFFLINE-FIRST & PRIVASI TOTAL
-• Semua data keuangan Anda tersimpan aman di basis data lokal HP Anda (SQLite Room).
-• Bebas iklan (No Ads), bebas pelacak (No Trackers), dan tidak memerlukan koneksi internet untuk pencatatan harian.
+4. EXCEL (.XLSX) & PDF
+• Templat Excel Mankeu: isi sekali, impor banyak catatan sekaligus, dan batalkan bila salah.
+• Ekspor Excel yang bisa diimpor kembali, dan laporan PDF siap cetak.
 
-5. CADANGAN AWAN TERENKRIPSI (GOOGLE DRIVE)
-• Sinkronisasi cadangan aman ke Google Drive pribadi Anda (opsional).
-• Dilindungi enkripsi standar militer AES-256-GCM dengan kata sandi pribadi (passphrase).
+5. 100% OFFLINE & PRIVAT
+• Semua data tersimpan di HP Anda (SQLite Room).
+• Bebas iklan, tanpa pelacak, tanpa wajib login.
+
+6. CADANGAN TERENKRIPSI
+• Cadangkan ke berkas atau Google Drive pribadi Anda (opsional).
+• Dienkripsi AES-256-GCM dengan kata sandi Anda.
 
 💼 COCOK UNTUK BERBAGAI SEKTOR UMKM:
 • Usaha Dagang / Ritel: Toko kelontong, kios, warung sembako, agen, reseller.
 • Kuliner & F&B: Kafe, warung makan, resto, katering, bakery, kedai kopi.
 • Jasa & Servis: Bengkel, laundry, barbershop/salon, rental/sewa alat, jasa servis.
-• Usaha Agribisnis & Produksi: Pengolahan pangan, budidaya, kerajinan, dan manufaktur kecil.
+• Pertanian & Produksi: Budidaya, pengolahan pangan, kerajinan, dan manufaktur kecil.
 
-Kelola arus kas dan kembangkan usaha UMKM Anda secara profesional bersama Mankeu!
+Kelola arus kas dan kembangkan usaha Anda bersama Mankeu!
 ```
 
 ---
@@ -171,48 +174,45 @@ Mankeu
 
 #### Short Description (Max 80 Characters)
 ```text
-MSME business finance, BEP/HPP/margin calculator, and offline cash flow.
+Small-business cash book, business plan & break-even, and stock. Offline.
 ```
 
 #### Full Description (Max 4000 Characters)
 ```text
-Mankeu is a modern agricultural finance and farm cost accounting tool engineered for farmers, agribusiness operators, agricultural cooperatives, and farm advisors.
+Mankeu is a cash book and business planner for small businesses: shops, food stalls, service providers, rentals, and farms.
 
-Plan crop budgets, track real-world field expenses, and calculate enterprise feasibility metrics automatically, accurately, and 100% offline!
+Record money in and out, plan your business, find your break-even point, and track stock. 100% offline!
 
-🌾 KEY FEATURES:
+📊 KEY FEATURES:
 
-1. AUTOMATED FARM FEASIBILITY CALCULATOR
-• Calculate Break-Even Points (BEP Revenue & BEP Yield Volume).
-• Compute Cost of Goods Sold (HPP per kg/unit).
-• Analyze Benefit-Cost Ratio (B/C Ratio) and Return-Cost Ratio (R/C Ratio).
-• Evaluate net profit and margins before and after harvest.
+1. A SIMPLE CASH BOOK
+• Two buttons: Money In and Money Out. The category tells whether it is a sale, an expense, owner capital, an owner drawing, or an asset purchase.
+• Made a mistake? Tap Edit to fix it, or Delete.
+• Records money that actually moved. No debts, receivables, or loans.
 
-2. ISOLATED DUAL LEDGERS (PROJECTION VS ACTUAL)
-• Maintain an Actual Ledger (real expenses & harvest revenue) strictly separated from your Projection Ledger (budget/RAB).
-• Instantly detect cost overruns by comparing actual expenditures against planned budgets.
-• Farm-ready expense categories: Seeds, Fertilizers, Crop Protection (Pesticides), Labor, Machinery Rental, Land Rent, and Miscellaneous Operations.
+2. BUSINESS PLAN & BREAK-EVEN
+• A Projection book kept apart from the Actual book.
+• Products with per-unit cost recipes, monthly fixed costs, assets, and planned capital.
+• Break-even in units and rupiah (also for several products), monthly profit, R/C, B/C, and capital needed.
+• Compare actual results with the plan month by month.
 
-3. SMART EXCEL SPREADSHEET IMPORT & EXPORT (.XLSX)
-• Seamlessly import financial workbooks from Excel (.xlsx).
-• Powered by an intelligent on-device Semantic Matcher tailored for agricultural operations.
-• Export comprehensive financial statements to printable PDF and Excel formats.
+3. STOCK
+• Stock in, stock out, and stock counts, with low-stock warnings.
+• Stock per branch or shared.
 
-4. 100% OFFLINE-FIRST & STRICT DATA PRIVACY
-• All your agricultural records remain strictly on your local device (SQLite Room).
-• Zero advertisements, zero third-party tracking, and zero telemetry. Works seamlessly in remote fields without internet access.
+4. EXCEL (.XLSX) & PDF
+• The Mankeu Excel template: fill it once, import many records at a time, and undo if needed.
+• Excel export that imports back, and a printable PDF report.
 
-5. ENCRYPTED CLOUD BACKUP (GOOGLE DRIVE)
-• Optional backup synchronization directly to your personal Google Drive (drive.appdata).
-• Protected with military-grade client-side AES-256-GCM encryption using your custom passphrase.
+5. 100% OFFLINE & PRIVATE
+• All data stays on your phone (SQLite Room).
+• No ads, no trackers, no required login.
 
-🌱 PERFECT FOR ALL AGRICULTURAL ENTERPRISES:
-• Food Crops (Paddy/Rice, Corn, Soybean, Cassava)
-• Horticulture & Vegetables (Chili, Shallots, Tomato, Melon)
-• Cash Crops & Plantations (Coffee, Cocoa, Oil Palm, Rubber)
-• Agricultural Machinery Rentals, Farm Inputs, and Commodity Trading.
+6. ENCRYPTED BACKUP
+• Back up to a file or your personal Google Drive (optional).
+• Encrypted with AES-256-GCM under your password.
 
-Take control of your farm finances with precision and ease using Mankeu!
+Take control of your business finances with Mankeu!
 ```
 
 ---
@@ -225,9 +225,9 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 | :--- | :--- | :--- | :--- |
 | **App Icon** | 512 x 512 px PNG (32-bit) | Launcher & Google Play Store Icon | `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` |
 | **Feature Graphic** | 1024 x 500 px JPEG/PNG | Google Play Store Banner Header | `docs/assets/store/feature-graphic.png` |
-| **Screenshot 01** | High-Res PNG Phone | Beranda & Ringkasan Keuangan Tani | `docs/assets/store/screenshot-01-beranda.png` |
-| **Screenshot 02** | High-Res PNG Tablet/Phone | Analisis Kelayakan Usaha Tani (BEP/HPP/BCR) | `docs/assets/store/screenshot-02-kelayakan-bep-hpp.png` |
-| **Screenshot 03** | High-Res PNG Phone | Impor Cerdas Spreadsheet Excel & Pencocok Semantik | `docs/assets/store/screenshot-03-impor-excel.png` |
+| **Screenshot 01** | High-Res PNG Phone | Beranda & Ringkasan Keuangan | `docs/assets/store/screenshot-01-beranda.png` |
+| **Screenshot 02** | High-Res PNG Tablet/Phone | Kelayakan & BEP | `docs/assets/store/screenshot-02-kelayakan-bep-hpp.png` |
+| **Screenshot 03** | High-Res PNG Phone | Impor Templat Excel Mankeu | `docs/assets/store/screenshot-03-impor-excel.png` |
 | **Screenshot 04** | High-Res PNG Phone | Laporan Rincian Arus Kas & Biaya Operasional | `docs/assets/store/screenshot-04-laporan-keuangan.png` |
 | **Screenshot 05** | High-Res PNG Tablet/Phone | Buku Kas Terisolasi (Realisasi vs Proyeksi Anggaran) | `docs/assets/store/screenshot-05-buku-kas-anggaran.png` |
 | **Screenshot 06** | High-Res PNG Phone | Pengaturan Akun & Cadangan Terenkripsi AES-256-GCM | `docs/assets/store/screenshot-06-cadangan-terenkripsi.png` |

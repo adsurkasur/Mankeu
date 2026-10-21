@@ -1,5 +1,7 @@
 # Paket Instruksi & Standar Skill Agentic AI: Audit Keuangan & Codebase "Mankeu"
 
+> **Dokumen riwayat.** Paket instruksi audit 2026-10-20. Skill aktifnya ada di `.agents/skills/umkm-financial-auditor/SKILL.md`; bagian lain menggambarkan kode sebelum DEC-011. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 Paket ini dirancang untuk diumpankan langsung ke **Agentic AI** (seperti Claude Code, Cursor, Codex, Gemini CLI, atau Wilson) yang bertugas melakukan **audit mendalam dan refactoring** terhadap repositori **Mankeu** (`https://github.com/adsurkasur/Mankeu`).
 
 ---

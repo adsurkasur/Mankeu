@@ -22,8 +22,8 @@ These observations support further product discovery. They do **not** prove that
 ## Research questions
 
 1. Can intended users record common financial events correctly and quickly on their own devices?
-2. Do users understand business/project scope, projection versus realization, cash versus profit, receivables/payables, and financing?
-3. Does the enrichment notification build trust without creating unnecessary alarm or workload?
+2. Do users understand business/project scope, projection versus realization, cash versus profit, owner capital and drawings, and break-even?
+3. Do the import preview and its notice build trust without creating unnecessary alarm or workload?
 4. Can users restore, export, or move data without an application-owned server?
 5. Which relative-advantage, compatibility, complexity, trialability, and observability factors predict adoption intent?
 6. How do phone-only and tablet-capable users differ in tasks and report needs?
@@ -41,11 +41,11 @@ These observations support further product discovery. They do **not** prove that
 
 Use scenario tasks, not feature tours:
 
-- create two businesses and assign a job correctly;
-- record cash income, expense, owner capital, and loan;
+- create two businesses and assign a unit correctly;
+- record cash income, expense, owner capital, and an asset purchase, then correct one record with Ubah;
 - create a simple budget and compare it with realization;
-- record and partially settle a receivable/payable;
-- import a workbook, explain the Sewa Lahan notice, and find its sources;
+- build a simple business plan and read its break-even;
+- fill the Mankeu template, import it, and undo the import;
 - create and restore a backup.
 
 Capture completion, error/recovery, time-on-task, assistance, comprehension, and qualitative reasoning. A successful tap sequence with misunderstood money meaning is not success.

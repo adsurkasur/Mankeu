@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
  * Just enough of an event to compute a cash-flow schedule.
  *
  * The screens used to derive the monthly chart from the full `List<MoneyEvent>`, which carries a
- * description, a category name, a counterparty and a reference for every row. A book with a few
+ * description, a category name and a reference for every row. A book with a few
  * thousand transactions therefore rebuilt several megabytes of strings on every database change,
  * to add up six numbers per month. These five columns are all the arithmetic ever touched.
  */
@@ -332,8 +332,8 @@ interface FinanceDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertImportBatch(batch: ImportBatchEntity)
 
-    @Query("UPDATE import_batches SET state = 'REVERSED', reversedAtEpochMillis = :reversedAt WHERE id = :batchId AND state = 'COMMITTED'")
-    suspend fun markImportBatchReversed(batchId: String, reversedAt: Long): Int
+    @Query("UPDATE import_batches SET state = 'REVERSED', reversedAtEpochMillis = :undoneAt WHERE id = :batchId AND state = 'COMMITTED'")
+    suspend fun markImportBatchUndone(batchId: String, undoneAt: Long): Int
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertNotice(notice: ImportNoticeEntity)

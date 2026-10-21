@@ -1,5 +1,5 @@
 ---
-status: design-approved-not-implemented
+status: implemented (backup and auth); sync section superseded by docs/SYNC_ARCHITECTURE.md
 last_verified: 2026-08-28
 audience: human-and-ai
 sensitivity: internal

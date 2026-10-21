@@ -690,7 +690,7 @@ Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, te
         +getEvent(id) FinancialEventEntity
         +deleteEvent(id)
         +deleteEventsForImportBatch(batchId) Int
-        +markImportBatchReversed(batchId, reversedAt) Int
+        +markImportBatchUndone(batchId, undoneAt) Int
         +hasImported(sourceSha256) Boolean
         +observeEventsForBook(bookId, limit) Flow
         +observeCashFlowRows(bookId) Flow
@@ -1133,7 +1133,7 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
     opt Periode unit masih persis yang diisi impor
         Repo-&gt;&gt;Db: Kosongkan periode rencana
     end
-    Repo-&gt;&gt;Db: markImportBatchReversed
+    Repo-&gt;&gt;Db: markImportBatchUndone
     alt Batch sudah dibatalkan
         Repo--&gt;&gt;Db: Rollback
         Repo--&gt;&gt;VM: Impor ini sudah dibatalkan

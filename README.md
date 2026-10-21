@@ -30,10 +30,11 @@
 
 - 🔒 **100% Offline-First & Privat**: Beroperasi penuh tanpa butuh koneksi internet, tanpa kewajiban login, dan tanpa ketergantungan pada server pihak ketiga. Data keuangan Anda aman di genggaman Anda.
 - ⚖️ **Dual-Book Scenarios (Proyeksi vs Realisasi)**: Memisahkan secara tegas antara rencana/simulasi bisnis (*Plan*) dan realisasi operasional (*Actual*), tanpa saling mencemari data.
-- 📊 **Analisis Kelayakan Finansial Otomatis**: Menghitung Titik Impas (BEP unit & Rupiah), HPP per unit produk, Laba Kotor, Laba Bersih, hingga rasio kelayakan bisnis (Benefit-Cost Ratio).
-- 💼 **Multi Usaha & Multi Proyek/Siklus**: Kelola berbagai entitas usaha (toko, kuliner, bengkel, jasa, pertanian) beserta siklus proyeknya dalam satu aplikasi dengan isolasi data independen.
-- 📑 **Sinkronisasi Excel (.xlsx) Dua Arah**: Ekspor laporan lengkap bersertifikasi audit, atau impor pembukuan lama dengan rekonsiliasi cerdas dan jejak audit (*audit trail*).
-- 🛡️ **Cadangan Terenkripsi AES-256 & Cloud Drive**: Ekspor cadangan terenkripsi ke file lokal atau sinkronisasikan secara privat ke Google Drive pribadi Anda.
+- 📊 **Rencana Usaha & Titik Impas**: Susun produk beserta resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana; Mankeu menghitung BEP unit dan Rupiah, laba per bulan, R/C, B/C, dan kebutuhan modal.
+- 💼 **Multi Usaha & Multi Unit**: Kelola beberapa usaha (toko, kuliner, bengkel, jasa, pertanian), masing-masing dengan unit atau cabang yang datanya terpisah.
+- 📦 **Stok Barang**: Barang per unit atau dipakai bersama semua unit, dengan peringatan stok menipis.
+- 📑 **Templat Excel (.xlsx) Mankeu**: Templat kosong dan berkas ekspor memakai format yang sama, sehingga hasil ekspor dapat diimpor kembali tanpa kehilangan data.
+- 🛡️ **Cadangan Terenkripsi AES-256**: Simpan cadangan terenkripsi ke berkas lokal atau ke Google Drive pribadi Anda.
 
 ---
 
@@ -47,38 +48,45 @@
 
 ## 🚀 Fitur Unggulan
 
-### 1. Pencatatan Transaksi Komprehensif & Intuitif
-- **Pemasukan & Pengeluaran Kas**: Catat transaksi uang masuk dan uang keluar harian secara cepat dengan kategorisasi terstruktur.
-- **Piutang & Utang (Obligasi)**: Pantau tagihan yang belum diterima atau kewajiban yang belum dibayar, lengkap dengan riwayat pelunasan bertahap maupun pelunasan instan.
-- **Setoran Modal & Penarikan**: Pisahkan modal awal pemilik dan kas operasional secara akurat.
+### 1. Pencatatan Kas yang Sederhana
+- **Uang Masuk & Uang Keluar**: Dua tombol saja. Kategori yang dipilih menentukan jenisnya: pemasukan, pengeluaran, setoran modal, ambil pribadi (prive), atau beli aset.
+- **Kas murni**: Mankeu hanya mencatat uang yang benar-benar berpindah. Tidak ada piutang, utang, pinjaman, cicilan, atau bunga (DEC-011).
 - **Ubah dan Hapus**: Catatan yang salah isi diperbaiki langsung lewat **Ubah**; catatan yang tidak perlu dihapus. Jurnal ikut dibangun ulang sehingga laporan selalu seimbang (DEC-019).
+- **Produk dan kuantitas opsional**: Uang masuk dapat menyebut produk; jumlah mengikuti kuantitas × harga.
 
-### 2. Skenario Ganda: Mode Realisasi vs Mode Proyeksi
-- **Mode Realisasi**: Rekam pembukuan riil yang telah terjadi di lapangan.
-- **Mode Proyeksi (Plan)**: Rancang rencana keuangan sebelum modal dikeluarkan. Tetapkan target volume penjualan, estimasi harga jual satuan, dan modal kas awal.
+### 2. Dua Buku: Realisasi dan Proyeksi
+- **Realisasi**: Catatan kas nyata yang sudah terjadi.
+- **Proyeksi (Rencana Usaha)**: Periode rencana, produk dengan resep biaya per unit (beserta hasil per resep), bulan mulai dijual untuk produk musiman, biaya tetap bulanan, biaya dan pemasukan sekali, aset dengan umur pakai, serta setoran modal yang direncanakan.
 - **Analisis Kelayakan Seketika**:
-  - Estimasi Omzet Penjualan & Total Biaya
-  - HPP (Harga Pokok Penjualan) per satuan unit
-  - Titik Impas (BEP) dalam kuantitas produk dan nominal Rupiah
-  - Net Profit Margin (%) & Benefit-Cost Ratio (BCR)
+  - BEP gabungan berdasarkan bauran penjualan, plus BEP per produk
+  - Laba per bulan, R/C ratio, dan B/C ratio
+  - Kebutuhan modal dari defisit kas kumulatif terdalam
+  - Status BEP bulan berjalan di buku Realisasi
 
-### 3. Laporan Keuangan Standar Eksekutif
-- **Laba Rugi (Income Statement)**: Pantau omzet, beban pokok penjualan, beban operasional, dan laba bersih.
-- **Laporan Arus Kas (Cash Flow)**: Kategorisasi otomatis aktivitas operasi, investasi, dan pendanaan.
-- **Perbandingan Realisasi vs Rencana**: Bandingkan deviasi antara target rencana dan pencapaian aktual secara presisi.
+### 3. Stok Barang
+- Barang milik satu unit atau dipakai bersama semua unit usaha.
+- Barang masuk, barang keluar, dan opname, dengan peringatan stok menipis dan nilai persediaan.
 
-### 4. Interoperabilitas Lembar Kerja Excel (.xlsx)
-- **Ekspor Komprehensif**: Menghasilkan workbook Excel multi-lembar terstruktur (Transaksi Realisasi, Transaksi Proyeksi, Asumsi & Kelayakan, Laba Rugi, Arus Kas).
-- **Template Pembukuan UMKM**: Buat dan bagikan template Excel resmi Mankeu yang kompatibel untuk langsung diisi dan diimpor.
-- **Deteksi Cerdas & Rekonsiliasi**: Importer otomatis mencocokkan kolom tanggal, uraian, debit/kredit, dan kategori, serta memulihkan catatan tersirat dengan notifikasi bukti audit.
+### 4. Laporan Keuangan
+- **Laba Rugi dan Arus Kas**: Pemasukan, pengeluaran, laba, serta arus kas operasi, investasi, dan pendanaan, dengan grafik bulanan.
+- **Kelayakan & BEP**: Rincian bulanan biaya tetap, biaya sekali, penyusutan, biaya variabel, pendapatan, laba, R/C, dan B/C.
+- **Realisasi vs Target**: Rata-rata per bulan rencana dibandingkan dengan rata-rata per bulan realisasi, berbasis kas.
+- **Ekspor PDF** untuk dicetak atau diarsipkan.
 
-### 5. Keamanan & Cadangan Data
+### 5. Templat Excel (.xlsx)
+- **Satu format** (DEC-012): lembar Petunjuk, Transaksi, Rencana Anggaran, Produk, Resep Produk, Stok Barang, dan Kategori. Templat kosong dan ekspor memakai format yang sama.
+- **Impor ketat**: Hanya templat Mankeu yang diterima. Berkas lain ditolak dengan daftar lembar atau kolom yang bermasalah dan tautan unduh templat. Tidak ada tebakan kolom.
+- **Impor ke unit terpilih**: Kategori yang belum ada ditampilkan di pratinjau sebelum disimpan, dan impor berkas yang sama memunculkan peringatan duplikat.
+- **Batalkan impor**: Menghapus semua catatan yang ditambahkan impor itu; riwayat impornya tetap tercatat.
+
+### 6. Keamanan & Cadangan Data
 - **Offline-First Room DB**: Seluruh data tersimpan di SQLite lokal perangkat tanpa memerlukan koneksi server.
-- **Enkripsi AES-256 GCM**: Cadangkan basis data ke berkas lokal dengan perlindungan kata sandi kuat.
-- **Penyelarasan Google Drive Opsional**: Simpan cadangan terenkripsi ke folder aplikasi pribadi (`appDataFolder`) di Google Drive tanpa perantara server pihak ketiga.
+- **Enkripsi AES-256-GCM**: Kunci diturunkan dari kata sandi dengan PBKDF2-HMAC-SHA256 310.000 iterasi.
+- **Google Drive opsional**: Cadangan terenkripsi disimpan di folder aplikasi pribadi (`appDataFolder`); Drive hanya melihat ciphertext.
 
-### 6. Panduan Interaktif (Spotlight Guided Tour)
-- Dilengkapi panduan sorotan (*spotlight tour*) kontekstual pada setiap layar untuk memandu pemilik usaha memahami fitur tanpa repot membaca buku panduan tebal.
+### 7. Panduan dan Pusat Bantuan
+- Panduan per halaman **ditawarkan**, tidak dimulai sendiri, dan dapat dimatikan di Pengaturan (DEC-018).
+- **Pusat Bantuan** berisi artikel berbasis tugas dengan pencarian, langkah bernomor, gambar, dan tombol **Tunjukkan di aplikasi**.
 
 ---
 
@@ -90,12 +98,12 @@ Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Andro
 | :--- | :--- |
 | **Bahasa Pemrograman** | Kotlin 2.0+ (100% Coroutines & StateFlow) |
 | **Antarmuka (UI)** | Jetpack Compose, Material Design 3 (Dynamic Color, Light & Dark Theme) |
-| **Arsitektur** | MVI / Clean Architecture (Domain, Data, Presentation) |
-| **Basis Data Lokal** | Room ORM (SQLite) dengan migrasi skema teruji |
+| **Arsitektur** | Domain Kotlin murni, Room repository, satu `AppViewModel` dengan `StateFlow` |
+| **Basis Data Lokal** | Room (SQLite), schema 11, migrasi teruji tanpa migrasi destruktif |
 | **Aritmatika Uang** | Pure Integer Arithmetic (`Long` Rupiah — zero floating-point drift) |
-| **Format Lembar Kerja** | Native OpenXML / ZIP OOXML Streaming Parser & Exporter |
-| **Kriptografi** | Jetpack Security Crypto (AES-256-GCM) |
-| **Cloud Sync** | Google Drive REST API v3 (Scoped `appDataFolder`) |
+| **Format Lembar Kerja** | Pembaca dan penulis OOXML sendiri (parser DOM platform, tanpa Apache POI) |
+| **Kriptografi** | `javax.crypto` platform: PBKDF2-HMAC-SHA256 dan AES-256-GCM |
+| **Cadangan Cloud** | Google Drive REST API v3 (`appDataFolder`); kerangka sinkronisasi multi-perangkat ada di `sync/`, belum tersambung ke UI |
 | **Continuous Integration** | GitHub Actions (Build, Test, Lint, Auto-Release) |
 
 ---
@@ -135,7 +143,7 @@ Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Andro
 ## 🧪 Jaminan Kualitas (Quality Gates)
 
 Setiap baris kode di repositori Mankeu mematuhi standar ketat:
-- **59+ Automated Unit & Golden Tests**: Menguji keabsahan saldo, penjurnalan ganda, analisis kelayakan, enkripsi cadangan, import/export round-trip, hingga ubah/hapus catatan dan pembatalan impor.
+- **Unit test JVM dan instrumented test**: Menguji keseimbangan jurnal, rencana usaha dan BEP, stok, enkripsi cadangan, round-trip templat Excel, migrasi skema, ubah/hapus catatan, dan pembatalan impor.
 - **Strict Lint Compliance**: Tanpa error kompilasi dan bebas peringatan kritis.
 - **Exact Rupiah Invariant**: Seluruh perhitungan nilai uang menggunakan bilangan bulat (`Long`), menjamin akurasi 100% tanpa risiko pembulatan desimal komputer.
 

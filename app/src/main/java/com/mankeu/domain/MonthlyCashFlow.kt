@@ -17,7 +17,7 @@ data class MonthlyCashFlow(
  *
  * Separate from [MoneyEvent] so the calculation can be fed straight from a narrow database
  * projection: a book with thousands of transactions should not have to materialise every
- * description, category and counterparty to add up six figures a month. Mirrors what
+ * description and category to add up six figures a month. Mirrors what
  * `PostedRecord` already does for [PostingReportCalculator].
  */
 data class CashFlowRecord(

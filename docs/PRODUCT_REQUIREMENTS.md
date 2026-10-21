@@ -1,12 +1,12 @@
 ---
 status: baseline
-last_verified: 2026-08-15
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
   - owner-confirmed decisions dated 2026-08-15
   - docs/PROJECT_GUIDE.md
-  - docs/REFERENCE_WORKBOOK_CONTRACT.md
+  - logs/DECISION_LOG.md (DEC-011 to DEC-019 supersede the original receivables, loans, enrichment and reversal requirements)
 ---
 
 # Product Requirements
@@ -20,57 +20,52 @@ Mankeu is a standalone Android application with a universal financial core and o
 ### Businesses and projects
 
 - **FR-BIZ-001:** A user can create, rename, archive, restore, and delete multiple businesses.
-- **FR-BIZ-002:** A business can contain multiple projects, jobs, seasons, or activities.
-- **FR-BIZ-003:** Transactions that do not belong to a specific project are assigned to an explicit `Umum` workspace, never an invisible null bucket.
+- **FR-BIZ-002:** A business can contain multiple units (branches, fields, seasons, or activities), each with its own Proyeksi and Realisasi book.
+- **FR-BIZ-003:** Every record belongs to an explicit unit the owner created; the app never invents a hidden default unit.
 - **FR-BIZ-004:** Agriculture-specific attributes are optional template metadata, not required business fields.
 
 ### Simple financial entry
 
-- **FR-TXN-001:** The primary entry flow supports money in and money out with date, amount, description, category, business, and optional project.
-- **FR-TXN-002:** Quantity, unit, unit price, counterparty, payment method, attachment, and notes are optional.
+- **FR-TXN-001:** The primary entry flow supports money in and money out with date, amount, description, and category, into the selected unit. The category role decides the cash type: income, expense, owner capital, owner drawing, or asset purchase (DEC-011 K-2).
+- **FR-TXN-002:** Quantity, unit, unit price, product, reference, cost nature, and useful life (assets) are optional.
 - **FR-TXN-003:** The UI does not expose debit and credit as required user input, while the internal model preserves balanced financial meaning.
-- **FR-TXN-004:** Editing or deleting a posted transaction leaves an audit event and updates every derived report deterministically.
-- **FR-TXN-005:** Loan principal, owner capital, loan repayment, interest, revenue, and expense remain semantically distinct.
+- **FR-TXN-004:** A record can be corrected in place (Ubah: same id, journal rebuilt) or deleted (Hapus), and every derived report updates deterministically (DEC-019).
+- **FR-TXN-005:** Strict cash: owner capital, owner drawing, asset purchase, revenue, and expense remain semantically distinct; there are no receivables, payables, loans, instalments, or interest (DEC-011).
 
 ### Budget, projection, and realization
 
 - **FR-PLAN-001:** Each project can contain a complete projection and a complete realization dataset.
-- **FR-PLAN-002:** Both datasets can contain budget/recap items, dated transaction details, income statement, cash flow, financing, and unit-economics assumptions.
-- **FR-PLAN-003:** Comparison reads final projection and realization outputs and never acts as a transaction source.
-- **FR-PLAN-004:** A user can duplicate a projection as the starting structure for realization without linking future edits implicitly.
+- **FR-PLAN-002:** The projection is a business plan (DEC-014, DEC-017): plan period, products with per-unit cost recipes and a first selling month, monthly fixed costs, one-off costs and income, assets with useful life, and planned capital. Realization holds the recorded cash.
+- **FR-PLAN-003:** Comparison reads final projection and realization outputs (averages per month, cash basis) and never acts as a transaction source.
 
 ### Reports
 
 - **FR-RPT-001:** Provide income and expense summary, profit/loss, cash flow, cumulative cash, financing cash flow, and budget-versus-actual variance.
-- **FR-RPT-002:** Show HPP, break-even production, and B/C ratio only when their required unit and production assumptions exist.
+- **FR-RPT-002:** Show break-even (mix and per product), R/C, B/C, and capital need only when the plan has the products, targets, and costs they need.
 - **FR-RPT-003:** Every report offers a path back to its contributing records.
 - **FR-RPT-004:** An unexplained reconciliation difference is visible and cannot be labeled complete.
 - **FR-RPT-005:** Reports are read-only outputs; corrections happen at the originating record or through an explicit adjustment.
 
-### Receivables and payables
+### Stock
 
-- **FR-ARAP-001:** Before public 1.0, support simple receivables and payables with counterparty, issue date, due date, original amount, remaining amount, status, and notes.
-- **FR-ARAP-002:** Partial settlement is supported and creates linked cash transactions.
-- **FR-ARAP-003:** Status is derived from balances and dates: draft, open, partially paid, paid, overdue, or cancelled.
-- **FR-ARAP-004:** A receivable is not cash income until collected, and a payable is not cash outflow until paid.
-- **FR-ARAP-005:** Full invoice generation, tax, inventory valuation, and purchase-order workflow are outside the first implementation milestone.
+- **FR-STK-001:** Stock items belong to one unit or are shared by every unit of the business (DEC-017).
+- **FR-STK-002:** Stock in, stock out, and stock count (opname) are recorded atomically; stock out cannot exceed what is on hand, and low stock is flagged.
 
 ### Import, export, and backup
 
-- **FR-IMP-001:** A supported workbook is read as a coordinated multi-sheet source.
-- **FR-IMP-002:** Import runs preview, validation, reconciliation, enrichment classification, confirmation when required, and atomic commit.
-- **FR-IMP-003:** Automatic enrichment produces a visible notification and provenance record.
-- **FR-IMP-004:** Import can be reviewed and reversed by batch.
-- **FR-IMP-005:** Reimport offers replace, merge, or cancel with explicit consequences and duplicate detection.
-- **FR-EXP-001:** Export can reproduce budget, transactions, income statement, cash flow, post-financing cash flow, and comparison.
+- **FR-IMP-001:** Import reads only the Mankeu template (DEC-012); any other file is rejected with the exact missing or renamed sheets and columns and a way to download the template. Nothing is guessed or enriched.
+- **FR-IMP-002:** Import is bulk entry into the selected unit: preview (new categories, conflicts, duplicate warning), then one atomic commit with a visible notice.
+- **FR-IMP-003:** Undoing an import (Batalkan impor) deletes its records, archives its plan lines, removes its products and stock, and keeps the batch as history (DEC-019).
+- **FR-IMP-004:** Re-importing an identical file is allowed after a clear duplicate warning.
+- **FR-EXP-001:** The Excel export is the template format (lossless round trip); the PDF export carries the income statement, cash flow, and feasibility.
 - **FR-BKP-001:** Local backup and restore work without an account.
 - **FR-BKP-002:** Backups are versioned, integrity-checked, and encrypted before public release.
-- **FR-SYNC-001:** Google Drive sync/backup and Firebase authentication are optional later experiments, not core dependencies.
+- **FR-SYNC-001:** Google Drive backup and Firebase authentication are optional, never core dependencies. Multi-device sync exists as an end-to-end encrypted framework (DEC-013) and is not yet offered in the UI.
 
 ### Notifications and recovery
 
 - **FR-NOT-001:** Notifications distinguish information, automatic recovery, action required, conflict, and failure.
-- **FR-NOT-002:** A recovery notification describes the changed record, amount, source evidence, assumptions, and review/undo action.
+- **FR-NOT-002:** A notice says what an import or a data cleanup changed, how many records and how much money, and where it came from.
 - **FR-NOT-003:** Offline, interrupted import, failed restore, and storage errors provide a concrete recovery path.
 
 ## Non-functional requirements
@@ -88,7 +83,7 @@ Mankeu is a standalone Android application with a universal financial core and o
 ## Out of scope for the first code milestone
 
 - iOS implementation;
-- full inventory and cost-of-goods engine;
+- full inventory valuation and a cost-of-goods engine (recipes do not consume stock yet);
 - tax filing or regulated accounting compliance claims;
 - payroll;
 - marketplace, payments, or banking integration;

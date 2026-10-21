@@ -195,7 +195,7 @@ data class ProductEntity(
     val archived: Boolean = false,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long = createdAtEpochMillis,
-    /** Set when the product came from a template import, so reversing that import removes it. */
+    /** Set when the product came from a template import, so undoing that import removes it. */
     val importBatchId: String? = null,
     /** Month of the plan period (1 = first) from which it sells; seasonal products start later. */
     @ColumnInfo(defaultValue = "1") val sellFromMonth: Int = 1,
@@ -218,8 +218,8 @@ data class ProductCostComponentEntity(
 
 @Entity(
     tableName = "import_batches",
-    // Not unique: a reversed batch keeps its row as audit history, and re-importing the same file
-    // afterwards (typically into the other book) is a legitimate correction. `hasImported` is the
+    // Not unique: an undone batch keeps its row as audit history, and re-importing the same file
+    // afterwards is a legitimate correction. `hasImported` is the
     // duplicate guard, and it only counts batches still COMMITTED (D-076).
     indices = [Index("sourceSha256"), Index("bookId")],
 )
@@ -237,7 +237,7 @@ data class ImportBatchEntity(
     val recordCount: Int = 0,
     val totalAmountRupiah: Long = 0,
     val reversedAtEpochMillis: Long? = null,
-    /** The plan period this import gave a unit that had none; reversing the batch clears it again. */
+    /** The plan period this import gave a unit that had none; undoing the batch clears it again. */
     val appliedStartEpochDay: Long? = null,
     val appliedEndEpochDay: Long? = null,
     /** Money in among [totalAmountRupiah]; null on batches from before schema 10, which only kept the total. */

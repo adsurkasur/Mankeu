@@ -22,14 +22,14 @@ sensitivity: internal
 | Evidence | Location | Supports | Limits/sensitivity |
 | --- | --- | --- | --- |
 | Legacy finance audit | `../arina-agri/AUDIT_REVISI_MANAJEMEN_KEUANGAN.md` | Intended five-view workflow, corrected calculations, legacy gaps | Snapshot; verify against current code before reuse |
-| Reference workbook | `../arina-agri/references/CATATAN KEUANGAN PADI 1 Ha ADE.xlsx` | Golden categories, amounts, cross-sheet workflow, Sewa Lahan enrichment | Financial reference; do not redistribute casually; verify SHA-256 |
+| Reference workbook | `../arina-agri/references/CATATAN KEUANGAN PADI 1 Ha ADE.xlsx` | Historical golden case for the former reference importer (superseded by DEC-012) | Financial reference; do not redistribute casually; verify SHA-256 |
 | Legacy finance source | `../arina-agri/lib/finance/` and related hooks/components | Existing parser, types, calculations, and implementation lessons | Not an authoritative native design |
 | Legacy finance tests | `../arina-agri/tests/` | Regression cases and tested expectations | Passing tests do not prove complete user workflow |
 | Native/mobile request summary | `../jurnal_sus_test_arina_agri/README.md` | Six respondents requesting mobile access in current draft | Must be regenerated from authoritative response data before publication |
 | Submission discipline | `../jurnal_sus_test_arina_agri/SUBMISSION_GUIDE.md` | Mobile request is not proof of solution effectiveness | Publication guide, not product validation |
-| Owner decisions | [Decision Log](DECISION_LOG.md) | Scope, local-first, multi-business/project, brand, enrichment | Product authority; implementation still pending |
+| Owner decisions | [D-log](DECISION_LOG.md) (D-001 to D-087) and [`logs/DECISION_LOG.md`](../logs/DECISION_LOG.md) (DEC-001 on) | Scope, local-first, multi-business/unit, strict cash, template import, business plan, edit/delete | Product authority; DEC entries state implementation status |
 
-The reference workbook identity is fixed in [Reference Workbook Contract](REFERENCE_WORKBOOK_CONTRACT.md). Record future fixtures by hash, version, sensitivity, and permitted storage location.
+The former reference workbook identity is kept in [Reference Workbook Contract](REFERENCE_WORKBOOK_CONTRACT.md) (historical). Record future fixtures by hash, version, sensitivity, and permitted storage location.
 
 ## Official technical evidence
 

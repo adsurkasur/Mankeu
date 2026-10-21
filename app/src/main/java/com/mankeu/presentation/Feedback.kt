@@ -31,7 +31,7 @@ enum class FeedbackEvent(internal val haptic: HapticFeedbackType, internal val s
     /** A long-press reached its threshold and a tooltip opened. */
     LONG_PRESS(HapticFeedbackType.LongPress, null),
 
-    /** A destructive or corrective action was started: delete, reverse. Heavier than a tap. */
+    /** A destructive action was started: delete, archive. Heavier than a tap. */
     WARN(HapticFeedbackType.GestureThresholdActivate, null),
 
     /** Something was written: a transaction saved, an import committed, a backup created. */

@@ -45,7 +45,7 @@ import java.time.ZoneOffset
  * The two input types this app gets wrong most easily — money and dates — in one place.
  *
  * Both used to be written per screen. The entry form got a date picker and digit-only,
- * overflow-safe amounts in round 4 while the settlement and assumptions dialogs kept typing ISO
+ * overflow-safe amounts in round 4 while other dialogs kept typing ISO
  * dates into a bare text field and accepting `0001200000` as an amount. Same control, same rules,
  * one definition.
  */

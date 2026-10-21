@@ -1,11 +1,18 @@
 ---
-status: active
-last_verified: 2026-08-28
+status: closed-history (D-001 to D-087); newer decisions in logs/DECISION_LOG.md
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 ---
 
 # Decision Log
+
+> **Riwayat keputusan D-001 sampai D-087 (2026-08 s.d. 2026-09).** Keputusan baru sejak 2026-10 dicatat sebagai `DEC-xxx` di [`logs/DECISION_LOG.md`](../logs/DECISION_LOG.md). Baris di bawah tidak diubah agar riwayat tetap utuh; yang sudah tidak berlaku:
+>
+> - Piutang, utang, pembayaran, pinjaman, dan bunga (antara lain D-042 sebagian, D-077, D-078) dihapus oleh **DEC-011** (kas murni).
+> - Pembalikan transaksi ("Balik", jurnal pembalik, tampilan DIBALIK; D-042 sebagian, D-077, D-078, D-086, bagian pembalikan D-084 dan D-087) dihapus oleh **DEC-019** (Ubah dan Hapus). D-076 (impor ulang setelah dibatalkan) tetap berlaku.
+> - Pembacaan workbook referensi, pencocokan semantik, dan pengayaan otomatis digantikan oleh **DEC-012** (hanya templat Mankeu).
+> - Kalkulator asumsi kelayakan (`scenario_assumptions`) digantikan oleh rencana usaha **DEC-014**.
 
 ## Accepted decisions
 
@@ -101,15 +108,15 @@ sensitivity: internal
 
 ## Open decisions
 
-| ID | Decision needed | Needed before | Owner/input |
-| --- | --- | --- | --- |
-| O-003 | Minimum SDK and representative device matrix | Foundation stabilization | Field-device evidence |
-| O-004 | Decimal scale/rounding policy for units and ratios | Domain kernel | Product/accounting review |
-| O-005 | Backup format, encryption library, and key-recovery behavior | Backup implementation | Threat model and owner approval |
-| O-006 | Snapshot-only Drive backup versus true multi-device sync | Cloud experiment | User research and conflict design |
-| O-008 | Exact AR/AP inclusion point and invoice boundary | Beta scope freeze | Owner and research |
-| O-009 | Monetization and support model | Public release | Product owner |
-| O-011 | Analytics/crash-reporting provider, consent, and retention—or none | Beta instrumentation | Privacy/research decision |
+| ID | Decision needed | Status (2026-10-22) |
+| --- | --- | --- |
+| O-003 | Minimum SDK and representative device matrix | minSdk 26 set; device matrix still open |
+| O-004 | Decimal scale/rounding policy for units and ratios | closed: `BigDecimal` with `RoundingMode.HALF_UP`, money in whole rupiah `Long` |
+| O-005 | Backup format, encryption library, and key-recovery behavior | closed: `PortableBackupCodec`, PBKDF2-HMAC-SHA256 + AES-256-GCM, password is the only key (D-080, D-082) |
+| O-006 | Snapshot-only Drive backup versus true multi-device sync | closed: both; sync framework per DEC-013, UI wiring open |
+| O-008 | Exact AR/AP inclusion point and invoice boundary | closed: no AR/AP at all (DEC-011) |
+| O-009 | Monetization and support model | open |
+| O-011 | Analytics/crash-reporting provider, consent, and retention—or none | open; none is shipped |
 
 ## Decision-change rule
 

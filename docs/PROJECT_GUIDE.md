@@ -1,6 +1,6 @@
 ---
-status: active-planning
-last_verified: 2026-08-15
+status: active
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
@@ -23,7 +23,7 @@ That request is evidence of a real problem. It is not yet evidence that a partic
 
 Small-business operators need a low-friction way to record money movement, plan costs and revenue, understand cash position, compare plans with reality, and recover useful information from existing workbooks without becoming accountants or database operators.
 
-The product must preserve accounting meaning while presenting familiar language such as `Uang Masuk`, `Uang Keluar`, `Anggaran`, `Piutang`, `Utang`, and `Ringkasan`.
+The product must preserve accounting meaning while presenting familiar language such as `Uang Masuk`, `Uang Keluar`, `Anggaran`, `Setoran Modal`, `Ambil Pribadi`, `Stok`, and `Ringkasan`. It records cash only (DEC-011): money that actually moved, with no receivables, payables, loans or interest.
 
 ## Relationship to Arina Agri web
 
@@ -46,19 +46,20 @@ The new product may reuse validated formulas, fixtures, terms, and test ideas. I
 ## Jobs to be done
 
 - Record a transaction in seconds while working in the field or workshop.
-- Know current cash, income, expense, obligations, and receivables without manual recapitulation.
+- Know current cash, income, expense, profit and stock without manual recapitulation.
 - Create an estimate before starting a project and compare it with actual results.
-- Import a known workbook and receive a correct, explained result.
+- Fill the Mankeu Excel template once and bring many records in at the same time, with a preview and a clean undo.
 - Export or back up data without being locked into an application server.
 - Review richer reports on a tablet without losing the quick-entry experience on a phone.
 
 ## Current state
 
-- Product direction and initial requirements: documented.
-- Android implementation: not started.
-- Package name and final brand name: intentionally undecided.
-- Cloud sync and authentication: future experiments, not MVP dependencies.
-- Play Store account, listing, signing, privacy declarations, and release artifacts: not created or verified.
+As of 2026-10-22 (verified against the code; decisions in `logs/DECISION_LOG.md`):
+
+- Android app `com.mankeu`, version 0.0.6, Room schema 11: cash recording with Ubah/Hapus, two books per unit (Realisasi and Proyeksi), business plan with products, cost recipes and break-even, stock per unit, reports, PDF and Excel export, template import with undo, encrypted backup to a file or Google Drive, offered page tours and an in-app help center.
+- Strict cash (DEC-011): no receivables, payables, loans, instalments or interest anywhere.
+- Multi-device sync: framework implemented (DEC-013), not wired to the UI.
+- Releases: v0.0.4 to v0.0.6 went through the Play Console pipeline to the internal testing track (`docs/PLAY_STORE_DEPLOYMENT.md`); no public production release is recorded. Schema 6 to 11 are unreleased.
 - Research protocol: planned, not approved or executed.
 
 ## Success definition

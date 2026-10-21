@@ -1,5 +1,5 @@
 ---
-status: verified-audit
+status: historical
 last_verified: 2026-08-15
 audience: human-and-ai
 sensitivity: internal
@@ -11,6 +11,8 @@ evidence_basis:
 ---
 
 # Web Finance Capability Matrix
+
+> **Dokumen riwayat.** Matriks kemampuan web 2026-08-15, dipakai sebagai bukti awal. Cakupan Mankeu kemudian dipersempit oleh DEC-011 s.d. DEC-019. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 ## Purpose
 

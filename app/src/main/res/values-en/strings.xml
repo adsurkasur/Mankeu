@@ -425,14 +425,14 @@
 
     <!-- Reports -->
     <string name="reports_financing_actual_title">Financing used</string>
-    <string name="reports_financing_actual_note">These figures come from owner capital and drawings actually recorded, not from assumptions.</string>
+    <string name="reports_financing_actual_note">These figures come from owner capital and drawings actually recorded, not from the plan.</string>
     <string name="reports_financing_net">Net financing cash flow</string>
     <string name="reports_working_capital">Working capital needed</string>
     <string name="reports_working_capital_note">The gap your own capital has to cover, based on operating and investing cash flow.</string>
 
     <!-- Records -->
     <string name="tooltip_mode_actual">Actual book: transactions that really happened.</string>
-    <string name="tooltip_mode_plan">Plan book: plans, budget and assumptions. It does not change real cash.</string>
+    <string name="tooltip_mode_plan">Plan book: business plan, products and costs. It does not change real cash.</string>
     <string name="tooltip_feasibility_status">From the B/C ratio: feasible when revenue covers every cost (B/C of 1 or more).</string>
     <string name="stock_title">Inventory &amp; Stock</string>
     <string name="stock_value">Total inventory value</string>

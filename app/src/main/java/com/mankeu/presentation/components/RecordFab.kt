@@ -50,9 +50,9 @@ import com.mankeu.presentation.LocalFeedback
  * Pengeluaran" under the thumb from anywhere, and carries the same green/coral money direction the
  * entry form uses so the choice is recognisable before the label is read.
  *
- * Deliberately two options and no more: every other kind — piutang, utang, modal, pinjaman — is a
- * genuine but occasional case and stays behind "Jenis lain" on the entry screen, where there is
- * room to explain what each one means.
+ * Deliberately two options and no more: setoran modal, ambil pribadi and beli aset are money in or
+ * out too, chosen by their category in the entry form (DEC-011 K-2), so they need no button of
+ * their own.
  */
 @Composable
 fun RecordSpeedDial(

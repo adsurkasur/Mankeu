@@ -428,14 +428,14 @@
 
     <!-- Laporan -->
     <string name="reports_financing_actual_title">Pembiayaan Terpakai</string>
-    <string name="reports_financing_actual_note">Angka di bawah ini berasal dari setoran modal dan prive yang benar-benar tercatat, bukan dari asumsi.</string>
+    <string name="reports_financing_actual_note">Angka di bawah ini berasal dari setoran modal dan prive yang benar-benar tercatat, bukan dari rencana.</string>
     <string name="reports_financing_net">Arus Kas Pendanaan Bersih</string>
     <string name="reports_working_capital">Kebutuhan Modal Kerja</string>
     <string name="reports_working_capital_note">Selisih yang harus ditutup dengan modal sendiri, dihitung dari arus kas operasi dan investasi.</string>
 
     <!-- Catatan -->
     <string name="tooltip_mode_actual">Buku Realisasi: transaksi yang benar-benar terjadi.</string>
-    <string name="tooltip_mode_plan">Buku Proyeksi: rencana, RAB, dan asumsi. Tidak mengubah uang kas nyata.</string>
+    <string name="tooltip_mode_plan">Buku Proyeksi: rencana usaha, produk, dan biaya. Tidak mengubah uang kas nyata.</string>
     <string name="tooltip_feasibility_status">Status kelayakan usaha: R/C 1,00 atau lebih dan B/C di atas 0,00 menandakan usaha menguntungkan.</string>
     <string name="stock_title">Persediaan &amp; Stok Barang</string>
     <string name="stock_value">Total nilai persediaan</string>

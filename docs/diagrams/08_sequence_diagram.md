@@ -111,7 +111,7 @@ sequenceDiagram
     opt Periode unit masih persis yang diisi impor
         Repo->>Db: Kosongkan periode rencana
     end
-    Repo->>Db: markImportBatchReversed
+    Repo->>Db: markImportBatchUndone
     alt Batch sudah dibatalkan
         Repo-->>Db: Rollback
         Repo-->>VM: Impor ini sudah dibatalkan

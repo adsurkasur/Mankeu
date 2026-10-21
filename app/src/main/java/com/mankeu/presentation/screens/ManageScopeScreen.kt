@@ -210,8 +210,8 @@ fun ManageScopeScreen(
             }
         }
 
-        // Nothing below this line means anything until a farm exists: the heading would read
-        // "Lahan pada " with a hole where the name goes, over a card repeating the empty-farm copy.
+        // Nothing below this line means anything until a business exists: the heading would read
+        // "Unit pada " with a hole where the name goes, over a card repeating the empty-state copy.
         if (activeBusiness != null) {
             item { Spacer(Modifier.width(0.dp)) }
             item {

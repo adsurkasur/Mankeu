@@ -1,5 +1,7 @@
 # MASTER PROMPT HANDOFF: FINALISASI & RILIS APLIKASI "MANKEU"
 
+> **Dokumen riwayat.** Prompt serah terima 2026-10-20. Tugasnya sudah dikerjakan atau digantikan oleh DEC-011 s.d. DEC-019. **Jangan dijalankan lagi.** Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 Salin seluruh teks di bawah garis pemisah ini dan berikan langsung ke AI Agent baru (Claude Code, Cursor, Gemini CLI, Wilson, dll.) atau pengembang penerus tugas untuk mengeksekusi penyelesaian final aplikasi Mankeu.
 
 ---

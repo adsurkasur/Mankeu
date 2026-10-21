@@ -1,108 +1,105 @@
 ---
-status: current-mvp
-last_verified: 2026-08-15
+status: current
+last_verified: 2026-10-22
 audience: owner-testers-and-maintainers
 sensitivity: internal
 ---
 
-# Panduan Tes Manual MVP
+# Panduan Tes Manual
 
-Panduan ini menguji MVP debug, bukan release Play Store. Gunakan data sintetis; jangan jadikan MVP saat ini sebagai satu-satunya penyimpanan catatan keuangan asli.
+Panduan ini menguji build debug Mankeu (Room schema 11), bukan rilis Play Store. Gunakan data rekaan; jangan jadikan build debug satu-satunya tempat catatan keuangan asli.
 
-## 1. Jalankan dari Android Studio
+## 1. Jalankan aplikasi
 
-1. Buka Android Studio dari `E:\Android\Android Studio`.
-2. Pilih **Open** lalu buka `E:\Managed Projects\Arina\arina-agri-calculator`.
-3. Tunggu Gradle sync selesai. SDK Location harus `E:\Android\Sdk`.
-4. Buka **Tools → Device Manager** dan nyalakan `arina_api30`, atau sambungkan ponsel Android dengan USB debugging.
-5. Pilih konfigurasi `app`, lalu tekan tombol Run hijau.
+1. Buka folder `mankeu` di Android Studio dan tunggu Gradle sync selesai.
+2. Nyalakan emulator dari **Device Manager**, atau sambungkan ponsel dengan USB debugging.
+3. Pilih konfigurasi `app`, lalu Run.
 
-Alternatif tanpa Android Studio: pasang `app\build\outputs\apk\debug\app-debug.apk` pada ponsel uji. Package `com.example.arinaagri.calculator` dan debug signing bukan identitas release.
+Alternatif: pasang `app/build/outputs/apk/debug/app-debug.apk`. Package `com.mankeu` dengan debug signing bukan identitas rilis.
 
-## 2. Smoke test pencatatan dan akuntansi
+## 2. Pencatatan kas dan laporan
 
-Pada lingkup awal `Usaha Saya` → `Umum`, simpan empat catatan berikut:
+Buat usaha `Usaha Uji` dan unit `Unit A`. Di buku **Realisasi**, buka **Catatan** dan simpan lima catatan berikut:
 
-| Jenis | Keterangan | Kategori | Jumlah |
+| Tombol | Keterangan | Kategori | Jumlah |
 | --- | --- | --- | ---: |
-| Uang masuk | Servis traktor | Jasa | Rp1.250.000 |
-| Uang keluar | Suku cadang | Operasional | Rp250.001 |
-| Modal | Setoran pemilik | Modal | Rp5.000.000 |
-| Pinjaman | Pinjaman koperasi | Pembiayaan | Rp2.000.000 |
+| Uang masuk | Servis traktor | Penjualan & Jasa | Rp1.250.000 |
+| Uang keluar | Suku cadang | Bahan Baku & Stok | Rp250.001 |
+| Uang masuk | Setoran pemilik | Setoran Modal Pemilik | Rp5.000.000 |
+| Uang keluar | Ambil untuk dapur | Ambil untuk Pribadi (Prive) | Rp200.000 |
+| Uang keluar | Beli mesin bor | Beli Peralatan & Aset | Rp1.000.000 |
 
-Buka **Laporan** dan cocokkan:
+Buka **Laporan → Laba Rugi dan Arus Kas** dan cocokkan:
 
 | Baris laporan | Hasil yang benar |
 | --- | ---: |
-| Pendapatan usaha | Rp1.250.000 |
-| Beban usaha + bunga | Rp250.001 |
-| Laba/rugi | Rp999.999 |
-| Kas operasi | Rp999.999 |
-| Kas pembiayaan | Rp7.000.000 |
-| Saldo kas | Rp7.999.999 |
+| Pendapatan Operasional | Rp1.250.000 |
+| Biaya Operasional | Rp250.001 |
+| Laba / Rugi kas | Rp999.999 |
+| Arus Kas Operasi | Rp999.999 |
+| Arus Kas Investasi | −Rp1.000.000 |
+| Arus Kas Pembiayaan | Rp4.800.000 |
+| Saldo Kas Akhir | Rp4.799.999 |
 
-Modal dan pinjaman tidak boleh menambah pendapatan atau laba.
+Setoran modal dan prive tidak boleh mengubah pendapatan, beban, atau laba. Pembelian aset tidak menjadi beban.
 
-## 3. Persistensi dan isolasi lingkup
+## 3. Ubah dan Hapus
 
-1. Tutup paksa aplikasi, kemudian buka lagi. Keempat catatan dan semua angka harus tetap sama.
-2. Tambahkan usaha `Usaha Uji Kedua` dan proyek `Proyek B`.
-3. Pindah ke lingkup baru. Laporan harus dimulai dari Rp0.
-4. Kembali ke `Usaha Saya` → `Umum`. Empat catatan awal harus muncul kembali tanpa tercampur.
+1. Pada kartu `Suku cadang`, ketuk **Ubah**. Formulir terisi dan bertuliskan "Mengubah catatan".
+2. Ganti jumlah menjadi Rp300.000 lalu Simpan. Snackbar "Catatan diperbarui." muncul, kartu yang sama berubah (tidak ada kartu baru), dan laba menjadi Rp950.000.
+3. Ketuk **Hapus** pada kartu `Ambil untuk dapur`, baca sheet konfirmasi, lalu Hapus. Saldo kas naik Rp200.000 dan Arus Kas Pembiayaan menjadi Rp5.000.000.
 
-## 4. Tes impor tanpa enrichment
+## 4. Persistensi dan isolasi lingkup
 
-Gunakan proyek kosong dan fixture sintetis:
+1. Tutup paksa aplikasi lalu buka lagi. Usaha dan unit terakhir terbuka kembali, semua angka sama.
+2. Tambah usaha `Usaha Uji Kedua` dengan unit `Unit B` dan pindah ke sana. Laporan dimulai dari Rp0.
+3. Kembali ke `Usaha Uji` → `Unit A`. Catatan awal muncul tanpa tercampur.
 
-`..\arina-finance-workbook-fixtures\fixtures\canonical\WB-CAN-001\workbook.xlsx`
+## 5. Rencana usaha
 
-Di menu **Impor**, pilih workbook tersebut. Pratinjau yang benar:
+Pindah ke buku **Proyeksi** dan buka **Catatan** (menjadi Rencana Usaha):
 
-- 5 lembar dikenali;
-- 16 catatan langsung: 15 pengeluaran dan 1 pemasukan;
-- 0 pemulihan/enrichment;
-- pemasukan Rp45.500.000;
-- pengeluaran Rp22.159.000;
-- tidak ada konflik atau tindakan manual.
+1. Atur periode rencana 12 bulan.
+2. Tambah produk dengan harga jual, target per bulan, dan satu komponen resep biaya.
+3. Tambah satu biaya tetap bulanan.
 
-Setelah disetujui, laporan harus menunjukkan laba Rp23.341.000. Memilih file yang sama lagi harus ditolak sebagai duplicate hash.
+Beranda dan **Laporan → Kelayakan & BEP** harus menampilkan BEP unit dan rupiah. Bila harga jual di bawah biaya variabel per unit, muncul peringatan bahwa setiap penjualan menambah rugi.
 
-## 5. Tes enrichment yang terlihat
+## 6. Stok
 
-Gunakan proyek kosong lain dan fixture:
+1. Buka **Stok**, tambah barang dengan stok awal 10 dan batas minimum 3.
+2. Catat **Keluar** 8: stok menjadi 2 dan barang ditandai menipis.
+3. Catat **Keluar** 5: ditolak karena stok tidak mencukupi.
+4. Catat **Opname** 0: diterima.
 
-`..\arina-finance-workbook-fixtures\fixtures\enrichment\WB-ENR-001\workbook.xlsx`
+## 7. Impor templat dan Batalkan impor
 
-Pratinjau yang benar:
+1. Di **Berkas & Data**, ekspor Excel dari `Unit A`.
+2. Pindah ke `Unit B` lalu impor berkas tadi. Pratinjau menampilkan jumlah baris dan kategori baru, lalu Simpan.
+3. Impor berkas yang sama sekali lagi: pratinjau memberi peringatan duplikat (impor tetap diizinkan). Batalkan pratinjau.
+4. Di **Riwayat pengambilan**, ketuk **Batalkan impor** pada batch tadi. Catatan dari impor itu hilang, dan batch tetap tercatat sebagai dibatalkan.
+5. Impor berkas Excel lain yang bukan templat Mankeu: harus ditolak dengan daftar lembar atau kolom yang bermasalah.
 
-- 5 lembar dikenali;
-- 15 catatan langsung: 14 pengeluaran dan 1 pemasukan;
-- tepat 1 pemulihan otomatis;
-- `Sewa Lahan` Rp7.000.000 terlihat sebelum commit;
-- sumber yang ditampilkan mencakup RAB, laporan laba-rugi, dan arus kas;
-- asumsi tanggal/periode ditampilkan, bukan disembunyikan;
-- total akhir tetap: pemasukan Rp45.500.000, pengeluaran Rp22.159.000, laba Rp23.341.000.
+## 8. Cadangan dan pemulihan
 
-Jika enrichment muncul tanpa sumber atau notifikasi, anggap tes gagal.
+1. Buat cadangan ke berkas dengan kata sandi minimal 8 karakter.
+2. Tambah satu catatan baru, lalu pulihkan cadangan tadi. Pratinjau menampilkan jumlah data; setelah dipulihkan, catatan baru itu hilang dan data cadangan kembali.
+3. Coba pulihkan dengan kata sandi salah: harus gagal tanpa mengubah data.
 
-## 6. Tes tampilan tablet
+## 9. Tampilan tablet
 
-Di Device Manager, buat perangkat virtual kategori tablet menggunakan image API 30 Google APIs x86_64 yang sudah tersedia. Jalankan aplikasi dan pastikan:
+Di perangkat virtual tablet, pastikan navigasi berpindah dari baris bawah ke rail di sisi kiri (lebar 840dp ke atas), kartu tidak saling menimpa, dan formulir, laporan, serta pratinjau impor tetap dapat dipakai.
 
-- navigasi berpindah dari baris bawah menjadi rail di sisi kiri;
-- kartu ringkasan tidak saling menimpa;
-- pemilih usaha/proyek, form pencatatan, laporan, dan pratinjau impor tetap dapat digunakan.
+## 10. Batas kegagalan
 
-## 7. Batas kegagalan yang harus dicatat
-
-Jangan menyatakan MVP lolos jika terjadi salah satu hal berikut:
+Jangan menyatakan build lolos bila terjadi salah satu hal berikut:
 
 - angka berubah setelah restart;
-- transaksi usaha/proyek lain tercampur;
-- modal atau pinjaman menaikkan pendapatan/laba;
-- workbook dimutasi sebelum pratinjau disetujui;
-- enrichment terjadi tanpa bukti dan notifikasi;
-- workbook konflik tetap dapat di-commit;
+- catatan usaha atau unit lain tercampur;
+- setoran modal atau prive menaikkan pendapatan atau laba;
+- Ubah membuat kartu baru alih-alih mengganti kartu yang sama;
+- data berubah sebelum pratinjau impor disetujui;
+- berkas bukan templat diterima;
 - aplikasi crash, membeku, atau kehilangan data.
 
-Catat perangkat/API, langkah, expected result, actual result, screenshot, dan apakah masalah dapat diulang. Fitur ekspor, pembalikan impor, piutang/utang, backup terenkripsi, dan release signing memang belum tersedia dan tidak dihitung sebagai kegagalan implementasi MVP saat ini.
+Catat perangkat/API, langkah, hasil yang diharapkan, hasil sebenarnya, tangkapan layar, dan apakah masalah dapat diulang.

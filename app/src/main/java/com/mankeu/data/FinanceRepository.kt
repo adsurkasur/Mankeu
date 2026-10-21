@@ -310,10 +310,10 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 
     /**
-     * Creates only the business. It no longer also inserts a general "Umum" project: a field or
-     * season is a real accounting scope with its own two books, and inventing one on the owner's
+     * Creates only the business. It no longer also inserts a general "Umum" project: a unit
+     * (branch, field, season) is a real accounting scope with its own two books, and inventing one on the owner's
      * behalf is the same failure as the old starter workspace, one level down. The caller shows an
-     * explicit "Tambah Lahan" step instead.
+     * explicit "Tambah Unit Usaha" step instead.
      */
     suspend fun createBusiness(name: String): String = database.withTransaction {
         val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama usaha wajib diisi." } }
@@ -339,8 +339,8 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 
     suspend fun renameProject(id: String, name: String) = database.withTransaction {
-        val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama lahan wajib diisi." } }
-        val project = dao.getProject(id) ?: error("Lahan tidak ditemukan.")
+        val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama unit wajib diisi." } }
+        val project = dao.getProject(id) ?: error("Unit tidak ditemukan.")
         dao.updateProject(project.copy(name = cleanName, updatedAtEpochMillis = System.currentTimeMillis()))
     }
 
@@ -359,11 +359,11 @@ class FinanceRepository(private val database: AppDatabase) {
         startDate: LocalDate?,
         endDate: LocalDate?,
     ) = database.withTransaction {
-        val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama lahan wajib diisi." } }
+        val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama unit wajib diisi." } }
         require(startDate == null || endDate == null || !endDate.isBefore(startDate)) {
             "Tanggal selesai tidak boleh mendahului tanggal mulai."
         }
-        val project = dao.getProject(id) ?: error("Lahan tidak ditemukan.")
+        val project = dao.getProject(id) ?: error("Unit tidak ditemukan.")
         dao.updateProject(
             project.copy(
                 name = cleanName,
@@ -387,7 +387,7 @@ class FinanceRepository(private val database: AppDatabase) {
      * know which button to draw.
      */
     suspend fun removeProject(id: String): ScopeRemoval = database.withTransaction {
-        val project = dao.getProject(id) ?: error("Lahan tidak ditemukan.")
+        val project = dao.getProject(id) ?: error("Unit tidak ditemukan.")
         if (projectIsEmpty(project.id)) {
             dao.deleteProject(project.id)
             ScopeRemoval.DELETED
@@ -879,7 +879,7 @@ class FinanceRepository(private val database: AppDatabase) {
                 if (matches) dao.updateProject(unit!!.copy(startDateEpochDay = null, endDateEpochDay = null, updatedAtEpochMillis = now))
             }
         } ?: false
-        check(dao.markImportBatchReversed(batchId, now) == 1) {
+        check(dao.markImportBatchUndone(batchId, now) == 1) {
             "Impor ini sudah dibatalkan."
         }
         ImportUndo(deletedEvents + archivedBudgets.size + removedStock + removedProducts, periodCleared)

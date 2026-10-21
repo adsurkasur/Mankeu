@@ -7,7 +7,7 @@ The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported 
 | Schema | Shipped in | Change | Migration |
 | :-: | :-- | :-- | :-- |
 | 1–2 | pre-release | Initial ledger, then books, budgets and imports | Destructive (no user data existed yet) |
-| 3 | v0.0.4 | Baseline of the first Play Store release | — |
+| 3 | v0.0.4 | Baseline of the first Play Store build (internal testing track) | — |
 | 4 | v0.0.5 | `units` table and `categories.defaultUnitId` removed (D-064) | `MIGRATION_3_4`: drop `units`, rebuild `categories` without the column, recreate both indices |
 | 5 | v0.0.6 | `import_batches.sourceSha256` index is no longer unique (D-076) | `MIGRATION_4_5`: drop the unique index, create a plain index of the same name |
 | 6 | unreleased | Loan/interest columns removed from `scenario_assumptions`; nullable CVP inputs `fixedCostRupiah` and `variableCostPerUnitRupiah` added; minimal inventory tables `stock_items` and `stock_movements` added (DEC-007, DEC-009) | `MIGRATION_5_6`: rebuild `scenario_assumptions` copying every surviving column (CVP inputs start `NULL`), create both stock tables and their indices |
@@ -19,10 +19,10 @@ The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported 
 
 `fallbackToDestructiveMigration` is **not** configured. An upgrade without a matching migration crashes on open instead of deleting a user's books, and that crash is caught in development by installing over existing data.
 
-## Schema 5 behaviour
+## Re-import and upgrade notes
 
-- **Re-importing a file.** A batch keeps its `import_batches` row after it is undone (`undoImportBatch` since schema 11; the stored state is still spelled `REVERSED`) as audit history. Duplicate protection is `FinanceDao.hasImported`, which only counts `COMMITTED` batches. The same workbook can therefore be imported again once its earlier batch is reversed, and several rows may share a `sourceSha256`.
-- **Upgrade verified on device.** Installing v0.0.6 over a live schema-4 book gave `PRAGMA user_version` 5 with the index recreated non-unique. Transactions (59), cash (Rp29.050.000) and unbalanced journals (0) matched before and after.
+- **Re-importing a file.** A batch keeps its `import_batches` row after it is undone (`undoImportBatch` since schema 11; the stored state is still spelled `REVERSED`) as audit history. Duplicate protection is `FinanceDao.hasImported`, which only counts `COMMITTED` batches. The same workbook can therefore be imported again once its earlier batch is undone, and several rows may share a `sourceSha256`.
+- **Upgrade verified on device (schema 5).** Installing v0.0.6 over a live schema-4 book gave `PRAGMA user_version` 5 with the index recreated non-unique. Transactions (59), cash (Rp29.050.000) and unbalanced journals (0) matched before and after.
 
 ## Backup compatibility
 

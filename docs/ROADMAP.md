@@ -1,6 +1,6 @@
 ---
 status: active-planning
-last_verified: 2026-08-15
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
@@ -18,18 +18,18 @@ This roadmap is a dependency map, not a fixed queue. Independent tasks may proce
 
 | ID | Workstream | Outcome | Status | Depends on |
 | --- | --- | --- | --- | --- |
-| AAC-001 | Product baseline | Requirements, domain, import, UX, architecture, quality, research, and governance are documented | complete 2026-08-15 | none |
-| AAC-002 | Open product decisions | Resolve final name timing, package ID, minimum SDK/device baseline, and release ownership | ready for owner decision | AAC-001 |
-| AAC-003 | Native foundation | Reproducible Kotlin/Compose project with static checks and adaptive shell | MVP implemented; device matrix pending | AAC-001, provisional non-release foundation values |
-| AAC-004 | Domain kernel | Exact money, balanced events, businesses/projects, books, budget, and report calculations | partial: event/posting and core reports unit-verified; books/budget pending | AAC-001 |
-| AAC-005 | Local persistence | Room schema, repositories, audit events, migrations, and recovery tests | partial: schema 1 and atomic writes implemented; migration/recovery suite pending | AAC-004 |
-| AAC-006 | Core mobile workflows | Onboarding, business/project scope, money in/out, budgets, and reports on phone/tablet | partial: scope, entry, and reports implemented; budgets and device UX evidence pending | AAC-003–005 |
-| AAC-007 | Golden importer | Five-sheet reference import, reconciliation, provenance, notifications, and reversal | partial: preview, canonical enrichment, atomic commit, provenance/notice, duplicate guard; conflict UI and reversal pending | AAC-004–005 |
-| AAC-008 | Export and round trip | Five-sheet export, comparison export, reimport preservation, and safe sharing | planned | AAC-005, AAC-007 |
-| AAC-009 | Receivables/payables | Simple obligations, due states, partial settlement, and linked cash events | planned for pre-1.0 | AAC-004–006 |
-| AAC-010 | Backup/restore | Encrypted versioned local backup, restore, and failure recovery | planned for pre-1.0 | AAC-005 |
-| AAC-011 | Drive/auth experiments | Evidence-backed prototypes for optional Drive snapshot/sync and Firebase auth | optional later | AAC-010, owner ADR |
-| AAC-012 | Beta readiness | Privacy, signing, target API, device matrix, release evidence, support/rollback | planned | core release scope complete |
+| AAC-001 | Product baseline | Requirements, domain, import, UX, architecture, quality, research, and governance are documented | complete 2026-08-15; scope narrowed by DEC-011 to DEC-019 | none |
+| AAC-002 | Open product decisions | Final name timing, minimum device baseline, and release ownership | package `com.mankeu` and minSdk 26 set; release ownership open | AAC-001 |
+| AAC-003 | Native foundation | Reproducible Kotlin/Compose project with static checks and adaptive shell | implemented; device matrix pending | AAC-001 |
+| AAC-004 | Domain kernel | Exact money, balanced cash events, businesses/units, two books, business plan, stock, report calculations | implemented and unit-verified | AAC-001 |
+| AAC-005 | Local persistence | Room schema, repositories, migrations, and recovery tests | schema 11; migrations 7→11 tested step by step (`MigrationTest`) | AAC-004 |
+| AAC-006 | Core mobile workflows | Scope, money in/out with Ubah/Hapus, Rencana Usaha, Stok, reports on phone/tablet | implemented; workflow-verified on emulator; field UX evidence pending | AAC-003–005 |
+| AAC-007 | Template import | Mankeu template only (DEC-012), preview, atomic commit, duplicate warning, Batalkan impor | implemented and tested | AAC-004–005 |
+| AAC-008 | Export and round trip | Template-format Excel export, PDF report, lossless reimport | implemented and tested | AAC-005, AAC-007 |
+| AAC-009 | Receivables/payables | — | dropped by owner decision DEC-011 (strict cash) | — |
+| AAC-010 | Backup/restore | Encrypted versioned local backup, restore, recovery copy | implemented; restores schemas 3–11 | AAC-005 |
+| AAC-011 | Drive/auth and sync | Optional Drive backup and Firebase auth; encrypted multi-device sync | Drive backup and auth implemented; sync framework implemented, not wired (DEC-013) | AAC-010 |
+| AAC-012 | Beta readiness | Privacy, signing, target API, device matrix, release evidence, support/rollback | in progress (`docs/PLAY_STORE_DEPLOYMENT.md`) | core release scope complete |
 | AAC-013 | Research validation | Formative tests, pilot/workshop, SUS, DOI analysis, and publication-quality evidence | planned; protocol first | usable beta |
 
 ## Milestone outcomes
@@ -40,7 +40,7 @@ Exit evidence:
 
 - authoritative documents exist and cross-link;
 - owner-confirmed decisions and open decisions are distinguishable;
-- reference workbook hash, corrections, and golden values are fixed;
+- owner decisions are recorded in `logs/DECISION_LOG.md`;
 - private interpersonal context is excluded from product history.
 
 ### M1 — Trustworthy core
@@ -51,7 +51,7 @@ Exit evidence:
 - every user event balances;
 - reports reconcile exactly;
 - projection and realization remain independent;
-- golden values can be produced from sanitized domain fixtures.
+- plan and break-even figures are reproduced by unit tests.
 
 ### M2 — Useful offline application
 
@@ -59,14 +59,14 @@ Exit evidence:
 
 - APK installs on representative phone and tablet devices;
 - no login/network is required;
-- business/project, entry, budget, and report workflows survive process restart;
+- business/unit, entry, plan, stock, and report workflows survive process restart;
 - accessibility and adaptive-layout checks pass.
 
 ### M3 — Safe data mobility
 
 Exit evidence:
 
-- supported workbook imports atomically with enrichment notices;
+- the Mankeu template imports atomically with a visible notice, and undo is clean;
 - export/reimport preserves semantics;
 - encrypted backup/restore survives a loss simulation;
 - migration and rollback behavior are reproducible.
@@ -75,7 +75,6 @@ Exit evidence:
 
 Exit evidence:
 
-- simple receivables/payables are complete or explicitly moved by owner decision;
 - privacy, signing custody, Play requirements, support, known limitations, and release rollback are approved;
 - no stop-ship condition remains.
 
@@ -88,15 +87,9 @@ Exit evidence:
 - Rogers Diffusion of Innovation constructs are operationalized before analysis;
 - product, workshop, and journal claims match the collected evidence.
 
-## Best first implementation slice
+## Next
 
-Build a vertical but non-published slice:
-
-1. create one business and one project;
-2. record cash income, cash expense, owner capital, and loan;
-3. persist them with balanced internal entries;
-4. show reconciled profit/loss and cash flow;
-5. run the same domain rules against golden fixture values;
-6. render the flow at phone and tablet widths.
-
-This slice validates the architecture without prematurely creating Play, Firebase, Drive, or final branding assets.
+1. Representative device matrix (phone and tablet, low-end Android) for the core workflows.
+2. Decide whether and how multi-device sync is offered (open owner questions in `docs/SYNC_ARCHITECTURE.md`).
+3. Release ownership, signing custody, and the first public Play release.
+4. Research protocol, then formative tests with representative owners.

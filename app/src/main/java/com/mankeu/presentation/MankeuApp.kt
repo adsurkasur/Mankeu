@@ -984,7 +984,7 @@ private fun ScopeHeader(
             //
             // Round 8 gave Realisasi the semantic success (teal) container so the two books could
             // be told apart. It worked, and it cost more than it bought: teal is the app's money
-            // colour — Uang Masuk, a surplus, a settled receivable — and a permanent teal block in
+            // colour — Uang Masuk, a surplus, a positive cash flow — and a permanent teal block in
             // the header competed with the figures below it, which are the thing that is actually
             // supposed to be teal or coral. A book is a scope, not an amount.
             //

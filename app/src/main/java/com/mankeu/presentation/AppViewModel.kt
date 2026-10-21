@@ -184,8 +184,8 @@ class AppViewModel(
      *
      * The five-second timeout is the visible half. The half that matters for correctness is
      * `replayExpirationMillis`, which defaults to `Long.MAX_VALUE`: the cached value is *never*
-     * reset to the initial one when a flow goes cold. `record`, `createBudgetItem` and
-     * `saveAssumptions` read `selectedBookId.value` and `uiState.value` directly, and a reset
+     * reset to the initial one when a flow goes cold. `record`, `savePlanLine` and
+     * `saveProduct` read `selectedBookId.value` and `uiState.value` directly, and a reset
      * cache would hand them a null book id and silently drop the user's transaction.
      */
     private val KeepWarm = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000)
@@ -348,7 +348,7 @@ class AppViewModel(
         viewModelScope.launch { selectedProjectId.drop(1).collect { importState.value = ImportUiState.Idle } }
         viewModelScope.launch {
             // Reads only. A first run now legitimately resolves to (null, null) and the shell
-            // asks the owner to name their own usaha and lahan, instead of the app writing
+            // asks the owner to name their own usaha and unit, instead of the app writing
             // "Usaha Saya"/"Umum" behind their back and presenting it as their data.
             val selection = repository.currentWorkspace(rememberedSelection)
             selectedBusinessId.value = selection.businessId
@@ -456,7 +456,7 @@ class AppViewModel(
     /**
      * Archiving the active scope leaves nothing selected; the `businesses`/`projects` collectors in
      * `init` notice the selection has gone and fall back to the first remaining row, or to null when
-     * there is none — which is what puts the explicit "Tambah Usaha"/"Tambah Lahan" state back on
+     * there is none — which is what puts the explicit "Tambah Usaha"/"Tambah Unit Usaha" state back on
      * screen rather than leaving a dangling id.
      */
     fun removeBusiness(id: String) = mutating {

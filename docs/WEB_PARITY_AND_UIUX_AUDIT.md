@@ -1,4 +1,6 @@
-﻿# Audit Komparatif Berbasis Bukti (Web vs Android Calculator), Analisis Masalah UI/UX, dan Rencana Standardisasi Industri
+# Audit Komparatif Berbasis Bukti (Web vs Android Calculator), Analisis Masalah UI/UX, dan Rencana Standardisasi Industri
+
+> **Dokumen riwayat.** Audit perbandingan dengan aplikasi web (2026-08). Mankeu sengaja tidak mengejar paritas fitur; piutang, pinjaman, dan importer referensi sudah dihapus. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 Dokumen ini disusun sebagai audit manual berbasis bukti (*evidence-based*) yang membandingkan implementasi modul keuangan pada prototipe web (`E:\Managed Projects\Arina\arina-agri`) dengan aplikasi Android (`E:\Managed Projects\Arina\arina-agri-calculator`), merinci kelemahan UI/UX saat ini, dan merumuskan rencana standardisasi berbasis Material 3 dan Jetpack Compose.
 

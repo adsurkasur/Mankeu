@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 last_updated: 2026-08-29 05:45:00 +07:00
 audience: human-and-ai
 sensitivity: internal
@@ -7,6 +7,8 @@ purpose: interruption-safe implementation checkpoint
 ---
 
 # Implementation Progress
+
+> **Dokumen riwayat.** Catatan kemajuan 2026-08 (aplikasi masih bernama Arina Agri Calculator). Piutang, pinjaman, importer workbook referensi, dan pembalikan yang dibahas di sini sudah dihapus. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 This is the live recovery record for the Arina Agri Calculator v1 implementation. Update it after every material milestone, before switching to a substantially different task, and before ending an implementation session. Do not rely on chat history as the only record of progress.
 

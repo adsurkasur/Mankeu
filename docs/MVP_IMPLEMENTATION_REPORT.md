@@ -1,11 +1,13 @@
 ---
-status: implemented-and-locally-verified
+status: historical
 last_verified: 2026-08-15
 audience: human-and-ai
 sensitivity: internal
 ---
 
 # MVP Implementation Report
+
+> **Dokumen riwayat.** Laporan MVP 2026-08-15. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 ## Claim
 

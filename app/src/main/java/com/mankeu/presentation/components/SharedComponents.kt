@@ -190,7 +190,7 @@ fun EventCard(
                 // Default 48dp IconButtons: these were shrunk to 36dp, under the minimum touch target,
                 // on the one control that deletes money records.
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Ubah replaced "Balik Transaksi" (DEC-019).
+                    // Ubah corrects the record in place (DEC-019).
                     if (onEdit != null) {
                         MankeuTooltip(stringResource(R.string.action_edit_event)) {
                             IconButton(onClick = { feedback(FeedbackEvent.TAP); onEdit(event) }) {

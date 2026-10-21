@@ -44,7 +44,7 @@ Mistakes and uncertainty are normal. Dismissal of reproducible failures, unsuppo
 | --- | --- |
 | Product meaning or source precedence | Product-owner approval and decision entry |
 | Money/report calculation | Golden/invariant tests and reconciliation review |
-| Import repair/enrichment | Provenance, notification, atomicity, and reversal evidence |
+| Import/export format | Template round-trip, rejection, atomicity, notice, and undo evidence (DEC-012) |
 | Database schema | Migration, backup, rollback, and data-loss review |
 | Cloud/auth/analytics | Privacy/data-flow ADR and explicit owner approval |
 | Research protocol or public claim | Source/analysis trace and owner/research approval |

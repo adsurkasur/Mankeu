@@ -1,5 +1,7 @@
 # Laporan Audit Menyeluruh & Status Kesiapan Rilis Final "Mankeu"
 
+> **Dokumen riwayat.** Laporan audit 2026-10-20. Temuannya ditindaklanjuti lewat DEC-011 s.d. DEC-019; beberapa fitur yang dibahas di sini (kalkulator asumsi, pembalikan transaksi) sudah tidak ada. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 > **Status Dokumen**: Evaluasi Menyeluruh Kesiapan Final (Whole-Codebase Audit)  
 > **Tanggal Audit**: 20 Oktober 2026  
 > **Target Release**: Finalisasi Aplikasi (Production Ready MVP UMKM)  

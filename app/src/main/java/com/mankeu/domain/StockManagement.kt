@@ -124,7 +124,7 @@ data class StockItemEntity(
     val archived: Boolean = false,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long = createdAtEpochMillis,
-    /** Set when the item came from a template import, so reversing that import removes it. */
+    /** Set when the item came from a template import, so undoing that import removes it. */
     val importBatchId: String? = null,
     /** The business unit (branch) holding it; null means shared by every unit of the business. */
     val projectId: String? = null,

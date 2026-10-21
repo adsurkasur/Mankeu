@@ -148,7 +148,7 @@ classDiagram
         +getEvent(id) FinancialEventEntity
         +deleteEvent(id)
         +deleteEventsForImportBatch(batchId) Int
-        +markImportBatchReversed(batchId, reversedAt) Int
+        +markImportBatchUndone(batchId, undoneAt) Int
         +hasImported(sourceSha256) Boolean
         +observeEventsForBook(bookId, limit) Flow
         +observeCashFlowRows(bookId) Flow

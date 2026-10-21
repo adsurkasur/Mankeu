@@ -1,5 +1,7 @@
 # Progress Log & Implementation Audit
 
+> **Dokumen riwayat.** Log kemajuan 2026-08-29. Pencocok semantik dan fitur kredit yang dibahas di sini sudah dihapus (DEC-011, DEC-012). Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 **Timestamp:** 2026-08-29 06:45:00 +07:00  
 **Status:** All tasks and refinements implemented, verified with 38 unit tests (100% pass), built with `assembleDebug`, deployed, and validated on Android Emulator via ADB.
 

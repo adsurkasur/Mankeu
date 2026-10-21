@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Kelola kategori: choose Tetap/Variabel for each expense category.
 - Template v3: sheets Produk and Resep Produk; Transaksi gains Produk, Jumlah, Sifat Biaya, Umur Pakai; Rencana Anggaran gains Berulang, Sifat Biaya, Umur Pakai.
 ### Changed
+- Texts that still named removed features now describe the app as it is: the Proyeksi tooltip ("rencana usaha, produk, dan biaya" instead of "asumsi"), the financing note in Laporan, and unit errors ("Unit tidak ditemukan", "Nama unit wajib diisi" instead of "lahan").
 - "Balik Transaksi" is gone: a wrong record is fixed with **Ubah** or removed with **Hapus**. On upgrade (schema 11), records that were reversed earlier are deleted together with their reversals; cash and reports do not change, and a notice says how many went. Old backups are cleaned the same way on restore (DEC-019).
 - "Balik batch" is now **Batalkan impor**: undoing an import deletes the records it added; the import stays in the history as "dibatalkan".
 - The four-number BEP calculator, "Saldo kas awal" and "Modal sendiri" are gone. Existing calculator values are converted on upgrade into a product, a monthly fixed cost and a capital line, with a notice; opening cash is named in the notice to be recorded as Setoran Modal if real.

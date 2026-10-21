@@ -1,5 +1,5 @@
 ---
-status: verified-snapshot
+status: historical
 last_verified: 2026-08-15
 audience: human-and-ai
 sensitivity: internal
@@ -9,6 +9,8 @@ evidence_basis:
 ---
 
 # Legacy Web Evidence
+
+> **Dokumen riwayat.** Bukti dari aplikasi web lama (2026-08-15). Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 ## How to use this evidence
 

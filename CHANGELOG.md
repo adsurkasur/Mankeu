@@ -1,5 +1,7 @@
 # Changelog
 
+> **Dokumen riwayat.** Changelog lama sampai 2026-09-11. Changelog yang dipelihara ada di `logs/CHANGELOG.md`. Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
+
 ## Unreleased
 
 ### Added

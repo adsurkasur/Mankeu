@@ -1,6 +1,6 @@
 ---
-status: proposed-baseline
-last_verified: 2026-08-15
+status: implemented-baseline
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
@@ -14,28 +14,27 @@ evidence_basis:
 ## Experience principles
 
 1. **Record first, organize progressively.** A user in the field can save a valid transaction with a few required inputs and add detail later.
-2. **Use business language.** Prefer `Uang Masuk`, `Uang Keluar`, `Belum Dibayar`, and `Jatuh Tempo`; accounting detail remains available as explanation.
-3. **No silent repair.** Every import enrichment or correction is visible and reviewable.
+2. **Use business language.** Prefer `Uang Masuk`, `Uang Keluar`, `Setoran Modal`, `Ambil Pribadi`, and `Unit Usaha`; accounting detail remains available as explanation.
+3. **No silent change.** Every import and every data cleanup leaves a visible notice; import never guesses (DEC-012).
 4. **No dead ends.** Error states explain the impact and the next safe action.
-5. **One meaning everywhere.** Amount, category, project, and financing terms must not change meaning across entry, reports, import, and export.
+5. **One meaning everywhere.** Amount, category, unit, and financing terms must not change meaning across entry, reports, import, and export.
 6. **Offline is normal.** Network state is secondary; core screens do not look broken when offline.
 
 ## Information architecture
 
-Recommended compact-width destinations:
+Compact-width destinations (bottom bar; rail from 840dp):
 
-- `Beranda`: cash position, due items, recent activity, active business/project;
-- `Catat`: fast money-in, money-out, receivable, and payable flows;
-- `Anggaran`: projection, budget items, and comparison;
-- `Laporan`: profit/loss, cash flow, financing, and variances;
-- `Lainnya`: businesses/projects, categories, import/export, backup, settings, and help.
+- `Beranda`: cash, key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even;
+- `Catatan`: entry form and record list with Ubah/Hapus in Realisasi; Rencana Usaha in Proyeksi;
+- `Stok`: stock items of the selected unit and shared items;
+- `Laporan`: Laba Rugi dan Arus Kas, Kelayakan & BEP, Realisasi vs Target.
 
-The final navigation requires prototype testing. `Catat` should remain reachable in one deliberate action from the primary screen; it must not be buried in an overflow menu.
+Overlays from the top bar: `Berkas & Data` (import, export, backup, categories, import history), `Pengaturan`, and `Pusat Bantuan`. A record speed dial (Uang Masuk, Uang Keluar) sits on Beranda and Catatan.
 
 ## Phone behavior
 
 - Use a bottom navigation bar for primary destinations and a prominent quick-entry action.
-- Default to the most recently selected business and project, while always showing the current scope.
+- Reopen the most recently selected business and unit, while always showing the current scope.
 - Transaction entry initially asks for direction, amount, date, description/category, and scope. Optional details expand progressively.
 - Amount entry uses an IDR-aware numeric keyboard and formatted confirmation without floating-point behavior.
 - Reports use summaries and drill-down cards; core understanding must not require a wide spreadsheet or horizontal scrolling.
@@ -44,7 +43,7 @@ The final navigation requires prototype testing. `Catat` should remain reachable
 ## Tablet behavior
 
 - Use adaptive navigation rail or pane layouts at suitable widths.
-- Prefer list-detail interaction: transactions beside detail/edit, projects beside summaries, notices beside provenance.
+- Use the extra width for context (wider report cards, side-by-side metrics) rather than stretching phone cards.
 - Support keyboard navigation, visible focus, and hardware-keyboard entry.
 - Do not merely stretch phone cards across the screen; take advantage of additional context without creating a separate product.
 - Preserve the same domain actions and terminology as phone layouts.
@@ -53,35 +52,25 @@ The final navigation requires prototype testing. `Catat` should remain reachable
 
 1. Explain in one screen that data stays on this device by default and no login is required.
 2. Ask for a business name. The application never creates one on the user's behalf — see D-015.
-3. Ask for a first field/season (`lahan`). It is not optional and no `Umum` project is invented; a
+3. Ask for a first unit (`Unit Usaha`: branch, field, season). It is not optional and no `Umum` unit is invented; a
    book pair only exists once the user has named the scope it belongs to.
-4. Offer `Catat transaksi`, `Buat anggaran`, or `Impor workbook` as concrete starts.
+4. Offer page tours as a small card (Lihat / Nanti / Jangan tawarkan lagi), never started on their own (DEC-018).
 5. Defer account, Drive, research consent, and optional templates until relevant.
 
 No onboarding page may block offline use merely to obtain analytics, authentication, or marketing data.
 
 ## Import experience
 
-The preview groups results by outcome:
+Import reads only the Mankeu template (DEC-012). A file that is not the template is refused with the exact missing or renamed sheets and columns and a button to download the template.
 
-- siap diimpor;
-- dinormalisasi;
-- dipulihkan otomatis;
-- perlu keputusan;
-- konflik yang harus diselesaikan;
-- tidak didukung.
-
-An enrichment such as `Sewa Lahan Rp7.000.000` appears in the preview and, after commit, in the persistent activity/notification center. The summary states the number and total value of enriched records. Users can open source details without reading parser logs.
-
-The UI must not imply that the source workbook was wrong when the application merely needed to reconcile information across sheets.
+The preview states what will be added to the selected unit: transactions with money in and out, plan lines, products, stock, the new categories that will be created, conflicts that block the commit, and a duplicate warning when the same file was imported before. After commit, a notice says what was added. **Batalkan impor** in the import history deletes what the batch added and keeps the batch as history.
 
 ## Empty, loading, and error states
 
 - Empty states describe the first useful action and provide it directly.
 - Local calculations normally use skeletons only when genuine work is pending; do not animate unnecessarily.
 - Storage, import, restore, or migration failures preserve the previous safe state.
-- Reconciliation errors show affected totals and source evidence.
-- Sync status, if later introduced, distinguishes `tersimpan di perangkat`, `menunggu cadangan`, and `dicadangkan`; it must not conflate local save with cloud copy.
+- Sync status, when sync is offered (DEC-013), distinguishes `tersimpan di perangkat`, `menunggu cadangan`, and `dicadangkan`; it must not conflate local save with cloud copy.
 
 ## Colour system
 
@@ -259,8 +248,8 @@ any more.
 
 ## Content style
 
-- State the result first: `Impor selesai: 84 catatan, 1 dipulihkan otomatis`.
-- Explain assumptions plainly: `Tanggal harian tidak ada; periode Agustus digunakan`.
+- State the result first: `Impor dibatalkan: 84 catatan dihapus.`
+- Name the exact problem: the sheet, the cell, and what was expected.
 - Avoid blame, parser jargon, and false certainty.
 - Use consistent Indonesian labels; English technical terms may appear only in advanced help.
 
@@ -277,7 +266,7 @@ These rules apply to every new screen. The reasoning is in D-084 to D-087.
 ### Tooltips
 
 - Use `MankeuTooltip` (Material 3 `TooltipBox` + `PlainTooltip`), never a custom popup.
-- Required on: icon-only actions, status badges (DIBALIK, feasibility, obligation status), and figures that can be ellipsized (metric cards).
+- Required on: icon-only actions (Ubah, Hapus, Data, Pengaturan, bantuan), status badges (feasibility, shared stock), and figures that can be ellipsized (metric cards).
 - The tooltip text says what the element does or what a status is based on. It does not repeat a label that is already visible.
 
 ### Haptic taxonomy
@@ -286,7 +275,7 @@ These rules apply to every new screen. The reasoning is in D-084 to D-087.
 | --- | --- | --- |
 | `TAP` | `SegmentTick` | Changing tab, segment or filter; picking a date; dismissing a sheet |
 | `LONG_PRESS` | `LongPress` | A tooltip appears |
-| `WARN` | `GestureThresholdActivate` | Starting delete, reverse or archive |
+| `WARN` | `GestureThresholdActivate` | Starting delete or archive |
 | `CONFIRM` | `Confirm` | A save, import commit, export or backup succeeded |
 | `REJECT` | `Reject` | Form validation or a ledger rule refused the action |
 
@@ -304,4 +293,4 @@ These rules apply to every new screen. The reasoning is in D-084 to D-087.
 
 ## UX acceptance evidence
 
-A screen is not accepted from a mockup alone. Evidence includes task-based testing on representative phone and tablet sizes, TalkBack checks, font scaling, keyboard navigation for tablet flows, offline behavior, and user comprehension of at least one enrichment notification and one blocked conflict.
+A screen is not accepted from a mockup alone. Evidence includes task-based testing on representative phone and tablet sizes, TalkBack checks, font scaling, keyboard navigation for tablet flows, offline behavior, and user comprehension of one import preview, one refused non-template file, and one Batalkan impor.

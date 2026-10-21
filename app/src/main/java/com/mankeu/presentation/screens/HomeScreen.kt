@@ -105,8 +105,8 @@ import com.mankeu.presentation.toRupiah
 import java.time.format.DateTimeFormatter
 
 /**
- * The Beranda (home) destination: cash headline, the four key metrics, pending obligations,
- * import notices, and executive summary with quick shortcut to Catatan.
+ * The Beranda (home) destination: cash headline, the four key metrics, expense
+ * distribution, stock, plan feasibility and this month's break-even status.
  */
 @Composable
 fun HomeScreen(
@@ -194,8 +194,8 @@ fun HomeScreen(
                     else -> MetricTone.PRIMARY
                 }
                 // Operating cash flow leads: it answers "is the business itself paying for
-                // itself", which is the question a loss-making but loan-funded month hides from
-                // the balance in the hero card. Profit follows, then the two obligation balances.
+                // itself", which is the question a loss-making month topped up with owner capital
+                // hides from the balance in the hero card. Profit follows, then operating income and expense.
                 SimpleMetricGrid(
                     listOf(
                         SimpleMetric(stringResource(R.string.home_cash_flow), summary.operatingCashFlowRupiah, Icons.Default.SwapHoriz, cashFlowTone),
@@ -358,7 +358,7 @@ private fun HeroCard(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     // A balance on its own does not say which way the business is moving: a
-                    // healthy-looking figure can be last month's loan sitting still. The trend
+                    // healthy-looking figure can be last month's capital top-up sitting still. The trend
                     // line names the direction of the most recent month in the same breath.
                     val locale = appLocale()
                     val trend = when {

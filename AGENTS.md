@@ -57,7 +57,7 @@ These rules apply to every future code, documentation, test, migration, import, 
 - Unknown category names become custom categories, shown in the preview before commit.
 - Re-importing an identical file is allowed but must show a clear duplicate warning in the preview.
 - There are no columns for credit, debt, loans, instalments or interest (DEC-011, strict cash).
-- Import must be atomic and reversible through a recorded import batch, and must leave a visible notice of what it added.
+- Import must be atomic and undoable through a recorded import batch, and must leave a visible notice of what it added.
 
 ## Engineering behavior
 

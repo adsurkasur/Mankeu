@@ -1,5 +1,5 @@
 ---
-status: implemented-and-verified
+status: historical
 last_verified: 2026-09-11
 audience: human-and-ai
 sensitivity: internal
@@ -13,6 +13,8 @@ evidence_basis:
 ---
 
 # Round 8 — MSME feasibility workbook, end-to-end reconciliation, and UI/UX standardisation
+
+> **Dokumen riwayat.** Verifikasi ronde 8 (2026-09-11) dengan workbook referensi lama. Importer itu digantikan templat Mankeu (DEC-012). Keadaan sekarang (Room schema 11): `README.md`, `docs/DOMAIN_MODEL.md`, `docs/V1_IMPLEMENTATION_SPEC.md`, `docs/diagrams/`, dan keputusan di `logs/DECISION_LOG.md`.
 
 Three deliverables: a standardised MSME feasibility workbook that verifies the app end to end, a
 UI/UX pass over the main screens, and the audit record below. Both items deferred at the first pass

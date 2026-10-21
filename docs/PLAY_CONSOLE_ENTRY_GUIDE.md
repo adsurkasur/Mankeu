@@ -93,48 +93,51 @@ Mankeu
 
 #### 2. Deskripsi Singkat (Maks 80 Karakter)
 ```text
-Kalkulator keuangan UMKM, analisis kelayakan BEP/HPP, dan pembukuan kas offline.
+Buku kas UMKM, rencana usaha & titik impas (BEP), dan stok. Offline & privat.
 ```
 
 #### 3. Deskripsi Lengkap (Maks 4000 Karakter)
 ```text
-Mankeu adalah aplikasi manajemen keuangan dan pencatatan kas modern yang dirancang khusus untuk pelaku UMKM (Usaha Mikro, Kecil, dan Menengah), pedagang, wirausaha kuliner, dan penyedia jasa di Indonesia.
+Mankeu adalah aplikasi buku kas dan rencana usaha untuk pelaku UMKM (Usaha Mikro, Kecil, dan Menengah), pedagang, wirausaha kuliner, penyedia jasa, dan petani di Indonesia.
 
-Kelola rencana anggaran biaya (RAB), catat transaksi kas harian, dan hitung kelayakan bisnis Anda secara otomatis, akurat, dan 100% offline!
+Catat uang masuk dan keluar, susun rencana usaha, hitung titik impas, dan pantau stok. Semua 100% offline!
 
 📊 FITUR UTAMA MANKEU:
 
-1. KALKULATOR KELAYAKAN USAHA & METRIK UMKM OTOMATIS
-• Hitung Titik Impas (BEP Rupiah Omzet & BEP Volume Penjualan).
-• Hitung Harga Pokok Penjualan / Produksi (HPP per Unit/Porsi/Barang).
-• Analisis Margin Laba Kotor (Gross Profit Margin) dan Laba Bersih (Net Profit Margin).
-• Evaluasi keuntungan operasional riil berjalan secara real-time.
+1. BUKU KAS YANG SEDERHANA
+• Dua tombol saja: Uang Masuk dan Uang Keluar. Kategori menentukan apakah itu penjualan, biaya, setoran modal, ambil pribadi, atau beli aset.
+• Salah isi? Ketuk Ubah untuk membetulkan, atau Hapus.
+• Mencatat uang yang benar-benar berpindah. Tanpa utang, piutang, atau pinjaman.
 
-2. PEMBUKUAN KAS TERISOLASI (PROYEKSI VS REALISASI)
-• Kelola Buku Realisasi (transaksi nyata berjalan) terpisah dari Buku Proyeksi (simulasi/anggaran RAB).
-• Bandingkan selisih biaya aktual vs anggaran secara langsung untuk mencegah pembengkakan biaya.
-• Kategorisasi fleksibel per sektor usaha: Stok Dagang, Bahan Baku, Gaji/Upah, Sewa Tempat, Kemasan, dan Operasional.
+2. RENCANA USAHA & TITIK IMPAS (BEP)
+• Buku Proyeksi terpisah dari Buku Realisasi.
+• Produk dengan resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana.
+• BEP unit dan rupiah (juga untuk banyak produk), laba per bulan, R/C, B/C, dan kebutuhan modal.
+• Bandingkan realisasi dengan target per bulan.
 
-3. IMPOR & EKSPOR CERDAS SPREADSHEET EXCEL (.XLSX)
-• Impor catatan keuangan harian langsung dari berkas Excel (.xlsx).
-• Pencocok Semantik Otomatis yang mengklasifikasikan transaksi kas secara cerdas di perangkat.
-• Ekspor laporan keuangan lengkap ke format PDF dan Excel (.xlsx) siap cetak/arsip.
+3. STOK BARANG
+• Barang masuk, keluar, dan opname, dengan peringatan stok menipis.
+• Stok per cabang atau dipakai bersama.
 
-4. 100% OFFLINE-FIRST & PRIVASI TOTAL
-• Semua data keuangan Anda tersimpan aman di basis data lokal HP Anda (SQLite Room).
-• Bebas iklan (No Ads), bebas pelacak (No Trackers), dan tidak memerlukan koneksi internet untuk pencatatan harian.
+4. EXCEL (.XLSX) & PDF
+• Templat Excel Mankeu: isi sekali, impor banyak catatan sekaligus, dan batalkan bila salah.
+• Ekspor Excel yang bisa diimpor kembali, dan laporan PDF siap cetak.
 
-5. CADANGAN AWAN TERENKRIPSI (GOOGLE DRIVE)
-• Sinkronisasi cadangan aman ke Google Drive pribadi Anda (opsional).
-• Dilindungi enkripsi standar militer AES-256-GCM dengan kata sandi pribadi (passphrase).
+5. 100% OFFLINE & PRIVAT
+• Semua data tersimpan di HP Anda (SQLite Room).
+• Bebas iklan, tanpa pelacak, tanpa wajib login.
+
+6. CADANGAN TERENKRIPSI
+• Cadangkan ke berkas atau Google Drive pribadi Anda (opsional).
+• Dienkripsi AES-256-GCM dengan kata sandi Anda.
 
 💼 COCOK UNTUK BERBAGAI SEKTOR UMKM:
 • Usaha Dagang / Ritel: Toko kelontong, kios, warung sembako, agen, reseller.
 • Kuliner & F&B: Kafe, warung makan, resto, katering, bakery, kedai kopi.
 • Jasa & Servis: Bengkel, laundry, barbershop/salon, rental/sewa alat, jasa servis.
-• Usaha Agribisnis & Produksi: Pengolahan pangan, budidaya, kerajinan, dan manufaktur kecil.
+• Pertanian & Produksi: Budidaya, pengolahan pangan, kerajinan, dan manufaktur kecil.
 
-Kelola arus kas dan kembangkan usaha UMKM Anda secara profesional bersama Mankeu!
+Kelola arus kas dan kembangkan usaha Anda bersama Mankeu!
 ```
 
 ---

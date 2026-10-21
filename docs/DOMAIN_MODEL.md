@@ -1,12 +1,13 @@
 ---
-status: v2-foundation-implemented
-last_verified: 2026-08-28
+status: implemented-schema-11
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
   - owner-confirmed multi-business and multi-project direction
   - ../arina-agri/AUDIT_REVISI_MANAJEMEN_KEUANGAN.md
-  - docs/REFERENCE_WORKBOOK_CONTRACT.md
+  - app/schemas/com.mankeu.data.AppDatabase/11.json
+  - logs/DECISION_LOG.md (DEC-011 to DEC-019)
 ---
 
 # Domain Model
@@ -20,14 +21,18 @@ Give non-accountants a fast `Uang Masuk` and `Uang Keluar` experience while keep
 ```text
 Local Profile
 └── Business (one or many)
-    └── Project / job / season (zero or many)
-        ├── Projection book
-        └── Realization book
+    ├── Category (role: REVENUE, EXPENSE, CAPITAL_IN, DRAWING, ASSET)
+    ├── Stock item shared by every unit
+    └── Unit / project (zero or many)
+        ├── Projection book  -> plan lines (budget_items)
+        ├── Realization book -> cash events -> journal -> postings
+        ├── Products -> cost components (recipe)
+        └── Stock items held by this unit
 ```
 
 - A **Business** is the accounting and reporting boundary selected by the user.
-- A **Project** is an optional operational boundary: cultivation season, machinery-service job, rental period, trading activity, or another unit of work.
-- A **Book** is either `PROJECTION` or `REALIZATION`. Each book may contain budget items, dated events, reports, cash-flow timing, and financing—not merely one type of row.
+- A **Unit** (`ProjectEntity`, shown as "Unit Usaha") is an operational boundary: branch, field, season, machinery-service job, or another unit of work, with an optional plan period.
+- A **Book** is either `PROJECTION` or `REALIZATION`. Realization holds recorded cash events; Projection holds the business plan (plan lines), and the unit's products feed both the plan and realization break-even.
 
 ### How this maps onto the web prototype (owner question, 2026-08-28)
 
@@ -35,13 +40,12 @@ The web app has **one** level, not two. `arina-agri` stores a `FinanceProject` �
 land area and unit, season label, start and end dates, status — and every dataset, RAB and report
 hangs directly off it. There is no business entity above it.
 
-So: web **Proyek** ≈ Android **Lahan / musim tanam** (`ProjectEntity`). Android's **Usaha**
+So: web **Proyek** ≈ Android **Unit Usaha** (`ProjectEntity`). Android's **Usaha**
 (`BusinessEntity`) is an extra level the web does not have, added under D-005 because one owner can
 run several separate books — a rice farm and a machinery-rental service should not share a profit
 and loss statement. A single-farm user can create one Usaha and forget it exists; the level is
 there for the user who needs it, not as a step everyone must climb.
 
-A web project imported into Android therefore lands as a Lahan under whichever Usaha is selected.
 Note that `isGeneral` on `ProjectEntity` no longer marks an auto-created `Umum` workspace — nothing
 is created on the user's behalf since D-015.
 
@@ -52,31 +56,32 @@ is created on the user's behalf since D-015.
 | `Business` | id, name, base currency, status, created/updated time | Name is user-visible; archived businesses remain recoverable. |
 | `Project` | id, business id, name, optional type/template, start/end period, status | Belongs to one business; template fields are optional. |
 | `Book` | id, project id, mode, timestamps | Unique project + mode pair; exactly one projection and one realization book. |
-| `Account` | compile-time account role | V2 uses a versioned `LedgerAccount` policy enum for cash, receivable, payable, equity, revenue, expense, loan, and asset roles; user labels live in categories. |
-| `Category` | id, business id, name, semantic role | User labels may change; semantic role remains stable for reports. |
-| `BudgetItem` | book id, category, quantity, unit, unit price, amount, timing | Amount is exact rupiah; timing may be a date or period. |
-| `FinancialEvent` | business/project/book, kind, date, amount, description, category, optional reference/quantity/budget/product/import links | User-facing posted record; must produce a balanced journal event. |
-| `JournalEntry` | date/period, description, source type/id, status | Total postings must balance before posting. |
+| `Account` | compile-time account role | `LedgerAccount`: CASH, REVENUE, OPERATING_EXPENSE, OWNER_EQUITY, OWNER_DRAWING, EQUIPMENT_ASSET; user labels live in categories. |
+| `Category` | id, business id, name, role, optional cost nature | The role decides the cash type of a record (DEC-011 K-2); cost nature FIXED/VARIABLE feeds break-even. |
+| `BudgetItem` (plan line) | Projection book id, category, amount, recurrence MONTHLY/ONCE, month, cost nature, useful life | Fixed costs, one-off costs and income, assets, planned capital (DEC-014). |
+| `Product` | unit id, name, unit, price, target per month, first selling month | Contribution margin = price minus recipe cost per unit (DEC-014, DEC-017). |
+| `ProductCostComponent` | product id, name, amount, yield | Cost per unit = amount / yield. |
+| `StockItem` / `StockMovement` | business, optional unit, levels; IN/OUT/ADJUSTMENT with quantity | Stock out never exceeds stock on hand; movement and level change in one transaction. |
+| `FinancialEvent` | business/unit/book, type (CASH_INCOME, CASH_EXPENSE, OWNER_CAPITAL, OWNER_DRAWING, ASSET_PURCHASE_CASH), date, amount, description, category, optional reference/quantity/budget/product/import links | User-facing record; must produce a balanced journal. Corrected in place or deleted (DEC-019). |
+| `JournalEntry` | source event id (unique), date, description | Total postings must balance before writing. |
 | `Posting` | journal id, account id, side, amount | Integer rupiah; debit total equals credit total. |
-| `Obligation` | kind, counterparty, issue/due date, original amount, source event, reversed state | Kind distinguishes receivable/payable; remaining/status are derived from non-reversed settlements. |
-| `Settlement` | obligation id, cash-event id, amount | Partial settlement is allowed; sum cannot exceed the remaining amount. |
-| `ScenarioAssumption` | book id, opening cash, owner capital, loan/interest/timing/cost, optional output quantity/unit/price | Planning inputs are book-scoped; each saved field must affect an identified report. |
-| `ImportBatch` | source hash, importer version, mode, state, timestamps | Commit is atomic; undo is batch-addressable. |
-| `ProvenanceRecord` | target record/field, source locator, method, confidence, rationale | Required for every normalized, repaired, or enriched value. |
-| `Notification` | type, title, explanation, related record/batch, review state | Persistent for import mutations until reviewed or archived. |
+| `ImportBatch` | source hash, importer version, state COMMITTED/REVERSED (shown as dibatalkan), counts, applied plan period | Commit is atomic; undo is batch-addressable. |
+| `ProvenanceRecord` | target record/field, source locator, rationale | Kept for history; the template importer writes none (DEC-012). |
+| `ImportNotice` | severity, title, explanation, batch (null for SYSTEM notices) | Every import and every data cleanup leaves one. |
 
-## Implemented v2 persistence foundation
+## Implemented persistence (schema 11)
 
-Room schema 5 implements businesses, projects, books, categories, budget items, financial events, journals, postings, obligations, settlements, scenario assumptions, and import batches/notices/provenance (units were retired in schema 4, D-064; the import-hash index stopped being unique in schema 5, D-076). Repository transaction boundaries now enforce:
+Room schema 11 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products and cost components, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
 
-- scope consistency across business, project, book, and category;
+- scope consistency across business, unit, book, and category;
 - exact positive rupiah values;
-- one projection and realization book per project;
+- one projection and one realization book per unit;
 - balanced posting insertion in the same database transaction as the source event;
-- credit-event creation of a matching obligation;
-- partial settlement no greater than the outstanding amount;
 - correction by editing in place (same id, rebuilt journal) or deleting (DEC-019);
+- stock movement and stock level written together;
 - report derivation from joined postings and cash-flow roles.
+
+The schema history is in `docs/DATABASE_MIGRATIONS.md`.
 
 ### Correction rules (edit and delete, DEC-019)
 
@@ -105,44 +110,24 @@ The user normally chooses a familiar event, not debit and credit. The domain tra
 | Cash sale / income received | Cash increases; revenue increases. |
 | Expense paid | Expense increases; cash decreases. |
 | Owner capital deposited | Cash increases; owner equity increases. |
-| Loan received | Cash increases; loan liability increases. |
-| Loan principal repaid | Loan liability decreases; cash decreases. |
-| Loan interest paid | Interest expense increases; cash decreases. |
-| Sale on credit | Receivable increases; revenue increases; cash is unchanged. |
-| Receivable collected | Cash increases; receivable decreases; revenue is not counted again. |
-| Purchase on credit | Expense or asset increases; payable increases; cash is unchanged. |
-| Payable settled | Payable decreases; cash decreases; expense is not counted again. |
+| Owner drawing (prive) | Owner drawing increases; cash decreases. |
+| Asset bought with cash | Equipment asset increases; cash decreases. |
 
-Templates for these mappings must be testable and versioned. A contributor may not “fix” a report by adding an unrelated synthetic transaction outside this event model.
+The form shows only Uang Masuk and Uang Keluar; the chosen category's role picks the row (`CategoryRole.cashTypeFor`). There is no credit, loan, or interest event (DEC-011).
+
+These mappings live in `LedgerPolicy.journalFor` and are covered by `LedgerPolicyTest`. A contributor may not “fix” a report by adding an unrelated synthetic transaction outside this event model.
 
 ## Projection, realization, and comparison
 
-- Projection and realization are complete parallel books.
-- Duplicating projection into realization creates independent records with lineage; later projection edits do not mutate realization silently.
-- Comparison reads both books and calculates variance. It does not own editable financial facts.
-- Budget items and dated transactions may coexist in one book, but reconciliation rules prevent double counting.
-- A report must declare which source class it uses: budget, transactions, journal postings, or an explicitly reconciled combination.
-
-## Receivable and payable lifecycle
-
-```text
-OPEN → PARTIAL → PAID
-  └──────┴─────→ OVERDUE   (due date passed, balance remaining)
-OPEN → REVERSED            (source credit event reversed; blocked while payments stand)
-```
-
-- Status is never stored: `ObligationBalance.status(today)` derives it from the original amount, non-reversed settlements, the due date and the `reversed` flag.
-- `overdue` is derived when the due date passes with a remaining balance.
-- Every settlement creates a linked money movement and balanced posting.
-- Cancelling an obligation preserves history and reverses or voids its accounting effect according to posting state.
-- Full invoice design, tax, inventory valuation, and purchase-order workflows remain separate future scope.
+- Projection is the business plan: plan period, products with recipes and a first selling month, plan lines, planned capital. `PlanCalculator` derives the monthly averages, break-even (mix and per product), R/C, B/C, and capital need (deepest cumulative deficit before capital), and a cash schedule over the real months (DEC-014, DEC-016, DEC-017).
+- Realization is the recorded cash. `ActualBepCalculator` compares this month's revenue with its break-even.
+- Comparison (Realisasi vs Target) reads both and compares averages per month on a cash basis. It does not own editable financial facts.
 
 ## Financing semantics
 
-- Loan disbursement and owner capital affect cash but are not operating revenue.
-- Loan principal repayment affects financing cash flow but is not an operating expense.
-- Interest is an expense and a cash outflow when paid.
-- Post-financing cash flow starts from an explicitly defined opening cash balance and includes the recorded financing events exactly once.
+- Owner capital (Setoran Modal) and owner drawing (Ambil Pribadi) are financing cash flow, never operating revenue or expense.
+- An asset purchase is investing cash flow; it enters break-even as straight-line depreciation over its useful life.
+- There is no borrowing or interest in the model (DEC-011). An owner who records a loan as plain money in under a custom category is left alone.
 
 ## Derived reports
 
@@ -150,9 +135,8 @@ Reports are deterministic projections of canonical records:
 
 - profit/loss derives from revenue and expense postings;
 - cash flow derives from cash-account postings grouped by period;
-- post-financing cash flow separately exposes operating and financing movements;
-- budget variance compares compatible categories and periods;
-- HPP, break-even production, and B/C ratio are shown only when required production assumptions are complete.
+- cash flow separates operating, investing, and financing movements;
+- break-even, R/C, B/C, and capital need are shown only when the plan has the products, targets, and costs they need.
 
 Every displayed total must allow drill-down to contributing records. A mismatch is a first-class reconciliation result, not a formatting issue.
 

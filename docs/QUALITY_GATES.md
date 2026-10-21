@@ -1,11 +1,11 @@
 ---
 status: baseline
-last_verified: 2026-08-15
+last_verified: 2026-10-22
 audience: human-and-ai
 sensitivity: internal
 evidence_basis:
   - owner-confirmed zero-unexplained-mismatch standard
-  - docs/REFERENCE_WORKBOOK_CONTRACT.md
+  - logs/DECISION_LOG.md (DEC-011 strict cash, DEC-012 template import, DEC-019 edit and delete)
   - objective lessons from the legacy web implementation
 ---
 
@@ -34,26 +34,27 @@ Do not collapse these labels into `done`.
 
 - integer-money arithmetic and explicit decimal rounding;
 - balanced postings for every user-facing event type;
-- financing classification: revenue versus capital versus loan principal versus interest;
+- cash-type classification by category role: income, expense, owner capital, owner drawing, asset purchase;
 - projection/realization independence;
-- receivable/payable partial settlement and overdue derivation;
+- business plan: mix and per-product break-even, seasonal products, capital need, depreciation;
+- stock levels: in, out (never below zero), count;
 - report totals equal contributing canonical postings;
-- duplicate and undo behavior;
-- property tests for invariants such as debit equals credit and remaining obligation never becomes negative.
+- edit in place keeps the record's identity and rebuilds a balanced journal; delete removes the journal;
+- duplicate import and import undo behavior;
+- invariants such as debit equals credit for every journal.
 
-### Golden workbook tests
+### Template tests
 
-The exact hashed workbook in [Reference Workbook Contract](REFERENCE_WORKBOOK_CONTRACT.md) is a required golden fixture in a secure test-data strategy. Automated acceptance must verify:
+The Mankeu template is the only import format (DEC-012). `TemplateImportTest` and the instrumented import tests must verify:
 
-- five coordinated sheets are recognized;
-- approved totals and monthly values match;
-- `Sewa Lahan Rp7.000.000` is enriched once, not omitted or duplicated;
-- the enrichment notification and field provenance exist;
-- known broken formulas/references do not corrupt the result;
-- import is atomic and repeat handling is explicit;
-- export/reimport preserves semantic values.
+- an export imports back without loss, including seasonal products and the plan period;
+- the blank template imports as nothing, without errors;
+- a non-template workbook, a missing sheet, or a renamed column is rejected with the exact reason;
+- invalid cells are reported by sheet and cell;
+- older template versions with optional columns absent still import;
+- commit is atomic, a duplicate file shows a warning, and undo deletes exactly the batch's records.
 
-If the real workbook cannot be distributed in a public or shared test environment, keep its hash and expected-output contract in Git and use a sanitized structurally equivalent fixture. Record where restricted evidence was executed without committing the source.
+The earlier reference-workbook golden fixture is kept only as history in `docs/evidence/verification-workbook/legacy-reference-format/`.
 
 ### Persistence and migration tests
 
@@ -68,18 +69,18 @@ If the real workbook cannot be distributed in a public or shared test environmen
 
 - fast entry on compact width;
 - adaptive navigation and list-detail on medium/expanded width;
-- selected business/project always visible;
+- selected business/unit always visible;
 - TalkBack labels/order, 200% font scale, contrast, touch targets, keyboard focus;
 - visible reconciliation and offline state;
-- enrichment review shows source, rationale, inferred fields, impact, and reversal action.
+- import preview shows new categories, conflicts, and the duplicate warning before commit; every import leaves a visible notice.
 
 ### End-to-end and device tests
 
 - first run without login or network;
-- create multiple businesses and projects, then prevent cross-scope leakage;
+- create multiple businesses and units, then prevent cross-scope leakage;
 - projection → realization → comparison workflow;
-- cash, loan, capital, interest, receivable, payable, and partial settlement;
-- reference import → notification review → reports → export → reimport;
+- cash in and out under each category role, edit and delete, stock movements, business plan;
+- template export → import into another unit → reports → undo import;
 - local backup → application data loss simulation → restore;
 - APK install/upgrade and AAB pre-release checks on representative Android versions.
 
@@ -97,7 +98,7 @@ If the real workbook cannot be distributed in a public or shared test environmen
 - source variants and precedence stated;
 - mutation class and provenance tested;
 - preview, atomic commit, duplicate behavior, and undo tested;
-- golden fixture passes;
+- template round-trip and rejection tests pass;
 - user-visible notice/error content reviewed.
 
 ### UI change
@@ -137,7 +138,7 @@ A screenshot of a screen, a passing parser unit test, or an AI statement is supp
 ## Stop-ship conditions
 
 - unexplained money mismatch or double counting;
-- silent import enrichment or discarded source content;
+- an import that guesses columns or silently discards rows;
 - loss/corruption during import, migration, backup, or restore;
 - core workflow depends on login/network contrary to local-first requirements;
 - inaccessible primary task with no alternative;

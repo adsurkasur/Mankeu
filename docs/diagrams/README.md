@@ -1,18 +1,18 @@
 # Katalog Diagram Sistem Mankeu
 
-Diagram arsitektur, basis data, alur pengguna, proses bisnis, dan siklus hidup Mankeu dalam Mermaid. Terakhir diselaraskan dengan kode pada **2026-09-15** (Room schema 5, D-076 sampai D-083).
+Diagram arsitektur, basis data, alur pengguna, proses bisnis, dan siklus hidup Mankeu dalam Mermaid. Terakhir diselaraskan dengan kode pada **2026-10-22** (Room schema 11, DEC-011 sampai DEC-019).
 
 | No | Dokumen | Isi | Jenis |
 | :-: | :-- | :-- | :-: |
-| 1 | [01_entity_relationship_diagram.md](01_entity_relationship_diagram.md) | Schema 5: 14 tabel, foreign key sungguhan dibedakan dari referensi logis | ERD |
-| 2 | [02_architecture_diagram.md](02_architecture_diagram.md) | Lapisan dan dependensi, pohon komponen Compose, aliran data reaktif | Flowchart |
-| 3 | [03_use_case_diagram.md](03_use_case_diagram.md) | Pemilik usaha dan sistem eksternal terhadap lima modul | Use case |
+| 1 | [01_entity_relationship_diagram.md](01_entity_relationship_diagram.md) | Schema 11: 17 tabel, foreign key sungguhan dibedakan dari referensi logis | ERD |
+| 2 | [02_architecture_diagram.md](02_architecture_diagram.md) | Lapisan dan dependensi, pohon komponen Compose, aliran data reaktif, kerangka sinkronisasi | Flowchart |
+| 3 | [03_use_case_diagram.md](03_use_case_diagram.md) | Pemilik usaha dan sistem eksternal terhadap tujuh modul | Use case |
 | 4 | [04_class_diagram.md](04_class_diagram.md) | Model domain, kalkulator, repository, DAO, ViewModel | Class |
-| 5 | [05_user_flow_diagram.md](05_user_flow_diagram.md) | Navigasi empat destinasi, overlay, koreksi berpenjaga | Flowchart |
-| 6 | [06_activity_diagrams.md](06_activity_diagrams.md) | Catat, balik, hapus, impor dan pembatalan batch, cadangan dan pemulihan | Activity |
-| 7 | [07_state_diagrams.md](07_state_diagrams.md) | Piutang dan utang, transaksi, batch impor, buku aktif | State |
-| 8 | [08_sequence_diagram.md](08_sequence_diagram.md) | Pencatatan transaksi, komit impor atomik | Sequence |
-| 9 | [09_interaction_feedback.md](09_interaction_feedback.md) | Taksonomi haptic, siklus tooltip, tampilan kartu transaksi yang dibalik | Flowchart, sequence, state |
+| 5 | [05_user_flow_diagram.md](05_user_flow_diagram.md) | Navigasi empat destinasi, tiga overlay, Ubah dan Hapus, Batalkan impor | Flowchart |
+| 6 | [06_activity_diagrams.md](06_activity_diagrams.md) | Catat, Ubah, Hapus, impor dan Batalkan impor, cadangan dan pemulihan | Activity |
+| 7 | [07_state_diagrams.md](07_state_diagrams.md) | Catatan kas, batch impor, buku aktif, barang stok | State |
+| 8 | [08_sequence_diagram.md](08_sequence_diagram.md) | Catat atau ubah catatan, impor templat, Batalkan impor | Sequence |
+| 9 | [09_interaction_feedback.md](09_interaction_feedback.md) | Taksonomi haptic, siklus tooltip, kartu catatan dengan Ubah dan Hapus | Flowchart, sequence, state |
 
 ## Melihat diagram
 

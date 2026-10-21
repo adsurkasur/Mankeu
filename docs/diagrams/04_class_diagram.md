@@ -1,6 +1,6 @@
 # Class Diagram - Domain, Data, dan Presentasi Mankeu
 
-Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.
+Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber pada Room **schema 11**. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.
 
 ```mermaid
 classDiagram
@@ -11,25 +11,28 @@ classDiagram
         PROJECTION
         REALIZATION
     }
+    class FinancialEventType {
+        <<enumeration>>
+        CASH_INCOME
+        CASH_EXPENSE
+        OWNER_CAPITAL
+        OWNER_DRAWING
+        ASSET_PURCHASE_CASH
+    }
+    class CategoryRole {
+        <<enumeration>>
+        REVENUE
+        EXPENSE
+        CAPITAL_IN
+        DRAWING
+        ASSET
+        +cashTypeFor(incoming) FinancialEventType
+    }
     class CashFlowRole {
         <<enumeration>>
         OPERATING
         INVESTING
         FINANCING
-        NON_CASH
-    }
-    class RecordStatus {
-        <<enumeration>>
-        POSTED
-        REVERSED
-    }
-    class ObligationStatus {
-        <<enumeration>>
-        OPEN
-        PARTIAL
-        PAID
-        OVERDUE
-        REVERSED
     }
 
     class MoneyEvent {
@@ -39,17 +42,16 @@ classDiagram
         +Long amountRupiah
         +LocalDate date
         +String description
+        +String categoryId
+        +String productId
+        +String importBatchId
         +CashFlowRole cashFlowRole
-        +RecordStatus status
-        +String obligationId
-        +String reversesEventId
-        +String reversedByEventId
+        +CostNature costNature
     }
     class JournalEntry {
         +String id
         +String sourceEventId
         +List~Posting~ postings
-        +String reversalOfJournalId
         +requireBalanced() JournalEntry
     }
     class Posting {
@@ -57,133 +59,166 @@ classDiagram
         +PostingSide side
         +Long amountRupiah
     }
-    class ObligationBalance {
-        +String id
-        +ObligationKind kind
-        +Long originalAmountRupiah
-        +Long settledAmountRupiah
-        +Long outstandingAmountRupiah
-        +Boolean reversed
-        +status(today) ObligationStatus
-    }
     class CashFlowRecord {
         +String id
         +LocalDate date
         +FinancialEventType type
         +CashFlowRole cashFlowRole
         +Long amountRupiah
-        +String reversesEventId
     }
     class FinancialSummary {
         +Long operatingIncomeRupiah
         +Long operatingExpenseRupiah
         +Long profitRupiah
         +Long cashBalanceRupiah
-        +Long receivableOutstandingRupiah
-        +Long payableOutstandingRupiah
     }
-    class BusinessAnalysis {
-        +Long financingGapRupiah
-        +Long totalCostRupiah
-        +BigDecimal breakEvenQuantity
-        +BigDecimal benefitCostRatio
-        +Boolean feasible
+    class PlanProduct {
+        +String name
+        +Long priceRupiah
+        +BigDecimal targetPerMonth
+        +List~CostComponent~ components
+        +Int sellFromMonth
+        +BigDecimal contributionMargin
+    }
+    class CostComponent {
+        +String name
+        +Long amountRupiah
+        +BigDecimal yield
+        +BigDecimal perUnit
+    }
+    class PlanAnalysis {
+        +List~ProductBep~ products
+        +BigDecimal breakEvenUnits
+        +Long breakEvenRupiah
+        +Long profitRupiah
+        +Long breakEvenBaseRupiah
+    }
+    class StockItem {
+        +String name
+        +BigDecimal currentStock
+        +BigDecimal minAlertStock
+        +Boolean shared
+        +Boolean isLowStock
     }
 
     class LedgerPolicy {
         <<object>>
         +journalFor(event) JournalEntry
-        +reversalFor(original, reversalEvent) JournalEntry
     }
     class PostingReportCalculator {
         <<object>>
-        +calculate(records, obligations) FinancialSummary
+        +calculate(records) FinancialSummary
     }
     class MonthlyCashFlowCalculator {
         <<object>>
         +calculateFromRecords(records, openingCash) List~MonthlyCashFlow~
     }
-    class BudgetPlanCalculator {
+    class PlanCalculator {
         <<object>>
-        +summarize(lines) FinancialSummary
-        +schedule(lines, openingCash) List~MonthlyCashFlow~
+        +analyse(inputs) PlanAnalysis
+        +schedule(months, inputs) List~MonthlyCashFlow~
     }
-    class BusinessAnalysisCalculator {
+    class ActualBepCalculator {
         <<object>>
-        +calculate(summary, assumptions, monthlyFlows) BusinessAnalysis
+        +analyse(products, actual) ActualMonthAnalysis
+    }
+    class StockCalculation {
+        <<object>>
+        +summarize(items) StockSummary
     }
 
     class FinanceRepository {
-        +inTransaction(block) T
         +recordEvent(draft) String
-        +settleObligation(obligationId, amount, date, description) String
-        +reverseEvent(eventId, date, reason) String
+        +updateEvent(eventId, draft)
         +deleteEvent(eventId)
         +createCategory(businessId, name, role, aliases) String
-        +commitImport(businessId, projectId, preview, targetBook) Int
-        +reverseImportBatch(batchId) Int
+        +saveProduct(...)
+        +createBudgetItem(draft) String
+        +createStockItem(businessId, projectId, shared, ...) String
+        +recordStockMovement(stockItemId, type, quantity, date, notes) BigDecimal
+        +reviewImport(businessId, projectId, preview) ImportReview
+        +commitImport(businessId, projectId, preview) Int
+        +undoImportBatch(batchId) ImportUndo
         +eventsForBook(bookId) Flow
         +cashFlowRecords(bookId) Flow
         +accountingSummary(bookId) Flow
     }
     class FinanceDao {
         <<interface>>
-        +insertEvent(event)
-        +insertJournal(entry)
-        +insertPostings(postings)
+        +getEvent(id) FinancialEventEntity
+        +deleteEvent(id)
+        +deleteEventsForImportBatch(batchId) Int
+        +markImportBatchReversed(batchId, reversedAt) Int
+        +hasImported(sourceSha256) Boolean
         +observeEventsForBook(bookId, limit) Flow
         +observeCashFlowRows(bookId) Flow
-        +countLiveSettlementsForSource(sourceEventId) Int
-        +restoreObligationBySource(sourceEventId)
         +findCategory(businessId, role, normalizedName) CategoryEntity
+    }
+    class StockDao {
+        <<interface>>
+        +observeStockItems(businessId, projectId) Flow
+        +insertStockMovement(movement)
+        +deleteImportedItems(batchId) Int
     }
     class AppDatabase {
         <<abstract>>
         +financeDao() FinanceDao
-        +MIGRATION_3_4
-        +MIGRATION_4_5
+        +DATA_TABLES
+        +MIGRATION_9_10
+        +MIGRATION_10_11
     }
     class EncryptedBackupManager {
         +create(password) ByteArray
         +prepareRestore(envelope, password) PreparedRestore
         +restore(prepared, recoveryPassword) RestoreResult
     }
+    class SyncEngine {
+        +collectLocalChanges() LocalChanges
+        +applyRemote(changeSet) ApplyResult
+        +acknowledge(changes)
+    }
 
     class AppViewModel {
         +StateFlow~AppUiState~ uiState
         +MutableStateFlow~Boolean~ isSaving
-        +record(type, amount, description, ...)
-        +settleObligation(id, amount, date, description)
-        +reverseEvent(id, reason)
+        +record(type, amount, ..., editingEventId)
         +deleteTransaction(eventId)
-        +commitImport(targetBook)
-        +reverseImportBatch(id)
+        +saveProduct(...)
+        +savePlanLine(...)
+        +recordStockMovement(itemId, type, quantity, notes)
+        +commitImport()
+        +undoImportBatch(id)
         -mutating(block) Job
     }
     class AppUiState {
         +String selectedBookId
         +BookMode selectedBookMode
         +List~MoneyEvent~ events
-        +Int eventCount
         +List~CashFlowRecord~ cashFlowRecords
+        +List~StockItem~ stockItems
         +FinancialSummary summary
+        +PlanAnalysis plan
         +Boolean isLoading
-        +planBudgetLines() List~PlanBudgetLine~
     }
 
     JournalEntry "1" *-- "2..*" Posting : berisi
-    MoneyEvent --> RecordStatus
+    PlanProduct "1" *-- "0..*" CostComponent : resep
+    MoneyEvent --> FinancialEventType
     MoneyEvent --> CashFlowRole
-    ObligationBalance --> ObligationStatus
+    CategoryRole ..> FinancialEventType : menentukan
     LedgerPolicy ..> MoneyEvent : membaca
     LedgerPolicy ..> JournalEntry : membuat
     PostingReportCalculator ..> FinancialSummary : membuat
     MonthlyCashFlowCalculator ..> CashFlowRecord : membaca
-    BusinessAnalysisCalculator ..> BusinessAnalysis : membuat
+    PlanCalculator ..> PlanProduct : membaca
+    PlanCalculator ..> PlanAnalysis : membuat
+    StockCalculation ..> StockItem : membaca
     FinanceRepository --> FinanceDao : kueri
-    FinanceRepository --> AppDatabase : transaksi
+    FinanceRepository --> StockDao : stok
+    FinanceRepository --> AppDatabase : withTransaction
     FinanceRepository ..> LedgerPolicy : jurnal
-    EncryptedBackupManager --> AppDatabase : snapshot
+    EncryptedBackupManager --> AppDatabase : snapshot DATA_TABLES
+    SyncEngine --> AppDatabase : sync_outbox
     AppViewModel --> FinanceRepository : delegasi
     AppViewModel --> EncryptedBackupManager : cadangan
     AppViewModel --> AppUiState : memancarkan
@@ -191,6 +226,7 @@ classDiagram
 
 ## Catatan desain
 
-1. **Keseimbangan dua lapis.** `LedgerPolicy` memanggil `JournalEntry.requireBalanced()` saat membuat jurnal, lalu `FinanceRepository.insertEventAndJournal` memeriksa ulang debit sama dengan kredit tepat sebelum baris ditulis.
-2. **Status dihitung, bukan disimpan.** `ObligationBalance.status(today)` menurunkan OPEN, PARTIAL, PAID, OVERDUE, atau REVERSED dari angka dan tanggal.
-3. **Proyeksi sempit.** `CashFlowRecord` hanya membawa kolom yang dibutuhkan jadwal kas, sehingga buku berisi ribuan transaksi tidak memuat seluruh deskripsi ke memori.
+1. **Keseimbangan dua lapis.** `LedgerPolicy.journalFor` memanggil `JournalEntry.requireBalanced()`, lalu `FinanceRepository.insertEventAndJournal` memeriksa ulang debit sama dengan kredit tepat sebelum baris ditulis.
+2. **Satu jalur untuk catat dan ubah.** `AppViewModel.record` memanggil `updateEvent` bila `editingEventId` terisi dan `recordEvent` bila tidak. Keduanya memakai `requireValid` dan `LedgerPolicy.journalFor` yang sama.
+3. **Kategori menentukan jenis.** Formulir hanya punya Masuk dan Keluar. `CategoryRole.cashTypeFor` mengubahnya menjadi salah satu dari lima jenis kas (DEC-011 K-2).
+4. **Proyeksi sempit.** `CashFlowRecord` hanya membawa kolom yang dibutuhkan jadwal kas, sehingga buku berisi ribuan transaksi tidak memuat seluruh deskripsi ke memori.

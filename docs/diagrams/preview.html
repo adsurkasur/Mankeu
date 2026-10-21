@@ -48,7 +48,7 @@
   <main>
 <section id="01_entity_relationship_diagram" class="card">
 <h2>Entity Relationship Diagram - Basis Data Mankeu</h2>
-<script type="text/markdown">Skema Room SQLite **versi 5** (`com.mankeu.data`), diselaraskan dengan `Entities.kt` dan `app/schemas/com.mankeu.data.AppDatabase/5.json`.
+<script type="text/markdown">Skema Room SQLite **versi 11** (`com.mankeu.data`), diselaraskan dengan `Entities.kt`, `domain/StockManagement.kt`, `sync/SyncEntities.kt`, dan `app/schemas/com.mankeu.data.AppDatabase/11.json`.
 
 > Garis **tegas** adalah foreign key sungguhan (dengan aturan `CASCADE` atau `RESTRICT`). Garis **putus-putus** adalah referensi logis: kolomnya diindeks, tetapi tidak dijaga foreign key, sehingga integritasnya ditegakkan oleh `FinanceRepository`.</script>
 <pre class="mermaid" data-source="01_entity_relationship_diagram.md #1">erDiagram
@@ -60,17 +60,21 @@
     books ||--o{ financial_events : &quot;CASCADE&quot;
     financial_events ||--|| journal_entries : &quot;CASCADE&quot;
     journal_entries ||--|{ postings : &quot;CASCADE&quot;
-    books ||--o{ obligations : &quot;CASCADE&quot;
-    financial_events ||--o| obligations : &quot;sumber kredit, CASCADE&quot;
-    obligations ||--o{ settlements : &quot;CASCADE&quot;
-    financial_events ||--o| settlements : &quot;event kas, CASCADE&quot;
-    books ||--o| scenario_assumptions : &quot;CASCADE&quot;
+    projects ||--o{ products : &quot;CASCADE&quot;
+    products ||--o{ product_cost_components : &quot;CASCADE&quot;
+    businesses ||--o{ stock_items : &quot;CASCADE&quot;
+    stock_items ||--o{ stock_movements : &quot;CASCADE&quot;
     import_batches ||--o{ import_notices : &quot;CASCADE&quot;
     import_batches ||--o{ provenance_records : &quot;CASCADE&quot;
     categories ||..o{ financial_events : &quot;categoryId logis&quot;
+    products ||..o{ financial_events : &quot;productId logis&quot;
+    budget_items ||..o{ financial_events : &quot;budgetItemId logis&quot;
+    projects ||..o{ stock_items : &quot;projectId logis, NULL = semua unit&quot;
     import_batches ||..o{ financial_events : &quot;importBatchId logis&quot;
     import_batches ||..o{ budget_items : &quot;importBatchId logis&quot;
-    financial_events |o..o| financial_events : &quot;reversesEventId logis&quot;
+    import_batches ||..o{ products : &quot;importBatchId logis&quot;
+    import_batches ||..o{ stock_items : &quot;importBatchId logis&quot;
+    financial_events |o..o{ stock_movements : &quot;referenceEventId logis&quot;
 
     businesses {
         string id PK
@@ -84,11 +88,11 @@
     projects {
         string id PK
         string businessId FK
-        string name
+        string name &quot;unit usaha&quot;
         boolean isGeneral
         boolean archived
         string description
-        long startDateEpochDay
+        long startDateEpochDay &quot;periode rencana&quot;
         long endDateEpochDay
         long createdAtEpochMillis
         long updatedAtEpochMillis
@@ -105,18 +109,19 @@
     categories {
         string id PK
         string businessId FK
-        string role &quot;REVENUE EXPENSE ASSET EQUITY LIABILITY&quot;
+        string role &quot;REVENUE EXPENSE CAPITAL_IN DRAWING ASSET&quot;
         string name
         string normalizedName &quot;unik bersama businessId dan role&quot;
         string aliases
         string templateOrigin
         boolean active &quot;arsip = 0, dapat diaktifkan lagi&quot;
+        string costNature &quot;FIXED atau VARIABLE&quot;
         long createdAtEpochMillis
     }
 
     budget_items {
         string id PK
-        string bookId FK
+        string bookId FK &quot;buku Proyeksi&quot;
         string categoryId FK
         string name
         string normalizedName
@@ -130,6 +135,9 @@
         long formulaDifferenceRupiah
         int sortOrder
         boolean archived
+        string costNature &quot;menimpa kategori&quot;
+        string recurrence &quot;MONTHLY atau ONCE&quot;
+        int usefulLifeMonths &quot;khusus aset&quot;
         string importBatchId &quot;logis&quot;
         long createdAtEpochMillis
         long updatedAtEpochMillis
@@ -140,26 +148,23 @@
         string businessId FK
         string projectId FK
         string bookId FK
-        string type
+        string type &quot;CASH_INCOME CASH_EXPENSE OWNER_CAPITAL OWNER_DRAWING ASSET_PURCHASE_CASH&quot;
         long amountRupiah &quot;rupiah bulat lebih dari 0&quot;
         long dateEpochDay
         string description
         string category
         string categoryId &quot;logis&quot;
-        string counterparty
         string reference
-        long dueDateEpochDay
         string quantityText
         string unit
         long unitPriceRupiah
         string budgetItemId &quot;logis&quot;
-        string obligationId &quot;logis&quot;
+        string productId &quot;logis&quot;
+        string costNature
+        int usefulLifeMonths
         string importBatchId &quot;logis&quot;
-        string cashFlowRole
-        string status &quot;POSTED atau REVERSED&quot;
-        string reversesEventId &quot;logis&quot;
-        string reversedByEventId &quot;logis&quot;
-        long createdAtEpochMillis
+        string cashFlowRole &quot;OPERATING INVESTING FINANCING&quot;
+        long createdAtEpochMillis &quot;tetap saat Ubah&quot;
     }
 
     journal_entries {
@@ -167,7 +172,6 @@
         string sourceEventId FK, UK
         long dateEpochDay
         string description
-        string reversalOfJournalId
     }
 
     postings {
@@ -178,50 +182,63 @@
         long amountRupiah
     }
 
-    obligations {
+    products {
         string id PK
-        string bookId FK
-        string kind &quot;RECEIVABLE atau PAYABLE&quot;
-        string sourceEventId FK, UK
-        string counterparty
-        string description
-        long issueDateEpochDay
-        long dueDateEpochDay
-        long originalAmountRupiah
-        boolean reversed
+        string projectId FK
+        string name
+        string unit
+        long priceRupiah
+        string targetPerMonthText
+        int sellFromMonth &quot;1 = bulan pertama rencana&quot;
+        int sortOrder
+        boolean archived
+        string importBatchId &quot;logis&quot;
         long createdAtEpochMillis
-    }
-
-    settlements {
-        string id PK
-        string obligationId FK
-        string eventId FK, UK
-        long amountRupiah
-        long createdAtEpochMillis
-    }
-
-    scenario_assumptions {
-        string id PK
-        string bookId FK, UK
-        long openingCashRupiah
-        long ownerCapitalRupiah
-        long loanAmountRupiah
-        int interestRateBasisPoints
-        long loanDisbursementEpochDay
-        long loanPaymentEpochDay
-        long otherFinancingCostRupiah
-        string outputQuantityText
-        string outputUnit
-        long outputPriceRupiah
         long updatedAtEpochMillis
+    }
+
+    product_cost_components {
+        string id PK
+        string productId FK
+        string name
+        long amountRupiah
+        string yieldText &quot;hasil per biaya&quot;
+        int sortOrder
+    }
+
+    stock_items {
+        string id PK
+        string businessId FK
+        string projectId &quot;logis, unik bersama businessId dan name&quot;
+        string name
+        string unit
+        long basePriceRupiah
+        string initialStockText
+        string currentStockText
+        string minAlertStockText
+        boolean archived
+        string importBatchId &quot;logis&quot;
+        long createdAtEpochMillis
+        long updatedAtEpochMillis
+    }
+
+    stock_movements {
+        string id PK
+        string stockItemId FK
+        string movementType &quot;IN OUT ADJUSTMENT&quot;
+        string quantityText
+        long dateEpochDay
+        string notes
+        string referenceEventId &quot;logis&quot;
+        long createdAtEpochMillis
     }
 
     import_batches {
         string id PK
         string sourceName
-        string sourceSha256 &quot;indeks biasa sejak v5&quot;
+        string sourceSha256 &quot;indeks biasa&quot;
         string importerVersion
-        string state &quot;COMMITTED atau REVERSED&quot;
+        string state &quot;COMMITTED atau REVERSED = dibatalkan&quot;
         long committedAtEpochMillis
         string businessId
         string projectId
@@ -229,12 +246,15 @@
         string mappingVersion
         int recordCount
         long totalAmountRupiah
-        long reversedAtEpochMillis
+        long incomingRupiah
+        long appliedStartEpochDay
+        long appliedEndEpochDay
+        long reversedAtEpochMillis &quot;waktu Batalkan impor&quot;
     }
 
     import_notices {
         string id PK
-        string batchId FK
+        string batchId FK &quot;NULL untuk notice SYSTEM&quot;
         string severity
         string title
         string explanation
@@ -260,19 +280,36 @@
         string inferredFields
         int confidenceBasisPoints
         string ruleVersion
-    }</pre>
-<script type="text/markdown">## Aturan integritas
+    }
 
-1. **Dua buku per lahan.** Indeks unik `(projectId, mode)` dan `ensureBookPair` menjamin tepat satu buku `PROJECTION` dan satu `REALIZATION`.
-2. **Jurnal selalu seimbang.** Setiap event memiliki tepat satu `journal_entries` (unik pada `sourceEventId`). Jumlah debit dan kredit posting diperiksa sebelum baris ditulis, di dalam transaksi yang sama.
-3. **Piutang dan utang.** Transaksi kredit membuat satu `obligations`. Setiap pembayaran menambah satu `settlements` yang menunjuk event kasnya sendiri. Sisa tagihan dan status tidak disimpan, melainkan dihitung dari pembayaran yang belum dibalik.
-4. **Koreksi.** Pembalikan dan penghapusan mengikuti tabel aturan di `docs/DOMAIN_MODEL.md` ("Correction rules"), termasuk penolakan saat masih ada pembayaran aktif.
-5. **Impor.** `sourceSha256` diindeks tanpa unik sejak v5 (D-076). Duplikat ditolak oleh `hasImported`, yang hanya menghitung batch berstatus `COMMITTED`, sehingga berkas yang batch-nya sudah dibalik dapat diimpor ulang.
-6. **Migrasi.** `MIGRATION_3_4` menghapus `units` dan `categories.defaultUnitId`. `MIGRATION_4_5` mengganti indeks unik `sourceSha256` menjadi indeks biasa. Tidak ada migrasi destruktif.</script>
+    sync_outbox {
+        long seq PK &quot;autoincrement&quot;
+        string tableName
+        string rowId
+        string op &quot;UPSERT atau DELETE&quot;
+        long changedAtEpochMillis
+    }
+
+    sync_meta {
+        string key PK
+        string value
+    }</pre>
+<script type="text/markdown">`sync_outbox` dan `sync_meta` tidak memiliki relasi: outbox diisi trigger SQLite pada setiap tabel `DATA_TABLES` (DEC-013, DEC-015), dan `sync_meta` menyimpan flag seperti `applying_remote` dan `requires_full_snapshot`.
+
+## Aturan integritas
+
+1. **Dua buku per unit.** Indeks unik `(projectId, mode)` dan `ensureBookPair` menjamin tepat satu buku `PROJECTION` dan satu `REALIZATION`.
+2. **Jurnal selalu seimbang.** Setiap event memiliki tepat satu `journal_entries` (unik pada `sourceEventId`). Debit dan kredit diperiksa di `insertEventAndJournal` sebelum baris ditulis, di dalam transaksi yang sama.
+3. **Kas murni (DEC-011).** Hanya lima jenis event kas: uang yang benar-benar berpindah.
+4. **Ubah dan Hapus (DEC-019).** `updateEvent` mengganti event di tempat: id, `importBatchId`, dan `createdAtEpochMillis` dipertahankan, jurnal dan posting dibangun ulang. `deleteEvent` menghapus event, dan jurnal serta posting ikut terhapus lewat `CASCADE`. Tidak ada lagi status atau kolom pembalikan.
+5. **Rencana usaha (DEC-014, DEC-017).** Produk dan komponen biaya per unit milik unit (`projects`). Biaya tetap, biaya sekali, aset, dan modal rencana adalah `budget_items` di buku Proyeksi.
+6. **Stok per unit (DEC-017).** `stock_items.projectId` NULL berarti dipakai bersama semua unit. Nama unik di antara barang yang terlihat oleh satu unit.
+7. **Impor dan pembatalannya.** Duplikat boleh diimpor ulang dengan peringatan (`hasImported` hanya menghitung batch `COMMITTED`). `undoImportBatch` menghapus event batch, mengarsipkan RAB-nya, menghapus produk dan stoknya, lalu menandai batch `REVERSED` sebagai riwayat.
+8. **Migrasi.** `MIGRATION_10_11` menjalankan `ReversalCleanup` (menghapus setiap pasangan pembalikan beserta jurnalnya, meninggalkan satu notice SYSTEM), lalu membangun ulang `financial_events` dan `journal_entries` tanpa kolom pembalikan dan membuat ulang trigger sinkronisasi. Tidak ada migrasi destruktif.</script>
 </section>
 <section id="02_architecture_diagram" class="card">
 <h2>Arsitektur Sistem Mankeu</h2>
-<script type="text/markdown">Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional.
+<script type="text/markdown">Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite **schema 11** di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional dan kerangka sinkronisasi (DEC-013, belum tersambung ke UI).
 
 ## 1. Lapisan dan dependensi
 
@@ -285,7 +322,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
 
     subgraph presentation [&quot;Presentasi: Jetpack Compose dan Material 3&quot;]
         shell[&quot;MankeuApp&lt;br/&gt;collectAsStateWithLifecycle&quot;]
-        screens[&quot;Beranda, Catat, Riwayat, Laporan&lt;br/&gt;Overlay Data dan Pengaturan&quot;]
+        screens[&quot;Beranda, Catatan, Stok, Laporan&lt;br/&gt;Overlay Data, Pengaturan, Pusat Bantuan&quot;]
         vicoChart[&quot;CashFlowChart&lt;br/&gt;Vico 3.2.3&quot;]
     end
 
@@ -294,23 +331,24 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     end
 
     subgraph domainLayer [&quot;Domain: Kotlin murni, tanpa androidx&quot;]
-        ledgerPolicy[&quot;LedgerPolicy&lt;br/&gt;jurnal dan pembalik seimbang&quot;]
-        calculators[&quot;PostingReportCalculator&lt;br/&gt;MonthlyCashFlowCalculator&lt;br/&gt;BudgetPlanCalculator&lt;br/&gt;BusinessAnalysisCalculator&quot;]
+        ledgerPolicy[&quot;LedgerPolicy&lt;br/&gt;journalFor, jurnal seimbang&quot;]
+        calculators[&quot;PostingReportCalculator&lt;br/&gt;MonthlyCashFlowCalculator&lt;br/&gt;PlanCalculator, ActualBepCalculator&lt;br/&gt;StockCalculation&quot;]
         txCalc[&quot;TransactionCalculation&lt;br/&gt;kuantitas BigDecimal, rupiah Long&quot;]
     end
 
     subgraph dataLayer [&quot;Data: Room&quot;]
-        repository[&quot;FinanceRepository&lt;br/&gt;satu corong semua penulisan&lt;br/&gt;aturan bisnis di withTransaction&quot;]
+        repository[&quot;FinanceRepository&lt;br/&gt;satu corong semua penulisan&lt;br/&gt;recordEvent, updateEvent, deleteEvent&lt;br/&gt;commitImport, undoImportBatch&quot;]
         dao[&quot;FinanceDao&lt;br/&gt;proyeksi sempit dan agregasi SQL&quot;]
-        database[(&quot;AppDatabase schema 5&quot;)]
+        database[(&quot;AppDatabase schema 11&quot;)]
     end
 
     subgraph ioLayer [&quot;Subsistem I/O&quot;]
-        importer[&quot;FinanceWorkbookImporter&lt;br/&gt;XlsxWorkbookReader: DOM platform,&lt;br/&gt;XXE mati, ZIP dibaca terbatas&quot;]
-        exporters[&quot;FinanceWorkbookExporter&lt;br/&gt;FinancePdfExporter&lt;br/&gt;MsmeTemplateExporter&quot;]
+        importer[&quot;FinanceWorkbookImporter&lt;br/&gt;hanya templat Mankeu, DEC-012&lt;br/&gt;XlsxWorkbookReader: XXE mati, ZIP terbatas&quot;]
+        exporters[&quot;FinanceWorkbookExporter&lt;br/&gt;templat kosong sama dengan ekspor&lt;br/&gt;FinancePdfExporter&quot;]
         backupManager[&quot;EncryptedBackupManager&lt;br/&gt;PBKDF2-HMAC-SHA256 dan AES-256-GCM&quot;]
         driveClient[&quot;GoogleDriveBackupClient&lt;br/&gt;HttpURLConnection dan org.json&quot;]
         authManager[&quot;FirebaseAuthManager&quot;]
+        syncFramework[&quot;SyncEngine dan SyncCoordinator&lt;br/&gt;trigger ke sync_outbox&lt;br/&gt;belum dipanggil UI&quot;]
     end
 
     appContainer --&gt; mainActivity
@@ -330,30 +368,33 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     repository --&gt; exporters
     repository --&gt; dao
     dao --&gt; database
-    backupManager --&gt; database</pre>
+    backupManager --&gt; database
+    syncFramework --&gt; database
+    syncFramework -.-&gt; driveClient</pre>
 <script type="text/markdown">## 2. Pohon komponen Compose</script>
 <pre class="mermaid" data-source="02_architecture_diagram.md #2">flowchart TD
     setContent[&quot;MainActivity.setContent&quot;] --&gt; mankeuApp[&quot;MankeuApp&quot;]
     mankeuApp --&gt; mankeuTheme[&quot;MankeuTheme&lt;br/&gt;token warna tanpa animasi&quot;]
     mankeuTheme --&gt; overlayContent[&quot;AnimatedContent overlay&quot;]
-    overlayContent --&gt;|&quot;DATA&quot;| dataOverlay[&quot;OverlayScaffold&lt;br/&gt;DataScreen: impor, ekspor, cadangan, kategori&quot;]
+    overlayContent --&gt;|&quot;DATA&quot;| dataOverlay[&quot;OverlayScaffold&lt;br/&gt;DataScreen: impor, Batalkan impor,&lt;br/&gt;ekspor, cadangan, kategori&quot;]
     overlayContent --&gt;|&quot;SETTINGS&quot;| settingsOverlay[&quot;OverlayScaffold&lt;br/&gt;SettingsScreen&quot;]
+    overlayContent --&gt;|&quot;HELP&quot;| helpOverlay[&quot;OverlayScaffold&lt;br/&gt;HelpCenter&quot;]
     overlayContent --&gt;|&quot;NONE&quot;| widthCheck{&quot;Lebar layar 840dp atau lebih?&quot;}
     widthCheck --&gt;|&quot;ya&quot;| appRail[&quot;AppRail&quot;]
     widthCheck --&gt;|&quot;ya&quot;| mainScaffoldWide[&quot;MainScaffold&quot;]
-    widthCheck --&gt;|&quot;tidak&quot;| mainScaffold[&quot;MainScaffold&lt;br/&gt;NavigationBar 4 destinasi&quot;]
+    widthCheck --&gt;|&quot;tidak&quot;| mainScaffold[&quot;MainScaffold&lt;br/&gt;NavigationBar 4 destinasi&lt;br/&gt;RecordSpeedDial di Beranda dan Catatan&quot;]
     mainScaffold --&gt; scopeHeader[&quot;ScopeHeader&lt;br/&gt;ScopeSummary dan tombol mode buku&quot;]
     mainScaffold --&gt; screenContent[&quot;ScreenContent&quot;]
     mainScaffoldWide --&gt; screenContent
     screenContent --&gt; homeScreen[&quot;HomeScreen&quot;]
-    screenContent --&gt; entryScreen[&quot;EntryScreen&lt;br/&gt;formulir saja&quot;]
-    screenContent --&gt; ledgerScreen[&quot;LedgerScreen&lt;br/&gt;cari dan saring&quot;]
-    screenContent --&gt; reportsScreen[&quot;ReportsScreen&quot;]
-    homeScreen --&gt; homeCard[&quot;EventCard&lt;br/&gt;balik&quot;]
+    screenContent --&gt; entryScreen[&quot;EntryScreen di Realisasi&lt;br/&gt;formulir, cari, saring Semua Masuk Keluar&quot;]
+    screenContent --&gt; planScreen[&quot;PlanScreen di Proyeksi&lt;br/&gt;produk, biaya, periode&quot;]
+    screenContent --&gt; stockScreen[&quot;StockScreen&lt;br/&gt;barang unit dan bersama&quot;]
+    screenContent --&gt; reportsScreen[&quot;ReportsScreen&lt;br/&gt;Laba Rugi dan Arus Kas, Kelayakan dan BEP,&lt;br/&gt;Realisasi vs Target&quot;]
     homeScreen --&gt; metricCards[&quot;SimpleMetricCard&lt;br/&gt;read-out tanpa klik&quot;]
-    ledgerScreen --&gt; ledgerCard[&quot;EventCard&lt;br/&gt;balik dan hapus, 48dp&quot;]
+    homeScreen --&gt; planCards[&quot;PlanFeasibilityCard&lt;br/&gt;ActualMonthCard, StockCard&quot;]
+    entryScreen --&gt; ledgerCard[&quot;EventCard&lt;br/&gt;Ubah dan Hapus, 48dp&quot;]
     reportsScreen --&gt; monthlyChart[&quot;MonthlyCashFlowChart&quot;]
-    reportsScreen --&gt; statusBadge[&quot;Badge status piutang&quot;]
     mankeuApp --&gt; scopeSheet[&quot;ManageScopeSheet&quot;]
     mankeuApp --&gt; restoreDialog[&quot;RestorePreviewDialog&quot;]
     mankeuApp --&gt; spotlightTour[&quot;SpotlightTour&quot;]
@@ -363,14 +404,13 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
         tooltipAnchor[&quot;Anchor tekan lama&quot;]
     end
     scopeHeader --&gt; tooltipAnchor
-    homeCard --&gt; tooltipAnchor
     ledgerCard --&gt; tooltipAnchor
     metricCards --&gt; tooltipAnchor
-    statusBadge --&gt; tooltipAnchor
+    planCards --&gt; tooltipAnchor
     tooltipAnchor -.-&gt;|&quot;LONG_PRESS&quot;| feedbackProvider</pre>
 <script type="text/markdown">## 3. Aliran data reaktif</script>
 <pre class="mermaid" data-source="02_architecture_diagram.md #3">flowchart LR
-    roomTables[(&quot;Tabel Room&quot;)] --&gt;|&quot;invalidation&quot;| daoFlows[&quot;Flow FinanceDao&lt;br/&gt;observeEventsForBook LIMIT 200&lt;br/&gt;observeCashFlowRows&lt;br/&gt;observeCategoryTotals&lt;br/&gt;observePostingRows&quot;]
+    roomTables[(&quot;Tabel Room&quot;)] --&gt;|&quot;invalidation&quot;| daoFlows[&quot;Flow FinanceDao&lt;br/&gt;observeEventsForBook LIMIT&lt;br/&gt;observeCashFlowRows&lt;br/&gt;observeCategoryTotals&lt;br/&gt;observePostingRows&quot;]
     daoFlows --&gt; repoFlows[&quot;FinanceRepository&lt;br/&gt;pemetaan ke model domain&quot;]
 
     subgraph selectionChain [&quot;Rantai pemilihan: SharingStarted.Eagerly&quot;]
@@ -380,7 +420,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     end
 
     subgraph bookQueries [&quot;Kueri per buku: WhileSubscribed 5000 ms&quot;]
-        perBook[&quot;events, eventCount, cashFlowRecords,&lt;br/&gt;categoryTotals, budgetItems, obligations,&lt;br/&gt;summary, assumptions, importBatches&quot;]
+        perBook[&quot;events, eventCount, cashFlowRecords,&lt;br/&gt;categoryTotals, budgetItems, products,&lt;br/&gt;stockItems, summary, importBatches&quot;]
     end
 
     repoFlows --&gt; selBusinesses
@@ -397,55 +437,63 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
 
 1. **Satu sumber kebenaran.** UI hanya membaca `AppUiState`. Setiap penulisan melewati `AppViewModel.mutating` lalu `FinanceRepository`, dan setiap aturan bisnis ditegakkan di repository di dalam transaksi yang sama dengan penulisannya.
 2. **Domain murni.** Kalkulator dan `LedgerPolicy` tidak mengimpor paket Android sehingga seluruhnya diuji dengan unit test JVM.
-3. **Uang presisi.** Rupiah disimpan sebagai `Long` bulat. Rasio, margin, dan kuantitas memakai `BigDecimal` dengan `RoundingMode.HALF_UP`.
+3. **Uang presisi.** Rupiah disimpan sebagai `Long` bulat. Rasio, margin, kuantitas, dan stok memakai `BigDecimal` dengan `RoundingMode.HALF_UP`.
 4. **Primitif standar.** `org.json` bawaan Android untuk JSON Drive, `viewModelFactory` dari Jetpack, parser DOM platform untuk XLSX, dan `NumberFormat` yang di-cache per thread (D-082). Hilt, Apache POI, DataStore, dan AppCompat dipertimbangkan lalu ditolak dengan alasan di D-082.
 5. **Cadangan tanpa server.** Berkas `.aabk` dienkripsi AES-256-GCM dengan kunci PBKDF2-HMAC-SHA256 310.000 iterasi. Drive hanya menyimpan ciphertext di `appDataFolder`.</script>
 </section>
 <section id="03_use_case_diagram" class="card">
 <h2>Use Case Diagram - Mankeu</h2>
-<script type="text/markdown">Mankeu adalah aplikasi satu pengguna tanpa peran atau hak akses bertingkat: satu pemilik usaha mengelola seluruh buku di perangkatnya. Aktor lain adalah sistem eksternal.</script>
+<script type="text/markdown">Mankeu adalah aplikasi satu pengguna tanpa peran atau hak akses bertingkat: satu pemilik usaha mengelola seluruh buku di perangkatnya. Aktor lain adalah sistem eksternal. Diselaraskan dengan kode pada Room **schema 11** (DEC-011 sampai DEC-019).</script>
 <pre class="mermaid" data-source="03_use_case_diagram.md #1">flowchart LR
-    owner[&quot;Pemilik usaha UMKM&quot;]
-    workbookFile[&quot;Berkas Excel XLSX&quot;]
+    owner[&quot;Pemilik usaha kecil&quot;]
+    workbookFile[&quot;Berkas Excel templat Mankeu&quot;]
     googleDrive[&quot;Google Drive appDataFolder&quot;]
     firebaseAuth[&quot;Firebase Auth&quot;]
 
     subgraph mankeuSystem [&quot;Aplikasi Mankeu&quot;]
         subgraph scopeModule [&quot;1. Lingkup dan buku&quot;]
-            ucScope[&quot;Kelola usaha dan lahan&quot;]
+            ucScope[&quot;Kelola usaha dan unit&quot;]
             ucMode[&quot;Beralih buku Proyeksi atau Realisasi&quot;]
-            ucCategory[&quot;Kelola kategori pembukuan&quot;]
+            ucCategory[&quot;Kelola kategori dan sifat biaya&quot;]
         end
 
-        subgraph entryModule [&quot;2. Pencatatan&quot;]
-            ucCash[&quot;Catat uang masuk atau keluar&quot;]
-            ucCredit[&quot;Catat penjualan atau pembelian kredit&quot;]
-            ucSettle[&quot;Catat pembayaran piutang atau utang&quot;]
-            ucFinancing[&quot;Catat modal, pinjaman, dan bunga&quot;]
-            ucBudget[&quot;Susun RAB bertanggal&quot;]
+        subgraph entryModule [&quot;2. Catatan kas&quot;]
+            ucCash[&quot;Catat uang masuk atau keluar&lt;br/&gt;jenis ditentukan kategori&quot;]
+            ucEdit[&quot;Ubah catatan&quot;]
+            ucDelete[&quot;Hapus catatan&quot;]
+            ucValidate[&quot;Periksa jumlah, lingkup, dan kategori&quot;]
+            ucSearch[&quot;Cari dan saring Semua, Masuk, Keluar&quot;]
         end
 
-        subgraph correctionModule [&quot;3. Koreksi berpenjaga&quot;]
-            ucReverse[&quot;Balik transaksi&quot;]
-            ucDelete[&quot;Hapus transaksi&quot;]
-            ucGuard[&quot;Periksa pembayaran aktif dan kecocokan sisa tagihan&quot;]
+        subgraph planModule [&quot;3. Rencana usaha&quot;]
+            ucProduct[&quot;Kelola produk dan komponen biaya&quot;]
+            ucPlanLine[&quot;Kelola biaya tetap, biaya sekali, aset, modal&quot;]
+            ucPeriod[&quot;Atur periode rencana&quot;]
         end
 
-        subgraph analysisModule [&quot;4. Laporan dan kelayakan&quot;]
-            ucDashboard[&quot;Pantau kas dan metrik di Beranda&quot;]
-            ucHistory[&quot;Cari dan saring Riwayat&quot;]
+        subgraph stockModule [&quot;4. Stok&quot;]
+            ucStockItem[&quot;Tambah barang untuk unit atau semua unit&quot;]
+            ucStockMove[&quot;Catat masuk, keluar, atau opname&quot;]
+        end
+
+        subgraph analysisModule [&quot;5. Laporan dan kelayakan&quot;]
+            ucDashboard[&quot;Pantau kas, BEP, dan stok di Beranda&quot;]
             ucChart[&quot;Jelajahi grafik arus kas bulanan&quot;]
-            ucAssumptions[&quot;Isi asumsi kelayakan&quot;]
-            ucFeasibility[&quot;Hitung BEP, B/C, dan kebutuhan modal kerja&quot;]
-            ucCompare[&quot;Bandingkan rencana dan realisasi&quot;]
+            ucFeasibility[&quot;Hitung BEP, kebutuhan modal, dan kelayakan&quot;]
+            ucCompare[&quot;Bandingkan realisasi dengan target&quot;]
         end
 
-        subgraph dataModule [&quot;5. Data&quot;]
-            ucImport[&quot;Impor workbook&quot;]
-            ucReverseBatch[&quot;Batalkan batch impor&quot;]
-            ucExport[&quot;Ekspor Excel, PDF, atau templat&quot;]
+        subgraph dataModule [&quot;6. Data&quot;]
+            ucImport[&quot;Impor templat ke unit terpilih&quot;]
+            ucUndoImport[&quot;Batalkan impor&quot;]
+            ucExport[&quot;Ekspor Excel, PDF, atau templat kosong&quot;]
             ucBackup[&quot;Buat cadangan terenkripsi&quot;]
             ucRestore[&quot;Pulihkan cadangan&quot;]
+        end
+
+        subgraph helpModule [&quot;7. Bantuan&quot;]
+            ucTour[&quot;Ikuti panduan halaman yang ditawarkan&quot;]
+            ucHelp[&quot;Baca Pusat Bantuan dan Tunjukkan di aplikasi&quot;]
         end
     end
 
@@ -453,27 +501,31 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     owner --&gt; ucMode
     owner --&gt; ucCategory
     owner --&gt; ucCash
-    owner --&gt; ucCredit
-    owner --&gt; ucSettle
-    owner --&gt; ucFinancing
-    owner --&gt; ucBudget
-    owner --&gt; ucReverse
+    owner --&gt; ucEdit
     owner --&gt; ucDelete
+    owner --&gt; ucSearch
+    owner --&gt; ucProduct
+    owner --&gt; ucPlanLine
+    owner --&gt; ucPeriod
+    owner --&gt; ucStockItem
+    owner --&gt; ucStockMove
     owner --&gt; ucDashboard
-    owner --&gt; ucHistory
     owner --&gt; ucChart
-    owner --&gt; ucAssumptions
     owner --&gt; ucCompare
     owner --&gt; ucImport
-    owner --&gt; ucReverseBatch
+    owner --&gt; ucUndoImport
     owner --&gt; ucExport
     owner --&gt; ucBackup
     owner --&gt; ucRestore
+    owner --&gt; ucTour
+    owner --&gt; ucHelp
 
-    ucReverse -.-&gt;|&quot;include&quot;| ucGuard
-    ucDelete -.-&gt;|&quot;include&quot;| ucGuard
-    ucAssumptions -.-&gt;|&quot;include&quot;| ucFeasibility
-    ucReverseBatch -.-&gt;|&quot;include&quot;| ucReverse
+    ucCash -.-&gt;|&quot;include&quot;| ucValidate
+    ucEdit -.-&gt;|&quot;include&quot;| ucValidate
+    ucProduct -.-&gt;|&quot;masukan&quot;| ucFeasibility
+    ucPlanLine -.-&gt;|&quot;masukan&quot;| ucFeasibility
+    ucDashboard -.-&gt;|&quot;include&quot;| ucFeasibility
+    ucUndoImport -.-&gt;|&quot;menghapus catatan batch&quot;| ucDelete
     workbookFile -.-&gt;|&quot;dibaca&quot;| ucImport
     ucExport -.-&gt;|&quot;menghasilkan&quot;| workbookFile
     ucBackup -.-&gt;|&quot;opsional, ciphertext&quot;| googleDrive
@@ -481,15 +533,18 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     firebaseAuth -.-&gt;|&quot;identitas untuk Drive&quot;| ucBackup</pre>
 <script type="text/markdown">| Use case | Tujuan bagi pemilik usaha |
 | --- | --- |
-| Catat uang masuk atau keluar | Mengganti buku kas tulis dengan beberapa ketukan, tanpa istilah debit dan kredit. |
-| Koreksi berpenjaga | Membalik atau menghapus catatan yang salah tanpa pernah membuat saldo kas, piutang, atau utang menjadi tidak cocok. |
-| Kelayakan | Menjawab "berapa modal yang harus disiapkan" dan "berapa unit harus terjual agar tidak rugi". |
-| Impor workbook | Membawa pembukuan Excel yang sudah ada tanpa mengetik ulang. Setiap batch dapat dibatalkan dan diimpor ulang. |
-| Cadangan terenkripsi | Memindahkan atau menyelamatkan data tanpa pihak mana pun dapat membaca isinya. |</script>
+| Catat uang masuk atau keluar | Mengganti buku kas tulis dengan beberapa ketukan. Kategori menentukan jenisnya (pemasukan, pengeluaran, setoran modal, ambil pribadi, beli aset), tanpa istilah debit dan kredit. |
+| Ubah dan Hapus | Membetulkan catatan yang salah langsung di tempat, atau menghapusnya, tanpa baris pembalik tambahan (DEC-019). |
+| Rencana usaha | Menjawab "berapa modal yang harus disiapkan" dan "berapa unit harus terjual agar tidak rugi" dari produk, resep biaya, dan biaya tetap. |
+| Stok | Mengetahui sisa barang per unit dan kapan harus belanja lagi. |
+| Impor templat | Memasukkan banyak catatan sekaligus ke unit terpilih. Batalkan impor menghapus catatan batch itu, dan berkas yang sama boleh diimpor ulang. |
+| Cadangan terenkripsi | Memindahkan atau menyelamatkan data tanpa pihak mana pun dapat membaca isinya. |
+
+Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, tetapi belum dapat dijalankan pemilik dari UI, sehingga tidak muncul sebagai use case.</script>
 </section>
 <section id="04_class_diagram" class="card">
 <h2>Class Diagram - Domain, Data, dan Presentasi Mankeu</h2>
-<script type="text/markdown">Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.</script>
+<script type="text/markdown">Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber pada Room **schema 11**. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.</script>
 <pre class="mermaid" data-source="04_class_diagram.md #1">classDiagram
     direction LR
 
@@ -498,25 +553,28 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
         PROJECTION
         REALIZATION
     }
+    class FinancialEventType {
+        &lt;&lt;enumeration&gt;&gt;
+        CASH_INCOME
+        CASH_EXPENSE
+        OWNER_CAPITAL
+        OWNER_DRAWING
+        ASSET_PURCHASE_CASH
+    }
+    class CategoryRole {
+        &lt;&lt;enumeration&gt;&gt;
+        REVENUE
+        EXPENSE
+        CAPITAL_IN
+        DRAWING
+        ASSET
+        +cashTypeFor(incoming) FinancialEventType
+    }
     class CashFlowRole {
         &lt;&lt;enumeration&gt;&gt;
         OPERATING
         INVESTING
         FINANCING
-        NON_CASH
-    }
-    class RecordStatus {
-        &lt;&lt;enumeration&gt;&gt;
-        POSTED
-        REVERSED
-    }
-    class ObligationStatus {
-        &lt;&lt;enumeration&gt;&gt;
-        OPEN
-        PARTIAL
-        PAID
-        OVERDUE
-        REVERSED
     }
 
     class MoneyEvent {
@@ -526,17 +584,16 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
         +Long amountRupiah
         +LocalDate date
         +String description
+        +String categoryId
+        +String productId
+        +String importBatchId
         +CashFlowRole cashFlowRole
-        +RecordStatus status
-        +String obligationId
-        +String reversesEventId
-        +String reversedByEventId
+        +CostNature costNature
     }
     class JournalEntry {
         +String id
         +String sourceEventId
         +List~Posting~ postings
-        +String reversalOfJournalId
         +requireBalanced() JournalEntry
     }
     class Posting {
@@ -544,203 +601,243 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
         +PostingSide side
         +Long amountRupiah
     }
-    class ObligationBalance {
-        +String id
-        +ObligationKind kind
-        +Long originalAmountRupiah
-        +Long settledAmountRupiah
-        +Long outstandingAmountRupiah
-        +Boolean reversed
-        +status(today) ObligationStatus
-    }
     class CashFlowRecord {
         +String id
         +LocalDate date
         +FinancialEventType type
         +CashFlowRole cashFlowRole
         +Long amountRupiah
-        +String reversesEventId
     }
     class FinancialSummary {
         +Long operatingIncomeRupiah
         +Long operatingExpenseRupiah
         +Long profitRupiah
         +Long cashBalanceRupiah
-        +Long receivableOutstandingRupiah
-        +Long payableOutstandingRupiah
     }
-    class BusinessAnalysis {
-        +Long financingGapRupiah
-        +Long totalCostRupiah
-        +BigDecimal breakEvenQuantity
-        +BigDecimal benefitCostRatio
-        +Boolean feasible
+    class PlanProduct {
+        +String name
+        +Long priceRupiah
+        +BigDecimal targetPerMonth
+        +List~CostComponent~ components
+        +Int sellFromMonth
+        +BigDecimal contributionMargin
+    }
+    class CostComponent {
+        +String name
+        +Long amountRupiah
+        +BigDecimal yield
+        +BigDecimal perUnit
+    }
+    class PlanAnalysis {
+        +List~ProductBep~ products
+        +BigDecimal breakEvenUnits
+        +Long breakEvenRupiah
+        +Long profitRupiah
+        +Long breakEvenBaseRupiah
+    }
+    class StockItem {
+        +String name
+        +BigDecimal currentStock
+        +BigDecimal minAlertStock
+        +Boolean shared
+        +Boolean isLowStock
     }
 
     class LedgerPolicy {
         &lt;&lt;object&gt;&gt;
         +journalFor(event) JournalEntry
-        +reversalFor(original, reversalEvent) JournalEntry
     }
     class PostingReportCalculator {
         &lt;&lt;object&gt;&gt;
-        +calculate(records, obligations) FinancialSummary
+        +calculate(records) FinancialSummary
     }
     class MonthlyCashFlowCalculator {
         &lt;&lt;object&gt;&gt;
         +calculateFromRecords(records, openingCash) List~MonthlyCashFlow~
     }
-    class BudgetPlanCalculator {
+    class PlanCalculator {
         &lt;&lt;object&gt;&gt;
-        +summarize(lines) FinancialSummary
-        +schedule(lines, openingCash) List~MonthlyCashFlow~
+        +analyse(inputs) PlanAnalysis
+        +schedule(months, inputs) List~MonthlyCashFlow~
     }
-    class BusinessAnalysisCalculator {
+    class ActualBepCalculator {
         &lt;&lt;object&gt;&gt;
-        +calculate(summary, assumptions, monthlyFlows) BusinessAnalysis
+        +analyse(products, actual) ActualMonthAnalysis
+    }
+    class StockCalculation {
+        &lt;&lt;object&gt;&gt;
+        +summarize(items) StockSummary
     }
 
     class FinanceRepository {
-        +inTransaction(block) T
         +recordEvent(draft) String
-        +settleObligation(obligationId, amount, date, description) String
-        +reverseEvent(eventId, date, reason) String
+        +updateEvent(eventId, draft)
         +deleteEvent(eventId)
         +createCategory(businessId, name, role, aliases) String
-        +commitImport(businessId, projectId, preview, targetBook) Int
-        +reverseImportBatch(batchId) Int
+        +saveProduct(...)
+        +createBudgetItem(draft) String
+        +createStockItem(businessId, projectId, shared, ...) String
+        +recordStockMovement(stockItemId, type, quantity, date, notes) BigDecimal
+        +reviewImport(businessId, projectId, preview) ImportReview
+        +commitImport(businessId, projectId, preview) Int
+        +undoImportBatch(batchId) ImportUndo
         +eventsForBook(bookId) Flow
         +cashFlowRecords(bookId) Flow
         +accountingSummary(bookId) Flow
     }
     class FinanceDao {
         &lt;&lt;interface&gt;&gt;
-        +insertEvent(event)
-        +insertJournal(entry)
-        +insertPostings(postings)
+        +getEvent(id) FinancialEventEntity
+        +deleteEvent(id)
+        +deleteEventsForImportBatch(batchId) Int
+        +markImportBatchReversed(batchId, reversedAt) Int
+        +hasImported(sourceSha256) Boolean
         +observeEventsForBook(bookId, limit) Flow
         +observeCashFlowRows(bookId) Flow
-        +countLiveSettlementsForSource(sourceEventId) Int
-        +restoreObligationBySource(sourceEventId)
         +findCategory(businessId, role, normalizedName) CategoryEntity
+    }
+    class StockDao {
+        &lt;&lt;interface&gt;&gt;
+        +observeStockItems(businessId, projectId) Flow
+        +insertStockMovement(movement)
+        +deleteImportedItems(batchId) Int
     }
     class AppDatabase {
         &lt;&lt;abstract&gt;&gt;
         +financeDao() FinanceDao
-        +MIGRATION_3_4
-        +MIGRATION_4_5
+        +DATA_TABLES
+        +MIGRATION_9_10
+        +MIGRATION_10_11
     }
     class EncryptedBackupManager {
         +create(password) ByteArray
         +prepareRestore(envelope, password) PreparedRestore
         +restore(prepared, recoveryPassword) RestoreResult
     }
+    class SyncEngine {
+        +collectLocalChanges() LocalChanges
+        +applyRemote(changeSet) ApplyResult
+        +acknowledge(changes)
+    }
 
     class AppViewModel {
         +StateFlow~AppUiState~ uiState
         +MutableStateFlow~Boolean~ isSaving
-        +record(type, amount, description, ...)
-        +settleObligation(id, amount, date, description)
-        +reverseEvent(id, reason)
+        +record(type, amount, ..., editingEventId)
         +deleteTransaction(eventId)
-        +commitImport(targetBook)
-        +reverseImportBatch(id)
+        +saveProduct(...)
+        +savePlanLine(...)
+        +recordStockMovement(itemId, type, quantity, notes)
+        +commitImport()
+        +undoImportBatch(id)
         -mutating(block) Job
     }
     class AppUiState {
         +String selectedBookId
         +BookMode selectedBookMode
         +List~MoneyEvent~ events
-        +Int eventCount
         +List~CashFlowRecord~ cashFlowRecords
+        +List~StockItem~ stockItems
         +FinancialSummary summary
+        +PlanAnalysis plan
         +Boolean isLoading
-        +planBudgetLines() List~PlanBudgetLine~
     }
 
     JournalEntry &quot;1&quot; *-- &quot;2..*&quot; Posting : berisi
-    MoneyEvent --&gt; RecordStatus
+    PlanProduct &quot;1&quot; *-- &quot;0..*&quot; CostComponent : resep
+    MoneyEvent --&gt; FinancialEventType
     MoneyEvent --&gt; CashFlowRole
-    ObligationBalance --&gt; ObligationStatus
+    CategoryRole ..&gt; FinancialEventType : menentukan
     LedgerPolicy ..&gt; MoneyEvent : membaca
     LedgerPolicy ..&gt; JournalEntry : membuat
     PostingReportCalculator ..&gt; FinancialSummary : membuat
     MonthlyCashFlowCalculator ..&gt; CashFlowRecord : membaca
-    BusinessAnalysisCalculator ..&gt; BusinessAnalysis : membuat
+    PlanCalculator ..&gt; PlanProduct : membaca
+    PlanCalculator ..&gt; PlanAnalysis : membuat
+    StockCalculation ..&gt; StockItem : membaca
     FinanceRepository --&gt; FinanceDao : kueri
-    FinanceRepository --&gt; AppDatabase : transaksi
+    FinanceRepository --&gt; StockDao : stok
+    FinanceRepository --&gt; AppDatabase : withTransaction
     FinanceRepository ..&gt; LedgerPolicy : jurnal
-    EncryptedBackupManager --&gt; AppDatabase : snapshot
+    EncryptedBackupManager --&gt; AppDatabase : snapshot DATA_TABLES
+    SyncEngine --&gt; AppDatabase : sync_outbox
     AppViewModel --&gt; FinanceRepository : delegasi
     AppViewModel --&gt; EncryptedBackupManager : cadangan
     AppViewModel --&gt; AppUiState : memancarkan</pre>
 <script type="text/markdown">## Catatan desain
 
-1. **Keseimbangan dua lapis.** `LedgerPolicy` memanggil `JournalEntry.requireBalanced()` saat membuat jurnal, lalu `FinanceRepository.insertEventAndJournal` memeriksa ulang debit sama dengan kredit tepat sebelum baris ditulis.
-2. **Status dihitung, bukan disimpan.** `ObligationBalance.status(today)` menurunkan OPEN, PARTIAL, PAID, OVERDUE, atau REVERSED dari angka dan tanggal.
-3. **Proyeksi sempit.** `CashFlowRecord` hanya membawa kolom yang dibutuhkan jadwal kas, sehingga buku berisi ribuan transaksi tidak memuat seluruh deskripsi ke memori.</script>
+1. **Keseimbangan dua lapis.** `LedgerPolicy.journalFor` memanggil `JournalEntry.requireBalanced()`, lalu `FinanceRepository.insertEventAndJournal` memeriksa ulang debit sama dengan kredit tepat sebelum baris ditulis.
+2. **Satu jalur untuk catat dan ubah.** `AppViewModel.record` memanggil `updateEvent` bila `editingEventId` terisi dan `recordEvent` bila tidak. Keduanya memakai `requireValid` dan `LedgerPolicy.journalFor` yang sama.
+3. **Kategori menentukan jenis.** Formulir hanya punya Masuk dan Keluar. `CategoryRole.cashTypeFor` mengubahnya menjadi salah satu dari lima jenis kas (DEC-011 K-2).
+4. **Proyeksi sempit.** `CashFlowRecord` hanya membawa kolom yang dibutuhkan jadwal kas, sehingga buku berisi ribuan transaksi tidak memuat seluruh deskripsi ke memori.</script>
 </section>
 <section id="05_user_flow_diagram" class="card">
 <h2>User Flow Diagram - Mankeu</h2>
-<script type="text/markdown">Alur navigasi sesuai `MankeuApp`: empat destinasi di `NavigationBar` (atau `AppRail` pada layar lebar), dua overlay yang dibuka dari bar atas, dan satu bottom sheet lingkup.</script>
+<script type="text/markdown">Alur navigasi sesuai `MankeuApp` pada Room **schema 11**: empat destinasi di `NavigationBar` (atau `AppRail` pada layar lebar), tiga overlay yang dibuka dari bar atas, dan satu bottom sheet lingkup.</script>
 <pre class="mermaid" data-source="05_user_flow_diagram.md #1">flowchart TD
-    launch([&quot;Buka aplikasi&quot;]) --&gt; workspace{&quot;currentWorkspace menemukan usaha?&quot;}
-    workspace --&gt;|&quot;belum ada&quot;| addBusiness[&quot;Tambah usaha&lt;br/&gt;kategori bawaan ikut dibuat&quot;]
-    addBusiness --&gt; addProject[&quot;Tambah lahan atau siklus&lt;br/&gt;buku Proyeksi dan Realisasi ikut dibuat&quot;]
+    launch([&quot;Buka aplikasi&quot;]) --&gt; workspace{&quot;currentWorkspace menemukan usaha dan unit?&quot;}
+    workspace --&gt;|&quot;belum ada&quot;| addBusiness[&quot;Tambah usaha&lt;br/&gt;kategori dasar ikut dibuat&quot;]
+    addBusiness --&gt; addProject[&quot;Tambah unit&lt;br/&gt;buku Proyeksi dan Realisasi ikut dibuat&quot;]
     addProject --&gt; home
-    workspace --&gt;|&quot;ada&quot;| home[&quot;Beranda&lt;br/&gt;kas, metrik, kelayakan, transaksi terbaru&quot;]
+    workspace --&gt;|&quot;ada, pilihan terakhir diingat&quot;| home[&quot;Beranda&lt;br/&gt;kas, arus kas, BEP, stok&quot;]
 
     home --&gt; scopeHeader[&quot;ScopeHeader&quot;]
     scopeHeader --&gt;|&quot;ketuk ringkasan&quot;| scopeSheet[&quot;ManageScopeSheet&lt;br/&gt;ganti, tambah, ubah, hapus atau arsipkan&quot;]
     scopeHeader --&gt;|&quot;tombol mode&quot;| modeChoice{&quot;Buku aktif&quot;}
-    modeChoice --&gt;|&quot;Realisasi&quot;| actualBook[&quot;Transaksi nyata&lt;br/&gt;warna primaryContainer&quot;]
-    modeChoice --&gt;|&quot;Proyeksi&quot;| planBook[&quot;Rencana, RAB, asumsi&lt;br/&gt;warna secondaryContainer&quot;]
+    modeChoice --&gt;|&quot;Realisasi&quot;| actualBook[&quot;Catatan kas nyata&lt;br/&gt;warna primaryContainer&quot;]
+    modeChoice --&gt;|&quot;Proyeksi&quot;| planBook[&quot;Rencana usaha&lt;br/&gt;warna secondaryContainer&quot;]
 
     home --&gt; navBar{&quot;NavigationBar&quot;}
-    navBar --&gt;|&quot;Catat&quot;| entry[&quot;Catat&lt;br/&gt;pilih jenis transaksi&quot;]
+    navBar --&gt;|&quot;Catatan, Realisasi&quot;| entry[&quot;Catatan&lt;br/&gt;formulir dan daftar catatan&quot;]
+    navBar --&gt;|&quot;Catatan, Proyeksi&quot;| planPage[&quot;Rencana Usaha&lt;br/&gt;produk, resep biaya, biaya tetap, aset, periode&quot;]
+    home --&gt;|&quot;speed dial Masuk atau Keluar&quot;| entry
     entry --&gt; entryForm[&quot;Formulir&lt;br/&gt;jumlah, keterangan, tanggal, kategori&quot;]
     entryForm --&gt; validate{&quot;Valid?&quot;}
     validate --&gt;|&quot;tidak&quot;| fieldError[&quot;Pesan galat di kolom&quot;]
     fieldError --&gt; entryForm
     validate --&gt;|&quot;ya&quot;| saving[&quot;Simpan&lt;br/&gt;tombol nonaktif dan indikator berputar&quot;]
-    saving --&gt; saved[&quot;Snackbar tersimpan&lt;br/&gt;formulir dikosongkan&quot;]
+    saving --&gt; saved[&quot;Snackbar Tersimpan atau Diperbarui&lt;br/&gt;formulir dikosongkan&quot;]
 
-    navBar --&gt;|&quot;Riwayat&quot;| ledger[&quot;Riwayat&lt;br/&gt;cari dan saring Semua, Masuk, Keluar, Belum Lunas&quot;]
-    ledger --&gt; eventAction{&quot;Aksi pada transaksi&quot;}
-    eventAction --&gt;|&quot;Balik&quot;| reverseCheck{&quot;Pembalikan atau ada pembayaran aktif?&quot;}
-    reverseCheck --&gt;|&quot;ya&quot;| refused[&quot;Snackbar penolakan&lt;br/&gt;menjelaskan langkah yang harus didahulukan&quot;]
-    reverseCheck --&gt;|&quot;tidak&quot;| reversed[&quot;Jurnal pembalik tercatat&quot;]
-    eventAction --&gt;|&quot;Hapus&quot;| deleteCheck{&quot;Ada pembayaran aktif atau sisa tagihan tidak cukup?&quot;}
-    deleteCheck --&gt;|&quot;ya&quot;| refused
-    deleteCheck --&gt;|&quot;tidak&quot;| deleted[&quot;Transaksi terhapus&lt;br/&gt;pasangan pembaliknya ikut terhapus&quot;]
+    entry --&gt; recordList[&quot;Daftar catatan&lt;br/&gt;cari dan saring Semua, Masuk, Keluar&quot;]
+    recordList --&gt; eventAction{&quot;Aksi pada kartu catatan&quot;}
+    eventAction --&gt;|&quot;Ubah&quot;| editForm[&quot;Formulir terisi data catatan&lt;br/&gt;label Mengubah catatan&quot;]
+    editForm --&gt; entryForm
+    eventAction --&gt;|&quot;Hapus&quot;| confirmDelete{&quot;Sheet konfirmasi Hapus&quot;}
+    confirmDelete --&gt;|&quot;batal&quot;| recordList
+    confirmDelete --&gt;|&quot;Hapus&quot;| deleted[&quot;Catatan terhapus&lt;br/&gt;jurnal ikut terhapus&quot;]
+
+    navBar --&gt;|&quot;Stok&quot;| stock[&quot;Stok&lt;br/&gt;barang unit ini dan barang bersama&quot;]
+    stock --&gt; stockSheet[&quot;Sheet barang&lt;br/&gt;Masuk, Keluar, Opname&quot;]
 
     navBar --&gt;|&quot;Laporan&quot;| reports[&quot;Laporan&quot;]
     reports --&gt; reportTabs{&quot;Tab&quot;}
-    reportTabs --&gt;|&quot;Ringkasan&quot;| summaryTab[&quot;Laba rugi dan arus kas&quot;]
-    reportTabs --&gt;|&quot;Arus kas&quot;| chartTab[&quot;Grafik bulanan Vico&lt;br/&gt;geser dan ketuk batang&quot;]
-    reportTabs --&gt;|&quot;Kelayakan&quot;| feasibilityTab[&quot;Asumsi, BEP, B/C, modal kerja&quot;]
+    reportTabs --&gt;|&quot;Laba Rugi dan Arus Kas&quot;| summaryTab[&quot;Laba rugi, arus kas, grafik bulanan&quot;]
+    reportTabs --&gt;|&quot;Kelayakan dan BEP&quot;| feasibilityTab[&quot;BEP unit dan rupiah, kebutuhan modal&quot;]
+    reportTabs --&gt;|&quot;Realisasi vs Target&quot;| compareTab[&quot;Rata-rata per bulan, basis kas&quot;]
 
     home --&gt;|&quot;ikon Data&quot;| dataOverlay[&quot;Data&lt;br/&gt;impor, ekspor, cadangan, kategori&quot;]
-    dataOverlay --&gt; importFlow[&quot;Pilih workbook, pratinjau, komit&quot;]
-    importFlow --&gt; batchCard[&quot;Kartu batch&lt;br/&gt;dapat dibatalkan dan diimpor ulang&quot;]
+    dataOverlay --&gt; importFlow[&quot;Pilih berkas templat, pratinjau, simpan&quot;]
+    importFlow --&gt; batchCard[&quot;Kartu riwayat impor&quot;]
+    batchCard --&gt;|&quot;Batalkan impor&quot;| undoImport[&quot;Catatan batch dihapus&lt;br/&gt;riwayat impor tetap, ditandai dibatalkan&quot;]
     dataOverlay --&gt; backupFlow[&quot;Cadangan terenkripsi&lt;br/&gt;berkas lokal atau Google Drive&quot;]
-    home --&gt;|&quot;ikon Pengaturan&quot;| settingsOverlay[&quot;Pengaturan&lt;br/&gt;tema, gerak, bahasa, akun, tur&quot;]
+    home --&gt;|&quot;ikon Pengaturan&quot;| settingsOverlay[&quot;Pengaturan&lt;br/&gt;tema, getar, bahasa, akun, panduan&quot;]
+    home --&gt;|&quot;tombol tanda tanya&quot;| helpOverlay[&quot;Pusat Bantuan&lt;br/&gt;artikel dan Tunjukkan di aplikasi&quot;]
 
     classDef screen fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
     classDef blocked fill:#FFEBEE,stroke:#C62828,stroke-width:2px
     classDef success fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
-    class home,entry,ledger,reports,dataOverlay,settingsOverlay screen
-    class refused,fieldError blocked
-    class saved,reversed,deleted success</pre>
+    class home,entry,planPage,stock,reports,dataOverlay,settingsOverlay,helpOverlay screen
+    class fieldError blocked
+    class saved,deleted,undoImport success</pre>
 <script type="text/markdown">## Catatan kegunaan
 
-1. **Catat hanya formulir, Riwayat hanya daftar** (D-070), sehingga pencarian dan saringan tidak tersembunyi di balik tombol segmen.
-2. **Penolakan selalu menjelaskan jalan keluarnya.** Contohnya: batalkan pembayaran dulu, atau hapus pembalikan untuk memulihkan transaksi asli.
-3. **Warna buku berbeda** agar transaksi nyata tidak tercatat ke buku rencana.</script>
+1. **Ubah di tempat (DEC-019).** Catatan yang salah dibetulkan di formulir yang sama dengan saat mencatat, tanpa baris tambahan atau tanda khusus pada kartu.
+2. **Hapus selalu dikonfirmasi.** Sheet konfirmasi menampilkan keterangan dan jumlah catatan dengan warna galat sebelum penghapusan.
+3. **Warna buku berbeda** agar catatan kas nyata tidak tercatat ke buku rencana, dan Catatan berganti menjadi Rencana Usaha di mode Proyeksi.</script>
 </section>
 <section id="06_activity_diagrams" class="card">
 <h2>Activity Diagrams - Alur Bisnis Kritis Mankeu</h2>
-<script type="text/markdown">Lima alur yang menulis atau mengoreksi uang. Semua pemeriksaan di bawah ini berada di `FinanceRepository`, di dalam `withTransaction`: satu penolakan membatalkan seluruh penulisan.
+<script type="text/markdown">Lima alur yang menulis, mengubah, atau menghapus uang pada Room **schema 11**. Semua pemeriksaan di bawah ini berada di `FinanceRepository`, di dalam `withTransaction`: satu penolakan membatalkan seluruh penulisan.
 
 ## 1. Mencatat transaksi</script>
 <pre class="mermaid" data-source="06_activity_diagrams.md #1">flowchart TD
@@ -748,175 +845,155 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     uiGuard --&gt;|&quot;ya&quot;| ignoreTap([&quot;Ketukan diabaikan&quot;])
     uiGuard --&gt;|&quot;tidak&quot;| formValid{&quot;Formulir valid?&quot;}
     formValid --&gt;|&quot;tidak&quot;| formError([&quot;Galat di kolom&quot;])
-    formValid --&gt;|&quot;ya&quot;| mutating[&quot;AppViewModel.mutating&lt;br/&gt;isSaving compareAndSet&quot;]
+    formValid --&gt;|&quot;ya&quot;| typeFromCategory[&quot;CategoryRole.cashTypeFor&lt;br/&gt;Masuk atau Keluar menjadi jenis kas&quot;]
+    typeFromCategory --&gt; mutating[&quot;AppViewModel.mutating&lt;br/&gt;isSaving compareAndSet&quot;]
     mutating --&gt; reconcile[&quot;TransactionCalculation.reconcile&lt;br/&gt;total, kuantitas, harga satuan&quot;]
-    reconcile --&gt; openTx[&quot;withTransaction&quot;]
+    reconcile --&gt; openTx[&quot;recordEvent: withTransaction&quot;]
     openTx --&gt; ruleAmount{&quot;Jumlah lebih dari 0?&quot;}
     ruleAmount --&gt;|&quot;tidak&quot;| rollback[&quot;Rollback dan snackbar penolakan&quot;]
-    ruleAmount --&gt;|&quot;ya&quot;| ruleKind{&quot;Jenis pembayaran atau REVERSAL?&quot;}
-    ruleKind --&gt;|&quot;ya&quot;| rollback
-    ruleKind --&gt;|&quot;tidak&quot;| ruleScope{&quot;Usaha, lahan, buku, dan kategori cocok?&quot;}
+    ruleAmount --&gt;|&quot;ya&quot;| ruleScope{&quot;Usaha, unit, dan buku konsisten?&quot;}
     ruleScope --&gt;|&quot;tidak&quot;| rollback
-    ruleScope --&gt;|&quot;ya&quot;| ruleParty{&quot;Transaksi kredit tanpa nama pihak?&quot;}
-    ruleParty --&gt;|&quot;ya&quot;| rollback
-    ruleParty --&gt;|&quot;tidak&quot;| journal[&quot;LedgerPolicy.journalFor&lt;br/&gt;requireBalanced&quot;]
+    ruleScope --&gt;|&quot;ya&quot;| ruleCategory{&quot;Kategori milik usaha yang sama?&quot;}
+    ruleCategory --&gt;|&quot;tidak&quot;| rollback
+    ruleCategory --&gt;|&quot;ya&quot;| journal[&quot;LedgerPolicy.journalFor&lt;br/&gt;requireBalanced&quot;]
     journal --&gt; recheck{&quot;Debit sama dengan kredit dan semua posting positif?&quot;}
     recheck --&gt;|&quot;tidak&quot;| rollback
     recheck --&gt;|&quot;ya&quot;| insertRows[&quot;Tulis event, jurnal, dan posting&quot;]
-    insertRows --&gt; creditKind{&quot;Transaksi kredit?&quot;}
-    creditKind --&gt;|&quot;ya&quot;| insertObligation[&quot;Tulis obligation&quot;]
-    creditKind --&gt;|&quot;tidak&quot;| commitTx[&quot;Commit&quot;]
-    insertObligation --&gt; commitTx
+    insertRows --&gt; commitTx[&quot;Commit&lt;br/&gt;trigger menulis sync_outbox&quot;]
     commitTx --&gt; savedDone([&quot;Snackbar tersimpan, Flow Room memperbarui layar&quot;])
     rollback --&gt; failDone([&quot;Tidak ada baris yang tertulis&quot;])</pre>
-<script type="text/markdown">## 2. Membalik transaksi</script>
+<script type="text/markdown">## 2. Mengubah catatan (Ubah)</script>
 <pre class="mermaid" data-source="06_activity_diagrams.md #2">flowchart TD
-    askReverse([&quot;Pengguna memilih Balik&quot;]) --&gt; loadEvent[&quot;Ambil event&quot;]
-    loadEvent --&gt; alreadyReversed{&quot;Sudah dibalik?&quot;}
-    alreadyReversed --&gt;|&quot;ya&quot;| refuseReverse[&quot;Tolak&quot;]
-    alreadyReversed --&gt;|&quot;tidak&quot;| isReversal{&quot;Event itu sendiri REVERSAL?&quot;}
-    isReversal --&gt;|&quot;ya&quot;| refuseReverse
-    isReversal --&gt;|&quot;tidak&quot;| livePayments{&quot;Ada pembayaran aktif atas piutang atau utangnya?&quot;}
-    livePayments --&gt;|&quot;ya&quot;| refuseReverse
-    livePayments --&gt;|&quot;tidak&quot;| buildReversal[&quot;Buat event REVERSAL&lt;br/&gt;cashFlowRole sama dengan sumber&quot;]
-    buildReversal --&gt; invert[&quot;LedgerPolicy.reversalFor&lt;br/&gt;tukar sisi setiap posting&quot;]
-    invert --&gt; writeReversal[&quot;Tulis event dan jurnal pembalik&quot;]
-    writeReversal --&gt; markSource{&quot;Tandai sumber REVERSED&lt;br/&gt;tepat satu baris berubah?&quot;}
-    markSource --&gt;|&quot;tidak&quot;| refuseReverse
-    markSource --&gt;|&quot;ya&quot;| markObligation[&quot;Tandai obligation sumber reversed&quot;]
-    markObligation --&gt; reverseDone([&quot;Commit&quot;])
-    refuseReverse --&gt; reverseFail([&quot;Rollback dan pesan penjelasan&quot;])</pre>
-<script type="text/markdown">## 3. Menghapus transaksi</script>
+    askEdit([&quot;Pengguna memilih Ubah pada kartu&quot;]) --&gt; fillForm[&quot;Formulir diisi dari catatan&lt;br/&gt;editingId disimpan&quot;]
+    fillForm --&gt; editSave([&quot;Ketuk Simpan&quot;])
+    editSave --&gt; recordCall[&quot;AppViewModel.record&lt;br/&gt;editingEventId terisi&quot;]
+    recordCall --&gt; updateTx[&quot;updateEvent: withTransaction&quot;]
+    updateTx --&gt; loadOld{&quot;Catatan lama masih ada?&quot;}
+    loadOld --&gt;|&quot;tidak&quot;| refuseEdit[&quot;Tolak: Transaksi tidak ditemukan&quot;]
+    loadOld --&gt;|&quot;ya&quot;| validDraft{&quot;requireValid lolos?&lt;br/&gt;sama dengan saat mencatat&quot;}
+    validDraft --&gt;|&quot;tidak&quot;| refuseEdit
+    validDraft --&gt;|&quot;ya&quot;| keepIdentity[&quot;Pertahankan id, importBatchId,&lt;br/&gt;dan createdAtEpochMillis&quot;]
+    keepIdentity --&gt; swapRow[&quot;Hapus baris lama, jurnal ikut CASCADE&quot;]
+    swapRow --&gt; rebuild[&quot;Tulis event baru dengan id sama&lt;br/&gt;jurnal dari LedgerPolicy.journalFor&quot;]
+    rebuild --&gt; editDone([&quot;Commit, snackbar Catatan diperbarui&quot;])
+    refuseEdit --&gt; editFail([&quot;Rollback dan pesan penjelasan&quot;])</pre>
+<script type="text/markdown">## 3. Menghapus catatan (Hapus)</script>
 <pre class="mermaid" data-source="06_activity_diagrams.md #3">flowchart TD
-    askDelete([&quot;Pengguna memilih Hapus&quot;]) --&gt; loadDeleted[&quot;Ambil event&quot;]
-    loadDeleted --&gt; deletePayments{&quot;Ada pembayaran aktif atas piutang atau utangnya?&quot;}
-    deletePayments --&gt;|&quot;ya&quot;| refuseDelete[&quot;Tolak&quot;]
-    deletePayments --&gt;|&quot;tidak&quot;| isReversalRow{&quot;Event ini REVERSAL?&quot;}
-    isReversalRow --&gt;|&quot;ya&quot;| restoreSource[&quot;Pulihkan sumber menjadi POSTED&lt;br/&gt;pulihkan obligation sumber&quot;]
-    restoreSource --&gt; sourceIsPayment{&quot;Sumbernya pembayaran?&quot;}
-    sourceIsPayment --&gt;|&quot;ya&quot;| paymentFits{&quot;Obligation belum dibatalkan dan pembayaran masih muat di sisa tagihan?&quot;}
-    paymentFits --&gt;|&quot;tidak&quot;| refuseDelete
-    paymentFits --&gt;|&quot;ya&quot;| hasReversal
-    sourceIsPayment --&gt;|&quot;tidak&quot;| hasReversal
-    isReversalRow --&gt;|&quot;tidak&quot;| hasReversal{&quot;Event ini sudah dibalik?&quot;}
-    hasReversal --&gt;|&quot;ya&quot;| dropPair[&quot;Hapus event pembaliknya juga&quot;]
-    hasReversal --&gt;|&quot;tidak&quot;| dropEvent[&quot;Hapus event&quot;]
-    dropPair --&gt; dropEvent
-    dropEvent --&gt; cascade[&quot;CASCADE: jurnal, posting, obligation, settlement&quot;]
-    cascade --&gt; deleteDone([&quot;Commit&quot;])
-    refuseDelete --&gt; deleteFail([&quot;Rollback dan pesan penjelasan&quot;])</pre>
-<script type="text/markdown">## 4. Impor workbook dan pembatalan batch</script>
+    askDelete([&quot;Pengguna memilih Hapus&quot;]) --&gt; warnFeedback[&quot;Getar WARN&lt;br/&gt;sheet konfirmasi dengan keterangan dan jumlah&quot;]
+    warnFeedback --&gt; confirm{&quot;Pengguna menekan Hapus?&quot;}
+    confirm --&gt;|&quot;tidak&quot;| keep([&quot;Tidak ada perubahan&quot;])
+    confirm --&gt;|&quot;ya&quot;| deleteCall[&quot;AppViewModel.deleteTransaction&quot;]
+    deleteCall --&gt; dropEvent[&quot;FinanceRepository.deleteEvent&lt;br/&gt;DELETE financial_events&quot;]
+    dropEvent --&gt; cascade[&quot;CASCADE: jurnal dan posting&quot;]
+    cascade --&gt; deleteDone([&quot;Snackbar terhapus, saldo dan laporan dihitung ulang&quot;])</pre>
+<script type="text/markdown">## 4. Impor templat dan Batalkan impor</script>
 <pre class="mermaid" data-source="06_activity_diagrams.md #4">flowchart TD
     pickFile([&quot;Pilih berkas&quot;]) --&gt; readBytes[&quot;Baca maksimal 25 MB, hitung SHA-256&quot;]
-    readBytes --&gt; unzip[&quot;XlsxWorkbookReader&lt;br/&gt;maks 1.000 entri, 64 MB setelah dekompresi,&lt;br/&gt;berhenti begitu batas terlewati&quot;]
-    unzip --&gt; parseXml[&quot;Parser DOM platform&lt;br/&gt;DOCTYPE dan entitas eksternal ditolak&quot;]
-    parseXml --&gt; recognize[&quot;Kenali lembar: parameter, RAB, harian, laba rugi, arus kas&quot;]
-    recognize --&gt; preview[&quot;Pratinjau: kandidat, RAB, asumsi, peringatan&quot;]
-    preview --&gt; confirmImport{&quot;Pengguna menyetujui?&quot;}
+    readBytes --&gt; unzip[&quot;XlsxWorkbookReader&lt;br/&gt;maks 1.000 entri, berhenti begitu batas terlewati,&lt;br/&gt;DOCTYPE dan entitas eksternal ditolak&quot;]
+    unzip --&gt; template{&quot;Penanda templat, lembar, dan kolom cocok?&quot;}
+    template --&gt;|&quot;tidak&quot;| rejectFile([&quot;Tolak dengan daftar masalah&lt;br/&gt;dan tautan unduh templat&quot;])
+    template --&gt;|&quot;ya&quot;| review[&quot;reviewImport&lt;br/&gt;kategori baru, konflik peran, stok dan produk yang sudah ada,&lt;br/&gt;peringatan bila berkas pernah diimpor&quot;]
+    review --&gt; confirmImport{&quot;Pengguna menyetujui pratinjau?&quot;}
     confirmImport --&gt;|&quot;tidak&quot;| cancelImport([&quot;Pratinjau dibuang&quot;])
-    confirmImport --&gt;|&quot;ya&quot;| importTx[&quot;inTransaction&quot;]
-    importTx --&gt; scope[&quot;Buat usaha dan lahan bila belum ada&quot;]
-    scope --&gt; duplicate{&quot;Hash sama dengan batch COMMITTED?&quot;}
-    duplicate --&gt;|&quot;ya&quot;| importRollback([&quot;Rollback, usaha dan lahan baru ikut batal&quot;])
-    duplicate --&gt;|&quot;tidak&quot;| batchRow[&quot;Tulis import_batches COMMITTED&quot;]
-    batchRow --&gt; eachRow[&quot;Setiap kandidat: event dan jurnal,&lt;br/&gt;obligation atau settlement,&lt;br/&gt;provenance dan notice bila hasil inferensi&quot;]
-    eachRow --&gt; budgets[&quot;Setiap baris RAB: temukan, aktifkan lagi, atau buat kategori,&lt;br/&gt;lalu tulis budget_items&quot;]
-    budgets --&gt; assumptions[&quot;Asumsi ke buku Proyeksi, dengan provenance dan notice&quot;]
-    assumptions --&gt; importCommit([&quot;Commit, lalu pilih usaha dan lahan&quot;])
+    confirmImport --&gt;|&quot;ya&quot;| importTx[&quot;commitImport: withTransaction&lt;br/&gt;ke usaha dan unit terpilih&quot;]
+    importTx --&gt; conflicts{&quot;Ada konflik kategori atau produk?&quot;}
+    conflicts --&gt;|&quot;ya&quot;| importRollback([&quot;Rollback, tidak ada baris tertulis&quot;])
+    conflicts --&gt;|&quot;tidak&quot;| batchRow[&quot;Tulis import_batches COMMITTED&lt;br/&gt;isi periode rencana bila unit belum punya&quot;]
+    batchRow --&gt; categories[&quot;Buat kategori baru yang tercantum di pratinjau&quot;]
+    categories --&gt; products[&quot;Produk dan komponen biaya ke unit&quot;]
+    products --&gt; events[&quot;Transaksi ke buku Realisasi&lt;br/&gt;event dan jurnal seimbang&quot;]
+    events --&gt; budgets[&quot;Rencana Anggaran ke buku Proyeksi&quot;]
+    budgets --&gt; stockRows[&quot;Barang stok ke unit terpilih&quot;]
+    stockRows --&gt; notice[&quot;Notice: apa yang ditambahkan&quot;]
+    notice --&gt; importCommit([&quot;Commit&quot;])
 
-    reverseBatch([&quot;Batalkan batch&quot;]) --&gt; activeRows[&quot;Ambil event aktif batch&quot;]
-    activeRows --&gt; paymentsFirst[&quot;Urutkan pembayaran lebih dulu&quot;]
-    paymentsFirst --&gt; reverseEach[&quot;reverseEvent untuk setiap baris&quot;]
-    reverseEach --&gt; archiveBudgets[&quot;Arsipkan RAB batch&quot;]
-    archiveBudgets --&gt; markBatch[&quot;Batch menjadi REVERSED&lt;br/&gt;berkas yang sama boleh diimpor ulang&quot;]</pre>
+    undoBatch([&quot;Batalkan impor&quot;]) --&gt; undoTx[&quot;undoImportBatch: withTransaction&quot;]
+    undoTx --&gt; deleteEvents[&quot;Hapus semua event batch,&lt;br/&gt;termasuk yang sudah diubah&quot;]
+    deleteEvents --&gt; archiveBudgets[&quot;Arsipkan RAB batch&quot;]
+    archiveBudgets --&gt; removeRest[&quot;Hapus stok dan produk batch&quot;]
+    removeRest --&gt; periodCheck{&quot;Periode unit masih persis yang diisi impor?&quot;}
+    periodCheck --&gt;|&quot;ya&quot;| clearPeriod[&quot;Kosongkan periode rencana&quot;]
+    periodCheck --&gt;|&quot;tidak&quot;| markBatch
+    clearPeriod --&gt; markBatch{&quot;Tandai batch REVERSED&lt;br/&gt;tepat satu baris berubah?&quot;}
+    markBatch --&gt;|&quot;tidak&quot;| undoRefused([&quot;Rollback: impor ini sudah dibatalkan&quot;])
+    markBatch --&gt;|&quot;ya&quot;| undoDone([&quot;Commit: riwayat impor tetap, tampil dibatalkan&lt;br/&gt;berkas yang sama boleh diimpor ulang&quot;])</pre>
 <script type="text/markdown">## 5. Cadangan dan pemulihan terenkripsi</script>
 <pre class="mermaid" data-source="06_activity_diagrams.md #5">flowchart TD
     startBackup([&quot;Buat cadangan&quot;]) --&gt; passwordLength{&quot;Kata sandi minimal 8 karakter?&quot;}
     passwordLength --&gt;|&quot;tidak&quot;| backupRefused([&quot;Tolak&quot;])
-    passwordLength --&gt;|&quot;ya&quot;| capture[&quot;Snapshot 14 tabel dalam satu transaksi baca&quot;]
+    passwordLength --&gt;|&quot;ya&quot;| capture[&quot;Snapshot semua DATA_TABLES dalam satu transaksi baca&quot;]
     capture --&gt; encode[&quot;PortableBackupCodec&lt;br/&gt;MANKEU-PORTABLE-DB&quot;]
     encode --&gt; derive[&quot;Salt 16 byte, IV 12 byte&lt;br/&gt;PBKDF2-HMAC-SHA256 310.000 iterasi&quot;]
     derive --&gt; encrypt[&quot;AES-256-GCM, AAD MANKEU-BKP&quot;]
     encrypt --&gt; destination{&quot;Tujuan&quot;}
     destination --&gt;|&quot;berkas&quot;| safFile[&quot;Tulis lewat Storage Access Framework&quot;]
-    destination --&gt;|&quot;Drive&quot;| driveUpload[&quot;Unggah multipart ke appDataFolder&lt;br/&gt;sisakan 5 cadangan terbaru&quot;]
+    destination --&gt;|&quot;Drive&quot;| driveUpload[&quot;Unggah ke appDataFolder&lt;br/&gt;sisakan 5 cadangan terbaru&quot;]
     safFile --&gt; wipePassword([&quot;Kata sandi dihapus dari memori&quot;])
     driveUpload --&gt; wipePassword
 
     startRestore([&quot;Pulihkan&quot;]) --&gt; decrypt[&quot;Dekripsi dan dekode, galat bila sandi salah&quot;]
-    decrypt --&gt; schemaCheck{&quot;Schema cadangan antara 3 dan versi aplikasi?&quot;}
+    decrypt --&gt; schemaCheck{&quot;Schema cadangan antara 3 dan 11?&quot;}
     schemaCheck --&gt;|&quot;tidak&quot;| restoreRefused([&quot;Tolak&quot;])
-    schemaCheck --&gt;|&quot;ya&quot;| previewRestore[&quot;Pratinjau jumlah usaha, lahan, RAB, transaksi&quot;]
+    schemaCheck --&gt;|&quot;ya&quot;| previewRestore[&quot;Pratinjau jumlah usaha, unit, RAB, transaksi&quot;]
     previewRestore --&gt; recoveryCopy[&quot;Salinan pemulihan otomatis terenkripsi&quot;]
-    recoveryCopy --&gt; replaceTx[&quot;Satu transaksi: kosongkan tabel,&lt;br/&gt;isi hanya kolom yang masih ada&quot;]
-    replaceTx --&gt; restoreDone([&quot;Pilih ulang usaha dan lahan&quot;])</pre>
+    recoveryCopy --&gt; replaceTx[&quot;Satu transaksi, trigger sinkronisasi dibisukan:&lt;br/&gt;kosongkan tabel, isi hanya kolom yang masih ada&quot;]
+    replaceTx --&gt; legacy{&quot;Schema cadangan lebih lama?&quot;}
+    legacy --&gt;|&quot;di bawah 11, 8, atau 9&quot;| upgrade[&quot;Pembersihan dan konversi yang sama&lt;br/&gt;dengan migrasi ke schema 11&quot;]
+    legacy --&gt;|&quot;tidak&quot;| resetSync
+    upgrade --&gt; resetSync[&quot;Kosongkan sync_outbox&lt;br/&gt;requires_full_snapshot = 1&quot;]
+    resetSync --&gt; restoreDone([&quot;Pilih ulang usaha dan unit&quot;])</pre>
 </section>
 <section id="07_state_diagrams" class="card">
 <h2>State Diagrams - Siklus Hidup Mankeu</h2>
-<script type="text/markdown">## 1. Piutang dan utang (`ObligationStatus`)
+<script type="text/markdown">Diselaraskan dengan Room **schema 11**. Sejak DEC-019 catatan kas tidak punya kolom status: catatan ada, diubah di tempat, atau dihapus.
 
-Status tidak disimpan. `ObligationBalance.status(today)` menurunkannya dari jumlah awal, pembayaran yang belum dibalik, tanggal jatuh tempo, dan penanda `reversed`.</script>
-<pre class="mermaid" data-source="07_state_diagrams.md #1">stateDiagram-v2
-    [*] --&gt; OPEN : penjualan atau pembelian kredit dicatat
-    OPEN --&gt; PARTIAL : pembayaran sebagian
-    PARTIAL --&gt; PARTIAL : pembayaran sebagian berikutnya
-    OPEN --&gt; PAID : pembayaran penuh
-    PARTIAL --&gt; PAID : pembayaran terakhir
-    OPEN --&gt; OVERDUE : jatuh tempo lewat
-    PARTIAL --&gt; OVERDUE : jatuh tempo lewat
-    OVERDUE --&gt; PAID : dilunasi
-    PAID --&gt; PARTIAL : satu pembayaran dibalik
-    PARTIAL --&gt; OPEN : semua pembayaran dibalik
-    OPEN --&gt; REVERSED : transaksi sumber dibalik
-    REVERSED --&gt; OPEN : pembalikan sumber dihapus
-    PAID --&gt; [*]
-    REVERSED --&gt; [*]
-
-    note right of REVERSED
-        Membalik sumber ditolak selama
-        masih ada pembayaran aktif.
-    end note</pre>
-<script type="text/markdown">## 2. Transaksi (`RecordStatus`)
+## 1. Catatan kas (`financial_events`)
 
 Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di UI.</script>
-<pre class="mermaid" data-source="07_state_diagrams.md #2">stateDiagram-v2
-    [*] --&gt; POSTED : recordEvent, settleObligation, atau impor
-    POSTED --&gt; REVERSED : reverseEvent membuat event REVERSAL
-    REVERSED --&gt; POSTED : event REVERSAL-nya dihapus
-    POSTED --&gt; Deleted : deleteEvent tanpa pembayaran aktif
-    REVERSED --&gt; Deleted : deleteEvent menghapus pasangan pembalik
+<pre class="mermaid" data-source="07_state_diagrams.md #1">stateDiagram-v2
+    [*] --&gt; Recorded : recordEvent atau commitImport
+    Recorded --&gt; Recorded : updateEvent, id dan createdAt tetap
+    Recorded --&gt; Deleted : deleteEvent
+    Recorded --&gt; Deleted : undoImportBatch untuk catatan batch
 
     state Deleted {
         [*] --&gt; Removed
-        Removed : baris dan jurnalnya terhapus lewat CASCADE
+        Removed : jurnal dan posting ikut terhapus lewat CASCADE
     }
 
-    note right of POSTED
-        Event REVERSAL sendiri tidak dapat dibalik.
-        Menghapusnya memulihkan sumbernya.
+    note right of Recorded
+        Setiap simpan membangun ulang jurnal
+        dengan LedgerPolicy.journalFor.
+        Trigger mencatat UPSERT atau DELETE
+        ke sync_outbox.
     end note</pre>
-<script type="text/markdown">## 3. Batch impor dan pratinjau (`ImportUiState`)</script>
-<pre class="mermaid" data-source="07_state_diagrams.md #3">stateDiagram-v2
+<script type="text/markdown">## 2. Batch impor dan pratinjau (`ImportUiState`)</script>
+<pre class="mermaid" data-source="07_state_diagrams.md #2">stateDiagram-v2
     state &quot;Pratinjau di UI&quot; as PreviewFlow {
         [*] --&gt; Idle
         Idle --&gt; Loading : berkas dipilih
-        Loading --&gt; Ready : pratinjau dapat dikomit
-        Loading --&gt; Failure : berkas tidak terbaca atau ada galat
-        Ready --&gt; Loading : komit
-        Loading --&gt; Committed : transaksi berhasil
+        Loading --&gt; Ready : templat dikenali, reviewImport selesai
+        Loading --&gt; Failure : bukan templat Mankeu atau ada galat
+        Ready --&gt; Loading : simpan
+        Loading --&gt; Committed : commitImport berhasil
         Failure --&gt; Idle : reset
         Committed --&gt; Idle : reset
     }
 
     state &quot;Baris import_batches&quot; as BatchRow {
         [*] --&gt; COMMITTED
-        COMMITTED --&gt; REVERSED : reverseImportBatch
+        COMMITTED --&gt; REVERSED : undoImportBatch, tampil dibatalkan
     }
 
     Committed --&gt; BatchRow : batch tertulis
-    REVERSED --&gt; Idle : berkas yang sama boleh diimpor ulang</pre>
-<script type="text/markdown">## 4. Buku aktif (`BookMode`)</script>
-<pre class="mermaid" data-source="07_state_diagrams.md #4">stateDiagram-v2
+    REVERSED --&gt; Idle : berkas yang sama boleh diimpor ulang
+
+    note right of BatchRow
+        REVERSED hanya ejaan tersimpan untuk dibatalkan.
+        Catatan batch sudah dihapus, baris batch tetap sebagai riwayat.
+    end note</pre>
+<script type="text/markdown">## 3. Buku aktif (`BookMode`)</script>
+<pre class="mermaid" data-source="07_state_diagrams.md #3">stateDiagram-v2
     state &quot;REALIZATION, primaryContainer&quot; as Realization
     state &quot;PROJECTION, secondaryContainer&quot; as Projection
 
@@ -925,18 +1002,39 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
     Projection --&gt; Realization : pilih Realisasi
 
     note right of Projection
-        RAB bertanggal, asumsi, jadwal kas rencana,
-        BEP, B/C, dan kebutuhan modal kerja.
+        Catatan menjadi Rencana Usaha: produk, resep biaya,
+        biaya tetap, aset, modal, dan periode rencana.
     end note
 
     note left of Realization
-        Transaksi nyata, saldo kas,
-        piutang, dan utang berjalan.
+        Catatan kas nyata, saldo kas,
+        BEP realisasi bulan berjalan.
+    end note</pre>
+<script type="text/markdown">## 4. Barang stok (`stock_items`)</script>
+<pre class="mermaid" data-source="07_state_diagrams.md #4">stateDiagram-v2
+    state &quot;Aman&quot; as Normal
+    state &quot;Stok menipis&quot; as Low
+
+    [*] --&gt; Normal : createStockItem, stok awal di atas batas
+    [*] --&gt; Low : stok awal di bawah atau sama dengan batas
+    Normal --&gt; Low : keluar atau opname sampai batas
+    Low --&gt; Normal : masuk atau opname di atas batas
+    Normal --&gt; Normal : recordStockMovement
+    Low --&gt; Low : recordStockMovement
+    Normal --&gt; [*] : undoImportBatch untuk barang impor
+    Low --&gt; [*] : undoImportBatch untuk barang impor
+
+    note right of Low
+        isLowStock: currentStock kurang dari
+        atau sama dengan minAlertStock.
+        Keluar melebihi stok tersedia ditolak.
     end note</pre>
 </section>
 <section id="08_sequence_diagram" class="card">
 <h2>Sequence Diagrams - Mankeu</h2>
-<script type="text/markdown">## 1. Mencatat transaksi kas</script>
+<script type="text/markdown">Diselaraskan dengan Room **schema 11** (DEC-012, DEC-019).
+
+## 1. Mencatat atau mengubah catatan kas</script>
 <pre class="mermaid" data-source="08_sequence_diagram.md #1">sequenceDiagram
     autonumber
     actor Owner as Pemilik usaha
@@ -949,11 +1047,15 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
 
     Owner-&gt;&gt;Entry: Ketuk Simpan, Rp50.000 beli bahan
     Entry-&gt;&gt;Entry: Abaikan bila isSaving atau justSaved
-    Entry-&gt;&gt;VM: record(type, amount, description, ...)
+    Entry-&gt;&gt;VM: record(type, amount, description, ..., editingEventId)
     VM-&gt;&gt;VM: mutating, isSaving compareAndSet false ke true
-    VM-&gt;&gt;Repo: recordEvent(EventDraft)
+    alt editingEventId kosong
+        VM-&gt;&gt;Repo: recordEvent(EventDraft)
+    else Ubah catatan
+        VM-&gt;&gt;Repo: updateEvent(eventId, EventDraft)
+    end
     Repo-&gt;&gt;Db: withTransaction dimulai
-    Repo-&gt;&gt;Repo: Periksa jumlah, jenis, lingkup, kategori, pihak
+    Repo-&gt;&gt;Repo: requireValid: jumlah, lingkup, kategori
     Repo-&gt;&gt;Policy: journalFor(event)
     Policy--&gt;&gt;Repo: JournalEntry seimbang
     Repo-&gt;&gt;Repo: Periksa ulang debit sama dengan kredit
@@ -963,21 +1065,57 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
         Repo--&gt;&gt;VM: IllegalArgumentException
         VM--&gt;&gt;Entry: message berisi alasan penolakan
     else Semua aturan terpenuhi
-        Repo-&gt;&gt;Dao: insertEvent
+        opt Ubah catatan
+            Repo-&gt;&gt;Dao: deleteEvent(id lama), jurnal ikut CASCADE
+        end
+        Repo-&gt;&gt;Dao: insertEvent, id sama bila Ubah
         Repo-&gt;&gt;Dao: insertJournal
         Repo-&gt;&gt;Dao: insertPostings
-        opt Transaksi kredit
-            Repo-&gt;&gt;Dao: insertObligation
-        end
-        Repo--&gt;&gt;Db: Commit
-        Repo--&gt;&gt;VM: eventId
-        VM--&gt;&gt;Entry: message tersimpan
+        Repo--&gt;&gt;Db: Commit, trigger mengisi sync_outbox
+        Repo--&gt;&gt;VM: selesai
+        VM--&gt;&gt;Entry: Tersimpan atau Catatan diperbarui
         Db--&gt;&gt;VM: Invalidation Room memicu Flow
         VM--&gt;&gt;Entry: uiState baru
     end
     VM-&gt;&gt;VM: isSaving kembali false</pre>
-<script type="text/markdown">## 2. Komit impor ke lingkup yang belum ada</script>
+<script type="text/markdown">## 2. Impor templat ke unit terpilih</script>
 <pre class="mermaid" data-source="08_sequence_diagram.md #2">sequenceDiagram
+    autonumber
+    actor Owner as Pemilik usaha
+    participant Data as DataScreen
+    participant VM as AppViewModel
+    participant Importer as FinanceWorkbookImporter
+    participant Repo as FinanceRepository
+    participant Db as Room SQLite
+
+    Owner-&gt;&gt;Data: Pilih berkas
+    Data-&gt;&gt;VM: previewWorkbook(contentResolver, uri)
+    VM-&gt;&gt;Importer: Baca templat
+    alt Bukan templat Mankeu
+        Importer--&gt;&gt;VM: Daftar lembar atau kolom yang hilang
+        VM--&gt;&gt;Data: ImportUiState.Failure dan tautan templat
+    else Templat dikenali
+        Importer--&gt;&gt;VM: WorkbookImportPreview
+        VM-&gt;&gt;Repo: reviewImport(businessId, projectId, preview)
+        Repo--&gt;&gt;VM: ImportReview, kategori baru dan peringatan duplikat
+        VM--&gt;&gt;Data: ImportUiState.Ready
+        Owner-&gt;&gt;Data: Setujui pratinjau
+        Data-&gt;&gt;VM: commitImport()
+        VM-&gt;&gt;Repo: commitImport(businessId, projectId, preview)
+        Repo-&gt;&gt;Db: withTransaction dimulai
+        alt Ada konflik kategori atau produk
+            Repo--&gt;&gt;Db: Rollback
+            Repo--&gt;&gt;VM: Galat
+            VM--&gt;&gt;Data: ImportUiState.Failure
+        else Berhasil
+            Repo-&gt;&gt;Db: Batch, kategori, produk, transaksi, RAB, stok, notice
+            Repo--&gt;&gt;Db: Commit
+            Repo--&gt;&gt;VM: Jumlah baris yang ditambahkan
+            VM--&gt;&gt;Data: ImportUiState.Committed
+        end
+    end</pre>
+<script type="text/markdown">## 3. Batalkan impor</script>
+<pre class="mermaid" data-source="08_sequence_diagram.md #3">sequenceDiagram
     autonumber
     actor Owner as Pemilik usaha
     participant Data as DataScreen
@@ -985,43 +1123,41 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
     participant Repo as FinanceRepository
     participant Db as Room SQLite
 
-    Owner-&gt;&gt;Data: Setujui pratinjau
-    Data-&gt;&gt;VM: commitImport(targetBook)
-    VM-&gt;&gt;Repo: inTransaction
-    Repo-&gt;&gt;Db: Transaksi dimulai
-    opt Belum ada usaha terpilih
-        VM-&gt;&gt;Repo: createBusiness(nama berkas)
+    Owner-&gt;&gt;Data: Batalkan impor, lalu konfirmasi
+    Data-&gt;&gt;VM: undoImportBatch(id)
+    VM-&gt;&gt;Repo: undoImportBatch(batchId)
+    Repo-&gt;&gt;Db: withTransaction dimulai
+    Repo-&gt;&gt;Db: deleteEventsForImportBatch, jurnal ikut CASCADE
+    Repo-&gt;&gt;Db: Arsipkan RAB batch
+    Repo-&gt;&gt;Db: Hapus stok dan produk batch
+    opt Periode unit masih persis yang diisi impor
+        Repo-&gt;&gt;Db: Kosongkan periode rencana
     end
-    opt Belum ada lahan terpilih
-        VM-&gt;&gt;Repo: createProject(Lahan Utama)
-    end
-    VM-&gt;&gt;Repo: commitImport(businessId, projectId, preview, destination)
-    alt Hash sudah dikomit atau baris tidak valid
-        Repo--&gt;&gt;Db: Rollback, termasuk usaha dan lahan baru
-        Repo--&gt;&gt;VM: Galat
-        VM--&gt;&gt;Data: ImportUiState.Failure
+    Repo-&gt;&gt;Db: markImportBatchReversed
+    alt Batch sudah dibatalkan
+        Repo--&gt;&gt;Db: Rollback
+        Repo--&gt;&gt;VM: Impor ini sudah dibatalkan
     else Berhasil
         Repo--&gt;&gt;Db: Commit
-        Repo--&gt;&gt;VM: Jumlah baris
-        VM-&gt;&gt;VM: Pilih usaha dan lahan
-        VM--&gt;&gt;Data: ImportUiState.Committed
+        Repo--&gt;&gt;VM: ImportUndo(records, periodCleared)
+        VM--&gt;&gt;Data: Impor dibatalkan, N catatan dihapus
     end</pre>
 <script type="text/markdown">## Jaminan
 
-1. **Atomik.** Semua penulisan dan pemeriksaan satu aksi berada dalam satu transaksi SQLite. Penolakan tidak meninggalkan baris setengah jadi, termasuk usaha atau lahan yang dibuat untuk impor yang gagal (D-079).
+1. **Atomik.** Semua penulisan dan pemeriksaan satu aksi berada dalam satu transaksi SQLite. Penolakan tidak meninggalkan baris setengah jadi. Ubah adalah satu pertukaran atomik: tidak pernah ada saat catatan lama sudah hilang dan yang baru belum tertulis.
 2. **Tidak ada ketukan ganda.** `compareAndSet` di `mutating` menolak aksi kedua yang tiba sebelum aksi pertama selesai, termasuk ketukan dalam satu frame (D-072).
 3. **Reaktif.** Setelah commit, invalidation Room memancarkan ulang Flow, dan `uiState` memperbarui layar tanpa pemanggilan manual.</script>
 </section>
 <section id="09_interaction_feedback" class="card">
 <h2>Interaction Feedback - Tooltip dan Haptic</h2>
-<script type="text/markdown">Cara Mankeu memberi tahu pengguna bahwa sentuhannya diterima: tooltip tekan lama dari Material 3 dan lima jenis getar. Aturannya ada di `docs/UX_AND_ACCESSIBILITY.md` ("Touch targets, tooltips and haptics") dan keputusan D-084 sampai D-087.
+<script type="text/markdown">Cara Mankeu memberi tahu pengguna bahwa sentuhannya diterima: tooltip tekan lama dari Material 3 dan lima jenis getar. Aturannya ada di `docs/UX_AND_ACCESSIBILITY.md` ("Touch targets, tooltips and haptics") dan keputusan D-084 sampai D-087, diselaraskan dengan Room **schema 11** (DEC-019).
 
 ## 1. Dari peristiwa ke getar</script>
 <pre class="mermaid" data-source="09_interaction_feedback.md #1">flowchart TD
     subgraph eventSources [&quot;Sumber peristiwa&quot;]
         longPress[&quot;Tekan lama pada ikon, badge, atau kartu angka&quot;]
         discrete[&quot;Ganti tab, segmen, filter, tanggal, atau tutup sheet&quot;]
-        destructive[&quot;Mulai hapus, balik, atau arsipkan&quot;]
+        destructive[&quot;Mulai hapus atau arsipkan&quot;]
         formInvalid[&quot;Validasi formulir gagal&quot;]
         vmMessage[&quot;Pesan ViewModel atau hasil ekspor dan cadangan&quot;]
     end
@@ -1051,11 +1187,11 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
     soundSwitch --&gt;|&quot;ya&quot;| soundEffect[&quot;View.playSoundEffect&quot;]</pre>
 <script type="text/markdown">| Event | `HapticFeedbackType` | Contoh |
 | --- | --- | --- |
-| TAP | SegmentTick | Tab Laporan, Proyeksi atau Realisasi, filter Riwayat, tanggal di kalender |
-| LONG_PRESS | LongPress | Tooltip ikon Data, badge DIBALIK, kartu Uang masuk bersih |
-| WARN | GestureThresholdActivate | Ketuk ikon hapus atau balik pada transaksi |
-| CONFIRM | Confirm | Transaksi tersimpan, impor dikomit, cadangan dibuat |
-| REJECT | Reject | Jumlah kosong, hapus transaksi kredit yang sudah dibayar sebagian |
+| TAP | SegmentTick | Tab Laporan, Proyeksi atau Realisasi, filter Catatan, tombol Ubah, tanggal di kalender |
+| LONG_PRESS | LongPress | Tooltip ikon Data, tombol Ubah catatan, kartu Uang masuk bersih |
+| WARN | GestureThresholdActivate | Ketuk ikon Hapus pada catatan |
+| CONFIRM | Confirm | Catatan tersimpan atau diperbarui, impor disimpan, cadangan dibuat |
+| REJECT | Reject | Jumlah kosong, stok keluar melebihi stok tersedia |
 
 ## 2. Siklus tooltip</script>
 <pre class="mermaid" data-source="09_interaction_feedback.md #2">sequenceDiagram
@@ -1079,22 +1215,30 @@ Tidak ada status draf di basis data: formulir yang belum disimpan hanya ada di U
     else Pembaca layar aktif
         TipBox--&gt;&gt;Owner: Teks tooltip dibacakan sebagai deskripsi anchor
     end</pre>
-<script type="text/markdown">## 3. Tampilan kartu transaksi</script>
+<script type="text/markdown">## 3. Tampilan kartu catatan (`EventCard`)
+
+Sejak DEC-019 kartu tidak punya status pembalikan: warnanya hanya mengikuti arah uang, dan setiap kartu di Catatan memiliki Ubah dan Hapus (target sentuh 48dp).</script>
 <pre class="mermaid" data-source="09_interaction_feedback.md #3">stateDiagram-v2
-    state &quot;Aktif, hijau atau koral&quot; as Active
-    state &quot;Asli yang dibalik, netral dan dicoret&quot; as ReversedOriginal
-    state &quot;Entri pembalik, netral dengan tanda pemulihan&quot; as ReversalEntry
+    state &quot;Uang masuk, hijau dengan tanda plus&quot; as Incoming
+    state &quot;Uang keluar, koral dengan tanda minus&quot; as Outgoing
+    state &quot;Formulir terisi, Mengubah catatan&quot; as Editing
+    state &quot;Sheet konfirmasi Hapus&quot; as ConfirmDelete
 
-    [*] --&gt; Active : transaksi tersimpan
-    Active --&gt; ReversedOriginal : reverseEvent
-    ReversedOriginal --&gt; Active : entri pembaliknya dihapus
-    [*] --&gt; ReversalEntry : dibuat oleh reverseEvent
-    ReversalEntry --&gt; [*] : dihapus
+    [*] --&gt; Incoming : jenis masuk tersimpan
+    [*] --&gt; Outgoing : jenis keluar tersimpan
+    Incoming --&gt; Editing : Ubah, getar TAP
+    Outgoing --&gt; Editing : Ubah, getar TAP
+    Editing --&gt; Incoming : simpan sebagai masuk
+    Editing --&gt; Outgoing : simpan sebagai keluar
+    Incoming --&gt; ConfirmDelete : Hapus, getar WARN
+    Outgoing --&gt; ConfirmDelete : Hapus, getar WARN
+    ConfirmDelete --&gt; Incoming : batal
+    ConfirmDelete --&gt; Outgoing : batal
+    ConfirmDelete --&gt; [*] : Hapus dikonfirmasi
 
-    note right of ReversalEntry
-        Tanda plus bila membatalkan pengeluaran,
-        minus bila membatalkan pemasukan,
-        tanpa tanda bila sumbernya di luar 200 baris terakhir.
+    note right of Editing
+        Ubah dapat mengganti arah uang.
+        Kategori menentukan jenis kas.
     end note</pre>
 </section>
   </main>

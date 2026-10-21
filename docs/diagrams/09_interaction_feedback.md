@@ -1,6 +1,6 @@
 # Interaction Feedback - Tooltip dan Haptic
 
-Cara Mankeu memberi tahu pengguna bahwa sentuhannya diterima: tooltip tekan lama dari Material 3 dan lima jenis getar. Aturannya ada di `docs/UX_AND_ACCESSIBILITY.md` ("Touch targets, tooltips and haptics") dan keputusan D-084 sampai D-087.
+Cara Mankeu memberi tahu pengguna bahwa sentuhannya diterima: tooltip tekan lama dari Material 3 dan lima jenis getar. Aturannya ada di `docs/UX_AND_ACCESSIBILITY.md` ("Touch targets, tooltips and haptics") dan keputusan D-084 sampai D-087, diselaraskan dengan Room **schema 11** (DEC-019).
 
 ## 1. Dari peristiwa ke getar
 
@@ -9,7 +9,7 @@ flowchart TD
     subgraph eventSources ["Sumber peristiwa"]
         longPress["Tekan lama pada ikon, badge, atau kartu angka"]
         discrete["Ganti tab, segmen, filter, tanggal, atau tutup sheet"]
-        destructive["Mulai hapus, balik, atau arsipkan"]
+        destructive["Mulai hapus atau arsipkan"]
         formInvalid["Validasi formulir gagal"]
         vmMessage["Pesan ViewModel atau hasil ekspor dan cadangan"]
     end
@@ -41,11 +41,11 @@ flowchart TD
 
 | Event | `HapticFeedbackType` | Contoh |
 | --- | --- | --- |
-| TAP | SegmentTick | Tab Laporan, Proyeksi atau Realisasi, filter Riwayat, tanggal di kalender |
-| LONG_PRESS | LongPress | Tooltip ikon Data, badge DIBALIK, kartu Uang masuk bersih |
-| WARN | GestureThresholdActivate | Ketuk ikon hapus atau balik pada transaksi |
-| CONFIRM | Confirm | Transaksi tersimpan, impor dikomit, cadangan dibuat |
-| REJECT | Reject | Jumlah kosong, hapus transaksi kredit yang sudah dibayar sebagian |
+| TAP | SegmentTick | Tab Laporan, Proyeksi atau Realisasi, filter Catatan, tombol Ubah, tanggal di kalender |
+| LONG_PRESS | LongPress | Tooltip ikon Data, tombol Ubah catatan, kartu Uang masuk bersih |
+| WARN | GestureThresholdActivate | Ketuk ikon Hapus pada catatan |
+| CONFIRM | Confirm | Catatan tersimpan atau diperbarui, impor disimpan, cadangan dibuat |
+| REJECT | Reject | Jumlah kosong, stok keluar melebihi stok tersedia |
 
 ## 2. Siklus tooltip
 
@@ -73,23 +73,31 @@ sequenceDiagram
     end
 ```
 
-## 3. Tampilan kartu transaksi
+## 3. Tampilan kartu catatan (`EventCard`)
+
+Sejak DEC-019 kartu tidak punya status pembalikan: warnanya hanya mengikuti arah uang, dan setiap kartu di Catatan memiliki Ubah dan Hapus (target sentuh 48dp).
 
 ```mermaid
 stateDiagram-v2
-    state "Aktif, hijau atau koral" as Active
-    state "Asli yang dibalik, netral dan dicoret" as ReversedOriginal
-    state "Entri pembalik, netral dengan tanda pemulihan" as ReversalEntry
+    state "Uang masuk, hijau dengan tanda plus" as Incoming
+    state "Uang keluar, koral dengan tanda minus" as Outgoing
+    state "Formulir terisi, Mengubah catatan" as Editing
+    state "Sheet konfirmasi Hapus" as ConfirmDelete
 
-    [*] --> Active : transaksi tersimpan
-    Active --> ReversedOriginal : reverseEvent
-    ReversedOriginal --> Active : entri pembaliknya dihapus
-    [*] --> ReversalEntry : dibuat oleh reverseEvent
-    ReversalEntry --> [*] : dihapus
+    [*] --> Incoming : jenis masuk tersimpan
+    [*] --> Outgoing : jenis keluar tersimpan
+    Incoming --> Editing : Ubah, getar TAP
+    Outgoing --> Editing : Ubah, getar TAP
+    Editing --> Incoming : simpan sebagai masuk
+    Editing --> Outgoing : simpan sebagai keluar
+    Incoming --> ConfirmDelete : Hapus, getar WARN
+    Outgoing --> ConfirmDelete : Hapus, getar WARN
+    ConfirmDelete --> Incoming : batal
+    ConfirmDelete --> Outgoing : batal
+    ConfirmDelete --> [*] : Hapus dikonfirmasi
 
-    note right of ReversalEntry
-        Tanda plus bila membatalkan pengeluaran,
-        minus bila membatalkan pemasukan,
-        tanpa tanda bila sumbernya di luar 200 baris terakhir.
+    note right of Editing
+        Ubah dapat mengganti arah uang.
+        Kategori menentukan jenis kas.
     end note
 ```

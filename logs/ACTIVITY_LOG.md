@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 13:30] [Claude Code (Opus 5.5) — Diagram sistem diselaraskan dengan skema 11]
+- **Goal**: `docs/diagrams/01`–`09` still described schema 5 (obligations/settlements, `scenario_assumptions`, Balik Transaksi). Redraw them to the current code.
+- **Actions**: ERD rebuilt from `11.json` (17 tables: products, product_cost_components, stock per unit, sync_outbox/meta; logical refs). Architecture: schema 11, current calculators, Pusat Bantuan overlay, PlanScreen/StockScreen, EventCard Ubah/Hapus, sync framework. Use case: seven modules (catatan with Ubah/Hapus, rencana usaha, stok, bantuan). Class: five cash types, CategoryRole.cashTypeFor, PlanCalculator/ActualBepCalculator/StockCalculation, `updateEvent`/`deleteEvent`/`undoImportBatch`, SyncEngine. User flow, activity (catat, Ubah, Hapus, impor + Batalkan impor, cadangan), state (catatan, batch, buku, stok), sequence (catat/ubah, impor templat, Batalkan impor) and interaction feedback (EventCard states) redrawn. README catalogue updated; `preview.html` regenerated.
+- **Files**: `docs/diagrams/01`–`09`, `docs/diagrams/README.md`, `docs/diagrams/preview.html`, logs.
+- **Verification**: `py docs/diagrams/generate_html_preview.py` → 9 documents, 22 diagrams; in the browser the page's `mermaid.parse` report says all 22 parse and render (0 errors). A grep for obligation, settlement, piutang/utang, scenario_assumptions, REVERSAL, RecordStatus, reverses/reversedBy/reversalOf, DIBALIK, reverseEvent, Riwayat, schema 5 finds nothing in the diagrams.
+
 ### [2026-10-22 12:40] [Claude Code (Opus 5.5) — Ubah dan Hapus menggantikan Balik Transaksi; pembalikan dihapus (DEC-019, skema 11)]
 - **Goal**: Owner: a record card should offer Ubah and Hapus instead of Balik and Hapus, and reversal should go entirely ("belum perlu fiturnya"); update the guides and docs.
 - **Actions**:

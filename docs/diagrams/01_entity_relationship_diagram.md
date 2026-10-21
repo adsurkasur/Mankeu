@@ -1,6 +1,6 @@
 # Entity Relationship Diagram - Basis Data Mankeu
 
-Skema Room SQLite **versi 5** (`com.mankeu.data`), diselaraskan dengan `Entities.kt` dan `app/schemas/com.mankeu.data.AppDatabase/5.json`.
+Skema Room SQLite **versi 11** (`com.mankeu.data`), diselaraskan dengan `Entities.kt`, `domain/StockManagement.kt`, `sync/SyncEntities.kt`, dan `app/schemas/com.mankeu.data.AppDatabase/11.json`.
 
 > Garis **tegas** adalah foreign key sungguhan (dengan aturan `CASCADE` atau `RESTRICT`). Garis **putus-putus** adalah referensi logis: kolomnya diindeks, tetapi tidak dijaga foreign key, sehingga integritasnya ditegakkan oleh `FinanceRepository`.
 
@@ -14,17 +14,21 @@ erDiagram
     books ||--o{ financial_events : "CASCADE"
     financial_events ||--|| journal_entries : "CASCADE"
     journal_entries ||--|{ postings : "CASCADE"
-    books ||--o{ obligations : "CASCADE"
-    financial_events ||--o| obligations : "sumber kredit, CASCADE"
-    obligations ||--o{ settlements : "CASCADE"
-    financial_events ||--o| settlements : "event kas, CASCADE"
-    books ||--o| scenario_assumptions : "CASCADE"
+    projects ||--o{ products : "CASCADE"
+    products ||--o{ product_cost_components : "CASCADE"
+    businesses ||--o{ stock_items : "CASCADE"
+    stock_items ||--o{ stock_movements : "CASCADE"
     import_batches ||--o{ import_notices : "CASCADE"
     import_batches ||--o{ provenance_records : "CASCADE"
     categories ||..o{ financial_events : "categoryId logis"
+    products ||..o{ financial_events : "productId logis"
+    budget_items ||..o{ financial_events : "budgetItemId logis"
+    projects ||..o{ stock_items : "projectId logis, NULL = semua unit"
     import_batches ||..o{ financial_events : "importBatchId logis"
     import_batches ||..o{ budget_items : "importBatchId logis"
-    financial_events |o..o| financial_events : "reversesEventId logis"
+    import_batches ||..o{ products : "importBatchId logis"
+    import_batches ||..o{ stock_items : "importBatchId logis"
+    financial_events |o..o{ stock_movements : "referenceEventId logis"
 
     businesses {
         string id PK
@@ -38,11 +42,11 @@ erDiagram
     projects {
         string id PK
         string businessId FK
-        string name
+        string name "unit usaha"
         boolean isGeneral
         boolean archived
         string description
-        long startDateEpochDay
+        long startDateEpochDay "periode rencana"
         long endDateEpochDay
         long createdAtEpochMillis
         long updatedAtEpochMillis
@@ -59,18 +63,19 @@ erDiagram
     categories {
         string id PK
         string businessId FK
-        string role "REVENUE EXPENSE ASSET EQUITY LIABILITY"
+        string role "REVENUE EXPENSE CAPITAL_IN DRAWING ASSET"
         string name
         string normalizedName "unik bersama businessId dan role"
         string aliases
         string templateOrigin
         boolean active "arsip = 0, dapat diaktifkan lagi"
+        string costNature "FIXED atau VARIABLE"
         long createdAtEpochMillis
     }
 
     budget_items {
         string id PK
-        string bookId FK
+        string bookId FK "buku Proyeksi"
         string categoryId FK
         string name
         string normalizedName
@@ -84,6 +89,9 @@ erDiagram
         long formulaDifferenceRupiah
         int sortOrder
         boolean archived
+        string costNature "menimpa kategori"
+        string recurrence "MONTHLY atau ONCE"
+        int usefulLifeMonths "khusus aset"
         string importBatchId "logis"
         long createdAtEpochMillis
         long updatedAtEpochMillis
@@ -94,26 +102,23 @@ erDiagram
         string businessId FK
         string projectId FK
         string bookId FK
-        string type
+        string type "CASH_INCOME CASH_EXPENSE OWNER_CAPITAL OWNER_DRAWING ASSET_PURCHASE_CASH"
         long amountRupiah "rupiah bulat lebih dari 0"
         long dateEpochDay
         string description
         string category
         string categoryId "logis"
-        string counterparty
         string reference
-        long dueDateEpochDay
         string quantityText
         string unit
         long unitPriceRupiah
         string budgetItemId "logis"
-        string obligationId "logis"
+        string productId "logis"
+        string costNature
+        int usefulLifeMonths
         string importBatchId "logis"
-        string cashFlowRole
-        string status "POSTED atau REVERSED"
-        string reversesEventId "logis"
-        string reversedByEventId "logis"
-        long createdAtEpochMillis
+        string cashFlowRole "OPERATING INVESTING FINANCING"
+        long createdAtEpochMillis "tetap saat Ubah"
     }
 
     journal_entries {
@@ -121,7 +126,6 @@ erDiagram
         string sourceEventId FK, UK
         long dateEpochDay
         string description
-        string reversalOfJournalId
     }
 
     postings {
@@ -132,50 +136,63 @@ erDiagram
         long amountRupiah
     }
 
-    obligations {
+    products {
         string id PK
-        string bookId FK
-        string kind "RECEIVABLE atau PAYABLE"
-        string sourceEventId FK, UK
-        string counterparty
-        string description
-        long issueDateEpochDay
-        long dueDateEpochDay
-        long originalAmountRupiah
-        boolean reversed
+        string projectId FK
+        string name
+        string unit
+        long priceRupiah
+        string targetPerMonthText
+        int sellFromMonth "1 = bulan pertama rencana"
+        int sortOrder
+        boolean archived
+        string importBatchId "logis"
         long createdAtEpochMillis
-    }
-
-    settlements {
-        string id PK
-        string obligationId FK
-        string eventId FK, UK
-        long amountRupiah
-        long createdAtEpochMillis
-    }
-
-    scenario_assumptions {
-        string id PK
-        string bookId FK, UK
-        long openingCashRupiah
-        long ownerCapitalRupiah
-        long loanAmountRupiah
-        int interestRateBasisPoints
-        long loanDisbursementEpochDay
-        long loanPaymentEpochDay
-        long otherFinancingCostRupiah
-        string outputQuantityText
-        string outputUnit
-        long outputPriceRupiah
         long updatedAtEpochMillis
+    }
+
+    product_cost_components {
+        string id PK
+        string productId FK
+        string name
+        long amountRupiah
+        string yieldText "hasil per biaya"
+        int sortOrder
+    }
+
+    stock_items {
+        string id PK
+        string businessId FK
+        string projectId "logis, unik bersama businessId dan name"
+        string name
+        string unit
+        long basePriceRupiah
+        string initialStockText
+        string currentStockText
+        string minAlertStockText
+        boolean archived
+        string importBatchId "logis"
+        long createdAtEpochMillis
+        long updatedAtEpochMillis
+    }
+
+    stock_movements {
+        string id PK
+        string stockItemId FK
+        string movementType "IN OUT ADJUSTMENT"
+        string quantityText
+        long dateEpochDay
+        string notes
+        string referenceEventId "logis"
+        long createdAtEpochMillis
     }
 
     import_batches {
         string id PK
         string sourceName
-        string sourceSha256 "indeks biasa sejak v5"
+        string sourceSha256 "indeks biasa"
         string importerVersion
-        string state "COMMITTED atau REVERSED"
+        string state "COMMITTED atau REVERSED = dibatalkan"
         long committedAtEpochMillis
         string businessId
         string projectId
@@ -183,12 +200,15 @@ erDiagram
         string mappingVersion
         int recordCount
         long totalAmountRupiah
-        long reversedAtEpochMillis
+        long incomingRupiah
+        long appliedStartEpochDay
+        long appliedEndEpochDay
+        long reversedAtEpochMillis "waktu Batalkan impor"
     }
 
     import_notices {
         string id PK
-        string batchId FK
+        string batchId FK "NULL untuk notice SYSTEM"
         string severity
         string title
         string explanation
@@ -215,13 +235,30 @@ erDiagram
         int confidenceBasisPoints
         string ruleVersion
     }
+
+    sync_outbox {
+        long seq PK "autoincrement"
+        string tableName
+        string rowId
+        string op "UPSERT atau DELETE"
+        long changedAtEpochMillis
+    }
+
+    sync_meta {
+        string key PK
+        string value
+    }
 ```
+
+`sync_outbox` dan `sync_meta` tidak memiliki relasi: outbox diisi trigger SQLite pada setiap tabel `DATA_TABLES` (DEC-013, DEC-015), dan `sync_meta` menyimpan flag seperti `applying_remote` dan `requires_full_snapshot`.
 
 ## Aturan integritas
 
-1. **Dua buku per lahan.** Indeks unik `(projectId, mode)` dan `ensureBookPair` menjamin tepat satu buku `PROJECTION` dan satu `REALIZATION`.
-2. **Jurnal selalu seimbang.** Setiap event memiliki tepat satu `journal_entries` (unik pada `sourceEventId`). Jumlah debit dan kredit posting diperiksa sebelum baris ditulis, di dalam transaksi yang sama.
-3. **Piutang dan utang.** Transaksi kredit membuat satu `obligations`. Setiap pembayaran menambah satu `settlements` yang menunjuk event kasnya sendiri. Sisa tagihan dan status tidak disimpan, melainkan dihitung dari pembayaran yang belum dibalik.
-4. **Koreksi.** Pembalikan dan penghapusan mengikuti tabel aturan di `docs/DOMAIN_MODEL.md` ("Correction rules"), termasuk penolakan saat masih ada pembayaran aktif.
-5. **Impor.** `sourceSha256` diindeks tanpa unik sejak v5 (D-076). Duplikat ditolak oleh `hasImported`, yang hanya menghitung batch berstatus `COMMITTED`, sehingga berkas yang batch-nya sudah dibalik dapat diimpor ulang.
-6. **Migrasi.** `MIGRATION_3_4` menghapus `units` dan `categories.defaultUnitId`. `MIGRATION_4_5` mengganti indeks unik `sourceSha256` menjadi indeks biasa. Tidak ada migrasi destruktif.
+1. **Dua buku per unit.** Indeks unik `(projectId, mode)` dan `ensureBookPair` menjamin tepat satu buku `PROJECTION` dan satu `REALIZATION`.
+2. **Jurnal selalu seimbang.** Setiap event memiliki tepat satu `journal_entries` (unik pada `sourceEventId`). Debit dan kredit diperiksa di `insertEventAndJournal` sebelum baris ditulis, di dalam transaksi yang sama.
+3. **Kas murni (DEC-011).** Hanya lima jenis event kas: uang yang benar-benar berpindah.
+4. **Ubah dan Hapus (DEC-019).** `updateEvent` mengganti event di tempat: id, `importBatchId`, dan `createdAtEpochMillis` dipertahankan, jurnal dan posting dibangun ulang. `deleteEvent` menghapus event, dan jurnal serta posting ikut terhapus lewat `CASCADE`. Tidak ada lagi status atau kolom pembalikan.
+5. **Rencana usaha (DEC-014, DEC-017).** Produk dan komponen biaya per unit milik unit (`projects`). Biaya tetap, biaya sekali, aset, dan modal rencana adalah `budget_items` di buku Proyeksi.
+6. **Stok per unit (DEC-017).** `stock_items.projectId` NULL berarti dipakai bersama semua unit. Nama unik di antara barang yang terlihat oleh satu unit.
+7. **Impor dan pembatalannya.** Duplikat boleh diimpor ulang dengan peringatan (`hasImported` hanya menghitung batch `COMMITTED`). `undoImportBatch` menghapus event batch, mengarsipkan RAB-nya, menghapus produk dan stoknya, lalu menandai batch `REVERSED` sebagai riwayat.
+8. **Migrasi.** `MIGRATION_10_11` menjalankan `ReversalCleanup` (menghapus setiap pasangan pembalikan beserta jurnalnya, meninggalkan satu notice SYSTEM), lalu membangun ulang `financial_events` dan `journal_entries` tanpa kolom pembalikan dan membuat ulang trigger sinkronisasi. Tidak ada migrasi destruktif.

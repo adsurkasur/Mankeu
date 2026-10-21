@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
  * Schema migrations against real old databases.
  *
  * Schema 7 → 8 on a database that holds both cash and legacy non-cash rows: cash survives intact,
- * every credit/loan row goes with its reversal, journal and postings, a notice says so, category
+ * every credit/loan row goes with its journal and postings, a notice says so, category
  * roles are remapped, and sync change capture is live afterwards (DEC-011, DEC-013).
  */
 @RunWith(AndroidJUnit4::class)
@@ -41,8 +41,10 @@ class MigrationTest {
 
         val db = helper.runMigrationsAndValidate(DB, 8, true, AppDatabase.MIGRATION_7_8)
 
-        assertEquals(listOf("cash"), db.strings("SELECT id FROM financial_events"))
-        assertEquals(listOf("journal-cash", "journal-cash"), db.strings("SELECT journalId FROM postings ORDER BY id"))
+        // The reversal of the credit sale is left for schema 11, which deletes every reversal (DEC-019).
+        assertEquals(listOf("cash", "credit-rev"), db.strings("SELECT id FROM financial_events ORDER BY id"))
+        assertEquals(listOf("journal-cash", "journal-cash"), db.strings("SELECT journalId FROM postings WHERE journalId = 'journal-cash' ORDER BY id"))
+        assertEquals(0, db.count("SELECT COUNT(*) FROM postings WHERE journalId = 'journal-credit'"))
         assertEquals(1, db.count("SELECT COUNT(*) FROM import_notices WHERE batchId IS NULL AND severity = 'SYSTEM'"))
         assertEquals(listOf("CAPITAL_IN"), db.strings("SELECT role FROM categories WHERE id = 'c-modal'"))
         assertEquals(listOf("0"), db.strings("SELECT active FROM categories WHERE id IN ('c-pinjam')"))
@@ -124,6 +126,40 @@ class MigrationTest {
         assertTrue(runCatching {
             db.execSQL("INSERT INTO stock_items(id, businessId, projectId, name, unit, basePriceRupiah, initialStockText, currentStockText, minAlertStockText, archived, createdAtEpochMillis, updatedAtEpochMillis) VALUES ('s3', 'b', 'p', 'Teh', 'kg', 1, '1', '1', '0', 0, 0, 0)")
         }.isFailure)
+        assertTrue(db.strings("PRAGMA foreign_key_check").isEmpty())
+    }
+
+    /**
+     * Schema 10 → 11 (DEC-019): each "Balik Transaksi" pair is deleted with its journals (it nets
+     * to zero, so cash is unchanged), a notice says so, the reversal columns are gone, and change
+     * capture still works on the rebuilt tables.
+     */
+    @Test
+    fun migrate10To11DeletesReversalPairsAndTheirColumns() {
+        helper.createDatabase(DB, 10).apply {
+            execSQL("INSERT INTO businesses VALUES ('b', 'Kedai', 'IDR', 0, 0, 0)")
+            execSQL("INSERT INTO projects(id, businessId, name, isGeneral, archived, createdAtEpochMillis, description, updatedAtEpochMillis) VALUES ('p', 'b', 'Utama', 0, 0, 0, '', 0)")
+            execSQL("INSERT INTO books(id, projectId, mode, createdAtEpochMillis, updatedAtEpochMillis) VALUES ('k', 'p', 'REALIZATION', 0, 0)")
+            event("cash", "CASH_INCOME", "OPERATING", 1_000_000, posts = listOf("CASH" to "DEBIT", "REVENUE" to "CREDIT"))
+            event("typo", "CASH_EXPENSE", "OPERATING", 50_000, posts = listOf("OPERATING_EXPENSE" to "DEBIT", "CASH" to "CREDIT"))
+            event("typo-undo", "REVERSAL", "OPERATING", 50_000, reverses = "typo", posts = listOf("OPERATING_EXPENSE" to "CREDIT", "CASH" to "DEBIT"))
+            execSQL("UPDATE financial_events SET status = 'REVERSED', reversedByEventId = 'typo-undo' WHERE id = 'typo'")
+            execSQL("DELETE FROM sync_outbox")
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(DB, 11, true, AppDatabase.MIGRATION_10_11)
+
+        assertEquals(listOf("cash"), db.strings("SELECT id FROM financial_events"))
+        assertEquals(listOf("journal-cash"), db.strings("SELECT id FROM journal_entries"))
+        assertEquals(listOf("journal-cash", "journal-cash"), db.strings("SELECT journalId FROM postings ORDER BY id"))
+        assertEquals(listOf("2 catatan yang dibalik dihapus"), db.strings("SELECT title FROM import_notices WHERE severity = 'SYSTEM'"))
+        val columns = db.strings("SELECT name FROM pragma_table_info('financial_events')") + db.strings("SELECT name FROM pragma_table_info('journal_entries')")
+        assertTrue(columns.none { it in setOf("status", "reversesEventId", "reversedByEventId", "reversalOfJournalId") })
+
+        db.execSQL("DELETE FROM sync_outbox")
+        db.execSQL("UPDATE financial_events SET description = 'Jual' WHERE id = 'cash'")
+        assertEquals(listOf("financial_events|cash|UPSERT"), db.strings("SELECT tableName || '|' || rowId || '|' || op FROM sync_outbox"))
         assertTrue(db.strings("PRAGMA foreign_key_check").isEmpty())
     }
 

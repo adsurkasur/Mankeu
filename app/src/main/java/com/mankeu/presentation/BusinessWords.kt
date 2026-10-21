@@ -32,8 +32,6 @@ object BusinessWords {
         FinancialEventType.OWNER_CAPITAL -> R.string.kind_capital_in
         FinancialEventType.OWNER_DRAWING -> R.string.kind_capital_out
         FinancialEventType.ASSET_PURCHASE_CASH -> R.string.kind_tool_cash
-        FinancialEventType.REVERSAL -> R.string.kind_cash_out
-        else -> R.string.kind_cash_out
     }
 
     /** Event types that increase cash on hand. Used for the +/- sign and the in/out colour. */
@@ -43,12 +41,4 @@ object BusinessWords {
     )
 
     fun isIncoming(type: FinancialEventType): Boolean = type in INCOMING_TYPES
-
-    /**
-     * Which way [event] moves cash. A REVERSAL moves it opposite to its [source] — undoing an expense
-     * puts the money back — so it cannot be read from its own type. Null when the source is not in
-     * memory (the ledger keeps a bounded window): no sign is better than a wrong one.
-     */
-    fun isIncoming(event: MoneyEvent, source: MoneyEvent?): Boolean? =
-        if (event.type == FinancialEventType.REVERSAL) source?.let { !isIncoming(it.type) } else isIncoming(event.type)
 }

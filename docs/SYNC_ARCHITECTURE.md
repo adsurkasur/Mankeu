@@ -55,8 +55,8 @@ nothing schedules it, and no change set is ever uploaded unless code calls
 
 An event, its journal and its postings are written in one Room transaction, so they reach the
 outbox together and travel in the same change set; the set is applied in one transaction. A
-journal can therefore never arrive without its postings. Reversal-instead-of-edit (the ledger's
-existing rule) means most "edits" are new rows, which do not conflict at all.
+journal can therefore never arrive without its postings. Since DEC-019 a record is edited in
+place (same id), so two devices editing the same record is a real conflict for the sync merge to resolve.
 
 ## Rules for future changes
 

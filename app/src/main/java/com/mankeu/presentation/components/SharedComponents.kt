@@ -1,5 +1,6 @@
 package com.mankeu.presentation.components
 
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.TextButton
 import com.mankeu.presentation.guide.HelpArticle
 import com.mankeu.presentation.guide.LocalOpenHelp
@@ -59,7 +60,6 @@ import com.mankeu.presentation.isDarkScheme
 import com.mankeu.R
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.MoneyEvent
-import com.mankeu.domain.RecordStatus
 import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.toDisplayDate
 import com.mankeu.presentation.toRupiah
@@ -139,33 +139,17 @@ fun SectionTitle(title: String, subtitle: String, modifier: Modifier = Modifier)
 @Composable
 fun EventCard(
     event: MoneyEvent,
-    onReverse: (String, String) -> Unit,
+    /** Opens the entry form on this record (DEC-019). Null where records are only shown. */
+    onEdit: ((MoneyEvent) -> Unit)? = null,
     onDelete: ((String) -> Unit)? = null,
-    /** The event a REVERSAL undoes, when it is in memory. Decides which way the reversal moves cash. */
-    reversedSource: MoneyEvent? = null,
 ) {
     val semantic = LocalMankeuSemanticColors.current
     val feedback = LocalFeedback.current
-    var confirmReverse by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
-    val isReversal = event.type == FinancialEventType.REVERSAL
-    val isReversed = event.reversedByEventId != null
-    val incoming = BusinessWords.isIncoming(event, reversedSource)
-    val active = event.status == RecordStatus.POSTED && !isReversed && !isReversal
-    // Green and coral mean money that still counts. A reversed row and its reversal net to zero, so
-    // both are drawn neutral (D-086): the reversal keeps the sign of the cash it restores — "+" when
-    // it undoes an expense — and the reversed original is struck through. Undoing an expense used to
-    // render as a red "−", the opposite of what it did to the balance.
-    val (accent, container) = when {
-        isReversal || isReversed -> MaterialTheme.colorScheme.onSurfaceVariant to MaterialTheme.colorScheme.surfaceContainerHighest
-        incoming == true -> semantic.success to semantic.successContainer
-        else -> semantic.danger to semantic.dangerContainer
-    }
-    val sign = when (incoming) {
-        true -> "+"
-        false -> "−"
-        null -> ""
-    }
+    val incoming = BusinessWords.isIncoming(event.type)
+    val (accent, container) =
+        if (incoming) semantic.success to semantic.successContainer else semantic.danger to semantic.dangerContainer
+    val sign = if (incoming) "+" else "−"
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -177,11 +161,7 @@ fun EventCard(
         ) {
             Surface(shape = CircleShape, color = container) {
                 Icon(
-                    when {
-                        isReversal -> Icons.AutoMirrored.Filled.Undo
-                        incoming == true -> Icons.Default.ArrowDownward
-                        else -> Icons.Default.ArrowUpward
-                    },
+                    if (incoming) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
                     contentDescription = null,
                     modifier = Modifier.padding(10.dp).size(20.dp),
                     tint = accent,
@@ -197,22 +177,6 @@ fun EventCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (isReversal || isReversed) {
-                    MankeuTooltip(
-                        stringResource(if (isReversal) R.string.tooltip_reversal_entry else R.string.tooltip_reversed_original),
-                        modifier = Modifier.padding(top = 4.dp),
-                    ) {
-                        Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                            Text(
-                                stringResource(R.string.event_reversed_badge),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Black,
-                            )
-                        }
-                    }
-                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
@@ -220,19 +184,19 @@ fun EventCard(
                     modifier = Modifier.padding(end = 10.dp),
                     fontWeight = FontWeight.Black,
                     color = accent,
-                    textDecoration = if (isReversed) TextDecoration.LineThrough else null,
                     maxLines = 1,
                     softWrap = false,
                 )
                 // Default 48dp IconButtons: these were shrunk to 36dp, under the minimum touch target,
                 // on the one control that deletes money records.
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (active) {
-                        MankeuTooltip(stringResource(R.string.action_reverse_event)) {
-                            IconButton(onClick = { feedback(FeedbackEvent.WARN); confirmReverse = true }) {
+                    // Ubah replaced "Balik Transaksi" (DEC-019).
+                    if (onEdit != null) {
+                        MankeuTooltip(stringResource(R.string.action_edit_event)) {
+                            IconButton(onClick = { feedback(FeedbackEvent.TAP); onEdit(event) }) {
                                 Icon(
-                                    Icons.AutoMirrored.Filled.Undo,
-                                    contentDescription = stringResource(R.string.action_reverse_event),
+                                    Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.action_edit_event),
                                     modifier = Modifier.size(20.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -253,28 +217,6 @@ fun EventCard(
                     }
                 }
             }
-        }
-    }
-
-    val reversalReason = stringResource(R.string.event_reverse_reason, event.description)
-    if (confirmReverse) {
-        MankeuSheet(
-            title = stringResource(R.string.dialog_reverse_event_title),
-            onDismiss = { confirmReverse = false },
-            confirmLabel = stringResource(R.string.action_reverse_event),
-            destructive = false,
-            onConfirm = {
-                onReverse(event.id, reversalReason)
-                confirmReverse = false
-            },
-        ) {
-            Text(stringResource(R.string.dialog_reverse_event_body))
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "${event.description} • ${event.amountRupiah.toRupiah()}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-            )
         }
     }
 

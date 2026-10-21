@@ -8,8 +8,8 @@ import java.util.UUID
 
 /**
  * Removes what strict cash (DEC-011 K-1) no longer has a meaning for: credit sales and purchases,
- * receivable/payable settlements, loans and interest, plus every reversal of those rows, their
- * journals, postings and import provenance.
+ * receivable/payable settlements, loans and interest, with their journals, postings and import
+ * provenance. Reversals of those rows are removed by [ReversalCleanup] (schema 11).
  *
  * Shared by `MIGRATION_7_8` and by restoring a backup taken on schema 7 or older, so an old backup
  * cannot bring the concepts back. Nothing disappears silently: a summary per type is written as a
@@ -43,9 +43,7 @@ object StrictCashCleanup {
         db.execSQL("DROP TABLE IF EXISTS doomed_events")
         db.execSQL(
             "CREATE TEMP TABLE doomed_events AS " +
-                "SELECT id FROM financial_events WHERE type IN ($TYPE_LIST) " +
-                "UNION SELECT id FROM financial_events WHERE reversesEventId IN " +
-                "(SELECT id FROM financial_events WHERE type IN ($TYPE_LIST))",
+                "SELECT id FROM financial_events WHERE type IN ($TYPE_LIST)",
         )
         db.execSQL("DELETE FROM postings WHERE journalId IN (SELECT id FROM journal_entries WHERE sourceEventId IN (SELECT id FROM doomed_events))")
         db.execSQL("DELETE FROM journal_entries WHERE sourceEventId IN (SELECT id FROM doomed_events)")
@@ -77,7 +75,7 @@ object StrictCashCleanup {
                 UUID.randomUUID().toString(),
                 "${summary.sumOf { it.count }} catatan non-kas lama dihapus",
                 "Mankeu kini murni kas: utang, piutang, pinjaman, cicilan, dan bunga tidak lagi dicatat. " +
-                    "Catatan berikut beserta pembaliknya sudah dihapus:\n$lines",
+                    "Catatan berikut sudah dihapus:\n$lines",
                 total,
                 source,
                 System.currentTimeMillis(),

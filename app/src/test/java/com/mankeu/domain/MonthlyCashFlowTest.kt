@@ -6,20 +6,16 @@ import java.time.LocalDate
 
 class MonthlyCashFlowTest {
     @Test
-    fun `monthly cash flow includes zero months and reversals`() {
+    fun `monthly cash flow includes zero months`() {
         val sale = event("sale", FinancialEventType.CASH_INCOME, 1_000_000, LocalDate.of(2026, 1, 5))
         val expense = event("expense", FinancialEventType.CASH_EXPENSE, 200_000, LocalDate.of(2026, 3, 2))
-        val reversal = event("undo", FinancialEventType.REVERSAL, 200_000, LocalDate.of(2026, 3, 3)).copy(
-            cashFlowRole = expense.cashFlowRole,
-            reversesEventId = expense.id,
-        )
 
-        val months = MonthlyCashFlowCalculator.calculate(listOf(sale, expense, reversal), openingCashRupiah = 50_000)
+        val months = MonthlyCashFlowCalculator.calculate(listOf(sale, expense), openingCashRupiah = 50_000)
 
         assertEquals(3, months.size)
         assertEquals(0, months[1].netRupiah)
-        assertEquals(0, months[2].netRupiah)
-        assertEquals(1_050_000, months.last().cumulativeRupiah)
+        assertEquals(-200_000, months[2].netRupiah)
+        assertEquals(850_000, months.last().cumulativeRupiah)
     }
 
     @Test

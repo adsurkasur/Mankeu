@@ -55,13 +55,13 @@ is created on the user's behalf since D-015.
 | `Account` | compile-time account role | V2 uses a versioned `LedgerAccount` policy enum for cash, receivable, payable, equity, revenue, expense, loan, and asset roles; user labels live in categories. |
 | `Category` | id, business id, name, semantic role | User labels may change; semantic role remains stable for reports. |
 | `BudgetItem` | book id, category, quantity, unit, unit price, amount, timing | Amount is exact rupiah; timing may be a date or period. |
-| `FinancialEvent` | business/project/book, kind, date, amount, description, category, optional counterparty/reference/quantity/budget/obligation/import/reversal links | User-facing posted record; must produce a balanced journal event. |
+| `FinancialEvent` | business/project/book, kind, date, amount, description, category, optional reference/quantity/budget/product/import links | User-facing posted record; must produce a balanced journal event. |
 | `JournalEntry` | date/period, description, source type/id, status | Total postings must balance before posting. |
 | `Posting` | journal id, account id, side, amount | Integer rupiah; debit total equals credit total. |
 | `Obligation` | kind, counterparty, issue/due date, original amount, source event, reversed state | Kind distinguishes receivable/payable; remaining/status are derived from non-reversed settlements. |
 | `Settlement` | obligation id, cash-event id, amount | Partial settlement is allowed; sum cannot exceed the remaining amount. |
 | `ScenarioAssumption` | book id, opening cash, owner capital, loan/interest/timing/cost, optional output quantity/unit/price | Planning inputs are book-scoped; each saved field must affect an identified report. |
-| `ImportBatch` | source hash, importer version, mode, state, timestamps | Commit is atomic; reversal is batch-addressable. |
+| `ImportBatch` | source hash, importer version, mode, state, timestamps | Commit is atomic; undo is batch-addressable. |
 | `ProvenanceRecord` | target record/field, source locator, method, confidence, rationale | Required for every normalized, repaired, or enriched value. |
 | `Notification` | type, title, explanation, related record/batch, review state | Persistent for import mutations until reviewed or archived. |
 
@@ -75,24 +75,19 @@ Room schema 5 implements businesses, projects, books, categories, budget items, 
 - balanced posting insertion in the same database transaction as the source event;
 - credit-event creation of a matching obligation;
 - partial settlement no greater than the outstanding amount;
-- reversal by an inverse journal plus retained source history;
+- correction by editing in place (same id, rebuilt journal) or deleting (DEC-019);
 - report derivation from joined postings and cash-flow roles.
 
-### Correction rules (reversal and deletion)
+### Correction rules (edit and delete, DEC-019)
 
-Every rule lives in `FinanceRepository`, inside the same transaction as the write, and is covered by `LedgerIntegrityTest` (instrumented).
+Every rule lives in `FinanceRepository`, inside the same transaction as the write, and is covered by `LedgerIntegrityTest` (instrumented). "Balik Transaksi" (an inverse journal kept beside the original) was removed in schema 11: owners fix a record by editing it.
 
 | Action | Allowed when | Effect |
 | --- | --- | --- |
-| Record an event | amount > 0; scope, book and category agree; credit kinds name a counterparty; kind is **not** a payment or `REVERSAL` (D-078) | Event + balanced journal (+ obligation for credit kinds) |
-| Settle an obligation | not reversed; 0 < amount ≤ outstanding; date not before the obligation's issue date (D-078) | Cash event + journal + settlement row |
-| Reverse an event | posted, not yet reversed, not itself a `REVERSAL` (D-078), no live payments against the obligation it created | Inverse journal; source marked `REVERSED`; its obligation marked reversed |
-| Delete a reversal | the restored source still fits: a restored payment must not exceed what is outstanding, and its obligation must not be cancelled (D-077) | Reversal removed; source back to `POSTED`; its obligation un-reversed |
-| Delete a reversed event | always | The event **and** its reversal are removed; the pair nets to zero (D-077) |
-| Delete any other event | it has no live payments (D-077) | Event, journal, postings, obligation and settlement rows removed by cascade |
-| Reverse an import batch | the batch is `COMMITTED` | Payment rows reversed before their credit rows; imported budget lines archived; the same file may be imported again afterwards (D-076) |
-
-Schema 1 and 2 were migrated destructively while the product was pre-release and the owner had confirmed there was no data to carry. That exception is now closed: v0.0.4 shipped to the Play Store, so `fallbackToDestructiveMigration` has been removed and every schema change from 3 onward carries a real `Migration` (D-064). A schema change may never delete a user's books.
+| Record an event | amount > 0; scope, book and category agree | Event + balanced journal |
+| Edit an event (Ubah) | the same checks as recording | Same id, import batch and creation time; journal and postings rebuilt from the corrected values |
+| Delete an event (Hapus) | always | Event, journal and postings removed by cascade |
+| Undo an import batch | the batch is `COMMITTED` | Its events deleted (edited ones included), plan lines archived, products and stock it added removed, the plan period it set cleared if unchanged; the batch row stays, marked undone, and the same file may be imported again (D-076) |
 
 ## Money and quantity
 

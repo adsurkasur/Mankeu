@@ -47,7 +47,7 @@ enum class Tour(val id: String, val version: Int, val steps: List<TourStep>) {
         ),
     ),
     ENTRY(
-        "entry", 2,
+        "entry", 3,
         listOf(
             TourStep(TourTarget.ENTRY_HISTORY, R.string.tour2_entry_list_title, R.string.tour2_entry_list_desc, Icons.Default.History, helpArticle = HelpArticle.RECORD_FIX),
             TourStep(TourTarget.HOME_RECORD, R.string.tour2_home_record_title, R.string.tour2_entry_record_desc, Icons.Default.AddCircleOutline, helpArticle = HelpArticle.RECORD_INCOME),
@@ -87,10 +87,10 @@ enum class Tour(val id: String, val version: Int, val steps: List<TourStep>) {
         ),
     ),
     DATA(
-        "data", 2,
+        "data", 3,
         listOf(
             TourStep(TourTarget.IMPORT_FILE_PICKER, R.string.tour2_data_import_title, R.string.tour2_data_import_desc, Icons.Default.UploadFile, helpArticle = HelpArticle.DATA_IMPORT),
-            TourStep(TourTarget.DATA_HISTORY, R.string.tour2_data_history_title, R.string.tour2_data_history_desc, Icons.Default.History, helpArticle = HelpArticle.DATA_REVERSE),
+            TourStep(TourTarget.DATA_HISTORY, R.string.tour2_data_history_title, R.string.tour2_data_history_desc, Icons.Default.History, helpArticle = HelpArticle.DATA_UNDO),
             TourStep(TourTarget.DATA_EXPORT, R.string.tour2_data_export_title, R.string.tour2_data_export_desc, Icons.Default.FileDownload, helpArticle = HelpArticle.REPORT_EXPORT),
             TourStep(TourTarget.DATA_BACKUP, R.string.tour2_data_backup_title, R.string.tour2_data_backup_desc, Icons.Default.Security, helpArticle = HelpArticle.DATA_BACKUP),
         ),
@@ -204,7 +204,7 @@ enum class HelpArticle(
     REPORT_EXPORT(HelpGroup.REPORT, R.string.help_report_export_title, R.string.help_report_export_body, R.string.help_report_export_steps, AT_DATA_EXPORT),
 
     DATA_IMPORT(HelpGroup.DATA, R.string.help_data_import_title, R.string.help_data_import_body, R.string.help_data_import_steps, AT_DATA_IMPORT),
-    DATA_REVERSE(HelpGroup.DATA, R.string.help_data_reverse_title, R.string.help_data_reverse_body, R.string.help_data_reverse_steps, AT_DATA_HISTORY),
+    DATA_UNDO(HelpGroup.DATA, R.string.help_data_undo_title, R.string.help_data_undo_body, R.string.help_data_undo_steps, AT_DATA_HISTORY),
     DATA_BACKUP(HelpGroup.DATA, R.string.help_data_backup_title, R.string.help_data_backup_body, R.string.help_data_backup_steps, AT_DATA_BACKUP),
     DATA_RESTORE(HelpGroup.DATA, R.string.help_data_restore_title, R.string.help_data_restore_body, R.string.help_data_restore_steps, AT_DATA_BACKUP),
 

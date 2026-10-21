@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- **Ubah** on every record card: the entry form opens filled in and saving corrects the record in place (DEC-019).
 - User guide for small-business owners (`docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`): step-by-step use of every feature with 47 screenshots generated from the real app, quick and full reading paths, appendices for seasonal farming and multi-branch stock.
 - Pusat Bantuan: 27 task-based articles (ID/EN) with search, numbered steps, a screenshot and "Tunjukkan di aplikasi", which opens the right page and highlights the place. The ? button now opens a help sheet for the current page (DEC-018).
 - Page guides for every page that may confuse (Beranda, Catatan, form catat, Rencana Usaha, Stok, Laporan, Berkas & Data, Usaha/Unit, Pengaturan), rewritten for the current app, short, with "Pelajari lebih lanjut". They are offered with a small card instead of starting on their own; "Jangan tawarkan lagi" and a switch in Pengaturan turn offers off.
@@ -23,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Kelola kategori: choose Tetap/Variabel for each expense category.
 - Template v3: sheets Produk and Resep Produk; Transaksi gains Produk, Jumlah, Sifat Biaya, Umur Pakai; Rencana Anggaran gains Berulang, Sifat Biaya, Umur Pakai.
 ### Changed
+- "Balik Transaksi" is gone: a wrong record is fixed with **Ubah** or removed with **Hapus**. On upgrade (schema 11), records that were reversed earlier are deleted together with their reversals; cash and reports do not change, and a notice says how many went. Old backups are cleaned the same way on restore (DEC-019).
+- "Balik batch" is now **Batalkan impor**: undoing an import deletes the records it added; the import stays in the history as "dibatalkan".
 - The four-number BEP calculator, "Saldo kas awal" and "Modal sendiri" are gone. Existing calculator values are converted on upgrade into a product, a monthly fixed cost and a capital line, with a notice; opening cash is named in the notice to be recorded as Setoran Modal if real.
 - Proyeksi reports (Beranda, Laporan, comparison) are computed from the business plan. The record button is hidden in Proyeksi.
 ### Fixed

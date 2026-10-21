@@ -72,10 +72,9 @@ class TemplateImportTest {
     }
 
     @Test
-    fun `reversed rows and archived plan lines are not exported`() {
+    fun `archived plan lines are not exported`() {
         val preview = importer.preview("ekspor.xlsx", FinanceWorkbookExporter().export(bundle()))
 
-        assertTrue(preview.transactions.none { it.description == "Salah catat" })
         assertTrue(preview.budgetLines.none { it.name == "Rencana lama" })
     }
 
@@ -288,8 +287,6 @@ class TemplateImportTest {
                         .copy(productId = "kopi", quantityText = "400"),
                     event("e6", FinancialEventType.ASSET_PURCHASE_CASH, 3_600_000, "Mesin espresso", "Pembelian Aset", createdAt = 3)
                         .copy(usefulLifeMonths = 24),
-                    event("e4", FinancialEventType.CASH_EXPENSE, 50_000, "Salah catat", "Bahan Baku & Stok", createdAt = 4, reversedBy = "e5"),
-                    event("e5", FinancialEventType.REVERSAL, 50_000, "Pembalikan", "Bahan Baku & Stok", createdAt = 5),
                 ),
                 summary = EMPTY,
             ),
@@ -337,7 +334,6 @@ class TemplateImportTest {
         description: String,
         category: String,
         createdAt: Long,
-        reversedBy: String? = null,
     ) = FinancialEventEntity(
         id = id,
         businessId = "b",
@@ -349,8 +345,6 @@ class TemplateImportTest {
         description = description,
         category = category,
         cashFlowRole = "OPERATING",
-        status = if (reversedBy != null) "REVERSED" else "POSTED",
-        reversedByEventId = reversedBy,
         createdAtEpochMillis = createdAt,
     )
 

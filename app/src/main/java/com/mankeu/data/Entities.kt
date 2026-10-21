@@ -123,7 +123,6 @@ data class BudgetItemEntity(
         Index("categoryId"),
         Index("budgetItemId"),
         Index("importBatchId"),
-        Index("reversesEventId"),
     ],
 )
 data class FinancialEventEntity(
@@ -144,9 +143,6 @@ data class FinancialEventEntity(
     val budgetItemId: String? = null,
     val importBatchId: String? = null,
     val cashFlowRole: String,
-    val status: String = "POSTED",
-    val reversesEventId: String? = null,
-    val reversedByEventId: String? = null,
     val createdAtEpochMillis: Long,
     /** Overrides the category's cost nature for this expense; null inherits. */
     val costNature: String? = null,
@@ -159,14 +155,13 @@ data class FinancialEventEntity(
 @Entity(
     tableName = "journal_entries",
     foreignKeys = [ForeignKey(FinancialEventEntity::class, ["id"], ["sourceEventId"], ForeignKey.CASCADE)],
-    indices = [Index(value = ["sourceEventId"], unique = true), Index("reversalOfJournalId")],
+    indices = [Index(value = ["sourceEventId"], unique = true)],
 )
 data class JournalEntryEntity(
     @PrimaryKey val id: String,
     val sourceEventId: String,
     val dateEpochDay: Long,
     val description: String,
-    val reversalOfJournalId: String? = null,
 )
 
 @Entity(

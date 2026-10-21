@@ -19,7 +19,6 @@ import com.mankeu.domain.LedgerAccount
 import com.mankeu.domain.PostedRecord
 import com.mankeu.domain.PostingReportCalculator
 import com.mankeu.domain.PostingSide
-import com.mankeu.domain.RecordStatus
 import com.mankeu.importer.ImportTransaction
 import com.mankeu.importer.WorkbookImportPreview
 import kotlinx.coroutines.flow.first
@@ -64,42 +63,40 @@ class LedgerIntegrityTest {
     @After
     fun tearDown() = database.close()
 
+    /** DEC-019: Ubah replaces the record in place; its identity stays and the journal is rebuilt. */
     @Test
-    fun deletingReversedEventTakesItsReversalWithIt() = runBlocking {
-        val income = record(CASH_INCOME, 100_000)
-        repository.reverseEvent(income, DAY, "Salah catat")
+    fun editingKeepsTheRecordIdentityAndRebuildsItsJournal() = runBlocking {
+        val sale = record(CASH_INCOME, 100_000)
+        val before = dao.getEvent(sale)!!
 
-        repository.deleteEvent(income)
+        repository.updateEvent(sale, draft(CASH_EXPENSE, 250_000).copy(description = "Listrik"))
 
-        assertEquals(0, dao.getEventsForBook(bookId).size)
-        assertEquals(0, summary().cashBalanceRupiah)
+        val after = dao.getEvent(sale)!!
+        assertEquals(listOf(sale), dao.getEventsForBook(bookId).map { it.id })
+        assertEquals(before.createdAtEpochMillis to "Listrik", after.createdAtEpochMillis to after.description)
+        assertEquals(CASH_EXPENSE.name to 250_000L, after.type to after.amountRupiah)
+        assertEquals(-250_000, summary().cashBalanceRupiah)
+        assertEquals(-250_000, summary().profitRupiah)
     }
 
     @Test
-    fun deletingReversalRestoresTheOriginalIncome() = runBlocking {
+    fun editingIsValidatedLikeRecording() = runBlocking {
+        val sale = record(CASH_INCOME, 100_000)
+
+        assertRefused { repository.updateEvent(sale, draft(CASH_INCOME, 0)) }
+        assertEquals(100_000, summary().cashBalanceRupiah)
+    }
+
+    @Test
+    fun deletingRemovesTheRecordAndItsJournal() = runBlocking {
         val sale = record(CASH_INCOME, 500_000)
-        val reversal = repository.reverseEvent(sale, DAY, "Batal")
-        assertEquals(0, summary().cashBalanceRupiah)
+        record(CASH_EXPENSE, 100_000)
 
-        repository.deleteEvent(reversal)
+        repository.deleteEvent(sale)
 
-        assertEquals(RecordStatus.POSTED.name, dao.getEvent(sale)!!.status)
-        assertEquals(500_000, summary().operatingIncomeRupiah)
-        assertEquals(500_000, summary().cashBalanceRupiah)
-    }
-
-    @Test
-    fun reversingAReversalIsRefused() = runBlocking {
-        val reversal = repository.reverseEvent(record(CASH_INCOME, 100_000), DAY, "Salah")
-
-        assertRefused { repository.reverseEvent(reversal, DAY, "") }
-        assertEquals(0, summary().cashBalanceRupiah)
-    }
-
-    @Test
-    fun reversalsCannotBeRecordedAsPlainTransactions() = runBlocking {
-        assertRefused { record(FinancialEventType.REVERSAL, 10_000) }
-        assertEquals(0, dao.getEventsForBook(bookId).size)
+        assertEquals(1, dao.getEventsForBook(bookId).size)
+        assertEquals(-100_000, summary().cashBalanceRupiah)
+        assertEquals(0, summary().operatingIncomeRupiah)
     }
 
     @Test
@@ -113,7 +110,7 @@ class LedgerIntegrityTest {
     }
 
     @Test
-    fun batchReversalUndoesEveryImportedCashRow() = runBlocking {
+    fun undoingAnImportDeletesEveryImportedCashRowEvenAfterAnEdit() = runBlocking {
         repository.commitImport(
             businessId,
             projectId,
@@ -127,11 +124,16 @@ class LedgerIntegrityTest {
             ),
         )
         assertEquals(250_000, summary().cashBalanceRupiah)
+        val batch = dao.getImportBatches(projectId).single()
+        val bought = dao.getEventsForBook(bookId).single { it.description == "Beli bahan" }
+        repository.updateEvent(bought.id, draft(CASH_EXPENSE, 175_000))
+        assertEquals(batch.id, dao.getEvent(bought.id)!!.importBatchId)
 
-        repository.reverseImportBatch(dao.getImportBatches(projectId).single().id)
+        assertEquals(2, repository.undoImportBatch(batch.id).records)
 
+        assertTrue(dao.getEventsForBook(bookId).isEmpty())
         assertEquals(0, summary().cashBalanceRupiah)
-        assertEquals(0, summary().operatingIncomeRupiah)
+        assertEquals("REVERSED", dao.getImportBatch(batch.id)!!.state)
     }
 
     @Test
@@ -167,6 +169,45 @@ class LedgerIntegrityTest {
         assertTrue(dao.observeNotices().first().any { it.batchId == null && "non-kas" in it.title })
     }
 
+    /** A schema-10 backup still holds pairs from "Balik Transaksi"; restoring it drops each pair (DEC-019). */
+    @Test
+    fun backupTakenOnSchemaTenRestoresWithoutReversalPairs() = runBlocking {
+        record(CASH_INCOME, 750_000)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val manager = EncryptedBackupManager(database, File(context.cacheDir, "ledger-integrity-recovery.aabk"))
+        val password = "sandi-uji-123".toCharArray()
+        val current = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(manager.create(password), password))
+        val reversalColumns = listOf(BackupValue.Text("POSTED"), BackupValue.Null)
+        fun pairRow(table: BackupTable, id: String, type: String, reversedBy: BackupValue) = table.rows.first().mapIndexed { index, value ->
+            when (table.columns[index]) {
+                "id" -> BackupValue.Text(id)
+                "type" -> BackupValue.Text(type)
+                else -> value
+            }
+        } + reversalColumns + reversedBy
+        val schemaTen = current.copy(
+            schemaVersion = 10,
+            tables = current.tables.map { table ->
+                if (table.name != "financial_events") return@map table
+                table.copy(
+                    columns = table.columns + listOf("status", "reversesEventId", "reversedByEventId"),
+                    rows = table.rows.map { it + reversalColumns + BackupValue.Null } +
+                        listOf(
+                            pairRow(table, "typo", "CASH_EXPENSE", BackupValue.Text("typo-undo")),
+                            pairRow(table, "typo-undo", "REVERSAL", BackupValue.Null),
+                        ),
+                )
+            },
+        )
+        record(CASH_EXPENSE, 50_000)
+
+        manager.restore(manager.prepareRestore(PasswordBackupCipher.encrypt(PortableBackupCodec.encode(schemaTen), password), password), password)
+
+        assertEquals(1, dao.getEventsForBook(bookId).size)
+        assertEquals(750_000, summary().cashBalanceRupiah)
+        assertTrue(dao.observeNotices().first().any { it.batchId == null && it.title == "2 catatan yang dibalik dihapus" })
+    }
+
     /** A copy of the table's first row turned into a pre-schema-8 credit sale. */
     private fun legacyCreditSale(table: BackupTable): List<BackupValue> = table.rows.first().mapIndexed { index, value ->
         when (table.columns[index]) {
@@ -176,19 +217,18 @@ class LedgerIntegrityTest {
         }
     }
 
-    private suspend fun record(type: FinancialEventType, amount: Long): String =
-        repository.recordEvent(
-            EventDraft(
-                businessId = businessId,
-                projectId = projectId,
-                bookId = bookId,
-                type = type,
-                amountRupiah = amount,
-                date = DAY,
-                description = "Uji $type",
-                category = "",
-            ),
-        )
+    private suspend fun record(type: FinancialEventType, amount: Long): String = repository.recordEvent(draft(type, amount))
+
+    private fun draft(type: FinancialEventType, amount: Long) = EventDraft(
+        businessId = businessId,
+        projectId = projectId,
+        bookId = bookId,
+        type = type,
+        amountRupiah = amount,
+        date = DAY,
+        description = "Uji $type",
+        category = "",
+    )
 
     private suspend fun summary() = PostingReportCalculator.calculate(
         dao.getPostingRows(bookId).map {

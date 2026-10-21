@@ -27,7 +27,7 @@ import java.time.YearMonth
 
 /**
  * The template commit path (DEC-012) against a real Room database: rows land in the right book with
- * the type their category implies, unknown categories become custom ones, the batch reverses
+ * the type their category implies, unknown categories become custom ones, the batch undoes
  * cleanly, and an identical file may be imported again after a warning.
  */
 @RunWith(AndroidJUnit4::class)
@@ -51,7 +51,7 @@ class ImportCommitTest {
     fun tearDown() = database.close()
 
     @Test
-    fun templateRowsLandInTheirBooksWithCategoryDrivenTypesAndReverseCleanly() = runBlocking {
+    fun templateRowsLandInTheirBooksWithCategoryDrivenTypesAndUndoCleanly() = runBlocking {
         val review = repository.reviewImport(businessId, projectId, preview())
         assertEquals(listOf("Sewa Gerobak" to CategoryRole.EXPENSE), review.newCategories)
         assertEquals(emptyList<String>(), review.conflicts)
@@ -86,8 +86,9 @@ class ImportCommitTest {
         assertEquals(4_000_000L, summary.profitRupiah)
         assertEquals(9_000_000L, summary.cashBalanceRupiah)
 
-        repository.reverseImportBatch(dao.getImportBatches(projectId).single().id)
+        repository.undoImportBatch(dao.getImportBatches(projectId).single().id)
 
+        assertTrue(dao.getEventsForBook(books.getValue(BookMode.REALIZATION).id).isEmpty())
         assertEquals(0L, repository.accountingSummary(books.getValue(BookMode.REALIZATION).id).first().cashBalanceRupiah)
         assertTrue(dao.getBudgetItems(plan).all { it.archived })
         assertTrue(database.stockDao().getStockItems(businessId, projectId).isEmpty())
@@ -163,17 +164,17 @@ class ImportCommitTest {
         assertEquals(0L, repository.accountingSummary(actual).first().profitRupiah)
     }
 
-    /** Schema 10: reversing must not undo a period the owner set after the import. */
+    /** Schema 10: undoing an import must not clear a period the owner set after it. */
     @Test
-    fun aPeriodTheOwnerChangedAfterImportSurvivesReversal() = runBlocking {
+    fun aPeriodTheOwnerChangedAfterImportSurvivesUndo() = runBlocking {
         repository.commitImport(businessId, projectId, preview())
         val batch = dao.getImportBatches(projectId).single()
         assertEquals(9_500_000L to 10_000_000L, batch.incomingRupiah to batch.totalAmountRupiah)
         repository.updateProjectDetails(projectId, "Gerai Utama", "", LocalDate.of(2027, 1, 1), LocalDate.of(2027, 6, 30))
 
-        val reversal = repository.reverseImportBatch(batch.id)
+        val undo = repository.undoImportBatch(batch.id)
 
-        assertFalse(reversal.periodCleared)
+        assertFalse(undo.periodCleared)
         assertEquals(LocalDate.of(2027, 1, 1).toEpochDay(), dao.getProject(projectId)!!.startDateEpochDay)
     }
 

@@ -26,28 +26,21 @@ data class CashFlowRecord(
     val type: FinancialEventType,
     val cashFlowRole: CashFlowRole,
     val amountRupiah: Long,
-    val reversesEventId: String? = null,
 )
 
 object MonthlyCashFlowCalculator {
     fun calculate(events: List<MoneyEvent>, openingCashRupiah: Long = 0): List<MonthlyCashFlow> =
         calculateFromRecords(
             events.map {
-                CashFlowRecord(it.id, it.date, it.type, it.cashFlowRole, it.amountRupiah, it.reversesEventId)
+                CashFlowRecord(it.id, it.date, it.type, it.cashFlowRole, it.amountRupiah)
             },
             openingCashRupiah,
         )
 
     fun calculateFromRecords(events: List<CashFlowRecord>, openingCashRupiah: Long = 0): List<MonthlyCashFlow> {
         if (events.isEmpty()) return emptyList()
-        val byId = events.associateBy { it.id }
         val movements = events.mapNotNull { event ->
-            val amount = if (event.type == FinancialEventType.REVERSAL) {
-                event.reversesEventId?.let(byId::get)?.let { -cashMovement(it) } ?: 0
-            } else {
-                cashMovement(event)
-            }
-            amount.takeIf { it != 0L }?.let { Triple(YearMonth.from(event.date), event.cashFlowRole, it) }
+            cashMovement(event).takeIf { it != 0L }?.let { Triple(YearMonth.from(event.date), event.cashFlowRole, it) }
         }
         if (movements.isEmpty()) return emptyList()
         val first = movements.minOf { it.first }
@@ -69,6 +62,5 @@ object MonthlyCashFlowCalculator {
     private fun cashMovement(event: CashFlowRecord): Long = when (event.type) {
         FinancialEventType.CASH_INCOME, FinancialEventType.OWNER_CAPITAL -> event.amountRupiah
         FinancialEventType.CASH_EXPENSE, FinancialEventType.OWNER_DRAWING, FinancialEventType.ASSET_PURCHASE_CASH -> -event.amountRupiah
-        FinancialEventType.REVERSAL -> 0
     }
 }

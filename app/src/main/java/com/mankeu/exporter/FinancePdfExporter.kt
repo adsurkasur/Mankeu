@@ -60,8 +60,6 @@ class FinancePdfExporter {
                     val details = buildList {
                         add(LocalDate.ofEpochDay(event.dateEpochDay).format(DATE))
                         add(eventTypeLabel(event.type))
-                        if (event.reversedByEventId != null) add("DIBALIK")
-                        if (event.reversesEventId != null) add("PEMBALIKAN")
                     }.joinToString(" - ")
                     report.listItem(event.description, details, money(event.amountRupiah))
                 }
@@ -269,7 +267,6 @@ class FinancePdfExporter {
                 FinancialEventType.OWNER_CAPITAL -> "Modal pemilik"
                 FinancialEventType.OWNER_DRAWING -> "Pengambilan pemilik"
                 FinancialEventType.ASSET_PURCHASE_CASH -> "Pembelian aset tunai"
-                FinancialEventType.REVERSAL -> "Pembalikan"
             }
         } ?: raw.replace('_', ' ').lowercase().replaceFirstChar(Char::uppercase)
     }

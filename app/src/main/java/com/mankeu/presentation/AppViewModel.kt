@@ -511,6 +511,8 @@ class AppViewModel(
         costNature: CostNature? = null,
         productId: String? = null,
         usefulLifeMonths: Int? = null,
+        /** Set when the form was opened with Ubah: the record is corrected in place (DEC-019). */
+        editingEventId: String? = null,
     ) = mutating {
         val state = uiState.value
         val businessId = state.selectedBusinessId
@@ -526,7 +528,7 @@ class AppViewModel(
                 quantityText = quantityText,
                 unitPriceRupiah = unitPriceRupiah,
             )
-            repository.recordEvent(
+            val draft =
                 EventDraft(
                     businessId = businessId,
                     projectId = projectId,
@@ -545,10 +547,10 @@ class AppViewModel(
                     costNature = costNature,
                     productId = productId,
                     usefulLifeMonths = usefulLifeMonths,
-                ),
-            )
+                )
+            if (editingEventId != null) repository.updateEvent(editingEventId, draft) else repository.recordEvent(draft)
         }.onSuccess {
-            message.value = UiText.of(R.string.msg_event_saved)
+            message.value = UiText.of(if (editingEventId != null) R.string.msg_event_updated else R.string.msg_event_saved)
         }.onFailure {
             message.value = UiText.fromError(it, R.string.msg_event_save_failed)
         }
@@ -647,12 +649,6 @@ class AppViewModel(
             .onFailure { message.value = UiText.fromError(it, R.string.msg_stock_movement_failed) }
     }
 
-    fun reverseEvent(id: String, reason: String) = mutating {
-        runCatching { repository.reverseEvent(id, LocalDate.now(), reason) }
-            .onSuccess { message.value = UiText.of(R.string.msg_event_reversed) }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_event_reverse_failed) }
-    }
-
     fun previewWorkbook(contentResolver: ContentResolver, uri: Uri) = viewModelScope.launch {
         importState.value = ImportUiState.Loading
         val result = runCatching {
@@ -703,12 +699,12 @@ class AppViewModel(
         importState.value = ImportUiState.Idle
     }
 
-    fun reverseImportBatch(id: String) = mutating {
-        runCatching { repository.reverseImportBatch(id) }
+    fun undoImportBatch(id: String) = mutating {
+        runCatching { repository.undoImportBatch(id) }
             .onSuccess { result ->
-                message.value = UiText.of(if (result.periodCleared) R.string.msg_batch_reversed_period else R.string.msg_batch_reversed, result.records)
+                message.value = UiText.of(if (result.periodCleared) R.string.msg_batch_undone_period else R.string.msg_batch_undone, result.records)
             }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_batch_reverse_failed) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_batch_undo_failed) }
     }
 
     fun exportWorkbook(contentResolver: ContentResolver, uri: Uri) = viewModelScope.launch {

@@ -1,5 +1,18 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-019] Ubah and Hapus Replace "Balik Transaksi"; Reversal Removed Entirely (Schema 11)
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner: "hapus aja keseluruhan pembalikan itu karena memang belum perlu fiturnya"). Implemented; unit, instrumented and screenshot runs green.
+- **Context**: A wrong record could only be reversed (an inverse journal kept beside the original, shown struck through with a DIBALIK badge) and then entered again, or hard-deleted. For small-business owners this was accounting ceremony: two extra rows per typo, a badge to explain, and no way to simply fix an amount. Nobody relies on an unchanged history yet (owner); the reversal design came from D-042/D-077, when credit, obligations and settlements still existed (removed by DEC-011).
+- **Decision**:
+  1. Every record card has **Ubah** (pencil) and **Hapus** (bin). Ubah opens the entry form filled in; saving replaces the record in one transaction: same id, import batch and creation time, journal and postings rebuilt by `LedgerPolicy.journalFor` (`FinanceRepository.updateEvent`, validated like recording).
+  2. Reversal is removed entirely: `FinancialEventType.REVERSAL`, `RecordStatus`, `LedgerPolicy.reversalFor`, `reverseEvent`, the DIBALIK badge/strike-through, their strings, and the reversal filters in queries and exports.
+  3. Schema 11: `ReversalCleanup` deletes every reversal row and the original it undid, with journals, postings and provenance, and leaves a SYSTEM notice ("N catatan yang dibalik dihapus"). Each pair nets to zero, so cash and every report are unchanged. Then `financial_events` drops `status/reversesEventId/reversedByEventId` and `journal_entries` drops `reversalOfJournalId`; sync triggers are recreated. A backup older than schema 11 gets the same cleanup on restore (pair ids found in the snapshot, since the columns are gone).
+  4. Undoing an import (**Batalkan impor**) deletes the batch's events, edited ones included, instead of reversing them; plan lines are still archived, products/stock removed, the period cleared if unchanged. The batch row stays as history; its stored state keeps the spelling `REVERSED` and is shown as "dibatalkan".
+- **Alternatives considered**: keeping reversal only for import undo (rejected by owner: no need yet, and it kept every reversal code path alive); keeping old pairs with a badge (rejected: a concept the app no longer has); edit as delete + insert under a new id (rejected: breaks the import-batch link and the sync row identity).
+- **Supersedes**: the reversal half of D-042, D-077's reversal rules, D-086's reversal colours. D-076 (re-import after undo) still holds.
+- **Affected components**: `domain/` (FinanceModels, LedgerPolicy, MonthlyCashFlow), `data/` (Entities, FinanceDao, FinanceRepository, AppDatabase `MIGRATION_10_11`, new `ReversalCleanup`, StrictCashCleanup), `backup/EncryptedBackupManager`, exporters, `presentation/` (EventCard, EntryScreen, MoreScreen, HomeScreen, AppViewModel, BusinessWords, guide), strings ID/EN, help text (`docs/guide/help_strings.py`; tours Catatan and Berkas & Data raised to version 3), tests, user guide 6.7/9.3/11/12/13.
+
 ### [DEC-018] Offered, Versioned Page Tours and an In-App Help Center with "Show Me"
 - **Date**: 2026-10-21
 - **Status**: Accepted (owner, grill Q1–Q17); implemented and tested on the emulator.

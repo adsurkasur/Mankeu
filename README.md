@@ -51,7 +51,7 @@
 - **Pemasukan & Pengeluaran Kas**: Catat transaksi uang masuk dan uang keluar harian secara cepat dengan kategorisasi terstruktur.
 - **Piutang & Utang (Obligasi)**: Pantau tagihan yang belum diterima atau kewajiban yang belum dibayar, lengkap dengan riwayat pelunasan bertahap maupun pelunasan instan.
 - **Setoran Modal & Penarikan**: Pisahkan modal awal pemilik dan kas operasional secara akurat.
-- **Pembalikan Transaksi (Reversals)**: Transaksi yang keliru dapat dibatalkan melalui jurnal pembalik (*reversal audit trail*), menjaga riwayat pembukuan tetap transparan dan akuntabel.
+- **Ubah dan Hapus**: Catatan yang salah isi diperbaiki langsung lewat **Ubah**; catatan yang tidak perlu dihapus. Jurnal ikut dibangun ulang sehingga laporan selalu seimbang (DEC-019).
 
 ### 2. Skenario Ganda: Mode Realisasi vs Mode Proyeksi
 - **Mode Realisasi**: Rekam pembukuan riil yang telah terjadi di lapangan.
@@ -135,7 +135,7 @@ Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Andro
 ## 🧪 Jaminan Kualitas (Quality Gates)
 
 Setiap baris kode di repositori Mankeu mematuhi standar ketat:
-- **59+ Automated Unit & Golden Tests**: Menguji keabsahan saldo, penjurnalan ganda, analisis kelayakan, enkripsi cadangan, import/export round-trip, hingga pembalikan transaksi.
+- **59+ Automated Unit & Golden Tests**: Menguji keabsahan saldo, penjurnalan ganda, analisis kelayakan, enkripsi cadangan, import/export round-trip, hingga ubah/hapus catatan dan pembatalan impor.
 - **Strict Lint Compliance**: Tanpa error kompilasi dan bebas peringatan kritis.
 - **Exact Rupiah Invariant**: Seluruh perhitungan nilai uang menggunakan bilangan bulat (`Long`), menjamin akurasi 100% tanpa risiko pembulatan desimal komputer.
 

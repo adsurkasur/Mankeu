@@ -35,7 +35,7 @@ import com.mankeu.sync.SyncSchema
         SyncOutboxEntity::class,
         SyncMetaEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -332,6 +332,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Schema 11, Ubah and Hapus replace "Balik Transaksi" (DEC-019): [ReversalCleanup] deletes
+         * every reversal and the original it undid (each pair nets to zero), then `financial_events`
+         * loses `status`/`reversesEventId`/`reversedByEventId` and `journal_entries` loses
+         * `reversalOfJournalId`. The rebuilds drop the change-capture triggers, so they are recreated.
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                ReversalCleanup.run(db, source = "Pembaruan basis data ke skema 11")
+                rebuild(
+                    db,
+                    table = "financial_events",
+                    create = "CREATE TABLE `financial_events_new` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `projectId` TEXT NOT NULL, `bookId` TEXT NOT NULL, `type` TEXT NOT NULL, `amountRupiah` INTEGER NOT NULL, `dateEpochDay` INTEGER NOT NULL, `description` TEXT NOT NULL, `category` TEXT NOT NULL, `categoryId` TEXT, `reference` TEXT, `quantityText` TEXT, `unit` TEXT, `unitPriceRupiah` INTEGER, `budgetItemId` TEXT, `importBatchId` TEXT, `cashFlowRole` TEXT NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `costNature` TEXT, `productId` TEXT, `usefulLifeMonths` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`bookId`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+                    columns = "id,businessId,projectId,bookId,type,amountRupiah,dateEpochDay,description,category,categoryId,reference,quantityText,unit,unitPriceRupiah,budgetItemId,importBatchId,cashFlowRole,createdAtEpochMillis,costNature,productId,usefulLifeMonths",
+                    indices = listOf("businessId", "projectId", "bookId", "categoryId", "budgetItemId", "importBatchId")
+                        .map { "CREATE INDEX IF NOT EXISTS `index_financial_events_$it` ON `financial_events` (`$it`)" },
+                )
+                rebuild(
+                    db,
+                    table = "journal_entries",
+                    create = "CREATE TABLE `journal_entries_new` (`id` TEXT NOT NULL, `sourceEventId` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sourceEventId`) REFERENCES `financial_events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+                    columns = "id,sourceEventId,dateEpochDay,description",
+                    indices = listOf("CREATE UNIQUE INDEX IF NOT EXISTS `index_journal_entries_sourceEventId` ON `journal_entries` (`sourceEventId`)"),
+                )
+                SyncSchema.createTriggers(db)
+            }
+        }
+
         private fun rebuild(db: SupportSQLiteDatabase, table: String, create: String, columns: String, indices: List<String>) {
             db.execSQL(create)
             db.execSQL("INSERT INTO `${table}_new` ($columns) SELECT $columns FROM `$table`")
@@ -364,7 +392,7 @@ abstract class AppDatabase : RoomDatabase() {
             AppDatabase::class.java,
             "mankeu.db",
         )
-            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
             .addCallback(SyncSchema.callback)
             .build()
     }

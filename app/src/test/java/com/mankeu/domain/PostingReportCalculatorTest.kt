@@ -32,27 +32,6 @@ class PostingReportCalculatorTest {
         assertEquals(1_800_000, summary.cashBalanceRupiah)
     }
 
-    @Test
-    fun `original plus reversing postings net every report back to zero`() {
-        val event = event("sale", FinancialEventType.CASH_INCOME, 5_000_000)
-        val original = LedgerPolicy.journalFor(event)
-        val reversalEvent = event("reversal", FinancialEventType.REVERSAL, 5_000_000).copy(
-            cashFlowRole = event.cashFlowRole,
-        )
-        val reversal = LedgerPolicy.reversalFor(original, reversalEvent)
-        val records = (original.postings.map { event.cashFlowRole to it } +
-            reversal.postings.map { reversalEvent.cashFlowRole to it }).mapIndexed { index, (role, posting) ->
-            PostedRecord("event-$index", role, posting.account, posting.side, posting.amountRupiah)
-        }
-
-        val summary = PostingReportCalculator.calculate(records)
-
-        assertEquals(0, summary.operatingIncomeRupiah)
-        assertEquals(0, summary.profitRupiah)
-        assertEquals(0, summary.operatingCashFlowRupiah)
-        assertEquals(0, summary.cashBalanceRupiah)
-    }
-
     private fun event(id: String, type: FinancialEventType, amount: Long) = MoneyEvent(
         id = id,
         businessId = "business",

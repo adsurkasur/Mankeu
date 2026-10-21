@@ -19,7 +19,6 @@ import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.Recurrence
-import com.mankeu.domain.RecordStatus
 import com.mankeu.domain.StockItemEntity
 import com.mankeu.importer.MankeuTemplate
 import java.time.Instant
@@ -132,12 +131,11 @@ class FinanceWorkbookExporter(
         ),
     )
 
-    /** Posted, unreversed cash rows only: what an owner would write in a cash book. */
+    /** Cash rows: what an owner would write in a cash book. */
     private fun transactions(events: List<FinancialEventEntity>, productNames: Map<String, String>) = WorkbookTable(
         name = MankeuTemplate.TRANSACTIONS,
         headers = MankeuTemplate.TRANSACTION_HEADERS,
         rows = events
-            .filter { it.status == RecordStatus.POSTED.name && it.reversedByEventId == null && it.type != FinancialEventType.REVERSAL.name }
             .sortedWith(compareBy({ it.dateEpochDay }, { it.createdAtEpochMillis }))
             .map { event ->
                 val incoming = event.type == FinancialEventType.CASH_INCOME.name || event.type == FinancialEventType.OWNER_CAPITAL.name

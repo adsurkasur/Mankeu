@@ -34,7 +34,6 @@ object LedgerPolicy {
                 amount,
             )
 
-            FinancialEventType.REVERSAL -> error("Use reversalFor() with the original journal.")
         }
         return JournalEntry(
             id = "journal-${event.id}",
@@ -44,17 +43,6 @@ object LedgerPolicy {
             postings = postings,
         ).requireBalanced()
     }
-
-    fun reversalFor(original: JournalEntry, reversalEvent: MoneyEvent): JournalEntry = JournalEntry(
-        id = "journal-${reversalEvent.id}",
-        sourceEventId = reversalEvent.id,
-        date = reversalEvent.date,
-        description = reversalEvent.description,
-        postings = original.postings.map { posting ->
-            posting.copy(side = if (posting.side == PostingSide.DEBIT) PostingSide.CREDIT else PostingSide.DEBIT)
-        },
-        reversalOfJournalId = original.id,
-    ).requireBalanced()
 
     private fun pair(
         first: Pair<LedgerAccount, PostingSide>,

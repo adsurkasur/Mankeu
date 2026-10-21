@@ -105,7 +105,7 @@ A conforming importer must:
 5. generate a visible notification for `Sewa Lahan` and every other automatic enrichment;
 6. preserve field-level provenance;
 7. complete atomically or leave the local database unchanged;
-8. allow reversal of the committed batch;
+8. allow undoing the committed batch;
 9. avoid double counting enriched facts already represented elsewhere.
 
 ## Export and round trip

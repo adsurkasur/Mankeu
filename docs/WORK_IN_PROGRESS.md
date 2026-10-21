@@ -23,5 +23,4 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-Tidak ada. Terakhir: alur panduan penggunaan dibuat lurus (urutan: siapkan → rencanakan → catat → pantau →
-amankan), 2026-10-22. Setelah mengubah naskah: `python scripts/check_guide_flow.py docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`.
+Tidak ada. Pekerjaan terakhir (DEC-019, Ubah/Hapus, skema 11) sudah di-commit; ringkasan di `logs/ACTIVITY_LOG.md`.

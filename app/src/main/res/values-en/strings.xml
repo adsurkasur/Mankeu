@@ -91,11 +91,11 @@
     <string name="entry_new_category_save">Save Category</string>
 
     <string name="action_delete_event">Delete</string>
-    <string name="action_reverse_event">Reverse Record</string>
+    <string name="action_edit_event">Edit record</string>
+    <string name="msg_event_updated">Record updated.</string>
+    <string name="entry_editing">Editing an existing record. Save to replace it.</string>
     <string name="dialog_delete_event_title">Delete Transaction Record?</string>
-    <string name="dialog_delete_event_body">This record will be permanently deleted from the database and cannot be recovered. To preserve an accounting audit trail, use \'Reverse Record\' instead.</string>
-    <string name="dialog_reverse_event_title">Reverse / Correct Record</string>
-    <string name="dialog_reverse_event_body">The system will generate a counter-journal entry to neutralize this transaction while preserving the original audit history.</string>
+    <string name="dialog_delete_event_body">This record will be deleted permanently and cannot be recovered. To fix an amount, date or category, use Edit.</string>
     <string name="msg_event_deleted">Transaction record successfully deleted.</string>
 
     <!-- Laporan / Reports -->
@@ -225,7 +225,7 @@
     <string name="data_rename_business">Rename business</string>
     <string name="data_master_count">%1$d active categories</string>
     <string name="data_import_history">Import history</string>
-    <string name="data_import_history_sub">Any import can be undone without erasing the original records.</string>
+    <string name="data_import_history_sub">An import can be undone: the records it added are deleted, and the import stays listed in the history.</string>
     <string name="data_export_title">Export and backup</string>
     <string name="data_export_sub">Excel, offline PDF, and encrypted backups all use the Android file picker; nothing is sent anywhere quietly.</string>
     <string name="data_export_excel">Excel</string>
@@ -262,9 +262,14 @@
     <string name="master_archive">Archive %1$s</string>
     <string name="action_done">Done</string>
     <string name="batch_summary">%1$d records • %2$s • %3$s</string>
-    <string name="batch_reverse">Undo import</string>
-    <string name="batch_reverse_title">Undo the whole import?</string>
-    <string name="batch_reverse_body">%1$d records from %2$s will be neutralised with reversing entries. The history and import evidence stay.</string>
+    <string name="msg_batch_undo_failed">The import could not be undone.</string>
+    <string name="msg_batch_undone_period">Import undone: %1$d records deleted. The plan period this import set was cleared again.</string>
+    <string name="msg_batch_undone">Import undone: %1$d records deleted.</string>
+    <string name="batch_state_undone">undone</string>
+    <string name="batch_state_committed">active</string>
+    <string name="batch_undo_body">%1$d records from %2$s will be deleted. This import stays listed in the history.</string>
+    <string name="batch_undo_title">Undo this whole import?</string>
+    <string name="batch_undo">Undo import</string>
     <string name="backup_title">Encrypted backup</string>
     <string name="backup_create_title">Create a backup</string>
     <string name="backup_restore_title">Restore a backup</string>
@@ -296,8 +301,6 @@
     <string name="restore_confirm">Restore now</string>
     <string name="action_back_step">Back</string>
 
-    <string name="event_reversed_badge">UNDONE</string>
-    <string name="event_reverse_reason">Reversal of: %1$s</string>
     <string name="compare_plan">Plan %1$s</string>
     <string name="compare_actual">Actual %1$s</string>
     <string name="compare_delta">Difference %1$s</string>
@@ -320,12 +323,7 @@
     <string name="msg_category_archive_failed">The category could not be archived.</string>
     <string name="msg_event_saved">Saved; the journal balances.</string>
     <string name="msg_event_save_failed">The transaction could not be saved.</string>
-    <string name="msg_event_reversed">Transaction undone; the original record and audit trail remain.</string>
-    <string name="msg_event_reverse_failed">The transaction could not be undone.</string>
-    <string name="msg_batch_reversed">Import undone: %1$d rows neutralised without erasing the trail.</string>
     <string name="batch_money_in_out">in %1$s · out %2$s</string>
-    <string name="msg_batch_reversed_period">Import undone: %1$d rows neutralised without erasing the trail. The plan period this import set was cleared again.</string>
-    <string name="msg_batch_reverse_failed">The import could not be undone.</string>
     <string name="msg_import_failed">The workbook could not be processed.</string>
     <string name="msg_import_commit_failed">The import failed safely.</string>
     <string name="work_building_workbook">Building the workbook…</string>
@@ -433,8 +431,6 @@
     <string name="reports_working_capital_note">The gap your own capital has to cover, based on operating and investing cash flow.</string>
 
     <!-- Records -->
-    <string name="tooltip_reversal_entry">Reversal entry. It returns the money of a cancelled transaction, so this pair no longer changes the balance.</string>
-    <string name="tooltip_reversed_original">Cancelled. No longer counted in cash or profit.</string>
     <string name="tooltip_mode_actual">Actual book: transactions that really happened.</string>
     <string name="tooltip_mode_plan">Plan book: plans, budget and assumptions. It does not change real cash.</string>
     <string name="tooltip_feasibility_status">From the B/C ratio: feasible when revenue covers every cost (B/C of 1 or more).</string>
@@ -628,7 +624,7 @@
     <string name="tour2_home_record_title">Record money in and out</string>
     <string name="tour2_home_record_desc">Tap this button, then pick income or expense. One record for each event.</string>
     <string name="tour2_entry_list_title">All records</string>
-    <string name="tour2_entry_list_desc">Every record of money in and out, newest first. A wrong record is reversed, not silently erased.</string>
+    <string name="tour2_entry_list_desc">Every record of money in and out, newest first. A wrong record can be edited or deleted from its card.</string>
     <string name="tour2_entry_record_desc">Tap to record a new transaction.</string>
     <string name="tour2_form_kind_title">In or out</string>
     <string name="tour2_form_kind_desc">First choose: money coming into the business, or going out.</string>
@@ -695,8 +691,8 @@
     <string name="help_record_capital_body">These three are neither income nor cost, so they do not change profit. The category tells them apart: “Setoran Modal Pemilik” (capital), “Ambil untuk Pribadi (Prive)” (withdrawal) and “Beli Peralatan &amp; Aset” (equipment).</string>
     <string name="help_record_capital_steps">Personal money put into the business: money in, category “Setoran Modal Pemilik”.\nBusiness money used for personal needs: money out, category “Ambil untuk Pribadi (Prive)”.\nBuying equipment used for years: money out, category “Beli Peralatan &amp; Aset”, then fill in its useful life in months.</string>
     <string name="help_record_fix_title">Fixing a wrong record</string>
-    <string name="help_record_fix_body">A saved record is never changed silently. A wrong record is reversed: the app adds a reversing record that cancels its amount, and the original stays visible. Then record the correct one.</string>
-    <string name="help_record_fix_steps">Open Records and find the wrong record.\nTap the Reverse Record icon on its card, give a reason, then confirm.\nRecord the transaction again with the correct amount.</string>
+    <string name="help_record_fix_body">Every record card has two buttons: Edit (pencil icon) and Delete (bin icon). Edit opens the form already filled in; once saved, the old record is replaced by the correct one. Delete removes the record for good.</string>
+    <string name="help_record_fix_steps">Open Records and find the wrong record.\nTap Edit on its card. The form opens with that record filled in.\nFix the amount, date, category or description, then tap Save.\nA record that should not exist at all: tap Delete, then confirm.</string>
     <string name="help_plan_create_title">Building a business plan</string>
     <string name="help_plan_create_body">The business plan lives in Records when Plan is selected. From it the app calculates the break-even point, profit per month and the capital you need.</string>
     <string name="help_plan_create_steps">Choose Plan at the top, then open Records.\nSet the plan period, for example 12 months.\nAdd products with price, monthly target and cost recipe.\nAdd monthly fixed costs, other costs, assets and capital.\nCheck the Feasibility card at the top for the result.</string>
@@ -733,9 +729,9 @@
     <string name="help_data_import_title">Importing from the Excel template</string>
     <string name="help_data_import_body">Mankeu only reads its own template. The content is added to the selected unit after you see a preview. New categories are created, and items and products whose names already exist are skipped.</string>
     <string name="help_data_import_steps">In Files and Data, export the Template and fill it in Excel.\nSelect the target unit, then tap Choose an .xlsx file.\nCheck the preview: row count, money in and out, new categories and warnings.\nTap Approve and import.</string>
-    <string name="help_data_reverse_title">Undoing an import</string>
-    <string name="help_data_reverse_body">Every import is one batch. Reversing it cancels all its transactions, archives its plan lines, removes the products and stock it added, and clears the plan period it filled in.</string>
-    <string name="help_data_reverse_steps">Open Files and Data, the import history section.\nTap Undo import on the wrong file, then confirm.\nThe history stays, marked as reversed.</string>
+    <string name="help_data_undo_title">Undoing an import</string>
+    <string name="help_data_undo_body">Every import is listed in the history. Undoing it deletes all the transactions it added, archives its plan lines, removes the products and stock it added, and clears the plan period it filled in.</string>
+    <string name="help_data_undo_steps">Open Files and Data, the import history section.\nTap Undo import on the wrong file, then confirm.\nThe history stays, marked as undone.</string>
     <string name="help_data_backup_title">Encrypted backup and Google Drive</string>
     <string name="help_data_backup_body">A backup stores all data on this phone in one file locked with your password. The app does not keep the password, so write it down somewhere safe. Backups can be stored on the phone or in your own Google Drive.</string>
     <string name="help_data_backup_steps">Open Files and Data, then tap Encrypted backup.\nChoose a password of at least 8 characters.\nSave the file on the phone, or choose Google Drive after signing in with Google in Settings.</string>

@@ -1,5 +1,6 @@
 package com.mankeu.presentation.screens
 
+import com.mankeu.domain.MoneyEvent
 import androidx.compose.foundation.layout.Box
 import com.mankeu.presentation.guide.rememberSheetTour
 import com.mankeu.presentation.guide.SheetTour
@@ -152,9 +153,8 @@ fun EntryScreen(
     state: AppUiState,
     onRecord: (
         FinancialEventType, Long, String, String?, String, LocalDate, String?, String?, String?, Long?, String?,
-        CostNature?, String?, Int?,
+        CostNature?, String?, Int?, String?,
     ) -> Unit,
-    onReverse: (String, String) -> Unit,
     onDelete: (String) -> Unit,
     onOpenData: () -> Unit,
     isSaving: Boolean = false,
@@ -196,6 +196,31 @@ fun EntryScreen(
     // nol" immediately after a save that had in fact worked. Observed with three synthetic taps
     // fired inside one frame.
     var justSaved by rememberSaveable { mutableStateOf(false) }
+    // The record being corrected with Ubah; null when the form records a new one.
+    var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    /** Opens the form on [event], filled in, so saving corrects it in place (DEC-019). */
+    fun startEdit(event: MoneyEvent) {
+        editingId = event.id
+        selected = if (BusinessWords.isIncoming(event.type)) FinancialEventType.CASH_INCOME else FinancialEventType.CASH_EXPENSE
+        amount = event.amountRupiah.toString()
+        description = event.description
+        date = event.date.toString()
+        categoryId = event.categoryId
+        reference = event.reference.orEmpty()
+        quantity = event.quantityText.orEmpty()
+        unit = event.unit.orEmpty()
+        unitPrice = event.unitPriceRupiah?.toString().orEmpty()
+        budgetItemId = event.budgetItemId
+        productId = event.productId
+        costNature = event.costNature?.name
+        usefulLife = (event.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS).toString()
+        advanced = quantity.isNotBlank() || unit.isNotBlank() || unitPrice.isNotBlank() || reference.isNotBlank()
+        isAutoCalculated = false
+        isUnitPriceAutoDerived = false
+        localError = null
+        justSaved = false
+    }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val sheetScope = rememberCoroutineScope()
@@ -242,6 +267,7 @@ fun EntryScreen(
     // Consumed immediately so returning to Catat later does not reopen the form on its own.
     LaunchedEffect(requestedKind) {
         requestedKind?.let {
+            editingId = null
             selected = it
             localError = null
             justSaved = false
@@ -249,13 +275,12 @@ fun EntryScreen(
         }
     }
 
-    val eventsById = remember(state.events) { state.events.associateBy { it.id } }
     val visibleEvents = state.events.filter { event ->
         val matchesText = search.isBlank() ||
             listOf(event.description, event.category, event.reference)
                 .filterNotNull()
                 .any { it.contains(search, ignoreCase = true) }
-        val incoming = BusinessWords.isIncoming(event, event.reversesEventId?.let(eventsById::get))
+        val incoming = BusinessWords.isIncoming(event.type)
         matchesText && when (direction) {
             "IN" -> incoming == true
             "OUT" -> incoming == false
@@ -349,6 +374,7 @@ fun EntryScreen(
                     action = stringResource(R.string.home_empty_action),
                     learn = HelpArticle.RECORD_INCOME,
                     onAction = {
+                        editingId = null
                         selected = FinancialEventType.CASH_INCOME
                         localError = null
                         justSaved = false
@@ -367,9 +393,8 @@ fun EntryScreen(
                 items(visibleEvents, key = { it.id }) { event ->
                     EventCard(
                         event = event,
-                        onReverse = onReverse,
+                        onEdit = { startEdit(it) },
                         onDelete = onDelete,
-                        reversedSource = event.reversesEventId?.let(eventsById::get),
                     )
                 }
                 if (state.eventCount > state.events.size) {
@@ -451,6 +476,9 @@ fun EntryScreen(
                         Text(stringResource(kind.labelRes), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         Text(stringResource(kind.helperRes), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+                if (editingId != null) {
+                    Text(stringResource(R.string.entry_editing), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
                 MoneyField(
                     label = stringResource(R.string.entry_amount),
@@ -857,7 +885,9 @@ fun EntryScreen(
                                 CostNature.entries.firstOrNull { it.name == costNature }.takeIf { selectedRole == CategoryRole.EXPENSE },
                                 productId.takeIf { incoming && selectedRole == CategoryRole.REVENUE },
                                 usefulLife.toIntOrNull().takeIf { selectedRole == CategoryRole.ASSET },
+                                editingId,
                             )
+                            editingId = null
                             amount = ""
                             description = ""
                             reference = ""

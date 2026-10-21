@@ -93,11 +93,11 @@
     <string name="entry_new_category_save">Simpan Kategori</string>
 
     <string name="action_delete_event">Hapus</string>
-    <string name="action_reverse_event">Balik Transaksi</string>
+    <string name="action_edit_event">Ubah catatan</string>
+    <string name="msg_event_updated">Catatan diperbarui.</string>
+    <string name="entry_editing">Mengubah catatan yang sudah ada. Simpan untuk mengganti isinya.</string>
     <string name="dialog_delete_event_title">Hapus Catatan Transaksi?</string>
-    <string name="dialog_delete_event_body">Transaksi ini akan dihapus secara permanen dari basis data dan tidak dapat dikembalikan. Jika Anda ingin mempertahankan riwayat pembukuan, gunakan opsi \'Balik Transaksi\'.</string>
-    <string name="dialog_reverse_event_title">Balik / Koreksi Transaksi</string>
-    <string name="dialog_reverse_event_body">Sistem akan membuat jurnal pembalik baru untuk menetralkan nominal transaksi ini tanpa menghapus riwayat audit aslinya.</string>
+    <string name="dialog_delete_event_body">Catatan ini akan dihapus permanen dan tidak bisa dikembalikan. Untuk memperbaiki nominal, tanggal, atau kategori, pakai Ubah.</string>
     <string name="msg_event_deleted">Catatan transaksi berhasil dihapus.</string>
 
     <!-- Laporan / Reports -->
@@ -228,7 +228,7 @@
     <string name="data_rename_business">Ubah nama usaha</string>
     <string name="data_master_count">%1$d kategori aktif</string>
     <string name="data_import_history">Riwayat pengambilan</string>
-    <string name="data_import_history_sub">Sekali ambil bisa dibatalkan tanpa menghapus catatan aslinya.</string>
+    <string name="data_import_history_sub">Impor bisa dibatalkan: catatan yang ditambahkannya dihapus, riwayat impornya tetap tercatat.</string>
     <string name="data_export_title">Ekspor dan cadangan</string>
     <string name="data_export_sub">Excel, PDF offline, dan cadangan terenkripsi memakai pemilih file Android; data tidak dikirim diam-diam.</string>
     <string name="data_export_excel">Excel</string>
@@ -265,9 +265,14 @@
     <string name="master_archive">Arsipkan %1$s</string>
     <string name="action_done">Selesai</string>
     <string name="batch_summary">%1$d catatan • %2$s • %3$s</string>
-    <string name="batch_reverse">Balik batch</string>
-    <string name="batch_reverse_title">Balik seluruh batch impor?</string>
-    <string name="batch_reverse_body">%1$d catatan dari %2$s akan dinetralkan dengan jurnal pembalik. Riwayat dan bukti impor tetap ada.</string>
+    <string name="msg_batch_undo_failed">Impor tidak dapat dibatalkan.</string>
+    <string name="msg_batch_undone_period">Impor dibatalkan: %1$d catatan dihapus. Periode rencana yang diisi impor ini dikosongkan kembali.</string>
+    <string name="msg_batch_undone">Impor dibatalkan: %1$d catatan dihapus.</string>
+    <string name="batch_state_undone">dibatalkan</string>
+    <string name="batch_state_committed">aktif</string>
+    <string name="batch_undo_body">%1$d catatan dari %2$s akan dihapus. Riwayat impor ini tetap tercatat.</string>
+    <string name="batch_undo_title">Batalkan seluruh impor ini?</string>
+    <string name="batch_undo">Batalkan impor</string>
     <string name="backup_title">Cadangan terenkripsi</string>
     <string name="backup_create_title">Buat cadangan</string>
     <string name="backup_restore_title">Pulihkan cadangan</string>
@@ -299,8 +304,6 @@
     <string name="restore_confirm">Pulihkan sekarang</string>
     <string name="action_back_step">Kembali</string>
 
-    <string name="event_reversed_badge">DIBALIK</string>
-    <string name="event_reverse_reason">Pembalikan: %1$s</string>
     <string name="compare_plan">Proyeksi %1$s</string>
     <string name="compare_actual">Realisasi %1$s</string>
     <string name="compare_delta">Selisih %1$s</string>
@@ -323,12 +326,7 @@
     <string name="msg_category_archive_failed">Kategori tidak dapat diarsipkan.</string>
     <string name="msg_event_saved">Transaksi tersimpan; jurnal debit dan kredit seimbang.</string>
     <string name="msg_event_save_failed">Transaksi tidak dapat disimpan.</string>
-    <string name="msg_event_reversed">Transaksi dibalik; catatan sumber dan jejak audit tetap tersimpan.</string>
-    <string name="msg_event_reverse_failed">Transaksi tidak dapat dibalik.</string>
-    <string name="msg_batch_reversed">Batch impor dibalik: %1$d baris dinetralkan tanpa menghapus jejak.</string>
     <string name="batch_money_in_out">masuk %1$s · keluar %2$s</string>
-    <string name="msg_batch_reversed_period">Batch impor dibalik: %1$d baris dinetralkan tanpa menghapus jejak. Periode rencana yang diisi impor ini dikosongkan kembali.</string>
-    <string name="msg_batch_reverse_failed">Batch impor tidak dapat dibalik.</string>
     <string name="msg_import_failed">Workbook tidak dapat diproses.</string>
     <string name="msg_import_commit_failed">Impor gagal dengan aman.</string>
     <string name="work_building_workbook">Menyusun workbook…</string>
@@ -436,8 +434,6 @@
     <string name="reports_working_capital_note">Selisih yang harus ditutup dengan modal sendiri, dihitung dari arus kas operasi dan investasi.</string>
 
     <!-- Catatan -->
-    <string name="tooltip_reversal_entry">Jurnal pembalik. Mengembalikan uang dari transaksi yang dibatalkan, jadi pasangan ini tidak lagi mengubah saldo.</string>
-    <string name="tooltip_reversed_original">Sudah dibatalkan. Tidak lagi dihitung dalam kas maupun laba.</string>
     <string name="tooltip_mode_actual">Buku Realisasi: transaksi yang benar-benar terjadi.</string>
     <string name="tooltip_mode_plan">Buku Proyeksi: rencana, RAB, dan asumsi. Tidak mengubah uang kas nyata.</string>
     <string name="tooltip_feasibility_status">Status kelayakan usaha: R/C 1,00 atau lebih dan B/C di atas 0,00 menandakan usaha menguntungkan.</string>
@@ -631,7 +627,7 @@
     <string name="tour2_home_record_title">Catat uang masuk dan keluar</string>
     <string name="tour2_home_record_desc">Ketuk tombol ini lalu pilih Pemasukan atau Pengeluaran. Satu catatan untuk satu kejadian.</string>
     <string name="tour2_entry_list_title">Semua catatan</string>
-    <string name="tour2_entry_list_desc">Daftar semua uang masuk dan keluar, terbaru di atas. Catatan yang salah dibalik, bukan dihapus diam-diam.</string>
+    <string name="tour2_entry_list_desc">Daftar semua uang masuk dan keluar, terbaru di atas. Catatan yang salah bisa diubah atau dihapus dari kartunya.</string>
     <string name="tour2_entry_record_desc">Ketuk untuk mencatat transaksi baru.</string>
     <string name="tour2_form_kind_title">Masuk atau keluar</string>
     <string name="tour2_form_kind_desc">Pilih dulu: uang masuk ke usaha, atau uang keluar dari usaha.</string>
@@ -664,7 +660,7 @@
     <string name="tour2_data_import_title">Impor dari Excel</string>
     <string name="tour2_data_import_desc">Isi template Mankeu di Excel, lalu pilih berkasnya. Kamu melihat pratinjau dulu sebelum apa pun berubah.</string>
     <string name="tour2_data_history_title">Riwayat impor</string>
-    <string name="tour2_data_history_desc">Setiap impor bisa dibalik di sini jika ternyata salah berkas.</string>
+    <string name="tour2_data_history_desc">Setiap impor bisa dibatalkan di sini jika ternyata salah berkas.</string>
     <string name="tour2_data_export_title">Ekspor</string>
     <string name="tour2_data_export_desc">Simpan data unit ini ke Excel, laporan ke PDF, atau unduh template kosong.</string>
     <string name="tour2_data_backup_title">Cadangan</string>
@@ -698,8 +694,8 @@
     <string name="help_record_capital_body">Tiga jenis uang ini bukan pendapatan dan bukan biaya, jadi tidak mengubah laba. Kategorinya yang membedakan: Setoran Modal Pemilik, Ambil untuk Pribadi (Prive), dan Beli Peralatan &amp; Aset.</string>
     <string name="help_record_capital_steps">Uang pribadi yang dimasukkan ke usaha: Pemasukan, kategori Setoran Modal Pemilik.\nUang usaha yang dipakai untuk keperluan pribadi: Pengeluaran, kategori Ambil untuk Pribadi (Prive).\nMembeli alat yang dipakai bertahun-tahun: Pengeluaran, kategori Beli Peralatan &amp; Aset, lalu isi umur pakainya dalam bulan.</string>
     <string name="help_record_fix_title">Memperbaiki catatan yang salah</string>
-    <string name="help_record_fix_body">Catatan yang sudah tersimpan tidak diubah diam-diam. Catatan salah dibalik: aplikasi membuat catatan pembalik yang menetralkan jumlahnya, dan jejak aslinya tetap ada. Setelah itu catat ulang yang benar.</string>
-    <string name="help_record_fix_steps">Buka Catatan dan cari catatan yang salah.\nKetuk ikon Balik Transaksi pada kartunya, tulis alasannya, lalu konfirmasi.\nCatat ulang transaksi dengan jumlah yang benar.</string>
+    <string name="help_record_fix_body">Setiap kartu catatan punya dua tombol: Ubah (ikon pensil) dan Hapus (ikon tempat sampah). Ubah membuka formulir yang sudah terisi; setelah disimpan, catatan lama diganti dengan yang benar. Hapus membuang catatan itu untuk selamanya.</string>
+    <string name="help_record_fix_steps">Buka Catatan dan cari catatan yang salah.\nKetuk Ubah pada kartunya. Formulir terbuka dengan isi catatan itu.\nPerbaiki nominal, tanggal, kategori, atau keterangannya, lalu ketuk Simpan.\nCatatan yang sama sekali tidak perlu: ketuk Hapus, lalu konfirmasi.</string>
     <string name="help_plan_create_title">Membuat Rencana Usaha</string>
     <string name="help_plan_create_body">Rencana Usaha ada di Catatan saat Proyeksi dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.</string>
     <string name="help_plan_create_steps">Pilih Proyeksi di bagian atas, lalu buka Catatan.\nAtur periode rencana, misalnya 12 bulan.\nTambahkan produk dengan harga, target per bulan, dan resep biayanya.\nTambahkan biaya tetap bulanan, biaya lain, aset, dan setoran modal.\nLihat kartu Kelayakan di atas untuk hasilnya.</string>
@@ -736,9 +732,9 @@
     <string name="help_data_import_title">Impor dari template Excel</string>
     <string name="help_data_import_body">Mankeu hanya membaca template-nya sendiri. Isinya ditambahkan ke unit yang sedang dipilih setelah kamu melihat pratinjau. Kategori baru dibuat otomatis, barang dan produk yang namanya sudah ada dilewati.</string>
     <string name="help_data_import_steps">Di Berkas dan Data, ekspor Template lalu isi di Excel.\nPilih unit tujuan, lalu ketuk Pilih file .xlsx.\nPeriksa pratinjau: jumlah baris, uang masuk dan keluar, kategori baru, dan peringatan.\nKetuk Setujui dan impor.</string>
-    <string name="help_data_reverse_title">Membatalkan impor</string>
-    <string name="help_data_reverse_body">Setiap impor tercatat sebagai satu batch. Membalik batch menetralkan semua transaksinya, mengarsipkan baris rencananya, menghapus produk dan stok yang ditambahkan, dan mengosongkan periode rencana yang diisinya.</string>
-    <string name="help_data_reverse_steps">Buka Berkas dan Data, bagian Riwayat pengambilan.\nKetuk Balik batch pada berkas yang salah, lalu konfirmasi.\nRiwayatnya tetap ada dengan status dibalik.</string>
+    <string name="help_data_undo_title">Membatalkan impor</string>
+    <string name="help_data_undo_body">Setiap impor tercatat di riwayat. Membatalkannya menghapus semua transaksi yang ditambahkan impor itu, mengarsipkan baris rencananya, menghapus produk dan stok yang ditambahkan, dan mengosongkan periode rencana yang diisinya.</string>
+    <string name="help_data_undo_steps">Buka Berkas dan Data, bagian Riwayat pengambilan.\nKetuk Batalkan impor pada berkas yang salah, lalu konfirmasi.\nRiwayatnya tetap ada dengan status dibatalkan.</string>
     <string name="help_data_backup_title">Cadangan terenkripsi dan Google Drive</string>
     <string name="help_data_backup_body">Cadangan menyimpan seluruh data di HP ini dalam satu berkas yang dikunci kata sandimu. Kata sandi tidak disimpan aplikasi, jadi catat di tempat aman. Cadangan bisa disimpan di HP atau di Google Drive pribadimu.</string>
     <string name="help_data_backup_steps">Buka Berkas dan Data, lalu ketuk Cadangan terenkripsi.\nBuat kata sandi minimal 8 karakter.\nSimpan berkasnya di HP, atau pilih Google Drive setelah masuk akun Google di Pengaturan.</string>

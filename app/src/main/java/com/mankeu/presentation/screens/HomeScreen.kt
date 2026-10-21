@@ -82,7 +82,6 @@ import com.mankeu.R
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
-import com.mankeu.domain.RecordStatus
 import com.mankeu.presentation.AppUiState
 import com.mankeu.presentation.Destination
 import com.mankeu.presentation.LocalMankeuSemanticColors
@@ -113,7 +112,6 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     state: AppUiState,
     onNavigate: (Destination) -> Unit,
-    onReverse: (String, String) -> Unit,
     onOpenData: () -> Unit,
     onOpenPlan: () -> Unit = {},
     expanded: Boolean = false,
@@ -452,8 +450,7 @@ private fun ExpenseDistributionCard(
     val palette = LocalMankeuSemanticColors.current.chart
     val expenseCategories = remember(state.categoryTotals, state.budgetItems, state.selectedBookMode, otherLabel, palette) {
         val categoryExpenses = mutableMapOf<String, Long>()
-        // Summed by the database (`observeCategoryTotals`), which applies the same POSTED and
-        // not-reversed filter `ReportCalculator` uses. Doing it here meant holding every event in
+        // Summed by the database (`observeCategoryTotals`). Doing it here meant holding every event in
         // memory to add up a dozen slices, and it silently went wrong the moment the event list
         // was capped for display.
         state.categoryTotals.forEach { row ->

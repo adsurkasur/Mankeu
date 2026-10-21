@@ -38,7 +38,7 @@ Do not collapse these labels into `done`.
 - projection/realization independence;
 - receivable/payable partial settlement and overdue derivation;
 - report totals equal contributing canonical postings;
-- duplicate and reversal behavior;
+- duplicate and undo behavior;
 - property tests for invariants such as debit equals credit and remaining obligation never becomes negative.
 
 ### Golden workbook tests
@@ -61,7 +61,7 @@ If the real workbook cannot be distributed in a public or shared test environmen
 - schema migration from every publicly released version;
 - downgrade/unsupported-version behavior;
 - backup checksum, encryption, restore, and failure recovery;
-- import-batch reversal after later unrelated edits;
+- import-batch undo after later edits to its rows;
 - process death and storage exhaustion at critical points.
 
 ### UI and accessibility tests
@@ -96,7 +96,7 @@ If the real workbook cannot be distributed in a public or shared test environmen
 
 - source variants and precedence stated;
 - mutation class and provenance tested;
-- preview, atomic commit, duplicate behavior, and reversal tested;
+- preview, atomic commit, duplicate behavior, and undo tested;
 - golden fixture passes;
 - user-visible notice/error content reviewed.
 

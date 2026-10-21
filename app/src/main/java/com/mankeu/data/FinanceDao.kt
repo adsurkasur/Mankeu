@@ -21,7 +21,6 @@ data class CashFlowRow(
     val type: String,
     val cashFlowRole: String,
     val amountRupiah: Long,
-    val reversesEventId: String?,
 )
 
 /** One slice of the cost-composition chart, summed by the database rather than in memory. */
@@ -180,7 +179,7 @@ interface FinanceDao {
 
     @Query(
         """
-        SELECT id, dateEpochDay, type, cashFlowRole, amountRupiah, reversesEventId
+        SELECT id, dateEpochDay, type, cashFlowRole, amountRupiah
         FROM financial_events
         WHERE bookId = :bookId
         ORDER BY dateEpochDay, createdAtEpochMillis
@@ -189,8 +188,7 @@ interface FinanceDao {
     fun observeCashFlowRows(bookId: String): Flow<List<CashFlowRow>>
 
     /**
-     * Expense totals per category, excluding reversed rows exactly as `ReportCalculator` does.
-     * Grouping in SQL keeps the chart correct on a book of any size without loading it.
+     * Expense totals per category. Grouping in SQL keeps the chart correct on a book of any size without loading it.
      */
     @Query(
         """
@@ -198,8 +196,6 @@ interface FinanceDao {
         FROM financial_events
         WHERE bookId = :bookId
           AND type = 'CASH_EXPENSE'
-          AND status = 'POSTED'
-          AND reversedByEventId IS NULL
         GROUP BY category
         HAVING SUM(amountRupiah) > 0
         ORDER BY totalRupiah DESC
@@ -216,14 +212,8 @@ interface FinanceDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertEvent(event: FinancialEventEntity)
 
-    @Query("UPDATE financial_events SET status = 'REVERSED', reversedByEventId = :reversalEventId WHERE id = :eventId AND reversedByEventId IS NULL")
-    suspend fun markEventReversed(eventId: String, reversalEventId: String): Int
-
     @Query("DELETE FROM financial_events WHERE id = :id")
     suspend fun deleteEvent(id: String)
-
-    @Query("UPDATE financial_events SET status = 'POSTED', reversedByEventId = NULL WHERE reversedByEventId = :id")
-    suspend fun clearReversalReference(id: String)
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertJournal(entry: JournalEntryEntity)
@@ -305,9 +295,8 @@ interface FinanceDao {
     suspend fun setCategoryCostNature(id: String, costNature: String?)
 
     /**
-     * Posted, unreversed cash rows of a book with what BEP needs: the effective cost nature
-     * (line override, else category), product and units, and asset life. Reversals cancel their
-     * originals, so neither is returned.
+     * Cash rows of a book with what BEP needs: the effective cost nature (line override, else
+     * category), product and units, and asset life.
      */
     @Query(
         """
@@ -316,7 +305,7 @@ interface FinanceDao {
                e.productId, e.quantityText, e.usefulLifeMonths
         FROM financial_events e
         LEFT JOIN categories c ON c.id = e.categoryId
-        WHERE e.bookId = :bookId AND e.status = 'POSTED' AND e.reversedByEventId IS NULL AND e.type != 'REVERSAL'
+        WHERE e.bookId = :bookId
         ORDER BY e.dateEpochDay
         """,
     )
@@ -331,8 +320,8 @@ interface FinanceDao {
     @Query("SELECT * FROM import_batches WHERE projectId = :projectId ORDER BY committedAtEpochMillis DESC")
     fun observeImportBatches(projectId: String): Flow<List<ImportBatchEntity>>
 
-    @Query("SELECT * FROM financial_events WHERE importBatchId = :batchId AND status = 'POSTED' AND reversedByEventId IS NULL ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
-    suspend fun getActiveEventsForImportBatch(batchId: String): List<FinancialEventEntity>
+    @Query("DELETE FROM financial_events WHERE importBatchId = :batchId")
+    suspend fun deleteEventsForImportBatch(batchId: String): Int
 
     @Query("SELECT n.* FROM import_notices n INNER JOIN import_batches b ON b.id = n.batchId WHERE b.projectId = :projectId ORDER BY n.createdAtEpochMillis")
     suspend fun getImportNotices(projectId: String): List<ImportNoticeEntity>

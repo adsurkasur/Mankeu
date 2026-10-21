@@ -11,7 +11,6 @@ enum class FinancialEventType {
     OWNER_CAPITAL,
     OWNER_DRAWING,
     ASSET_PURCHASE_CASH,
-    REVERSAL,
 }
 
 enum class PostingSide { DEBIT, CREDIT }
@@ -55,8 +54,6 @@ enum class CategoryRole {
     }
 }
 
-enum class RecordStatus { POSTED, REVERSED }
-
 data class MoneyEvent(
     val id: String,
     val businessId: String,
@@ -75,9 +72,6 @@ data class MoneyEvent(
     val budgetItemId: String? = null,
     val importBatchId: String? = null,
     val cashFlowRole: CashFlowRole = defaultCashFlowRole(type),
-    val status: RecordStatus = RecordStatus.POSTED,
-    val reversesEventId: String? = null,
-    val reversedByEventId: String? = null,
     val costNature: CostNature? = null,
     val productId: String? = null,
     val usefulLifeMonths: Int? = null,
@@ -96,10 +90,8 @@ data class MoneyEvent(
             -> CashFlowRole.FINANCING
 
             FinancialEventType.ASSET_PURCHASE_CASH -> CashFlowRole.INVESTING
-            // A reversal always copies its original's role; this default is never used.
             FinancialEventType.CASH_INCOME,
             FinancialEventType.CASH_EXPENSE,
-            FinancialEventType.REVERSAL,
             -> CashFlowRole.OPERATING
         }
     }
@@ -117,7 +109,6 @@ data class JournalEntry(
     val date: LocalDate,
     val description: String,
     val postings: List<Posting>,
-    val reversalOfJournalId: String? = null,
 ) {
     fun requireBalanced(): JournalEntry {
         val debit = postings.filter { it.side == PostingSide.DEBIT }.sumOf { it.amountRupiah }

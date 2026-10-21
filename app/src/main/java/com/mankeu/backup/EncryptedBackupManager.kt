@@ -1,6 +1,7 @@
 package com.mankeu.backup
 
 import com.mankeu.data.LegacyPlanConversion
+import com.mankeu.data.ReversalCleanup
 import com.mankeu.data.StrictCashCleanup
 import com.mankeu.sync.SyncSchema
 import android.content.ContentValues
@@ -282,6 +283,9 @@ class EncryptedBackupManager(
                     }
                 }
             }
+            if (prepared.snapshot.schemaVersion < NO_REVERSAL_SCHEMA) {
+                ReversalCleanup.delete(writable, reversalPairIds(prepared.snapshot), source = "Pemulihan cadangan skema ${prepared.snapshot.schemaVersion}")
+            }
             if (prepared.snapshot.schemaVersion < STRICT_CASH_SCHEMA) {
                 StrictCashCleanup.run(writable, source = "Pemulihan cadangan skema ${prepared.snapshot.schemaVersion}")
             }
@@ -307,6 +311,17 @@ class EncryptedBackupManager(
             RestoreResult(TABLES.size, rowCount, recoveryCreated = true)
             }
         }
+    }
+
+    /** Reversal rows and the originals they undid; their columns are gone from schema 11 on. */
+    private fun reversalPairIds(snapshot: PortableBackup): List<String> {
+        val table = snapshot.tables.firstOrNull { it.name == "financial_events" } ?: return emptyList()
+        fun at(column: String) = table.columns.indexOf(column)
+        val (id, type, reversedBy) = Triple(at("id"), at("type"), at("reversedByEventId"))
+        if (id < 0 || type < 0) return emptyList()
+        return table.rows.filter { row ->
+            (row[type] as? BackupValue.Text)?.value == "REVERSAL" || (reversedBy >= 0 && row[reversedBy] != BackupValue.Null)
+        }.mapNotNull { (it[id] as? BackupValue.Text)?.value }
     }
 
     fun hasLatestRecovery(): Boolean = recoveryFile.isFile && recoveryFile.length() > 0
@@ -396,7 +411,8 @@ class EncryptedBackupManager(
          * 4→5 un-uniqued an index; 5→6 added nullable CVP columns and `stock_*`; 6→7 dropped
          * `obligations`/`settlements`), so an older snapshot restores by leaving out what no longer
          * exists and leaving new tables empty. 7→8 also purged non-cash rows; a pre-8 snapshot gets
-         * the same [StrictCashCleanup] after it is restored. A migration that adds or
+         * the same [StrictCashCleanup] after it is restored. 10→11 dropped the reversal columns after
+         * deleting reversal pairs; a pre-11 snapshot gets the same [ReversalCleanup]. A migration that adds or
          * reshapes a column must raise this, or transform the snapshot the way the migration does.
          */
         const val OLDEST_RESTORABLE_SCHEMA = 3
@@ -404,6 +420,7 @@ class EncryptedBackupManager(
         val STOCK_TABLES = setOf("stock_items", "stock_movements")
         const val STRICT_CASH_SCHEMA = 8
         const val PLAN_SCHEMA = 9
+        const val NO_REVERSAL_SCHEMA = 11
         val PLAN_TABLES = setOf("products", "product_cost_components")
         val TABLES = AppDatabase.DATA_TABLES
     }

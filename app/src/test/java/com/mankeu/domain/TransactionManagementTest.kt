@@ -10,7 +10,7 @@ import java.time.LocalDate
 class TransactionManagementTest {
 
     @Test
-    fun `reversal policy creates correct offsetting entries`() {
+    fun `expense journal balances at the exact amount`() {
         val originalEvent = MoneyEvent(
             id = "test-expense",
             businessId = "biz-1",

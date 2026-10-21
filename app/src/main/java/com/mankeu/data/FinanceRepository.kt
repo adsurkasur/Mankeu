@@ -22,7 +22,6 @@ import com.mankeu.domain.Posting
 import com.mankeu.domain.PostedRecord
 import com.mankeu.domain.PostingSide
 import com.mankeu.domain.PostingReportCalculator
-import com.mankeu.domain.RecordStatus
 import com.mankeu.domain.RecordStockMovementUseCase
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockItemEntity
@@ -145,7 +144,6 @@ class FinanceRepository(private val database: AppDatabase) {
                     type = FinancialEventType.valueOf(row.type),
                     cashFlowRole = CashFlowRole.valueOf(row.cashFlowRole),
                     amountRupiah = row.amountRupiah,
-                    reversesEventId = row.reversesEventId,
                 )
             }
         }
@@ -530,10 +528,27 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 
     suspend fun recordEvent(draft: EventDraft): String = database.withTransaction {
+        requireValid(draft)
+        val event = draft.toEvent()
+        insertEventWithJournal(event)
+        event.id
+    }
+
+    /**
+     * Corrects a recorded transaction in place (DEC-019): the same id, import batch and creation
+     * time, with a journal rebuilt from the corrected values. Only the journal references an
+     * event, and it cascades, so this is one atomic swap.
+     */
+    suspend fun updateEvent(eventId: String, draft: EventDraft) = database.withTransaction {
+        val old = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
+        requireValid(draft)
+        val event = draft.copy(importBatchId = old.importBatchId).toEvent().copy(id = old.id)
+        dao.deleteEvent(old.id)
+        insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis = old.createdAtEpochMillis)
+    }
+
+    private suspend fun requireValid(draft: EventDraft) {
         require(draft.amountRupiah > 0) { "Nominal harus lebih dari nol." }
-        require(draft.type != FinancialEventType.REVERSAL) {
-            "Pembalikan dicatat lewat alurnya sendiri, bukan sebagai transaksi baru."
-        }
         val book = dao.getBookById(draft.bookId) ?: error("Buku keuangan tidak ditemukan.")
         val project = dao.getProject(draft.projectId) ?: error("Proyek tidak ditemukan.")
         require(book.projectId == project.id && project.businessId == draft.businessId) {
@@ -543,9 +558,6 @@ class FinanceRepository(private val database: AppDatabase) {
             val category = dao.getCategory(draft.categoryId) ?: error("Kategori tidak ditemukan.")
             require(category.businessId == draft.businessId) { "Kategori berasal dari usaha yang berbeda." }
         }
-        val event = draft.toEvent()
-        insertEventWithJournal(event)
-        event.id
     }
 
     fun stockItems(businessId: String, projectId: String?): Flow<List<StockItem>> =
@@ -603,61 +615,10 @@ class FinanceRepository(private val database: AppDatabase) {
         RecordStockMovementUseCase(stockDao).execute(stockItemId, type, quantity, date, notes).getOrThrow()
     }
 
-    suspend fun reverseEvent(eventId: String, date: LocalDate, reason: String): String = database.withTransaction {
-        val originalEntity = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
-        require(originalEntity.status == RecordStatus.POSTED.name && originalEntity.reversedByEventId == null) {
-            "Transaksi sudah dibalik."
-        }
-        require(originalEntity.type != FinancialEventType.REVERSAL.name) {
-            "Pembalikan tidak bisa dibalik lagi. Hapus pembalikan itu untuk memulihkan transaksi aslinya."
-        }
-        val originalJournalEntity = dao.getJournalForEvent(eventId) ?: error("Jurnal sumber tidak ditemukan.")
-        val originalPostings = dao.getPostings(originalJournalEntity.id)
-        require(originalPostings.isNotEmpty()) { "Posting sumber tidak ditemukan." }
-
-        val reversalId = UUID.randomUUID().toString()
-        val reversalEvent = MoneyEvent(
-            id = reversalId,
-            businessId = originalEntity.businessId,
-            projectId = originalEntity.projectId,
-            bookId = originalEntity.bookId,
-            type = FinancialEventType.REVERSAL,
-            amountRupiah = originalEntity.amountRupiah,
-            date = date,
-            description = reason.trim().ifBlank { "Pembalikan: ${originalEntity.description}" },
-            category = originalEntity.category,
-            categoryId = originalEntity.categoryId,
-            cashFlowRole = CashFlowRole.valueOf(originalEntity.cashFlowRole),
-            reversesEventId = originalEntity.id,
-        )
-        val originalJournal = JournalEntry(
-            id = originalJournalEntity.id,
-            sourceEventId = originalJournalEntity.sourceEventId,
-            date = LocalDate.ofEpochDay(originalJournalEntity.dateEpochDay),
-            description = originalJournalEntity.description,
-            postings = originalPostings.map {
-                Posting(
-                    account = LedgerAccount.valueOf(it.account),
-                    side = PostingSide.valueOf(it.side),
-                    amountRupiah = it.amountRupiah,
-                )
-            },
-        )
-        val reversalJournal = LedgerPolicy.reversalFor(originalJournal, reversalEvent)
-        insertEventAndJournal(reversalEvent, reversalJournal)
-        check(dao.markEventReversed(originalEntity.id, reversalId) == 1) { "Transaksi berubah sebelum pembalikan disimpan." }
-        reversalId
-    }
-
     /**
-     * Hard deletes a transaction (D-042) without leaving the ledger inconsistent (D-077).
-     *
-     * Journal and postings follow by CASCADE.
+     * Hard deletes a transaction (D-042, DEC-019). Journal and postings follow by CASCADE.
      */
-    suspend fun deleteEvent(eventId: String) = database.withTransaction {
-        val event = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
-        event.reversesEventId?.let { dao.clearReversalReference(eventId) }
-        event.reversedByEventId?.let { dao.deleteEvent(it) }
+    suspend fun deleteEvent(eventId: String) {
         dao.deleteEvent(eventId)
     }
 
@@ -683,7 +644,7 @@ class FinanceRepository(private val database: AppDatabase) {
     /**
      * Commits a template import into the selected unit (DEC-012): transactions to Realisasi, RAB
      * lines to Proyeksi, products with recipes to the unit, stock items to the business. One transaction,
-     * one reversible batch, one notice saying what was added.
+     * one undoable batch, one notice saying what was added.
      */
     suspend fun commitImport(businessId: String, projectId: String, preview: WorkbookImportPreview): Int = database.withTransaction {
         require(preview.canCommit) { "Berkas impor belum bisa disimpan." }
@@ -900,18 +861,12 @@ class FinanceRepository(private val database: AppDatabase) {
         return CategoryPlan(existing, drafts.values.toList(), conflicts)
     }
 
-    suspend fun reverseImportBatch(batchId: String): ImportReversal = database.withTransaction {
-        val activeEvents = dao.getActiveEventsForImportBatch(batchId)
-        activeEvents.forEach { event ->
-            reverseEvent(
-                eventId = event.id,
-                date = LocalDate.now(),
-                reason = "Pembalikan batch impor $batchId: ${event.description}",
-            )
-        }
-        // Budget items have no journal to reverse, so they are archived instead. Without this the
-        // batch would only be half-reversible: the transactions would neutralise but the imported
-        // RAB lines would stay behind.
+    /**
+     * Undoes an import (DEC-019): its transactions are deleted (journals cascade), its plan lines
+     * archived, its stock and products removed. The batch row stays as history, marked undone.
+     */
+    suspend fun undoImportBatch(batchId: String): ImportUndo = database.withTransaction {
+        val deletedEvents = dao.deleteEventsForImportBatch(batchId)
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
         archivedBudgets.forEach { item -> dao.archiveBudgetItem(item.id, now) }
@@ -925,9 +880,9 @@ class FinanceRepository(private val database: AppDatabase) {
             }
         } ?: false
         check(dao.markImportBatchReversed(batchId, now) == 1) {
-            "Batch impor tidak aktif atau telah dibalik."
+            "Impor ini sudah dibatalkan."
         }
-        ImportReversal(activeEvents.size + archivedBudgets.size + removedStock + removedProducts, periodCleared)
+        ImportUndo(deletedEvents + archivedBudgets.size + removedStock + removedProducts, periodCleared)
     }
 
     private suspend fun createProjectInternal(businessId: String, name: String, isGeneral: Boolean): ProjectEntity {
@@ -997,7 +952,7 @@ class FinanceRepository(private val database: AppDatabase) {
         insertEventAndJournal(event, LedgerPolicy.journalFor(event))
     }
 
-    private suspend fun insertEventAndJournal(event: MoneyEvent, journal: JournalEntry) {
+    private suspend fun insertEventAndJournal(event: MoneyEvent, journal: JournalEntry, createdAtEpochMillis: Long = System.currentTimeMillis()) {
         // Fail fast, at the last point before the rows are written.
         //
         // `JournalEntry.requireBalanced()` exists and every construction path is supposed to call
@@ -1017,14 +972,13 @@ class FinanceRepository(private val database: AppDatabase) {
             "Jurnal tidak seimbang untuk \"${event.description}\": debit Rp$debitTotal berbeda dari kredit Rp$creditTotal."
         }
 
-        dao.insertEvent(event.toEntity())
+        dao.insertEvent(event.toEntity(createdAtEpochMillis))
         dao.insertJournal(
             JournalEntryEntity(
                 id = journal.id,
                 sourceEventId = journal.sourceEventId,
                 dateEpochDay = journal.date.toEpochDay(),
                 description = journal.description,
-                reversalOfJournalId = journal.reversalOfJournalId,
             ),
         )
         dao.insertPostings(journal.postings.mapIndexed { index, posting ->
@@ -1078,15 +1032,12 @@ class FinanceRepository(private val database: AppDatabase) {
         budgetItemId = budgetItemId,
         importBatchId = importBatchId,
         cashFlowRole = CashFlowRole.valueOf(cashFlowRole),
-        status = RecordStatus.valueOf(status),
-        reversesEventId = reversesEventId,
-        reversedByEventId = reversedByEventId,
         costNature = PlanAssembly.nature(costNature),
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
     )
 
-    private fun MoneyEvent.toEntity() = FinancialEventEntity(
+    private fun MoneyEvent.toEntity(createdAtEpochMillis: Long = System.currentTimeMillis()) = FinancialEventEntity(
         id = id,
         businessId = businessId,
         projectId = projectId,
@@ -1104,10 +1055,7 @@ class FinanceRepository(private val database: AppDatabase) {
         budgetItemId = budgetItemId,
         importBatchId = importBatchId,
         cashFlowRole = cashFlowRole.name,
-        status = status.name,
-        reversesEventId = reversesEventId,
-        reversedByEventId = reversedByEventId,
-        createdAtEpochMillis = System.currentTimeMillis(),
+        createdAtEpochMillis = createdAtEpochMillis,
         costNature = costNature?.name,
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
@@ -1125,7 +1073,6 @@ class FinanceRepository(private val database: AppDatabase) {
         FinancialEventType.ASSET_PURCHASE_CASH -> "Peralatan dan aset"
         FinancialEventType.OWNER_CAPITAL -> "Modal pemilik"
         FinancialEventType.OWNER_DRAWING -> "Pengambilan pemilik"
-        FinancialEventType.REVERSAL -> "Pembalikan"
     }
 
     private fun normalize(value: String): String = value.lowercase(Locale.forLanguageTag("id-ID"))
@@ -1145,5 +1092,5 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 }
 
-/** What reversing an import batch undid: [records] rows, and whether the unit's plan period was cleared. */
-data class ImportReversal(val records: Int, val periodCleared: Boolean)
+/** What undoing an import batch removed: [records] rows, and whether the unit's plan period was cleared. */
+data class ImportUndo(val records: Int, val periodCleared: Boolean)

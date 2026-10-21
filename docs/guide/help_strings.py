@@ -58,8 +58,8 @@ t("tour2_home_record_title", "Catat uang masuk dan keluar", "Record money in and
 t("tour2_home_record_desc", "Ketuk tombol ini lalu pilih Pemasukan atau Pengeluaran. Satu catatan untuk satu kejadian.",
   "Tap this button, then pick income or expense. One record for each event.")
 t("tour2_entry_list_title", "Semua catatan", "All records")
-t("tour2_entry_list_desc", "Daftar semua uang masuk dan keluar, terbaru di atas. Catatan yang salah dibalik, bukan dihapus diam-diam.",
-  "Every record of money in and out, newest first. A wrong record is reversed, not silently erased.")
+t("tour2_entry_list_desc", "Daftar semua uang masuk dan keluar, terbaru di atas. Catatan yang salah bisa diubah atau dihapus dari kartunya.",
+  "Every record of money in and out, newest first. A wrong record can be edited or deleted from its card.")
 t("tour2_entry_record_desc", "Ketuk untuk mencatat transaksi baru.", "Tap to record a new transaction.")
 t("tour2_form_kind_title", "Masuk atau keluar", "In or out")
 t("tour2_form_kind_desc", "Pilih dulu: uang masuk ke usaha, atau uang keluar dari usaha.", "First choose: money coming into the business, or going out.")
@@ -104,7 +104,7 @@ t("tour2_data_import_title", "Impor dari Excel", "Import from Excel")
 t("tour2_data_import_desc", "Isi template Mankeu di Excel, lalu pilih berkasnya. Kamu melihat pratinjau dulu sebelum apa pun berubah.",
   "Fill in the Mankeu template in Excel, then pick the file. You see a preview before anything changes.")
 t("tour2_data_history_title", "Riwayat impor", "Import history")
-t("tour2_data_history_desc", "Setiap impor bisa dibalik di sini jika ternyata salah berkas.", "Every import can be undone here if it was the wrong file.")
+t("tour2_data_history_desc", "Setiap impor bisa dibatalkan di sini jika ternyata salah berkas.", "Every import can be undone here if it was the wrong file.")
 t("tour2_data_export_title", "Ekspor", "Export")
 t("tour2_data_export_desc", "Simpan data unit ini ke Excel, laporan ke PDF, atau unduh template kosong.", "Save this unit's data to Excel, the report to PDF, or download a blank template.")
 t("tour2_data_backup_title", "Cadangan", "Backup")
@@ -203,14 +203,16 @@ art("record_capital",
       "Buying equipment used for years: money out, category “Beli Peralatan & Aset”, then fill in its useful life in months."]))
 art("record_fix",
     ("Memperbaiki catatan yang salah", "Fixing a wrong record"),
-    ("Catatan yang sudah tersimpan tidak diubah diam-diam. Catatan salah dibalik: aplikasi membuat catatan pembalik yang menetralkan jumlahnya, dan jejak aslinya tetap ada. Setelah itu catat ulang yang benar.",
-     "A saved record is never changed silently. A wrong record is reversed: the app adds a reversing record that cancels its amount, and the original stays visible. Then record the correct one."),
+    ("Setiap kartu catatan punya dua tombol: Ubah (ikon pensil) dan Hapus (ikon tempat sampah). Ubah membuka formulir yang sudah terisi; setelah disimpan, catatan lama diganti dengan yang benar. Hapus membuang catatan itu untuk selamanya.",
+     "Every record card has two buttons: Edit (pencil icon) and Delete (bin icon). Edit opens the form already filled in; once saved, the old record is replaced by the correct one. Delete removes the record for good."),
     (["Buka Catatan dan cari catatan yang salah.",
-      "Ketuk ikon Balik Transaksi pada kartunya, tulis alasannya, lalu konfirmasi.",
-      "Catat ulang transaksi dengan jumlah yang benar."],
+      "Ketuk Ubah pada kartunya. Formulir terbuka dengan isi catatan itu.",
+      "Perbaiki nominal, tanggal, kategori, atau keterangannya, lalu ketuk Simpan.",
+      "Catatan yang sama sekali tidak perlu: ketuk Hapus, lalu konfirmasi."],
      ["Open Records and find the wrong record.",
-      "Tap the Reverse Record icon on its card, give a reason, then confirm.",
-      "Record the transaction again with the correct amount."]))
+      "Tap Edit on its card. The form opens with that record filled in.",
+      "Fix the amount, date, category or description, then tap Save.",
+      "A record that should not exist at all: tap Delete, then confirm."]))
 art("plan_create",
     ("Membuat Rencana Usaha", "Building a business plan"),
     ("Rencana Usaha ada di Catatan saat Proyeksi dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.",
@@ -349,16 +351,16 @@ art("data_import",
       "Select the target unit, then tap Choose an .xlsx file.",
       "Check the preview: row count, money in and out, new categories and warnings.",
       "Tap Approve and import."]))
-art("data_reverse",
+art("data_undo",
     ("Membatalkan impor", "Undoing an import"),
-    ("Setiap impor tercatat sebagai satu batch. Membalik batch menetralkan semua transaksinya, mengarsipkan baris rencananya, menghapus produk dan stok yang ditambahkan, dan mengosongkan periode rencana yang diisinya.",
-     "Every import is one batch. Reversing it cancels all its transactions, archives its plan lines, removes the products and stock it added, and clears the plan period it filled in."),
+    ("Setiap impor tercatat di riwayat. Membatalkannya menghapus semua transaksi yang ditambahkan impor itu, mengarsipkan baris rencananya, menghapus produk dan stok yang ditambahkan, dan mengosongkan periode rencana yang diisinya.",
+     "Every import is listed in the history. Undoing it deletes all the transactions it added, archives its plan lines, removes the products and stock it added, and clears the plan period it filled in."),
     (["Buka Berkas dan Data, bagian Riwayat pengambilan.",
-      "Ketuk Balik batch pada berkas yang salah, lalu konfirmasi.",
-      "Riwayatnya tetap ada dengan status dibalik."],
+      "Ketuk Batalkan impor pada berkas yang salah, lalu konfirmasi.",
+      "Riwayatnya tetap ada dengan status dibatalkan."],
      ["Open Files and Data, the import history section.",
       "Tap Undo import on the wrong file, then confirm.",
-      "The history stays, marked as reversed."]))
+      "The history stays, marked as undone."]))
 art("data_backup",
     ("Cadangan terenkripsi dan Google Drive", "Encrypted backup and Google Drive"),
     ("Cadangan menyimpan seluruh data di HP ini dalam satu berkas yang dikunci kata sandimu. Kata sandi tidak disimpan aplikasi, jadi catat di tempat aman. Cadangan bisa disimpan di HP atau di Google Drive pribadimu.",

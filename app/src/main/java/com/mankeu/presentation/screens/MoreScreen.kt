@@ -126,7 +126,7 @@ fun DataScreen(
     onSetCategoryCostNature: (String, CostNature?) -> Unit,
     onChooseWorkbook: () -> Unit,
     onCommitImport: () -> Unit,
-    onReverseImportBatch: (String) -> Unit,
+    onUndoImportBatch: (String) -> Unit,
     onExportWorkbook: () -> Unit,
     onExportPdf: () -> Unit,
     onExportTemplate: () -> Unit = {},
@@ -186,7 +186,7 @@ fun DataScreen(
         }
         if (state.importBatches.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.data_import_history), stringResource(R.string.data_import_history_sub), Modifier.tourTarget(TourTarget.DATA_HISTORY)) }
-            items(state.importBatches, key = { it.id }) { batch -> ImportBatchCard(batch, onReverseImportBatch) }
+            items(state.importBatches, key = { it.id }) { batch -> ImportBatchCard(batch, onUndoImportBatch) }
         }
         item {
             Card(modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.DATA_EXPORT), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
@@ -607,7 +607,7 @@ private fun MasterDataDialog(
 }
 
 @Composable
-private fun ImportBatchCard(batch: ImportBatchEntity, onReverse: (String) -> Unit) {
+private fun ImportBatchCard(batch: ImportBatchEntity, onUndo: (String) -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -620,20 +620,22 @@ private fun ImportBatchCard(batch: ImportBatchEntity, onReverse: (String) -> Uni
                 val money = batch.incomingRupiah?.let { incoming ->
                     stringResource(R.string.batch_money_in_out, incoming.toRupiah(), (batch.totalAmountRupiah - incoming).toRupiah())
                 } ?: batch.totalAmountRupiah.toRupiah()
-                Text(stringResource(R.string.batch_summary, batch.recordCount, money, batch.state), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // The stored state keeps its schema-1 spelling; "REVERSED" means undone (DEC-019).
+                val state = stringResource(if (batch.state == "COMMITTED") R.string.batch_state_committed else R.string.batch_state_undone)
+                Text(stringResource(R.string.batch_summary, batch.recordCount, money, state), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (batch.state == "COMMITTED") TextButton(onClick = { confirm = true }) { Text(stringResource(R.string.batch_reverse)) }
+            if (batch.state == "COMMITTED") TextButton(onClick = { confirm = true }) { Text(stringResource(R.string.batch_undo)) }
         }
     }
     if (confirm) {
         MankeuSheet(
-            title = stringResource(R.string.batch_reverse_title),
+            title = stringResource(R.string.batch_undo_title),
             onDismiss = { confirm = false },
-            confirmLabel = stringResource(R.string.batch_reverse),
+            confirmLabel = stringResource(R.string.batch_undo),
             destructive = true,
-            onConfirm = { confirm = false; onReverse(batch.id) },
+            onConfirm = { confirm = false; onUndo(batch.id) },
         ) {
-            Text(stringResource(R.string.batch_reverse_body, batch.recordCount, batch.sourceName))
+            Text(stringResource(R.string.batch_undo_body, batch.recordCount, batch.sourceName))
         }
     }
 }

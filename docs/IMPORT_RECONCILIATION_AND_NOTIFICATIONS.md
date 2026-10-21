@@ -29,7 +29,7 @@ select file
 → classify every mutation
 → preview and request only necessary decisions
 → atomic commit
-→ notify, audit, and offer review/reversal
+→ notify, audit, and offer review/undo
 ```
 
 Parsing and reconciliation run before persistent financial records are changed. Import preview is generated from a temporary candidate model.
@@ -59,7 +59,7 @@ For each normalized or enriched field, store:
 - short human-readable rationale;
 - confidence category (`deterministic`, `ambiguous`, or `unresolved`), not a decorative AI percentage;
 - inferred attributes, including date precision;
-- commit time, review state, and reversal linkage.
+- commit time, review state, and undo state.
 
 If raw source content may contain personal or financial data, provenance remains local and follows the same backup/privacy controls as the financial database.
 
@@ -73,7 +73,7 @@ An automatic-enrichment notification must include:
 4. **source evidence**—sheet and cell/row references;
 5. **assumptions**—especially inferred period, exact date, category, or counterparty;
 6. **impact**—which totals or reports changed;
-7. **actions**—review details, edit source mapping, or reverse the import batch.
+7. **actions**—review details, edit source mapping, or undo the import batch.
 
 The notification remains available in an import activity center after any temporary banner disappears. It must not be a one-time toast.
 
@@ -102,12 +102,12 @@ Do not invent a precise historical day when the source only establishes a month:
 - Reports are supporting evidence during import, then regenerated from canonical records after commit.
 - A discrepancy includes its amount, affected scope, candidate causes, and source locations.
 
-## Atomicity, idempotency, and reversal
+## Atomicity, idempotency, and undo
 
 - No committed domain record is visible until the entire selected import passes required checks.
 - Reimporting the same hash warns the user and offers cancel, replace, or an evidence-based merge; it never silently duplicates.
 - Every created or changed record links to the batch.
-- Reversal removes or reverses only that batch's effects, preserving later user changes through conflict-aware review.
+- Undo deletes only that batch's effects (its transactions, edited ones included; plan lines are archived) and keeps the batch row as history (DEC-019).
 - An interrupted or crashed import is resumed only from a safe staged state or discarded cleanly.
 
 ## Failure states

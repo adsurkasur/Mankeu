@@ -67,7 +67,7 @@ A persistent quick-entry action is available from Beranda, Anggaran, and Laporan
 - `FinancialEvent`: immutable posted business fact with book/scope, kind, date, description, category, counterparty/reference, quantity/unit/unit price, amount, cash state, import/provenance link, and reversal link.
 - `JournalEntry` and `Posting`: balanced debit/credit effects derived by domain policy.
 - Core accounts: cash, accounts receivable, accounts payable, revenue, operating expense, interest expense, owner equity, owner drawing, loan payable, and generic asset/equipment.
-- A posted record is corrected by reversal plus replacement; a draft can be deleted.
+- A posted record is corrected by editing it in place or deleting it (DEC-019 superseded reversal plus replacement).
 
 ### Obligations
 

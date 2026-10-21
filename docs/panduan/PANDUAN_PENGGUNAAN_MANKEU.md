@@ -365,17 +365,21 @@ saringan **Semua / Masuk / Keluar**.
 
 ![Daftar catatan](gambar/20_daftar_catatan.jpg)
 
-Bila ada catatan yang salah jumlah, misalnya *Salah ketik listrik*:
+Setiap kartu catatan punya dua tombol: **Ubah** (ikon pensil) dan **Hapus** (ikon tempat sampah).
 
-1. Ketuk ikon **Balik Transaksi** (panah melingkar) di kartu catatan itu.
-2. Baca penjelasannya, lalu ketuk **Balik Transaksi**. Aplikasi membuat catatan pembalik yang
-   menetralkan jumlahnya. Catatan aslinya tetap terlihat, sehingga jejaknya jelas.
-3. Catat ulang transaksi dengan jumlah yang benar.
+Bila ada catatan yang salah isi, misalnya listrik Rp150.000 yang terketik Rp1.500.000:
 
-![Dialog balik transaksi](gambar/21_dialog_balik.jpg)
+1. Ketuk ikon **Ubah** (pensil) di kartu catatan itu. Formulir catat terbuka dengan isi catatan
+   tersebut, bertanda *Mengubah catatan*.
+2. Perbaiki nominal, tanggal, kategori, atau keterangannya.
+3. Ketuk **Simpan catatan**. Catatan lama diganti dengan yang benar; kas dan laporan ikut menyesuaikan.
 
-> **Perhatian.** Gunakan **Balik Transaksi** untuk catatan yang memang terjadi tetapi salah isi.
-> Ikon tempat sampah hanya untuk catatan yang tidak pernah terjadi.
+![Mengubah catatan](gambar/21_ubah_catatan.jpg)
+
+Catatan yang sama sekali tidak perlu, misalnya tercatat dua kali, dihapus dengan ikon **Hapus**.
+
+> **Perhatian.** Hapus bersifat permanen dan tidak bisa dibatalkan. Bila hanya isinya yang salah,
+> pakai **Ubah**.
 
 ---
 
@@ -522,9 +526,10 @@ komputer.
 
 ### 9.3 Membatalkan impor
 
-Setiap impor tercatat di **Riwayat pengambilan**. Ketuk **Balik batch** pada berkas yang salah.
-Semua transaksinya dinetralkan, baris rencananya diarsipkan, produk dan stok yang ditambahkan
-dihapus, dan periode rencana yang diisinya dikosongkan kembali.
+Setiap impor tercatat di **Riwayat pengambilan**. Ketuk **Batalkan impor** pada berkas yang salah,
+lalu konfirmasi. Semua transaksi yang ditambahkan impor itu dihapus, baris rencananya diarsipkan,
+produk dan stok yang ditambahkan dihapus, dan periode rencana yang diisinya dikosongkan kembali.
+Impor itu tetap tercantum di riwayat dengan status *dibatalkan*.
 
 ### 9.4 Cadangan terenkripsi
 
@@ -605,7 +610,7 @@ dengan Mankeu di bulan pertama.
 | 3 | Membaca kelayakan: layak, omzet impas Rp4.040.816, kebutuhan modal Rp4.300.000 sudah tertutup | [5](#5-membaca-kelayakan-bep-dan-kebutuhan-modal) |
 | 4 | Mencatat modal awal Rp15.000.000 | [6.2](#62-mencatat-modal-awal) |
 | 5 | Mencatat transaksi harian: jualan, bahan, mesin, sewa, gaji, listrik | [6](#6-mencatat-uang-masuk-dan-keluar) |
-| 6 | Membalik catatan listrik yang salah ketik, lalu mencatat ulang | [6.7](#67-melihat-dan-memperbaiki-catatan) |
+| 6 | Memperbaiki catatan listrik yang salah ketik dengan **Ubah** | [6.7](#67-melihat-dan-memperbaiki-catatan) |
 | 7 | Mencatat stok susu dan biji kopi | [7](#7-mengelola-stok-barang) |
 | 8 | Di akhir bulan, membaca Status BEP bulan ini dan Realisasi vs Target | [8](#8-membaca-laporan) |
 | 9 | Membuat cadangan terenkripsi | [9.4](#94-cadangan-terenkripsi) |
@@ -621,7 +626,7 @@ dengan Mankeu di bulan pertama.
 | Mesin espresso (umur 36 bulan) | Beli Peralatan & Aset | | 7.200.000 |
 | Sewa lapak | Sewa Tempat | | 1.000.000 |
 | Gaji pembantu | Gaji & Upah | | 800.000 |
-| Salah ketik listrik | Listrik, Air & Internet | | 150.000 |
+| Listrik bulan ini | Listrik, Air & Internet | | 150.000 |
 
 **Hasil di aplikasi:**
 
@@ -631,8 +636,8 @@ dengan Mankeu di bulan pertama.
 - **Laba setelah penyusutan** Rp1.000.000. Mesin espresso tidak dihitung sebagai biaya bulan ini.
   Bebannya masuk sedikit demi sedikit sebagai penyusutan Rp200.000 per bulan.
 - **Status BEP bulan ini**: sudah melewati titik impas.
-- Catatan listrik seharusnya Rp200.000. Bu Sari membaliknya lewat **Balik Transaksi**, lalu
-  mencatat ulang dengan jumlah yang benar.
+- Catatan listrik sempat terketik Rp1.500.000. Bu Sari memperbaikinya lewat **Ubah** menjadi
+  Rp150.000, sehingga semua angka di atas sudah memakai jumlah yang benar.
 
 ---
 
@@ -646,7 +651,8 @@ dengan Mankeu di bulan pertama.
 | Laba berbeda dengan uang kas | Modal, ambil pribadi, beli alat, dan penyusutan | Lihat Laporan → Arus Kas: selisihnya ada di Investasi dan Pembiayaan |
 | Barang tidak tampil di cabang lain | Barang dibuat sebagai milik satu unit | Buka unit pembuatnya, atau tambahkan sebagai *Semua unit* |
 | Berkas impor ditolak | Bukan template Mankeu, judul kolom diubah, atau format tanggal salah | Baca pesan sel yang salah dan perbaiki di Excel, atau ekspor template baru |
-| Transaksi tercatat dobel setelah impor | Berkas yang sama diimpor dua kali | **Balik batch** pada impor kedua |
+| Transaksi tercatat dobel setelah impor | Berkas yang sama diimpor dua kali | **Batalkan impor** pada impor kedua |
+| Ada catatan yang salah jumlah atau tanggal | Salah ketik saat mencatat | **Ubah** di kartu catatannya ([bagian 6.7](#67-melihat-dan-memperbaiki-catatan)) |
 | Status BEP bulan ini "Belum Dapat Dinilai" | Belum ada penjualan bulan ini | Catat penjualan bulan ini |
 | Lupa kata sandi cadangan | Kata sandi tidak disimpan aplikasi | Cadangan itu tidak bisa dibuka. Buat cadangan baru dan catat kata sandinya |
 | Aplikasi tidak ditemukan di Play Store | Mankeu masih di jalur uji internal | Minta undangan penguji kepada pengelola ([bagian 1](#1-memasang-mankeu)) |
@@ -666,7 +672,7 @@ Bila masih bingung, ketuk **?** di halaman tersebut, atau cari di **Pusat Bantua
 ### Setiap minggu (15 menit)
 
 - [ ] Cocokkan uang kas di Beranda dengan uang di laci atau rekening.
-- [ ] Balik catatan yang salah, lalu catat ulang.
+- [ ] Perbaiki catatan yang salah dengan **Ubah**, hapus yang dobel.
 - [ ] Catat barang masuk dan keluar di Stok, atau lakukan opname.
 
 ### Setiap akhir bulan (30 menit)

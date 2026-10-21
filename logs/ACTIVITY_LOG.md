@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 18:20] [Claude Code (Opus 5.5) — Kebijakan privasi satu sumber (DEC-021)]
+- **Goal**: Owner: updating the policy in mankeu should update adsurkasur.my.id/mankeu/privacy-policy automatically.
+- **Actions**: Policy rewritten as `docs/privacy-policy/id.md` and `en.md` (current features, DEC-020 deletion paths, adesur@arinahub.com, correct repository link, permissions checked against the merged manifest, effective 22 October 2026) with a README on how to edit; `docs/privacy-policy.html` removed; docs map and store listing point at the page and its source; the dead GitHub Pages mirror link removed (checked: Pages not enabled, URL returns 404). The aura side is in that repository.
+- **Files**: `docs/privacy-policy/{id,en,README}.md` (new), `docs/privacy-policy.html` (removed), `docs/README.md`, `docs/STORE_LISTING_AND_POLICIES.md`, logs.
+- **Verification**: `check_doc_links` 0 broken; the live page is verified after the aura deploy (see the aura activity log).
+
 ### [2026-10-22 17:30] [Claude Code (Opus 5.5) — Hapus semua data (DEC-020) dan email support baru]
 - **Goal**: Owner: can the app comply with "delete all data" for Google Drive? Then: the typed confirmation must be case-sensitive, and the support address becomes adesur@arinahub.com.
 - **Actions**:

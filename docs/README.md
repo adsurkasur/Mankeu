@@ -46,7 +46,7 @@ Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 11)
 | [`PLAY_STORE_DEPLOYMENT.md`](PLAY_STORE_DEPLOYMENT.md) | Pipeline rilis dan penandatanganan |
 | [`PLAY_CONSOLE_ENTRY_GUIDE.md`](PLAY_CONSOLE_ENTRY_GUIDE.md) | Isian Play Console langkah demi langkah |
 | [`STORE_LISTING_AND_POLICIES.md`](STORE_LISTING_AND_POLICIES.md) | Teks listing, data safety, aset |
-| [`privacy-policy.html`](privacy-policy.html) | Kebijakan privasi |
+| [`privacy-policy/`](privacy-policy/README.md) | Kebijakan privasi (ID/EN), sumber halaman adsurkasur.my.id/mankeu/privacy-policy |
 | [`releases/`](releases/) | Catatan rilis |
 | [`playstore/`](playstore/), [`assets/store/`](assets/store/) | Grafik dan tangkapan layar toko |
 

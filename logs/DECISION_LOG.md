@@ -1,5 +1,17 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-021] The Privacy Policy Has One Source: Markdown in This Repository, Rendered by adsurkasur.my.id
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner: "biar dari adsurkasur-aura itu bisa langsung diperbarui kalau kita update di mankeu").
+- **Context**: The public policy at adsurkasur.my.id/mankeu/privacy-policy was hand-written JSX in the private `adsurkasur-aura` site, separate from `docs/privacy-policy.html` here. The two had drifted (old email, no account deletion, "reset" that did not exist, a dead GitHub Pages "mirror" link). Play Console points at the public page, so it must be the accurate one.
+- **Decision**:
+  1. `docs/privacy-policy/id.md` and `en.md` are the only source. `docs/privacy-policy.html` is removed.
+  2. The aura page fetches both files from `raw.githubusercontent.com/adsurkasur/Mankeu/main/...` (this repository is public) with Next.js ISR (`revalidate` 3600 s), renders them with `marked` (raw HTML escaped) inside the existing frame and ID/EN toggle. A push to `main` is live within an hour without redeploying the site; if GitHub is unreachable the last good copy keeps being served.
+  3. The policy text was brought up to date while moving it: cash book and business plan instead of "data keuangan tani" and HPP/margins, no semantic matching, deletion paths per DEC-020, support address adesur@arinahub.com, repository link `github.com/adsurkasur/Mankeu`, effective date 22 October 2026.
+- **Consequences**: any push to `main` touching these files is public within an hour, with no review step on the site. `docs/privacy-policy/README.md` states this and how to edit.
+- **Alternatives considered**: GitHub Pages from this repository (rejected: not the owner's domain, Play Console URL would change); copying the text into aura on every change (rejected: the drift this decision removes); a build-time fetch only (rejected: changes would need a redeploy).
+- **Affected components**: `docs/privacy-policy/`, `docs/README.md`, `docs/STORE_LISTING_AND_POLICIES.md`; in `adsurkasur-aura`: `src/app/mankeu/privacy-policy/` (`page.tsx`, `PrivacyPolicyView.tsx`, new `policySource.ts`), `tailwind.config.ts` (typography plugin), `package.json` (`marked`).
+
 ### [DEC-020] "Hapus semua data" in Pengaturan, Including Google Drive and the Sign-In Account
 - **Date**: 2026-10-22
 - **Status**: Accepted (owner asked whether the app can comply with "delete all data"); implemented and tested.

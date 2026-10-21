@@ -8,7 +8,7 @@ This guide provides the complete, authoritative compliance declarations, store l
 
 ### Live URL
 - **Public Privacy Policy URL:** `https://adsurkasur.my.id/mankeu/privacy-policy`
-*(Backup mirror on GitHub Pages: `https://adsurkasur.github.io/umkm-man-keu/privacy-policy.html`)*
+*(Content source: `docs/privacy-policy/id.md` and `en.md` in this repository; the page reads them from GitHub and refreshes within an hour of a push to `main`.)*
 
 ---
 
@@ -239,6 +239,6 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 
 * **Developer Name:** Mankeu
 * **Support Email:** `adesur@arinahub.com`
-* **Website / Privacy Policy:** `https://adsurkasur.github.io/umkm-man-keu/privacy-policy.html`
+* **Website / Privacy Policy:** `https://adsurkasur.my.id/mankeu/privacy-policy`
 * **Target Category:** Productivity / Business / Tools
 * **Primary Tags:** Agriculture, Farm Finance, Calculator, Bookkeeping, Agribusiness, Feasibility

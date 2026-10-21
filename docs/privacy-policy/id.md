@@ -59,6 +59,6 @@ Perubahan kebijakan ini diumumkan dengan memperbarui tanggal di bagian atas hala
 
 ## 10. Kontak
 
-- **Email:** [adesur@arinahub.com](mailto:adesur@arinahub.com)
+- **Email:** [adsurkasur.dev@gmail.com](mailto:adsurkasur.dev@gmail.com)
 - **Pengembang:** Ade Surya Ananda (AdsurKasur)
 - **Repositori:** [github.com/adsurkasur/Mankeu](https://github.com/adsurkasur/Mankeu)

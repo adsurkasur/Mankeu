@@ -400,7 +400,7 @@
     <string name="msg_erase_failed">Data belum dihapus. Coba lagi.</string>
 
     <!-- Support mailbox. Not translated: an address is an address. -->
-    <string name="settings_contact_email" translatable="false">adesur@arinahub.com</string>
+    <string name="settings_contact_email" translatable="false">adsurkasur.dev@gmail.com</string>
 
     <string name="language_switching">Mengganti bahasa…</string>
 

@@ -59,6 +59,6 @@ Changes are announced by updating the date at the top of this page. The full his
 
 ## 10. Contact
 
-- **Email:** [adesur@arinahub.com](mailto:adesur@arinahub.com)
+- **Email:** [adsurkasur.dev@gmail.com](mailto:adsurkasur.dev@gmail.com)
 - **Developer:** Ade Surya Ananda (AdsurKasur)
 - **Repository:** [github.com/adsurkasur/Mankeu](https://github.com/adsurkasur/Mankeu)

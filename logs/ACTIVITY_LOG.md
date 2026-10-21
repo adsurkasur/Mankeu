@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-22 19:00] [Claude Code (Opus 5.5) — Email support kembali ke adsurkasur.dev@gmail.com]
+- **Goal**: Owner: do not put this under the Arina name yet; use adsurkasur.dev@gmail.com for every reference instead of adesur@arinahub.com.
+- **Actions**: Replaced in the app (Hubungi Kami, ID/EN), the privacy policy (`docs/privacy-policy/id.md`, `en.md`), the Play Console guide, the store listing, the D-log banner and DEC-021. Earlier activity entries keep the address they recorded at the time.
+- **Files**: app/src/main/res/values{,-en}/strings.xml, docs/privacy-policy/{id,en}.md, docs/PLAY_CONSOLE_ENTRY_GUIDE.md, docs/STORE_LISTING_AND_POLICIES.md, docs/DECISION_LOG.md, logs.
+- **Verification**: `assembleDebug lintDebug` green; no `arinahub` left outside history (archive, past activity entries). The live policy page (aura deploy 1f4be4c, Vercel success) already reads the policy from this repository; it picks up this push within its hourly revalidation.
+
 ### [2026-10-22 18:20] [Claude Code (Opus 5.5) — Kebijakan privasi satu sumber (DEC-021)]
 - **Goal**: Owner: updating the policy in mankeu should update adsurkasur.my.id/mankeu/privacy-policy automatically.
 - **Actions**: Policy rewritten as `docs/privacy-policy/id.md` and `en.md` (current features, DEC-020 deletion paths, adesur@arinahub.com, correct repository link, permissions checked against the merged manifest, effective 22 October 2026) with a README on how to edit; `docs/privacy-policy.html` removed; docs map and store listing point at the page and its source; the dead GitHub Pages mirror link removed (checked: Pages not enabled, URL returns 404). The aura side is in that repository.

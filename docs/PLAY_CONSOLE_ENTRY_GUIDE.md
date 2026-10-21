@@ -36,7 +36,7 @@ Buka menu: **Policy and programs** > **App content** (atau ikuti daftar tugas pa
 * **Jawaban:** Pilih **"No, my app does not contain ads"** *(Tidak, aplikasi saya bebas iklan)*.
 
 ### D. Rating Konten (IARC Content Rating)
-* Masukkan email kontak pengembang: `adesur@arinahub.com`
+* Masukkan email kontak pengembang: `adsurkasur.dev@gmail.com`
 * Kategori aplikasi: **Utility, Productivity, Communication, or Other** *(Utilitas/Produktivitas)*
 * Kuesioner:
   * Kekerasan (Violence): **No**
@@ -82,7 +82,7 @@ Buka menu: **Grow** > **Store presence** > **Main store listing**.
 ### A. Pengaturan Toko & Kontak
 * **App category:** **Business** (atau **Finance** / **Productivity**)
 * **Tags (Label):** Bisnis, Finansial, Pembukuan Kas, Usaha Kecil
-* **Email kontak pengembang:** `adesur@arinahub.com`
+* **Email kontak pengembang:** `adsurkasur.dev@gmail.com`
 * **Website:** `https://adsurkasur.my.id`
 
 ### B. Teks Listing Toko

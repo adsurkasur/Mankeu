@@ -238,7 +238,7 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 ## 5. Contact & Support Information
 
 * **Developer Name:** Mankeu
-* **Support Email:** `adesur@arinahub.com`
+* **Support Email:** `adsurkasur.dev@gmail.com`
 * **Website / Privacy Policy:** `https://adsurkasur.my.id/mankeu/privacy-policy`
 * **Target Category:** Productivity / Business / Tools
 * **Primary Tags:** Agriculture, Farm Finance, Calculator, Bookkeeping, Agribusiness, Feasibility

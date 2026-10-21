@@ -1,5 +1,14 @@
 # Activity Log
 
+### [2026-10-21 23:50] [Claude Code (Opus 5.5) — Panduan penggunaan Mankeu untuk pelaku UMKM]
+- **Goal**: Owner asked for a complete Markdown user guide with screenshots and step-by-step instructions; the concept was grilled (Q1–Q11: usage guide not a training module, Markdown only, "Anda", quick/full paths, kopi example + two appendices, honest install note).
+- **Actions**:
+  1. `ModuleScreenshotTest` walks the real app as an owner from an empty install (usaha, unit, modal, plan, sales, expenses, asset, reversal, stock, reports, import preview, backup, help, guide offer, tour) plus appendices (seasonal chilli farm, two-branch shop with shared stock) and captures 47 screens with UiAutomation (sheets and dialogs included). `scripts/capture_module_screenshots.ps1` runs it (one retry) and writes `docs/panduan/gambar/`.
+  2. `docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`: 14 sections + 2 appendices, quick/full path table, "Untuk yang ingin tahu" calculation boxes, one-month usage example, troubleshooting, routine checklists, glossary.
+  3. Test robustness learned on the way: press via semantic OnClick (touches landed on shifted content), fill fields via SetText (no keyboard in shots), scroll the top-layer list, use the on-screen selection for ids, wait between ViewModel writes (the app's double-submit guard drops a second write, which first hid a plan line and skewed the figures).
+- **Files**: `app/src/androidTest/.../ModuleScreenshotTest.kt`, `scripts/capture_module_screenshots.ps1`, `docs/panduan/` (guide + 47 JPEG), `docs/WORK_IN_PROGRESS.md`, logs.
+- **Verification**: walk passes on emulator-5554; every figure quoted in the guide matches a hand calculation (kopi: BEP Rp4.040.816, laba Rp2.700.000, R/C 1,43, modal Rp4.300.000; realisasi: kas Rp9.000.000, laba kas Rp1.200.000, BEP bulan ini Rp4.035.836; cabai: BEP 214,583 kg per bulan panen, modal Rp27.600.000 vs Rp6.800.000 without the wait); script check: all 47 images referenced and present, no broken anchors, no "kamu"/exercise remnants.
+
 ### [2026-10-21 19:45] [Claude Code (Opus 5.5) — Guide rework: offered versioned tours + Pusat Bantuan (DEC-018)]
 - **Goal**: Owner asked to update the tours for the changed app and to add an interactive help page with screenshots and buttons to features; concept grilled with the owner (Q1–Q17), then implemented and tested for real.
 - **Actions**:

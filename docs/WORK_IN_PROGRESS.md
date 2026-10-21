@@ -6,17 +6,21 @@ perubahan schema 10 tertinggal tanpa catatan). Agen berikutnya: baca bagian "Sta
 langkah" dulu, lalu lanjutkan dari langkah pertama yang belum `selesai`.
 
 Setelah pekerjaan di-commit, ringkasannya pindah ke `logs/ACTIVITY_LOG.md`; dokumen ini dikosongkan
-untuk pekerjaan berikutnya (riwayat langkah demi langkah tetap ada di Git).
+untuk pekerjaan berikutnya (riwayat langkah demi langkah tetap ada di Git). Setiap progres yang di-commit
+langsung di-push dan pointer superproject diperbarui (instruksi pemilik 2026-10-21).
+
+Merawat panduan dalam aplikasi:
+- Ubah teks di `docs/guide/help_strings.py`, lalu `python -I docs/guide/help_strings.py`.
+- Isi tur berubah → naikkan `Tour.version` agar pengguna lama ditawari sekali.
+- Tampilan berubah atau artikel/target baru → `scripts/capture_help_screenshots.ps1` (emulator menyala);
+  `GuidesTest` gagal bila ada artikel tanpa gambar.
+
+Merawat panduan penggunaan (`docs/panduan/`):
+- Tampilan berubah → `scripts/capture_module_screenshots.ps1` (emulator menyala), lalu periksa gambar dan angka
+  yang dikutip di naskah. Keputusan isi (grill Q1–Q11) ada di riwayat Git berkas ini, 2026-10-21.
 
 ---
 
 ## Pekerjaan aktif
 
-Tidak ada. Terakhir: tur panduan + Pusat Bantuan (DEC-018), 2026-10-21. Keputusan grill Q1–Q17 dan
-catatan langkahnya ada di riwayat Git berkas ini dan di DEC-018.
-
-Merawat panduan:
-- Ubah teks di `docs/guide/help_strings.py`, lalu `python -I docs/guide/help_strings.py`.
-- Isi tur berubah → naikkan `Tour.version` agar pengguna lama ditawari sekali.
-- Tampilan berubah atau artikel/target baru → `scripts/capture_help_screenshots.ps1` (emulator menyala);
-  `GuidesTest` gagal bila ada artikel tanpa gambar.
+Tidak ada. Terakhir: panduan penggunaan untuk pelaku UMKM, 2026-10-21.

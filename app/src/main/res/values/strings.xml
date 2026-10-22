@@ -40,9 +40,9 @@
 
     <!-- Home -->
     <string name="home_balance_actual">Uang kas realisasi</string>
-    <string name="home_balance_plan">Uang kas proyeksi</string>
+    <string name="home_balance_plan">Uang kas rencana</string>
     <string name="home_balance_sub_actual">Sisa uang kas dari transaksi nyata pada unit usaha ini</string>
-    <string name="home_balance_sub_plan">Perkiraan saldo kas dari simulasi rencana/proyeksi</string>
+    <string name="home_balance_sub_plan">Perkiraan saldo kas dari rencana usaha</string>
     <string name="home_profit">Untung / Rugi kas</string>
     <string name="home_cash_loss_note">Belanja stok dan bahan dihitung sebagai biaya pada hari dibayar, jadi hari kulakan bisa tampak rugi. Lihat per bulan di Laporan agar adil.</string>
     <string name="home_cash_flow">Uang masuk bersih</string>
@@ -68,6 +68,8 @@
     <string name="msg_sync_off">Sync dimatikan di HP ini.</string>
     <string name="msg_sync_done">Sinkron selesai: %1$d perubahan dari HP lain diterima.</string>
     <string name="msg_sync_failed">Sinkronisasi gagal.</string>
+    <string name="sync_wrong_passphrase">Kata sandi sync tidak cocok dengan yang dipakai HP lain. Pakai kata sandi sync yang sama di semua HP.</string>
+    <string name="sync_passphrase_lost">Kata sandi sync di HP ini perlu diketik ulang. Matikan sync, lalu nyalakan lagi.</string>
     <string name="home_negative_cash_title">Uang kas minus?</string>
     <string name="home_negative_cash_body">Kalau uangnya ada di laci atau rekening, kemungkinan uang yang sudah ada sebelum mulai mencatat belum dicatat. Catat sekali sebagai Setoran Modal Pemilik, lalu angka kas akan sesuai.</string>
     <string name="home_negative_cash_action">Catat uang awal</string>
@@ -218,7 +220,7 @@
     <!-- Tur panduan dan tentang aplikasi -->
     <string name="tour_replay">Panduan halaman ini</string>
     <string name="settings_tour_reset">Ulangi Semua Panduan</string>
-    <string name="settings_tour_reset_help">Tandai semua panduan sebagai belum dilihat, sehingga tiap halaman menjelaskan dirinya lagi saat dibuka.</string>
+    <string name="settings_tour_reset_help">Tandai semua panduan sebagai belum dilihat: sapaan muncul lagi di Beranda. Panduan tiap halaman selalu bisa diputar lewat tombol ?.</string>
     <string name="tour_btn_next">Lanjut</string>
     <string name="tour_btn_skip">Lewati</string>
     <string name="tour_btn_finish">Mulai Gunakan</string>
@@ -636,7 +638,7 @@
     <string name="tour_learn_more">Pelajari lebih lanjut</string>
     <string name="tour_offer_text">Selamat datang! Mau lihat panduan singkat (%1$d langkah)? Kapan pun butuh bantuan, ketuk tombol ? di kanan atas.</string>
     <string name="tour_offer_start">Lihat</string>
-    <string name="tour_offer_later">Tutup</string>
+    <string name="tour_offer_close">Tutup</string>
     <string name="settings_tour_offers">Tampilkan sapaan panduan di Beranda</string>
     <string name="help_center_title">Pusat Bantuan</string>
     <string name="help_search_hint">Cari bantuan, mis. stok, BEP, impor</string>
@@ -710,7 +712,7 @@
     <string name="tour2_scope_unit_title">Cabang atau unit</string>
     <string name="tour2_scope_unit_desc">Cabang, kebun, atau musim tanam di dalam satu usaha. Tiap unit punya catatan, rencana, dan stoknya sendiri.</string>
     <string name="tour2_settings_guides_title">Panduan dan bantuan</string>
-    <string name="tour2_settings_guides_desc">Buka Pusat Bantuan, matikan tawaran panduan, atau ulangi semua panduan dari awal.</string>
+    <string name="tour2_settings_guides_desc">Buka Pusat Bantuan, nyalakan atau matikan sapaan panduan di Beranda, atau ulangi semua panduan dari awal.</string>
     <string name="tour2_settings_display_title">Tampilan</string>
     <string name="tour2_settings_display_desc">Tema terang atau gelap, bahasa, gerakan, getar, dan suara.</string>
     <string name="tour2_settings_drive_title">Google Drive</string>

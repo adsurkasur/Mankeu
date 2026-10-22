@@ -67,8 +67,9 @@ class FinanceWorkbookImporter(
 
     private fun readTransaction(row: Row, errors: MutableList<String>): ImportTransaction? {
         val date = row.date(0, errors) ?: return null
-        val description = row.requiredText(1, "Keterangan", errors) ?: return null
         val category = row.requiredText(2, "Kategori", errors) ?: return null
+        // Optional like in the entry form (DEC-022): a blank one takes the category's name.
+        val description = row.text(1) ?: category
         val income = row.money(3, errors)
         val expense = row.money(4, errors)
         if ((income == null) == (expense == null)) {

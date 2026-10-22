@@ -19,12 +19,12 @@ This choice can be revisited if an iOS requirement becomes funded and concrete. 
 
 ## Stack in use
 
-| Concern | In use (schema 11) |
+| Concern | In use (schema 12) |
 | --- | --- |
 | Language | Kotlin |
 | UI | Jetpack Compose + Material 3 adaptive layouts |
 | State | One `AppViewModel` exposing `StateFlow<AppUiState>`; coroutines and Room `Flow` |
-| Local structured data | Room over SQLite, schema 11, exported schemas in `app/schemas/` |
+| Local structured data | Room over SQLite, schema 12, exported schemas in `app/schemas/` |
 | Preferences | `SharedPreferences` via `AppPreferencesState` (DataStore considered and rejected, D-082) |
 | Background work | None scheduled; backup, export and import run on user action in coroutines |
 | File selection/export | Android Storage Access Framework |
@@ -130,4 +130,4 @@ One Gradle module, `:app`, with packages `domain`, `data`, `importer`, `exporter
 
 ## Architecture decisions
 
-Recorded in `docs/DECISION_LOG.md` (D-001 to D-087) and, from DEC-001 on, in `logs/DECISION_LOG.md`. Still open: representative device baseline, analytics/crash reporting (off; none planned), signing custody and release ownership, and how sync is offered to users.
+Recorded in `docs/DECISION_LOG.md` (D-001 to D-087) and, from DEC-001 on, in `logs/DECISION_LOG.md`. Still open: representative device baseline, analytics/crash reporting (off; none planned), signing custody and release ownership. Sync is offered since DEC-024; a two-phone test with a real Google account is pending.

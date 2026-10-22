@@ -78,6 +78,22 @@ class TemplateImportTest {
         assertTrue(preview.budgetLines.none { it.name == "Rencana lama" })
     }
 
+    /** DEC-022: the description is optional on import too; a blank one takes the category name. */
+    @Test
+    fun `a row without Keterangan imports with its category as description`() {
+        val withBlank = bundle().let { b ->
+            b.copy(books = b.books.map { book ->
+                if (book.book.mode != BookMode.REALIZATION.name) book
+                else book.copy(events = book.events + event("e9", FinancialEventType.CASH_EXPENSE, 12_345, "", "Bahan Baku & Stok", createdAt = 9))
+            })
+        }
+
+        val preview = importer.preview("tanpa-keterangan.xlsx", FinanceWorkbookExporter().export(withBlank))
+
+        assertEquals(emptyList<String>(), preview.errors)
+        assertEquals("Bahan Baku & Stok", preview.transactions.single { it.amountRupiah == 12_345L }.description)
+    }
+
     @Test
     fun `the blank template imports as nothing, without errors`() {
         val preview = importer.preview("template.xlsx", FinanceWorkbookExporter().template(listOf(TemplateCategory("Penjualan & Jasa", CategoryRole.REVENUE, null))))

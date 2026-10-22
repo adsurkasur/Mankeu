@@ -94,7 +94,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.domain.CategoryRole
-import com.mankeu.domain.DefaultMasterData
 import com.mankeu.domain.CostNature
 import com.mankeu.data.PlanAssembly
 import com.mankeu.domain.FinancialEventType
@@ -251,15 +250,8 @@ fun EntryScreen(
     val compatibleCategories = state.categories
         .filter { CategoryRole.parse(it.role).cashTypeFor(incoming) != null }
         .sortedBy { CategoryRole.parse(it.role) !in setOf(CategoryRole.REVENUE, CategoryRole.EXPENSE) }
-    // Default: the category last used for this direction (a warung records the same few things all
-    // day), else the starting list's order. Alphabetical order used to preselect "Pendapatan Lain"
-    // for every sale, which an owner new to the app never changed (audit 2026-10-22).
     LaunchedEffect(selected, compatibleCategories) {
-        if (compatibleCategories.none { it.id == categoryId }) {
-            val starting = DefaultMasterData.categories.map { it.name }
-            categoryId = state.events.firstOrNull { e -> compatibleCategories.any { it.id == e.categoryId } }?.categoryId
-                ?: compatibleCategories.minByOrNull { c -> starting.indexOf(c.name).let { if (it < 0) Int.MAX_VALUE else it } }?.id
-        }
+        if (compatibleCategories.none { it.id == categoryId }) categoryId = defaultCategoryId(compatibleCategories, state.events)
     }
     LaunchedEffect(state.categories, pendingCategoryName) {
         pendingCategoryName?.let { pending ->

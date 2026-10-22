@@ -153,10 +153,10 @@ class FinanceRepository(private val database: AppDatabase) {
 
     fun accountingSummary(bookId: String) = dao.observePostingTotals(bookId).map { it.summary() }
 
-    private fun List<PostingWithEventRow>.summary() = PostingReportCalculator.calculate(
+    private fun List<PostingTotalRow>.summary() = PostingReportCalculator.calculate(
         map {
             PostedRecord(
-                eventId = it.eventId,
+                eventId = "",
                 cashFlowRole = CashFlowRole.valueOf(it.cashFlowRole),
                 account = LedgerAccount.valueOf(it.account),
                 side = PostingSide.valueOf(it.side),
@@ -172,7 +172,7 @@ class FinanceRepository(private val database: AppDatabase) {
             val plan = planAnalysis(project, categories)
             val exportBooks = ensureBookPair(project.id).values.map { book ->
                 // Proyeksi reports from the business plan when there is one, as on every screen.
-                val summary = plan?.summary?.takeIf { book.mode == BookMode.PROJECTION.name } ?: dao.getPostingRows(book.id).summary()
+                val summary = plan?.summary?.takeIf { book.mode == BookMode.PROJECTION.name } ?: dao.getPostingRows(book.id).map { PostingTotalRow(it.cashFlowRole, it.account, it.side, it.amountRupiah) }.summary()
                 FinanceExportBook(
                     book = book,
                     budgets = dao.getBudgetItems(book.id),
@@ -323,6 +323,12 @@ class FinanceRepository(private val database: AppDatabase) {
         dao.insertBusiness(business)
         ensureDefaultCategories(business.id)
         business.id
+    }
+
+    /** A business and its first unit in one transaction: never a business without a unit (DEC-022). */
+    suspend fun createBusinessWithUnit(name: String, unitName: String): Pair<String, String> = database.withTransaction {
+        val businessId = createBusiness(name)
+        businessId to createProject(businessId, unitName)
     }
 
     suspend fun createProject(businessId: String, name: String): String = database.withTransaction {

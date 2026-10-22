@@ -23,6 +23,6 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-Tidak ada. Audit pra-rilis (DEC-022, DEC-023, DEC-024) selesai dan di-commit; laporan:
-`docs/audit/2026-10-22_AUDIT_PRA_RILIS.md`. Sisa yang butuh pemilik ada di bagian 10 laporan itu (uji sync dengan dua HP
-dan akun Google nyata, AAB bertanda tangan, Data Safety, peluncuran bertahap) dan usulan fitur usaha menengah di bagian 8.
+Tidak ada. Review run audit dan perbaikannya selesai (laporan: `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md` bagian 11).
+Sisa untuk pemilik: bagian 10 laporan itu (uji sync dua HP dengan akun Google nyata, AAB bertanda tangan, Data Safety,
+peluncuran bertahap) dan usulan fitur usaha menengah (bagian 8).

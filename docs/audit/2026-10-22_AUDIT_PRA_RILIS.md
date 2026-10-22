@@ -141,7 +141,7 @@ keputusan:
 | Gate | Hasil |
 |---|---|
 | Unit test, lint | Lulus |
-| Instrumented test | 33 test, 0 gagal (2 dilewati: test screenshot yang dijalankan lewat skrip) |
+| Instrumented test | 45 test, 0 gagal (2 dilewati: test screenshot yang dijalankan lewat skrip), setelah review |
 | `ScaleSimulationTest` | 5 berkas, semua angka sama persis |
 | Jalan-panduan screenshot (bantuan + panduan) | Lulus; `check_guide_flow.py` OK |
 | Build release R8 di emulator | Tanpa crash, juga setelah sync ditambahkan (APK 4,25 MB) |
@@ -160,3 +160,25 @@ Dikerjakan pemilik (butuh akun, kunci, atau Play Console):
 4. Pastikan halaman kebijakan privasi di adsurkasur.my.id sudah memuat bagian sync (dari repo ini).
 5. Promosikan ke produksi dengan peluncuran bertahap (mis. 20%), pantau ANR/crash di Play Console.
 
+
+## 11. Review menyeluruh dan perbaikannya (22 Oktober 2026, sore)
+
+Review dua sumbu (standar kode + kesesuaian dengan permintaan dan DEC-022–024) atas seluruh run ini menemukan
+lima bug nyata dan beberapa kekurangan. Semua diperbaiki dan diberi test nyata:
+
+| Temuan | Perbaikan | Bukti |
+|---|---|---|
+| Putaran sync yang sedang mengunggah bisa dibatalkan oleh catatan baru; nomor kiriman dipakai ulang sehingga HP lain melewatkan perubahan | Nomor dipesan sebelum unggah; unggah + pencatatan tak bisa dibatalkan; hanya jeda yang di-debounce | `SyncControllerTest`; uji mutasi: perilaku lama membuat test gagal |
+| Setelah modal awal, jualan berikutnya otomatis berkategori modal | Hanya kategori pendapatan/biaya yang dipilih otomatis | `EntryDefaultsTest`; uji emulator |
+| Pratinjau impor lama menimpa yang baru | Pratinjau yang dibatalkan tidak menulis status | `ViewModelFlowsTest` (berkas 9 ribu vs 547 baris) |
+| Gangguan jaringan disebut "kata sandi salah"; sync pertama gagal mematikan sync | Hanya gagal dekripsi = kata sandi beda; putaran pertama terpisah dari penyalaan | `SyncControllerTest` |
+| Kata sandi tidak selalu dihapus dari memori | Dimuat setelah kunci; tanpa salinan String | Kode |
+| Usaha tanpa unit bila langkah kedua gagal | Satu transaksi | `LedgerIntegrityTest` |
+| Keterangan kosong belum berlaku untuk impor | Kosong → nama kategori | `TemplateImportTest` |
+| Kata sandi beda di HP yang menyala lebih dulu | Gagal dekripsi kiriman HP lain dilaporkan jelas | `SyncControllerTest` |
+| "Uang kas proyeksi", sakelar sapaan yang tak berefek, teks "tawaran" lama | Diganti; sakelar menunjukkan keadaan nyata | Uji emulator |
+| Pemulihan cadangan tidak memicu sync | Memicu putaran | Kode |
+| **Screenshot Play Store basi** (layar yang sudah dihapus) dan rasio 2,22 (di atas batas 2:1 Play) | 7 screenshot baru 1:2 dari aplikasi saat ini, lewat skrip | `scripts/make_store_screenshots.py` |
+| Dokumen basi (skema 11, sync "belum tersambung", path aset lama) | Diperbarui | `check_doc_links.py` |
+
+Catatan proses: commit `075cde9` di run ini tidak menyertakan `logs/`; dicatat di log aktivitas.

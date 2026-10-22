@@ -84,7 +84,7 @@ fun TourOfferCard(stepCount: Int, onStart: () -> Unit, onClose: () -> Unit, modi
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text(stringResource(R.string.tour_offer_later)) }
+                TextButton(onClick = onClose) { Text(stringResource(R.string.tour_offer_close)) }
                 Button(onClick = onStart) { Text(stringResource(R.string.tour_offer_start), fontWeight = FontWeight.Bold) }
             }
         }

@@ -553,7 +553,8 @@ fun MankeuApp(
                                             helpArticle = null
                                             overlay = Overlay.HELP
                                         },
-                                        tourOffersEnabled = prefs.tourOffersEnabled,
+                                        // On only while the welcome will really show: after Tutup it reads off, one tap brings it back.
+                                        tourOffersEnabled = prefs.shouldOfferTour(Tour.HOME),
                                         onTourOffersChange = prefs::updateTourOffers,
                                         onResetTours = {
                                             prefs.resetAllTours()
@@ -671,9 +672,9 @@ fun MankeuApp(
                         onSelectBusiness = viewModel::selectBusiness,
                         onSelectProject = viewModel::selectProject,
                         onCreateBusiness = { name ->
-                            // The first business closes the sheet: it already has its unit, so Beranda is ready.
-                            if (state.businesses.isEmpty()) manageScope = false
-                            viewModel.createBusiness(name, firstUnitName)
+                            // The first business closes the sheet once saved: it already has its unit.
+                            val first = state.businesses.isEmpty()
+                            viewModel.createBusiness(name, firstUnitName) { if (first) manageScope = false }
                         },
                         onCreateProject = viewModel::createProject,
                         onRenameBusiness = viewModel::renameBusiness,

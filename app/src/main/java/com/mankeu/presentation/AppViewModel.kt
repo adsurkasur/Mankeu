@@ -50,12 +50,16 @@ import com.mankeu.auth.FirebaseAuthManager
 import com.mankeu.auth.AuthUser
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.sync.SyncController
+import com.mankeu.sync.SyncPassphraseLost
+import com.mankeu.sync.WrongSyncPassphrase
 import com.mankeu.backup.cloud.DriveBackupFile
 import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -424,10 +428,12 @@ class AppViewModel(
      */
     private fun scheduleSync(delayMillis: Long = 5_000) {
         val sync = syncController ?: return
+        // Only the wait is restarted. The round itself runs in its own job, so a record saved while
+        // a round is uploading never cancels it halfway (review 2026-10-22).
         syncJob?.cancel()
         syncJob = viewModelScope.launch {
             delay(delayMillis)
-            runCatching { sync.syncNow(authUser.value?.email) }
+            viewModelScope.launch { runCatching { sync.syncNow(authUser.value?.email) } }
         }
     }
 
@@ -435,15 +441,23 @@ class AppViewModel(
         val sync = syncController ?: return@launch
         runCatching { sync.syncNow(authUser.value?.email) }
             .onSuccess { report -> report?.let { message.value = UiText.of(R.string.msg_sync_done, it.applied) } }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_sync_failed) }
+            .onFailure { message.value = syncFailure(it) }
     }
 
     fun enableSync(passphrase: CharArray) = viewModelScope.launch {
         val sync = syncController ?: return@launch
+        // A failed check switches nothing on. Once on, the first round runs like any other: a
+        // network blip there leaves sync on and shows in the card, the passphrase is kept.
         runCatching { sync.enable(passphrase, authUser.value?.email) }
-            .onSuccess { message.value = UiText.of(R.string.msg_sync_on) }
-            .onFailure { sync.disable(); message.value = UiText.fromError(it, R.string.msg_sync_failed) }
+            .onSuccess { message.value = UiText.of(R.string.msg_sync_on); scheduleSync(delayMillis = 0) }
+            .onFailure { message.value = syncFailure(it) }
         passphrase.fill(' ')
+    }
+
+    private fun syncFailure(error: Throwable): UiText = when (error) {
+        is WrongSyncPassphrase -> UiText.of(R.string.sync_wrong_passphrase)
+        is SyncPassphraseLost -> UiText.of(R.string.sync_passphrase_lost)
+        else -> UiText.fromError(error, R.string.msg_sync_failed)
     }
 
     fun disableSync() = viewModelScope.launch {
@@ -456,15 +470,13 @@ class AppViewModel(
      * place, and making them create "a unit" before the first record was a step they did not
      * understand (owner decision after the audit walk, 2026-10-22). Branches are added later.
      */
-    fun createBusiness(name: String, firstUnitName: String) = mutating {
-        runCatching {
-            val businessId = repository.createBusiness(name)
-            businessId to repository.createProject(businessId, firstUnitName)
-        }
+    fun createBusiness(name: String, firstUnitName: String, onCreated: () -> Unit = {}) = mutating {
+        runCatching { repository.createBusinessWithUnit(name, firstUnitName) }
             .onSuccess { (businessId, projectId) ->
                 selectedBusinessId.value = businessId
                 selectedProjectId.value = projectId
                 message.value = UiText.of(R.string.msg_business_created)
+                onCreated()
             }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_business_create_failed) }
     }
@@ -731,6 +743,9 @@ class AppViewModel(
                 }
             }
         }
+        // runCatching also catches this job's cancellation; a superseded or cancelled preview must
+        // not write its "failure" over the newer one (review 2026-10-22).
+        currentCoroutineContext().ensureActive()
         if (importState.value != ImportUiState.Loading) return
         importState.value = result.fold(
             onSuccess = { (preview, review) ->
@@ -895,6 +910,8 @@ class AppViewModel(
                 val selection = repository.currentWorkspace()
                 selectedBusinessId.value = selection.businessId
                 selectedProjectId.value = selection.projectId
+                // A restore replaces everything and asks for a full snapshot; send it (DEC-024).
+                scheduleSync(delayMillis = 0)
                 TransferUiState.Success(UiText.of(R.string.msg_restore_ok, restored.rowCount, restored.tableCount))
             },
             onFailure = { TransferUiState.Failure(UiText.fromError(it, R.string.msg_restore_failed)) },

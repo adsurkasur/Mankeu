@@ -12,7 +12,7 @@ evidence_basis:
 
 # V1 Implementation Specification
 
-The original 2026-08-15 version of this spec (credit sales, receivables and payables, loans and interest, reversal, a generic workbook importer and an eleven-sheet export) is in Git history. Owner decisions DEC-011 to DEC-019 replaced those parts; this version states V1 as it stands on Room schema 11.
+The original 2026-08-15 version of this spec (credit sales, receivables and payables, loans and interest, reversal, a generic workbook importer and an eleven-sheet export) is in Git history. Owner decisions DEC-011 to DEC-024 replaced or extended those parts; this version states V1 as it stands on Room schema 12.
 
 ## Release outcome
 

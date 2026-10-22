@@ -99,11 +99,11 @@ Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Andro
 | **Bahasa Pemrograman** | Kotlin 2.0+ (100% Coroutines & StateFlow) |
 | **Antarmuka (UI)** | Jetpack Compose, Material Design 3 (Dynamic Color, Light & Dark Theme) |
 | **Arsitektur** | Domain Kotlin murni, Room repository, satu `AppViewModel` dengan `StateFlow` |
-| **Basis Data Lokal** | Room (SQLite), schema 11, migrasi teruji tanpa migrasi destruktif |
+| **Basis Data Lokal** | Room (SQLite), schema 12, migrasi teruji tanpa migrasi destruktif |
 | **Aritmatika Uang** | Pure Integer Arithmetic (`Long` Rupiah — zero floating-point drift) |
 | **Format Lembar Kerja** | Pembaca dan penulis OOXML sendiri (parser DOM platform, tanpa Apache POI) |
 | **Kriptografi** | `javax.crypto` platform: PBKDF2-HMAC-SHA256 dan AES-256-GCM |
-| **Cadangan Cloud** | Google Drive REST API v3 (`appDataFolder`); kerangka sinkronisasi multi-perangkat ada di `sync/`, belum tersambung ke UI |
+| **Cadangan Cloud** | Google Drive REST API v3 (`appDataFolder`); sinkronisasi antar-HP terenkripsi ujung ke ujung (`sync/`, DEC-024) |
 | **Continuous Integration** | GitHub Actions (Build, Test, Lint, Auto-Release) |
 
 ---

@@ -1,6 +1,6 @@
 # Arsitektur Sistem Mankeu
 
-Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite **schema 12** di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional dan kerangka sinkronisasi (DEC-013, belum tersambung ke UI).
+Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite **schema 12** di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional dan sinkronisasi antar-HP terenkripsi (DEC-013, DEC-024).
 
 ## 1. Lapisan dan dependensi
 

@@ -2,7 +2,7 @@
 
 ### [DEC-024] Sync Between Phones Is a Release Feature (Schema 12)
 - **Date**: 2026-10-22
-- **Status**: Accepted (owner, pre-release grill: "Jadikan fitur rilis", then account, passphrase, trigger and conflict choices). Implemented; engine and UI tested on the emulator; not yet tested against a real Google account on two phones.
+- **Status**: Accepted (owner, pre-release grill: "Jadikan fitur rilis", then account, passphrase, trigger and conflict choices). Implemented. Engine, controller and ViewModel triggers are tested with two phones over an in-memory store (`SyncEngineTest`, `SyncControllerTest`, `ViewModelFlowsTest`); the settings card was checked on the emulator. **Not yet tested against Google Drive with a real account on two phones.** Corrected after the review of 2026-10-22, which also fixed: a debounce that cancelled a running round (push numbers are now reserved before upload, upload + acknowledge are non-cancellable), a download error reported as a wrong passphrase, and a first-round network failure that switched sync off.
 - **Context**: DEC-013 built an end-to-end encrypted sync framework but nothing used it, while its triggers filled `sync_outbox` on every phone (about four rows per transaction, never read). The owner chose to ship sync rather than remove it.
 - **Decision**:
   1. One Google account for all phones of a business; sync lives in that account's `drive.appdata` folder.

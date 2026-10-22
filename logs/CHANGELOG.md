@@ -35,6 +35,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "Proyeksi" is now "Rencana", and the Rencana/Realisasi switch appears once a unit exists. Laporan says "Untung / Rugi kas" like Beranda.
 - Version 0.1.0; release builds are minified with R8 (DEC-023).
 ### Fixed
+- Sync: a record saved while a round was uploading could cancel it and make other phones skip later changes; a dropped connection while switching sync on was reported as a wrong passphrase; a failed first round turned sync off and forgot the passphrase. A phone with a different passphrase now says so instead of failing vaguely.
+- After recording opening money (or buying equipment) the next entry preselected that category, so a sale could be booked as capital in one tap; only sales and cost categories are preselected now.
+- Choosing a second Excel file while the first was still being read could replace the new preview with an error.
+- A Keterangan cell left empty in the Excel template is accepted and takes the category name, like in the entry form.
+- A business and its first unit are created together or not at all; restoring a backup starts a sync round.
+- The "Tampilkan sapaan panduan" switch shows whether the welcome will appear and brings it back with one tap; "Uang kas proyeksi" read "Uang kas rencana".
+- Play Store screenshots showed removed screens and were taller than Play accepts (2.22:1); seven new 1:2 screenshots are made from the current app by `scripts/make_store_screenshots.py`.
 - "Tambah Usaha" (and the other empty-state buttons for a business or unit) opened Berkas dan Data instead of the business form.
 - Catat Pemasukan preselected "Pendapatan Lain", so sales of a new owner were recorded as other income and the break-even status was wrong.
 - The import "Batal" buttons did not cancel; reading now stops for real and saving no longer offers a cancel it cannot honour.

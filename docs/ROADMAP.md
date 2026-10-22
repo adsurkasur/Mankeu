@@ -22,7 +22,7 @@ This roadmap is a dependency map, not a fixed queue. Independent tasks may proce
 | AAC-002 | Open product decisions | Final name timing, minimum device baseline, and release ownership | package `com.mankeu` and minSdk 26 set; release ownership open | AAC-001 |
 | AAC-003 | Native foundation | Reproducible Kotlin/Compose project with static checks and adaptive shell | implemented; device matrix pending | AAC-001 |
 | AAC-004 | Domain kernel | Exact money, balanced cash events, businesses/units, two books, business plan, stock, report calculations | implemented and unit-verified | AAC-001 |
-| AAC-005 | Local persistence | Room schema, repositories, migrations, and recovery tests | schema 11; migrations 7→11 tested step by step (`MigrationTest`) | AAC-004 |
+| AAC-005 | Local persistence | Room schema, repositories, migrations, and recovery tests | schema 12; migrations 7→12 tested step by step (`MigrationTest`) | AAC-004 |
 | AAC-006 | Core mobile workflows | Scope, money in/out with Ubah/Hapus, Rencana Usaha, Stok, reports on phone/tablet | implemented; workflow-verified on emulator; field UX evidence pending | AAC-003–005 |
 | AAC-007 | Template import | Mankeu template only (DEC-012), preview, atomic commit, duplicate warning, Batalkan impor | implemented and tested | AAC-004–005 |
 | AAC-008 | Export and round trip | Template-format Excel export, PDF report, lossless reimport | implemented and tested | AAC-005, AAC-007 |

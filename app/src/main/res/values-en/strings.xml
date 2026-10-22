@@ -66,6 +66,8 @@
     <string name="msg_sync_off">Sync is off on this phone.</string>
     <string name="msg_sync_done">Sync finished: %1$d changes received from other phones.</string>
     <string name="msg_sync_failed">Sync failed.</string>
+    <string name="sync_wrong_passphrase">The sync passphrase does not match the one used on your other phone. Use the same sync passphrase on every phone.</string>
+    <string name="sync_passphrase_lost">This phone needs the sync passphrase again. Turn sync off, then on again.</string>
     <string name="home_negative_cash_title">Cash below zero?</string>
     <string name="home_negative_cash_body">If the money is in the drawer or the bank, the money you had before you started recording is probably missing. Record it once as owner capital and the cash figure will match.</string>
     <string name="home_negative_cash_action">Record starting money</string>
@@ -225,7 +227,7 @@
     <!-- Guided tour and about -->
     <string name="tour_replay">Guide for this page</string>
     <string name="settings_tour_reset">Replay all guides</string>
-    <string name="settings_tour_reset_help">Mark every guide unseen, so each page explains itself again the next time you open it.</string>
+    <string name="settings_tour_reset_help">Mark every guide as unseen: the welcome shows again on the home page. Every page guide can always be played from the ? button.</string>
     <string name="tour_btn_next">Next</string>
     <string name="tour_btn_skip">Skip</string>
     <string name="tour_btn_finish">Start using</string>
@@ -633,7 +635,7 @@
     <string name="tour_learn_more">Learn more</string>
     <string name="tour_offer_text">Welcome! Take a short guide (%1$d steps)? Whenever you need help, tap the ? button at the top right.</string>
     <string name="tour_offer_start">Show me</string>
-    <string name="tour_offer_later">Close</string>
+    <string name="tour_offer_close">Close</string>
     <string name="settings_tour_offers">Show the welcome guide on the home page</string>
     <string name="help_center_title">Help Center</string>
     <string name="help_search_hint">Search help, e.g. stock, break-even, import</string>
@@ -707,7 +709,7 @@
     <string name="tour2_scope_unit_title">Branch or unit</string>
     <string name="tour2_scope_unit_desc">A branch, field or season inside one business. Each unit has its own records, plan and stock.</string>
     <string name="tour2_settings_guides_title">Guides and help</string>
-    <string name="tour2_settings_guides_desc">Open the Help Center, turn guide offers off, or start every guide again.</string>
+    <string name="tour2_settings_guides_desc">Open the Help Center, turn the home welcome on or off, or start every guide again.</string>
     <string name="tour2_settings_display_title">Display</string>
     <string name="tour2_settings_display_desc">Light or dark theme, language, motion, vibration and sound.</string>
     <string name="tour2_settings_drive_title">Google Drive</string>

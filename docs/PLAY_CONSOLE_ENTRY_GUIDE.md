@@ -147,14 +147,17 @@ Kelola arus kas dan kembangkan usaha Anda bersama Mankeu!
 
 Aset visual resmi dengan resolusi presisi telah dibuat dan siap di-drag-and-drop dari folder komputer Anda:
 
-| Aset | Ukuran / Format | Lokasi Berkas di Komputer |
+| Aset | Ukuran / Format | Lokasi di repo |
 | :--- | :--- | :--- |
-| **App Icon** | 512 × 512 px (PNG) | `E:\Managed Projects\umkm-man-keu\docs\playstore\app_icon_512x512.png` |
-| **Feature Graphic** | 1024 × 500 px (PNG) | `E:\Managed Projects\umkm-man-keu\docs\playstore\feature_graphic_1024x500.png` |
-| **Screenshot 1** | Beranda & Realisasi Kas | `E:\Managed Projects\umkm-man-keu\docs\playstore\screenshots\01_beranda_realisasi.png` |
-| **Screenshot 2** | Proyeksi Anggaran M3 | `E:\Managed Projects\umkm-man-keu\docs\playstore\screenshots\02_proyeksi_anggaran.png` |
-| **Screenshot 3** | Tampilan Mode Gelap | `E:\Managed Projects\umkm-man-keu\docs\playstore\screenshots\03_mode_gelap.png` |
-| **Screenshot 4** | Navigasi Unit Usaha | `E:\Managed Projects\umkm-man-keu\docs\playstore\screenshots\04_unit_usaha_aktif.png` |
+| **App Icon** | 512 × 512 px (PNG) | `docs/playstore/app_icon_512x512.png` |
+| **Feature Graphic** | 1024 × 500 px (PNG) | `docs/playstore/feature_graphic_1024x500.png` |
+| **Screenshot 1** | Beranda: kas, untung/rugi, komposisi biaya (720 × 1440, 1:2) | `docs/assets/store/screenshot-01-beranda.png` |
+| **Screenshot 2** | Rencana Usaha: kelayakan, BEP per produk, kebutuhan modal (720 × 1440, 1:2) | `docs/assets/store/screenshot-02-rencana-kelayakan.png` |
+| **Screenshot 3** | Catatan dengan Ubah dan Hapus (720 × 1440, 1:2) | `docs/assets/store/screenshot-03-catatan-ubah-hapus.png` |
+| **Screenshot 4** | Laporan: Status BEP bulan ini (720 × 1440, 1:2) | `docs/assets/store/screenshot-04-laporan-bep.png` |
+| **Screenshot 5** | Stok per unit (720 × 1440, 1:2) | `docs/assets/store/screenshot-05-stok.png` |
+| **Screenshot 6** | Pratinjau impor Excel (720 × 1440, 1:2) | `docs/assets/store/screenshot-06-impor-excel.png` |
+| **Screenshot 7** | Sinkronisasi antar-HP (720 × 1440, 1:2) | `docs/assets/store/screenshot-07-sinkronisasi.png` |
 
 ---
 
@@ -180,4 +183,4 @@ Jika ingin CI/CD GitHub Actions mengupload rilis secara otomatis:
 
 3. **Di GitHub Repository:**
    - Masukkan seluruh isi teks file JSON tersebut ke Secret:
-     `PLAY_STORE_SERVICE_ACCOUNT_JSON` di `https://github.com/adsurkasur/umkm-man-keu/settings/secrets/actions`.
+     `PLAY_STORE_SERVICE_ACCOUNT_JSON` di `https://github.com/adsurkasur/Mankeu/settings/secrets/actions`.

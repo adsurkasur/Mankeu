@@ -55,7 +55,10 @@ evidence_basis:
    inserted, `sync_meta` keeps `alias:<table>:<remoteId>` → local id, and `categoryId`, `productId` and
    `stockItemId` of incoming rows are rewritten through it, now and in later change sets. Merges,
    skipped edits and refused rows become one SYSTEM notice on the phone where they happened (written
-   with capture off, so it is not sent on). Upserts are applied parents
+   with capture off, so it is not sent on).
+   A DELETE that arrives for an aliased row deletes the local twin: the two rows are the same thing
+   for the owner. Categories are archived (an UPDATE) rather than deleted in normal use, and the
+   archive likewise reaches the twin; only "Hapus semua data" deletes, and it is local. Upserts are applied parents
    first as UPDATE-then-INSERT (never `INSERT OR REPLACE`, which would cascade-delete journals);
    deletes children first. A row a constraint refuses is skipped and counted (`rejected`).
 
@@ -88,9 +91,14 @@ place (same id), so two devices editing the same record is a real conflict for t
 2. **Passphrase.** Typed once per phone, at least 8 characters, the same on every phone; kept
    encrypted by a non-exportable Keystore key. Switching sync on checks it against a change set
    another phone already stored and refuses a mismatch before anything is written. Lost Keystore
-   (new phone, reset) → the card asks to switch sync off and on again.
-3. **Trigger.** On app start, 5 seconds after the last local change (debounced), and from
-   "Sinkronkan sekarang". Automatic rounds are quiet; failures show in the card. No background work
+   (new phone, reset) → the card asks to switch sync off and on again. A phone whose passphrase differs from
+   the others (possible when it switched on before any other phone had pushed) fails its rounds with
+   "kata sandi sync tidak cocok" instead of applying anything.
+3. **Trigger.** On app start, 5 seconds after the last local change (debounced), after a restore,
+   and from "Sinkronkan sekarang". Only the wait is debounced: a round that started always finishes.
+   Its push number is reserved before the upload, and upload + acknowledgement run non-cancellable,
+   so a dropped or cancelled upload is retried under a new number (other phones skip numbers at or
+   below their cursor). Automatic rounds are quiet; failures show in the card. No background work
    while the app is closed.
 4. **Conflicts.** Automatic: last writer wins per row; equal names merge; a notice reports both.
 5. **Capture only while on.** Schema 12 recreates the triggers with the `sync_enabled` condition and

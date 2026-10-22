@@ -7,7 +7,7 @@ sensitivity: internal
 
 # Panduan Tes Manual
 
-Panduan ini menguji build debug Mankeu (Room schema 11), bukan rilis Play Store. Gunakan data rekaan; jangan jadikan build debug satu-satunya tempat catatan keuangan asli.
+Panduan ini menguji build debug Mankeu (Room schema 12), bukan rilis Play Store. Gunakan data rekaan; jangan jadikan build debug satu-satunya tempat catatan keuangan asli.
 
 ## 1. Jalankan aplikasi
 

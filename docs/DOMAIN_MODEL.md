@@ -69,9 +69,9 @@ is created on the user's behalf since D-015.
 | `ProvenanceRecord` | target record/field, source locator, rationale | Kept for history; the template importer writes none (DEC-012). |
 | `ImportNotice` | severity, title, explanation, batch (null for SYSTEM notices) | Every import and every data cleanup leaves one. |
 
-## Implemented persistence (schema 11)
+## Implemented persistence (schema 12)
 
-Room schema 11 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products and cost components, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
+Room schema 12 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products and cost components, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
 
 - scope consistency across business, unit, book, and category;
 - exact positive rupiah values;

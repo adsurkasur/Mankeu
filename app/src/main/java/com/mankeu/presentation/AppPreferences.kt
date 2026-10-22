@@ -152,7 +152,7 @@ class AppPreferencesState internal constructor(context: Context) {
     var tourSeen: Map<Tour, Int> by mutableStateOf(Tour.entries.associateWith { readTourSeen(it) })
         private set
 
-    /** Off after "Jangan tawarkan panduan lagi"; the Pengaturan switch turns it back on. */
+    /** The Pengaturan switch for the welcome card on Beranda (DEC-022: the only offer left). */
     var tourOffersEnabled: Boolean by mutableStateOf(appContext.prefs().getBoolean(KEY_TOUR_OFFERS, true))
         private set
 
@@ -163,12 +163,17 @@ class AppPreferencesState internal constructor(context: Context) {
         appContext.prefs().edit { putInt(KEY_TOUR_SEEN_PREFIX + tour.id, tour.version) }
     }
 
+    /** Switching the welcome on shows it again on Beranda even if it was closed before. */
     fun updateTourOffers(enabled: Boolean) {
         tourOffersEnabled = enabled
-        appContext.prefs().edit { putBoolean(KEY_TOUR_OFFERS, enabled) }
+        if (enabled) tourSeen = tourSeen + (Tour.HOME to 0)
+        appContext.prefs().edit {
+            putBoolean(KEY_TOUR_OFFERS, enabled)
+            if (enabled) putInt(KEY_TOUR_SEEN_PREFIX + Tour.HOME.id, 0)
+        }
     }
 
-    /** Every tour unseen and offers on again: each page offers its tour on the next visit. */
+    /** Every tour unseen and the welcome on again: Beranda greets on the next visit. */
     fun resetAllTours() {
         tourSeen = Tour.entries.associateWith { 0 }
         tourOffersEnabled = true

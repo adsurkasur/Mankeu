@@ -79,6 +79,29 @@ class LedgerIntegrityTest {
         assertEquals(-250_000, summary().profitRupiah)
     }
 
+    /** DEC-022: a blank description takes the category name, on record and on edit. */
+    @Test
+    fun aBlankDescriptionBecomesTheCategoryName() = runBlocking {
+        val categoryId = repository.createCategory(businessId, "Jualan Gorengan", CategoryRole.REVENUE)
+        val sale = repository.recordEvent(draft(CASH_INCOME, 20_000).copy(description = "  ", category = "Jualan Gorengan", categoryId = categoryId))
+        assertEquals("Jualan Gorengan", dao.getEvent(sale)!!.description)
+
+        repository.updateEvent(sale, draft(CASH_INCOME, 25_000).copy(description = "", category = "Jualan Gorengan", categoryId = categoryId))
+        assertEquals("Jualan Gorengan", dao.getEvent(sale)!!.description)
+    }
+
+    /** A business never exists without its first unit (review 2026-10-22): both or neither. */
+    @Test
+    fun aBusinessAndItsFirstUnitAreCreatedTogetherOrNotAtAll() = runBlocking {
+        val before = dao.getBusinesses().size
+
+        assertRefused { repository.createBusinessWithUnit("Toko Baru", "   ") }
+        assertEquals(before, dao.getBusinesses().size)
+
+        val (business, unit) = repository.createBusinessWithUnit("Toko Baru", "Utama")
+        assertEquals(business, dao.getProject(unit)!!.businessId)
+    }
+
     @Test
     fun editingIsValidatedLikeRecording() = runBlocking {
         val sale = record(CASH_INCOME, 100_000)

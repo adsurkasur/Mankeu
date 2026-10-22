@@ -2,6 +2,8 @@ package com.mankeu.sync
 
 import com.mankeu.backup.PasswordBackupCipher
 import com.mankeu.backup.PortableBackupCodec
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /** One encrypted change set as the remote store lists it. */
 data class RemoteChangeSet(val id: String, val deviceId: String, val pushNumber: Long)
@@ -42,7 +44,10 @@ class SyncCoordinator(
             .filter { it.pushNumber > engine.remoteCursor(it.deviceId) }
             .sortedWith(compareBy({ it.deviceId }, { it.pushNumber }))
             .forEach { remote ->
-                val changeSet = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(transport.download(remote.id), passphrase))
+                val encrypted = transport.download(remote.id)
+                // Only a failed decryption means another passphrase; a download error stays itself.
+                val plain = runCatching { PasswordBackupCipher.decrypt(encrypted, passphrase) }.getOrElse { throw WrongSyncPassphrase() }
+                val changeSet = PortableBackupCodec.decode(plain)
                 val header = engine.header(changeSet)
                 require(header.deviceId == remote.deviceId && header.pushNumber == remote.pushNumber) {
                     "Isi perubahan tidak cocok dengan namanya; berkas dilewati demi keamanan."
@@ -57,8 +62,16 @@ class SyncCoordinator(
             }
         val local = engine.collectLocalChanges()
         if (local != null) {
-            transport.upload(me, local.pushNumber, PasswordBackupCipher.encrypt(PortableBackupCodec.encode(local.changeSet), passphrase))
-            engine.acknowledge(local)
+            val encrypted = PasswordBackupCipher.encrypt(PortableBackupCodec.encode(local.changeSet), passphrase)
+            // The number is taken before uploading, so an upload that fails or lands unacknowledged is
+            // retried under a new number: other phones skip numbers at or below their cursor, so reusing
+            // one would hide the retried changes from a phone that already saw it (review 2026-10-22).
+            engine.reserve(local)
+            // Upload and acknowledge finish together even if the caller is cancelled meanwhile.
+            withContext(NonCancellable) {
+                transport.upload(me, local.pushNumber, encrypted)
+                engine.acknowledge(local)
+            }
         }
         return Report(pulled, applied, older, rejected, pushed = local != null, merged = merged)
     }

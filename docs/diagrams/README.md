@@ -1,10 +1,10 @@
 # Katalog Diagram Sistem Mankeu
 
-Diagram arsitektur, basis data, alur pengguna, proses bisnis, dan siklus hidup Mankeu dalam Mermaid. Terakhir diselaraskan dengan kode pada **2026-10-22** (Room schema 11, DEC-011 sampai DEC-019).
+Diagram arsitektur, basis data, alur pengguna, proses bisnis, dan siklus hidup Mankeu dalam Mermaid. Terakhir diselaraskan dengan kode pada **2026-10-22** (Room schema 12, DEC-011 sampai DEC-024).
 
 | No | Dokumen | Isi | Jenis |
 | :-: | :-- | :-- | :-: |
-| 1 | [01_entity_relationship_diagram.md](01_entity_relationship_diagram.md) | Schema 11: 17 tabel, foreign key sungguhan dibedakan dari referensi logis | ERD |
+| 1 | [01_entity_relationship_diagram.md](01_entity_relationship_diagram.md) | Schema 12 (tabel sama dengan 11): 17 tabel, foreign key sungguhan dibedakan dari referensi logis | ERD |
 | 2 | [02_architecture_diagram.md](02_architecture_diagram.md) | Lapisan dan dependensi, pohon komponen Compose, aliran data reaktif, kerangka sinkronisasi | Flowchart |
 | 3 | [03_use_case_diagram.md](03_use_case_diagram.md) | Pemilik usaha dan sistem eksternal terhadap tujuh modul | Use case |
 | 4 | [04_class_diagram.md](04_class_diagram.md) | Model domain, kalkulator, repository, DAO, ViewModel | Class |

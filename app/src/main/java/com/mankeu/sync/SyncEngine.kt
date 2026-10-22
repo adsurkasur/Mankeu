@@ -91,10 +91,12 @@ class SyncEngine(private val database: AppDatabase) {
         )
     }
 
+    /** Takes [changes]' push number before uploading, so a failed upload never reuses it. */
+    suspend fun reserve(changes: LocalChanges) = dao.setMeta(PUSH_COUNTER, changes.pushNumber.toString())
+
     /** Call once [changes] is safely stored remotely. */
     suspend fun acknowledge(changes: LocalChanges) = database.withTransaction {
         dao.acknowledge(changes.upToSeq)
-        dao.setMeta(PUSH_COUNTER, changes.pushNumber.toString())
         if (changes.full) dao.clearMeta(SyncSchema.REQUIRES_FULL_SNAPSHOT)
     }
 

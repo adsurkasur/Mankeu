@@ -56,10 +56,10 @@ The new product may reuse validated formulas, fixtures, terms, and test ideas. I
 
 As of 2026-10-22 (verified against the code; decisions in `logs/DECISION_LOG.md`):
 
-- Android app `com.mankeu`, version 0.1.0 (code 7, prepared for the first production release), Room schema 11: cash recording with Ubah/Hapus, two books per unit (Realisasi and Rencana), business plan with products, cost recipes and break-even, stock per unit, reports, PDF and Excel export, template import with undo, encrypted backup to a file or Google Drive, offered page tours and an in-app help center.
+- Android app `com.mankeu`, version 0.1.0 (code 7, prepared for the first production release), Room schema 12: cash recording with Ubah/Hapus, two books per unit (Realisasi and Rencana), business plan with products, cost recipes and break-even, stock per unit, reports, PDF and Excel export, template import with undo, encrypted backup to a file or Google Drive, a welcome card with page tours behind the ? button and an in-app help center, sync between phones (DEC-024).
 - Strict cash (DEC-011): no receivables, payables, loans, instalments or interest anywhere.
-- Multi-device sync: framework implemented (DEC-013), not wired to the UI.
-- Releases: v0.0.4 to v0.0.6 went through the Play Console pipeline to the internal testing track (`docs/PLAY_STORE_DEPLOYMENT.md`); no public production release is recorded. Schema 6 to 11 are unreleased.
+- Multi-device sync: offered in Pengaturan (DEC-013, DEC-024); a two-phone test with a real Google account is pending.
+- Releases: v0.0.4 to v0.0.6 went through the Play Console pipeline to the internal testing track (`docs/PLAY_STORE_DEPLOYMENT.md`); no public production release is recorded. Schema 6 to 12 are unreleased.
 - Research protocol: planned, not approved or executed.
 
 ## Success definition

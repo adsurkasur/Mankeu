@@ -225,13 +225,16 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 | Asset Name | Resolution / Format | Purpose | File Location |
 | :--- | :--- | :--- | :--- |
 | **App Icon** | 512 x 512 px PNG (32-bit) | Launcher & Google Play Store Icon | `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` |
-| **Feature Graphic** | 1024 x 500 px JPEG/PNG | Google Play Store Banner Header | `docs/assets/store/feature-graphic.png` |
-| **Screenshot 01** | High-Res PNG Phone | Beranda & Ringkasan Keuangan | `docs/assets/store/screenshot-01-beranda.png` |
-| **Screenshot 02** | High-Res PNG Tablet/Phone | Kelayakan & BEP | `docs/assets/store/screenshot-02-kelayakan-bep-hpp.png` |
-| **Screenshot 03** | High-Res PNG Phone | Impor Templat Excel Mankeu | `docs/assets/store/screenshot-03-impor-excel.png` |
-| **Screenshot 04** | High-Res PNG Phone | Laporan Rincian Arus Kas & Biaya Operasional | `docs/assets/store/screenshot-04-laporan-keuangan.png` |
-| **Screenshot 05** | High-Res PNG Tablet/Phone | Buku Kas Terisolasi (Realisasi vs Proyeksi Anggaran) | `docs/assets/store/screenshot-05-buku-kas-anggaran.png` |
-| **Screenshot 06** | High-Res PNG Phone | Pengaturan Akun & Cadangan Terenkripsi AES-256-GCM | `docs/assets/store/screenshot-06-cadangan-terenkripsi.png` |
+| **Feature Graphic** | 1024 x 500 px PNG | Google Play Store Banner Header | `docs/playstore/feature_graphic_1024x500.png` |
+| **Screenshot 01** | 720 x 1440 px PNG Phone (1:2) | Beranda: kas, untung/rugi, komposisi biaya | `docs/assets/store/screenshot-01-beranda.png` |
+| **Screenshot 02** | 720 x 1440 px PNG Phone (1:2) | Rencana Usaha: kelayakan, BEP per produk, kebutuhan modal | `docs/assets/store/screenshot-02-rencana-kelayakan.png` |
+| **Screenshot 03** | 720 x 1440 px PNG Phone (1:2) | Catatan dengan Ubah dan Hapus | `docs/assets/store/screenshot-03-catatan-ubah-hapus.png` |
+| **Screenshot 04** | 720 x 1440 px PNG Phone (1:2) | Laporan: Status BEP bulan ini | `docs/assets/store/screenshot-04-laporan-bep.png` |
+| **Screenshot 05** | 720 x 1440 px PNG Phone (1:2) | Stok per unit | `docs/assets/store/screenshot-05-stok.png` |
+| **Screenshot 06** | 720 x 1440 px PNG Phone (1:2) | Pratinjau impor Excel | `docs/assets/store/screenshot-06-impor-excel.png` |
+| **Screenshot 07** | 720 x 1440 px PNG Phone (1:2) | Sinkronisasi antar-HP | `docs/assets/store/screenshot-07-sinkronisasi.png` |
+
+Screenshots are cut from the user-guide captures by `py -I scripts/make_store_screenshots.py` (after `scripts/capture_module_screenshots.ps1`), so they always show the current app. Play rejects a long side over twice the short side; the old 1080 x 2400 shots (2.22) and the pre-DEC-014 tablet shots were removed on 2026-10-22.
 
 ---
 

@@ -23,6 +23,7 @@ class MankeuApplication : Application() {
     val authService by lazy { FirebaseAuthManager() }
     val cloudBackupClient by lazy { GoogleDriveBackupClient() }
     val syncController by lazy {
-        SyncController(database, SyncEngine(database), cloudBackupClient, DriveTokenProvider(this), SyncPassphraseStore(this))
+        val tokens = DriveTokenProvider(this)
+        SyncController(database, SyncEngine(database), SyncPassphraseStore(this)) { email -> cloudBackupClient.asSyncTransport { tokens.token(email) } }
     }
 }

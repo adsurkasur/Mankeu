@@ -42,8 +42,10 @@ android {
 
     buildTypes {
         release {
-            // R8 for the production release (audit 2026-10-22): smaller download, verified by
-            // installing the minified build and walking record, report, export and backup.
+            // R8 for the production release (DEC-023): smaller download. Checked on the emulator with
+            // the minified build: create a business, record, reports, stock, help, settings and the
+            // sync card. Import, export, backup and a real sync round need the file picker or a Google
+            // account and are on the owner's release checklist (docs/audit/2026-10-22_AUDIT_PRA_RILIS.md).
             isMinifyEnabled = true
             isShrinkResources = true
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: System.getenv("KEYSTORE_FILE")

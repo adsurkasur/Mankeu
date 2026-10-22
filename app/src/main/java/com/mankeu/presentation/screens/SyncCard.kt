@@ -33,6 +33,8 @@ import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.TourTarget
 import com.mankeu.presentation.components.tourTarget
 import com.mankeu.sync.SyncController
+import com.mankeu.sync.SyncPassphraseLost
+import com.mankeu.sync.WrongSyncPassphrase
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -76,7 +78,12 @@ fun SyncCard(
                     SyncActions(onSyncNow) { confirmOff = true }
                 }
                 is SyncController.State.Failed -> {
-                    Text(stringResource(R.string.sync_failed, state.message), color = MaterialTheme.colorScheme.error)
+                    val reason = when (state.cause) {
+                        is WrongSyncPassphrase -> stringResource(R.string.sync_wrong_passphrase)
+                        is SyncPassphraseLost -> stringResource(R.string.sync_passphrase_lost)
+                        else -> stringResource(R.string.sync_failed, state.cause.message ?: state.cause.javaClass.simpleName)
+                    }
+                    Text(reason, color = MaterialTheme.colorScheme.error)
                     Text(lastSyncText(state.lastSyncAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     SyncActions(onSyncNow) { confirmOff = true }
                 }

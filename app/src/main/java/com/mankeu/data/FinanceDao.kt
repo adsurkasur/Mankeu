@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
  * database), so a year is a few dozen rows however busy the book is.
  */
 data class CashFlowRow(
+    /** One of the month's events (the query keeps MIN(id)); it only names the row. */
     val id: String,
     val dateEpochDay: Long,
     val type: String,
@@ -39,6 +40,9 @@ data class CostRow(
     val quantityText: String?,
     val usefulLifeMonths: Int?,
 )
+
+/** Posting total per (cash-flow role, account, side); see [FinanceDao.observePostingTotals]. */
+data class PostingTotalRow(val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
 
 data class PostingWithEventRow(
     val eventId: String,
@@ -236,7 +240,7 @@ interface FinanceDao {
      */
     @Query(
         """
-        SELECT '' AS eventId, e.cashFlowRole, p.account, p.side, SUM(p.amountRupiah) AS amountRupiah
+        SELECT e.cashFlowRole, p.account, p.side, SUM(p.amountRupiah) AS amountRupiah
         FROM financial_events e
         INNER JOIN journal_entries j ON j.sourceEventId = e.id
         INNER JOIN postings p ON p.journalId = j.id
@@ -244,7 +248,7 @@ interface FinanceDao {
         GROUP BY e.cashFlowRole, p.account, p.side
         """,
     )
-    fun observePostingTotals(bookId: String): Flow<List<PostingWithEventRow>>
+    fun observePostingTotals(bookId: String): Flow<List<PostingTotalRow>>
 
     @Query(
         """

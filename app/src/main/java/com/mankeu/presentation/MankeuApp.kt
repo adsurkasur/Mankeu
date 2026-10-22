@@ -6,14 +6,13 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.key
 import com.mankeu.presentation.components.MankeuTooltip
 
-import android.accounts.Account
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.mankeu.auth.DriveTokenProvider
 import com.mankeu.auth.AuthUser
 import com.mankeu.backup.cloud.DriveBackupFile
-import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -192,6 +191,7 @@ fun MankeuApp(
     val recoveryAvailable by viewModel.recoveryAvailable.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
     val authUser by viewModel.authUser.collectAsStateWithLifecycle()
     val driveBackups by viewModel.driveBackups.collectAsStateWithLifecycle()
     val isDriveLoading by viewModel.isDriveLoading.collectAsStateWithLifecycle()
@@ -272,17 +272,10 @@ fun MankeuApp(
         googleSignInLauncher.launch(client.signInIntent)
     }
 
+    val driveTokens = remember(context) { DriveTokenProvider(context) }
     val withDriveToken: (suspend (String) -> Unit) -> Unit = { action ->
         coroutineScope.launch {
-            val user = authUser
-            val tokenResult: Result<String> = runCatching {
-                withContext(Dispatchers.IO) {
-                    val account: Account = GoogleSignIn.getLastSignedInAccount(context)?.account
-                        ?: (user?.email?.let { Account(it, "com.google") })
-                        ?: error("Belum masuk akun Google.")
-                    GoogleAuthUtil.getToken(context, account, "oauth2:https://www.googleapis.com/auth/drive.appdata")
-                }
-            }
+            val tokenResult: Result<String> = runCatching { driveTokens.token(authUser?.email) }
             tokenResult.fold(
                 onSuccess = { token: String -> action(token) },
                 onFailure = { err ->
@@ -306,14 +299,7 @@ fun MankeuApp(
             viewModel.eraseAllData(driveAccessToken = null, onErased = clearUiState)
         } else {
             coroutineScope.launch {
-                runCatching {
-                    withContext(Dispatchers.IO) {
-                        val account = GoogleSignIn.getLastSignedInAccount(context)?.account
-                            ?: authUser?.email?.let { Account(it, "com.google") }
-                            ?: error("Belum masuk akun Google.")
-                        GoogleAuthUtil.getToken(context, account, "oauth2:https://www.googleapis.com/auth/drive.appdata")
-                    }
-                }.fold(
+                runCatching { driveTokens.token(authUser?.email) }.fold(
                     onSuccess = { token -> viewModel.eraseAllData(driveAccessToken = token, onErased = clearUiState) },
                     onFailure = { viewModel.message.value = UiText.fromError(it, R.string.msg_erase_failed) },
                 )
@@ -576,6 +562,10 @@ fun MankeuApp(
                                         },
                                         onEraseAllData = eraseAllData,
                                         isErasing = isSaving,
+                                        syncState = syncState,
+                                        onEnableSync = viewModel::enableSync,
+                                        onDisableSync = viewModel::disableSync,
+                                        onSyncNow = viewModel::syncNow,
                                     )
                                 }
 

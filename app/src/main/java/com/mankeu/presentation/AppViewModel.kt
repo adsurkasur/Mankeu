@@ -49,11 +49,13 @@ import com.mankeu.R
 import com.mankeu.auth.FirebaseAuthManager
 import com.mankeu.auth.AuthUser
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
+import com.mankeu.sync.SyncController
 import com.mankeu.backup.cloud.DriveBackupFile
 import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -146,12 +148,16 @@ class AppViewModel(
     /** The usaha and unit open when the app was last closed, and where to save each new choice. */
     private val rememberedSelection: WorkspaceSelection? = null,
     private val onSelectionChanged: (WorkspaceSelection) -> Unit = {},
+    /** Null in tests and screenshot walks: nothing syncs there. */
+    private val syncController: SyncController? = null,
 ) : ViewModel() {
     private val selectedBusinessId = MutableStateFlow<String?>(null)
     private val selectedProjectId = MutableStateFlow<String?>(null)
     private val selectedBookMode = MutableStateFlow(BookMode.REALIZATION)
 
     val authUser: StateFlow<AuthUser?> = authService.currentUser
+    val syncState: StateFlow<SyncController.State> = syncController?.state ?: MutableStateFlow(SyncController.State.Off)
+    private var syncJob: Job? = null
     val driveBackups = MutableStateFlow<List<DriveBackupFile>>(emptyList())
     val isDriveLoading = MutableStateFlow(false)
 
@@ -346,6 +352,7 @@ class AppViewModel(
     }.stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
 
     init {
+        syncController?.let { sync -> viewModelScope.launch { sync.refresh(); scheduleSync(delayMillis = 0) } }
         // A preview was reviewed against the unit it was opened in (existing products, duplicate
         // file); it must not be committed into another one.
         viewModelScope.launch { selectedProjectId.drop(1).collect { importState.value = ImportUiState.Idle } }
@@ -408,6 +415,40 @@ class AppViewModel(
         } finally {
             isSaving.value = false
         }
+        scheduleSync()
+    }
+
+    /**
+     * Sync a few seconds after the last change (DEC-024), so a burst of records goes in one round.
+     * Quiet: a failure shows in the sync card in Pengaturan, not as a message over the owner's work.
+     */
+    private fun scheduleSync(delayMillis: Long = 5_000) {
+        val sync = syncController ?: return
+        syncJob?.cancel()
+        syncJob = viewModelScope.launch {
+            delay(delayMillis)
+            runCatching { sync.syncNow(authUser.value?.email) }
+        }
+    }
+
+    fun syncNow() = viewModelScope.launch {
+        val sync = syncController ?: return@launch
+        runCatching { sync.syncNow(authUser.value?.email) }
+            .onSuccess { report -> report?.let { message.value = UiText.of(R.string.msg_sync_done, it.applied) } }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_sync_failed) }
+    }
+
+    fun enableSync(passphrase: CharArray) = viewModelScope.launch {
+        val sync = syncController ?: return@launch
+        runCatching { sync.enable(passphrase, authUser.value?.email) }
+            .onSuccess { message.value = UiText.of(R.string.msg_sync_on) }
+            .onFailure { sync.disable(); message.value = UiText.fromError(it, R.string.msg_sync_failed) }
+        passphrase.fill(' ')
+    }
+
+    fun disableSync() = viewModelScope.launch {
+        syncController?.disable()
+        message.value = UiText.of(R.string.msg_sync_off)
     }
 
     /**
@@ -943,6 +984,8 @@ class AppViewModel(
         }
         result.fold(
             onSuccess = { accountDeleted ->
+                // The database's sync flags are gone with sync_meta; the stored passphrase must go too.
+                syncController?.disable()
                 driveBackups.value = emptyList()
                 importState.value = ImportUiState.Idle
                 selectedProjectId.value = null

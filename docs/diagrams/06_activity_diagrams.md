@@ -1,6 +1,6 @@
 # Activity Diagrams - Alur Bisnis Kritis Mankeu
 
-Lima alur yang menulis, mengubah, atau menghapus uang pada Room **schema 11**. Semua pemeriksaan di bawah ini berada di `FinanceRepository`, di dalam `withTransaction`: satu penolakan membatalkan seluruh penulisan.
+Lima alur yang menulis, mengubah, atau menghapus uang pada Room **schema 12**. Semua pemeriksaan di bawah ini berada di `FinanceRepository`, di dalam `withTransaction`: satu penolakan membatalkan seluruh penulisan.
 
 ## 1. Mencatat transaksi
 
@@ -79,7 +79,7 @@ flowchart TD
     batchRow --> categories["Buat kategori baru yang tercantum di pratinjau"]
     categories --> products["Produk dan komponen biaya ke unit"]
     products --> events["Transaksi ke buku Realisasi<br/>event dan jurnal seimbang"]
-    events --> budgets["Rencana Anggaran ke buku Proyeksi"]
+    events --> budgets["Rencana Anggaran ke buku Rencana"]
     budgets --> stockRows["Barang stok ke unit terpilih"]
     stockRows --> notice["Notice: apa yang ditambahkan"]
     notice --> importCommit(["Commit"])

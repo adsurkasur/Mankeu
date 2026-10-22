@@ -1,6 +1,6 @@
 # Peta Dokumentasi Mankeu
 
-Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 11). Dokumen lama yang sudah tidak berlaku ada di [`archive/`](archive/README.md).
+Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 12, versi 0.1.0). Dokumen lama yang sudah tidak berlaku ada di [`archive/`](archive/README.md).
 
 ## Mulai dari sini
 
@@ -29,7 +29,7 @@ Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 11)
 | --- | --- |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stack, lapisan, cadangan, sinkronisasi |
 | [`DATABASE_MIGRATIONS.md`](DATABASE_MIGRATIONS.md) | Riwayat skema dan kompatibilitas cadangan |
-| [`SYNC_ARCHITECTURE.md`](SYNC_ARCHITECTURE.md) | Kerangka sinkronisasi multi-perangkat |
+| [`SYNC_ARCHITECTURE.md`](SYNC_ARCHITECTURE.md) | Sinkronisasi antar-HP (fitur rilis, DEC-024) |
 | [`CLOUD_SYNC_AND_AUTH.md`](CLOUD_SYNC_AND_AUTH.md) | Firebase Auth dan cadangan Google Drive |
 | [`QUALITY_GATES.md`](QUALITY_GATES.md) | Standar bukti dan pengujian |
 | [`MANUAL_TEST_GUIDE.md`](MANUAL_TEST_GUIDE.md) | Skenario uji manual dengan angka yang diharapkan |
@@ -62,8 +62,8 @@ Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 11)
 | [`RESEARCH_AND_VALIDATION.md`](RESEARCH_AND_VALIDATION.md) | Rencana validasi dan riset |
 | [`EVIDENCE_INDEX.md`](EVIDENCE_INDEX.md) | Indeks bukti |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | Tata kelola kontribusi |
-| [`audit/`](audit/) | Audit dan uji 2026-10 beserta rencana perbaikannya |
-| [`evidence/`](evidence/) | Simulasi lintas usaha dan skema 10, generator palet warna |
+| [`audit/`](audit/) | Audit dan uji 2026-10 beserta rencana perbaikannya; audit pra-rilis produksi: [`audit/2026-10-22_AUDIT_PRA_RILIS.md`](audit/2026-10-22_AUDIT_PRA_RILIS.md) |
+| [`evidence/`](evidence/) | Simulasi lintas usaha, skema 10, dan skala UMKM mikro–kecil–menengah; generator palet warna |
 
 ## Merawat dokumen
 

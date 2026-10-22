@@ -21,15 +21,14 @@ interface SyncTransport {
  * One sync round (DEC-013): pull and apply every other device's change sets this device has not
  * applied yet, in push order, then push this device's pending changes.
  *
- * Not wired to the UI or a scheduler yet: the sync passphrase onboarding, the trigger (button,
- * app start, WorkManager) and conflict reporting are open decisions listed in
- * `docs/SYNC_ARCHITECTURE.md`. Everything this function needs exists and is tested.
+ * Run by [SyncController] (DEC-024): on app start, a few seconds after a local change, and from the
+ * "Sinkronkan sekarang" button, while sync is switched on.
  */
 class SyncCoordinator(
     private val engine: SyncEngine,
     private val transport: SyncTransport,
 ) {
-    data class Report(val pulledSets: Int, val applied: Int, val skippedOlder: Int, val rejected: Int, val pushed: Boolean)
+    data class Report(val pulledSets: Int, val applied: Int, val skippedOlder: Int, val rejected: Int, val pushed: Boolean, val merged: Int = 0)
 
     suspend fun syncOnce(passphrase: CharArray): Report {
         val me = engine.deviceId()
@@ -37,6 +36,7 @@ class SyncCoordinator(
         var applied = 0
         var older = 0
         var rejected = 0
+        var merged = 0
         transport.list()
             .filter { it.deviceId != me }
             .filter { it.pushNumber > engine.remoteCursor(it.deviceId) }
@@ -53,12 +53,13 @@ class SyncCoordinator(
                 applied += result.applied
                 older += result.skippedOlder
                 rejected += result.rejected
+                merged += result.merged
             }
         val local = engine.collectLocalChanges()
         if (local != null) {
             transport.upload(me, local.pushNumber, PasswordBackupCipher.encrypt(PortableBackupCodec.encode(local.changeSet), passphrase))
             engine.acknowledge(local)
         }
-        return Report(pulled, applied, older, rejected, pushed = local != null)
+        return Report(pulled, applied, older, rejected, pushed = local != null, merged = merged)
     }
 }

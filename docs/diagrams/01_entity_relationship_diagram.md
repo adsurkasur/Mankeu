@@ -75,7 +75,7 @@ erDiagram
 
     budget_items {
         string id PK
-        string bookId FK "buku Proyeksi"
+        string bookId FK "buku Rencana"
         string categoryId FK
         string name
         string normalizedName
@@ -258,7 +258,7 @@ erDiagram
 2. **Jurnal selalu seimbang.** Setiap event memiliki tepat satu `journal_entries` (unik pada `sourceEventId`). Debit dan kredit diperiksa di `insertEventAndJournal` sebelum baris ditulis, di dalam transaksi yang sama.
 3. **Kas murni (DEC-011).** Hanya lima jenis event kas: uang yang benar-benar berpindah.
 4. **Ubah dan Hapus (DEC-019).** `updateEvent` mengganti event di tempat: id, `importBatchId`, dan `createdAtEpochMillis` dipertahankan, jurnal dan posting dibangun ulang. `deleteEvent` menghapus event, dan jurnal serta posting ikut terhapus lewat `CASCADE`. Tidak ada lagi status atau kolom pembalikan.
-5. **Rencana usaha (DEC-014, DEC-017).** Produk dan komponen biaya per unit milik unit (`projects`). Biaya tetap, biaya sekali, aset, dan modal rencana adalah `budget_items` di buku Proyeksi.
+5. **Rencana usaha (DEC-014, DEC-017).** Produk dan komponen biaya per unit milik unit (`projects`). Biaya tetap, biaya sekali, aset, dan modal rencana adalah `budget_items` di buku Rencana.
 6. **Stok per unit (DEC-017).** `stock_items.projectId` NULL berarti dipakai bersama semua unit. Nama unik di antara barang yang terlihat oleh satu unit.
 7. **Impor dan pembatalannya.** Duplikat boleh diimpor ulang dengan peringatan (`hasImported` hanya menghitung batch `COMMITTED`). `undoImportBatch` menghapus event batch, mengarsipkan RAB-nya, menghapus produk dan stoknya, lalu menandai batch `REVERSED` sebagai riwayat.
 8. **Migrasi.** `MIGRATION_10_11` menjalankan `ReversalCleanup` (menghapus setiap pasangan pembalikan beserta jurnalnya, meninggalkan satu notice SYSTEM), lalu membangun ulang `financial_events` dan `journal_entries` tanpa kolom pembalikan dan membuat ulang trigger sinkronisasi. Tidak ada migrasi destruktif.

@@ -22,15 +22,33 @@ import com.mankeu.data.AppDatabase
  * Conflicts are row-level last-writer-wins on `changedAt`: a remote change is skipped when this
  * device still has an unpushed change to the same row that is newer. Ledger rows travel with their
  * journals and postings in the same change set, so an applied set keeps every journal balanced.
- * A row a constraint refuses (e.g. two devices created the same category name) is skipped and
- * counted in [ApplyResult.rejected]; resolving those is future work, see `docs/SYNC_ARCHITECTURE.md`.
+ *
+ * Two devices that create the same category, stock item or product offline (same natural key,
+ * different ids) are merged: the incoming row is not inserted, an alias remote id -> local id is
+ * kept in `sync_meta`, and every reference to it (`categoryId`, `productId`, `stockItemId`), now and
+ * in later change sets, is rewritten to the local row. Counted in [ApplyResult.merged]. A row a
+ * constraint still refuses is skipped and counted in [ApplyResult.rejected].
  */
 class SyncEngine(private val database: AppDatabase) {
     data class LocalChanges(val changeSet: PortableBackup, val pushNumber: Long, val upToSeq: Long, val full: Boolean)
     data class Header(val deviceId: String, val pushNumber: Long, val full: Boolean)
-    data class ApplyResult(val applied: Int, val skippedOlder: Int, val rejected: Int)
+    data class ApplyResult(val applied: Int, val skippedOlder: Int, val rejected: Int, val merged: Int = 0)
 
     private val dao get() = database.syncDao()
+
+    suspend fun isEnabled(): Boolean = dao.meta(SyncSchema.SYNC_ENABLED) != null
+
+    /** Starts change capture; the first push after this carries every row (a full snapshot). */
+    suspend fun enable() = database.withTransaction {
+        dao.setMeta(SyncSchema.SYNC_ENABLED, "1")
+        dao.setMeta(SyncSchema.REQUIRES_FULL_SNAPSHOT, "1")
+    }
+
+    /** Stops change capture and drops what was waiting; turning sync on again sends everything. */
+    suspend fun disable() = database.withTransaction {
+        dao.clearMeta(SyncSchema.SYNC_ENABLED)
+        dao.acknowledge(Long.MAX_VALUE)
+    }
 
     suspend fun deviceId(): String = database.withTransaction {
         dao.meta(SyncSchema.DEVICE_ID) ?: run {
@@ -100,6 +118,13 @@ class SyncEngine(private val database: AppDatabase) {
         var applied = 0
         var older = 0
         var rejected = 0
+        var merged = 0
+        fun alias(table: String, id: String): String? =
+            db.query("SELECT value FROM sync_meta WHERE `key` = ?", arrayOf<Any>("$ALIAS$table:$id")).use { if (it.moveToFirst()) it.getString(0) else null }
+        fun resolve(values: Map<String, BackupValue>): Map<String, BackupValue> = values.mapValues { (column, value) ->
+            val target = REFERENCES[column]
+            if (target != null && value is BackupValue.Text) alias(target, value.value)?.let { BackupValue.Text(it) } ?: value else value
+        }
         SyncSchema.quietly(db) {
             fun eachChange(tables: List<String>, op: String, apply: (String, String, Map<String, BackupValue>) -> Unit) {
                 tables.forEach { table ->
@@ -108,14 +133,15 @@ class SyncEngine(private val database: AppDatabase) {
                     data.rows.forEach { row ->
                         val values = data.columns.zip(row).toMap()
                         if ((values[OP] as BackupValue.Text).value != op) return@forEach
-                        val id = (values.getValue("id") as BackupValue.Text).value
+                        val remoteId = (values.getValue("id") as BackupValue.Text).value
+                        val id = alias(table, remoteId) ?: remoteId
                         val changedAt = (values.getValue(CHANGED_AT) as BackupValue.Integer).value
                         if ((localPending[table to id] ?: Long.MIN_VALUE) > changedAt) {
                             older++
                             return@forEach
                         }
                         try {
-                            apply(table, id, values.filterKeys { it in live })
+                            apply(table, id, resolve(values.filterKeys { it in live }) + ("id" to BackupValue.Text(id)))
                             applied++
                         } catch (_: SQLiteConstraintException) {
                             rejected++
@@ -129,14 +155,34 @@ class SyncEngine(private val database: AppDatabase) {
                 // UPDATE then INSERT, never INSERT OR REPLACE: REPLACE deletes first and would
                 // cascade away the row's journals and postings.
                 if (db.update(table, SQLiteDatabase.CONFLICT_ABORT, content, "id = ?", arrayOf(id)) == 0) {
-                    db.insert(table, SQLiteDatabase.CONFLICT_ABORT, content)
+                    val twin = NATURAL_KEYS[table]?.let { keys -> twinOf(db, table, keys, values) }
+                    if (twin != null) {
+                        db.execSQL("INSERT OR REPLACE INTO sync_meta(`key`, value) VALUES (?, ?)", arrayOf<Any>("$ALIAS$table:$id", twin))
+                        merged++
+                    } else {
+                        db.insert(table, SQLiteDatabase.CONFLICT_ABORT, content)
+                    }
                 }
             }
             eachChange(AppDatabase.DATA_TABLES.asReversed(), DELETE) { table, id, _ ->
                 db.delete(table, "id = ?", arrayOf(id))
             }
         }
-        ApplyResult(applied, older, rejected)
+        ApplyResult(applied - merged, older, rejected, merged)
+    }
+
+    /** The local row with the same natural key as an incoming one, e.g. a category of that name. */
+    private fun twinOf(db: SupportSQLiteDatabase, table: String, keys: List<String>, values: Map<String, BackupValue>): String? {
+        if (keys.any { it !in values }) return null
+        val where = keys.joinToString(" AND ") { if (values[it] == BackupValue.Null) "`$it` IS NULL" else "`$it` = ? COLLATE NOCASE" }
+        val args = keys.mapNotNull { key -> when (val v = values.getValue(key)) {
+            BackupValue.Null -> null
+            is BackupValue.Text -> v.value
+            is BackupValue.Integer -> v.value
+            is BackupValue.Real -> v.value
+            is BackupValue.Blob -> v.value
+        } }
+        return db.query("SELECT id FROM `$table` WHERE $where LIMIT 1", args.toTypedArray()).use { if (it.moveToFirst()) it.getString(0) else null }
     }
 
     suspend fun remoteCursor(deviceId: String): Long = dao.meta("$CURSOR$deviceId")?.toLongOrNull() ?: 0
@@ -179,5 +225,16 @@ class SyncEngine(private val database: AppDatabase) {
         const val DELETE = "DELETE"
         private const val PUSH_COUNTER = "push_counter"
         private const val CURSOR = "cursor:"
+        private const val ALIAS = "alias:"
+
+        /** What makes two rows "the same thing" for the owner, per table that can be created offline twice. */
+        private val NATURAL_KEYS = mapOf(
+            "categories" to listOf("businessId", "role", "normalizedName"),
+            "stock_items" to listOf("businessId", "projectId", "name"),
+            "products" to listOf("projectId", "name"),
+        )
+
+        /** Reference columns and the table they point into, rewritten through aliases. */
+        private val REFERENCES = mapOf("categoryId" to "categories", "productId" to "products", "stockItemId" to "stock_items")
     }
 }

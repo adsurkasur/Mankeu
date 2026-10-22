@@ -57,7 +57,7 @@ Repositories ── Room / files / importers / optional remote adapters
 
 - **Domain** (`domain/`): money, five cash event types, balanced journals (`LedgerPolicy`), business plan and break-even (`PlanCalculator`, `ActualBepCalculator`), stock, cash-flow schedules. No Android dependency.
 - **Data** (`data/`): Room entities and DAO, `FinanceRepository` as the single write funnel (every rule enforced inside `withTransaction`), migrations, legacy cleanups for old schemas and backups.
-- **I/O** (`importer/`, `exporter/`, `backup/`, `sync/`): template import and export, PDF, encrypted backup, Drive client, sync framework.
+- **I/O** (`importer/`, `exporter/`, `backup/`, `sync/`): template import and export, PDF, encrypted backup, Drive client, sync.
 - **Presentation:** Compose routes, state holders, formatting, adaptive layout, accessibility.
 
 Import parsing never writes to the database. `FinanceWorkbookImporter` builds a preview from the Mankeu template only (DEC-012); `FinanceRepository.reviewImport` adds what only the database knows, and `commitImport` writes everything in one transaction under a recorded import batch.
@@ -109,7 +109,7 @@ One Gradle module, `:app`, with packages `domain`, `data`, `importer`, `exporter
 - **Backup/restore** (implemented): `EncryptedBackupManager` snapshots every table in `AppDatabase.DATA_TABLES`, encrypts it with AES-256-GCM under a PBKDF2-HMAC-SHA256 key, and writes it to a user-chosen file or to Drive `appDataFolder` (latest five kept). Restore validates the schema (3 to current), keeps an encrypted recovery copy, and upgrades old snapshots with the same cleanups as the migrations.
 - **Erase all data** (implemented, DEC-020): `FinanceRepository.eraseAllData` empties every data table and the sync state; `GoogleDriveBackupClient.deleteAllAppData` removes every file in the app folder; `FirebaseAuthManager.deleteAccount` removes the sign-in user.
 - **Authentication** (implemented, optional): Firebase Auth with Google Sign-In, only to reach the user's Drive (D-033, D-040).
-- **Synchronization** (framework, not wired): SQLite triggers record changes in `sync_outbox`; `SyncEngine` and `SyncCoordinator` exchange encrypted change sets over Drive with row-level last-writer-wins (DEC-013). Details and open owner questions in `docs/SYNC_ARCHITECTURE.md`.
+- **Synchronization** (release feature, DEC-024; see `docs/SYNC_ARCHITECTURE.md`): SQLite triggers record changes in `sync_outbox`; `SyncEngine` and `SyncCoordinator` exchange encrypted change sets over Drive with row-level last-writer-wins (DEC-013). Details and open owner questions in `docs/SYNC_ARCHITECTURE.md`.
 
 ## Security and privacy baseline
 

@@ -52,7 +52,8 @@ class MigrationTest {
         assertNotNull(db.strings("SELECT value FROM sync_meta WHERE `key` = 'device_id'").singleOrNull())
         assertEquals(listOf("1"), db.strings("SELECT value FROM sync_meta WHERE `key` = 'requires_full_snapshot'"))
 
-        // Change capture is live: any write now lands in the outbox.
+        // Change capture is live once sync is switched on (schema 12): a write lands in the outbox.
+        db.execSQL("INSERT INTO sync_meta(`key`, value) VALUES ('sync_enabled', '1')")
         db.execSQL("UPDATE businesses SET name = 'Warung Baru' WHERE id = 'b'")
         assertEquals(listOf("businesses|b|UPSERT"), db.strings("SELECT tableName || '|' || rowId || '|' || op FROM sync_outbox"))
         assertTrue(db.strings("PRAGMA foreign_key_check").isEmpty())
@@ -77,6 +78,8 @@ class MigrationTest {
                     "VALUES ('a', 'plan', 1000000, 5000000, '700', 'cup', 10000, 2000000, 5000, 0)",
             )
             execSQL("DELETE FROM sync_outbox")
+            // Converted rows must reach the outbox on a phone that syncs (capture needs sync on, schema 12).
+            execSQL("INSERT INTO sync_meta(`key`, value) VALUES ('sync_enabled', '1')")
             close()
         }
 
@@ -158,9 +161,31 @@ class MigrationTest {
         assertTrue(columns.none { it in setOf("status", "reversesEventId", "reversedByEventId", "reversalOfJournalId") })
 
         db.execSQL("DELETE FROM sync_outbox")
+        db.execSQL("INSERT INTO sync_meta(`key`, value) VALUES ('sync_enabled', '1')")
         db.execSQL("UPDATE financial_events SET description = 'Jual' WHERE id = 'cash'")
         assertEquals(listOf("financial_events|cash|UPSERT"), db.strings("SELECT tableName || '|' || rowId || '|' || op FROM sync_outbox"))
         assertTrue(db.strings("PRAGMA foreign_key_check").isEmpty())
+    }
+
+    /**
+     * Schema 11 -> 12 (DEC-024): the outbox nobody read is emptied, and with sync off a write is no
+     * longer captured; once sync is on it is.
+     */
+    @Test
+    fun migrate11To12CapturesOnlyWhileSyncIsOn() {
+        helper.createDatabase(DB, 11).apply {
+            execSQL("INSERT INTO businesses VALUES ('b', 'Kedai', 'IDR', 0, 0, 0)")
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(DB, 12, true, AppDatabase.MIGRATION_11_12)
+
+        assertEquals(0, db.count("SELECT COUNT(*) FROM sync_outbox"))
+        db.execSQL("UPDATE businesses SET name = 'Tanpa sync' WHERE id = 'b'")
+        assertEquals(0, db.count("SELECT COUNT(*) FROM sync_outbox"))
+        db.execSQL("INSERT INTO sync_meta(`key`, value) VALUES ('sync_enabled', '1')")
+        db.execSQL("UPDATE businesses SET name = 'Dengan sync' WHERE id = 'b'")
+        assertEquals(listOf("businesses|b|UPSERT"), db.strings("SELECT tableName || '|' || rowId || '|' || op FROM sync_outbox"))
     }
 
     private fun androidx.sqlite.db.SupportSQLiteDatabase.category(id: String, role: String, name: String, normalized: String) =

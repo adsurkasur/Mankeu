@@ -60,7 +60,7 @@ Mankeu is a standalone Android application with a universal financial core and o
 - **FR-EXP-001:** The Excel export is the template format (lossless round trip); the PDF export carries the income statement, cash flow, and feasibility.
 - **FR-BKP-001:** Local backup and restore work without an account.
 - **FR-BKP-002:** Backups are versioned, integrity-checked, and encrypted before public release.
-- **FR-SYNC-001:** Google Drive backup and Firebase authentication are optional, never core dependencies. Multi-device sync exists as an end-to-end encrypted framework (DEC-013) and is not yet offered in the UI.
+- **FR-SYNC-001:** Google Drive backup and Firebase authentication are optional, never core dependencies. Multi-device sync (DEC-013, DEC-024) is offered in Pengaturan: same Google account on every phone, end-to-end encrypted with a sync passphrase, automatic with a manual button.
 
 ### Notifications and recovery
 

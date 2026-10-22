@@ -113,6 +113,7 @@ enum class TourTarget {
 
     // Tier 2: Contextual Per-Page Feature Tours
     SETTINGS_DRIVE,
+    SETTINGS_SYNC,
     SETTINGS_SECURITY,
     SETTINGS_DISPLAY,
     SCOPE_ADD_BUSINESS,

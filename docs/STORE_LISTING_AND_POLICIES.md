@@ -100,7 +100,7 @@ Fill in the Google Play Data Safety form with the following answers:
 * **Financial Info (User payment info, Purchase history, Credit score):**
   * **Collected?** **No** (Cash records, plans, and stock are stored exclusively on device in the local SQLite Room database).
 * **Files and Docs:**
-  * **Collected?** **No** (Excel workbooks and backups are processed on-device; cloud backups are uploaded directly to the user's personal Google Drive without developer server intermediation).
+  * **Collected?** **No** (Excel workbooks and backups are processed on-device; cloud backups and sync change sets (DEC-024) go directly to the user's own Google Drive app folder, end-to-end encrypted with a password or sync passphrase only the user knows; the developer never receives them).
 * **Device or Other IDs:**
   * **Collected?** **No** (No advertising IDs, no device trackers).
 

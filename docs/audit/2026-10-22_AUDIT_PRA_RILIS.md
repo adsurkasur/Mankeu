@@ -101,8 +101,62 @@ Kode tergolong ramping. Temuan dan tindakan:
 | R8 + shrinkResources | Aktif; APK release 4,2 MB (APK debug 27 MB); build release diuji di emulator tanpa crash |
 | Target SDK | 36 (compileSdk 36) |
 | Penandatanganan | Lewat variabel lingkungan `KEYSTORE_*` (tidak berubah); kunci rilis di tangan pemilik |
+| "Hapus semua data" | Kini juga mematikan sync dan menghapus kata sandi sync tersimpan |
 
-## 7. Belum selesai di dokumen ini
+## 7. Sinkronisasi antar-HP (DEC-024)
 
-Bagian sync, usulan fitur usaha menengah, dan daftar periksa akhir ditambahkan setelah
-pekerjaannya selesai.
+Sebelum audit, kerangka sync sudah ada tetapi tidak tersambung, dan triggernya mengisi `sync_outbox`
+di setiap HP tanpa pernah dibaca. Keputusan pemilik: jadikan fitur rilis.
+
+| Butir | Status |
+|---|---|
+| Satu akun Google untuk semua HP, folder `drive.appdata` | **Terverifikasi** di kode; belum diuji dengan akun nyata |
+| Kata sandi sync sekali per HP, terkunci Android Keystore | **Terverifikasi** (`SyncPassphraseStoreTest`) |
+| Kata sandi berbeda di HP kedua ditolak sebelum menulis apa pun | Kode ada (`SyncController.enable`); belum diuji dengan Drive nyata |
+| Otomatis saat dibuka, 5 detik setelah perubahan, tombol "Sinkronkan sekarang" | Kode ada; kartu Pengaturan diperiksa di emulator |
+| Nama sama dari dua HP digabung, rujukan ikut berpindah, pemberitahuan | **Terverifikasi** (`SyncEngineTest`: kategori dari dua HP, kas −Rp65.000 di keduanya) |
+| Antrean hanya diisi saat sync menyala (skema 12) | **Terverifikasi** (`MigrationTest.migrate11To12…`, `SyncEngineTest`) |
+| Kebijakan privasi dan catatan Data Safety | Diperbarui (ID/EN) |
+
+**Belum diketahui:** perilaku dengan akun Google sungguhan di dua HP fisik. Uji ini perlu pemilik
+masuk dengan akunnya sendiri; agen tidak boleh memasukkan kredensial. Langkah uji ada di bagian 10.
+
+## 8. Usulan fitur untuk usaha menengah (diputuskan setelah audit)
+
+Simulasi penggilingan (Rp48 M/tahun, tiga unit) berjalan benar secara angka, tetapi usaha sebesar itu
+hampir pasti punya kebutuhan yang Mankeu (kas murni, DEC-011) belum tampung. Ini **usulan**, bukan
+keputusan:
+
+| # | Usulan | Alasan dari simulasi | Catatan |
+|---|---|---|---|
+| P1 | **Catatan tagihan** (piutang/utang sebagai daftar pengingat, bukan jurnal): siapa, berapa, jatuh tempo; saat dibayar menjadi catatan kas biasa | Penggilingan menjual ke toko dengan tempo dan membeli gabah dengan bayar belakang | Menjaga DEC-011: kas tetap satu-satunya buku; tagihan tidak masuk laporan sampai dibayar |
+| P2 | **Laporan per periode** (pilih bulan/kuartal/tahun) | Admin menengah perlu tutup buku bulanan, bukan akumulasi sejak awal | Laporan sekarang dari awal buku |
+| P3 | **Peran pengguna** (kasir hanya mencatat, pemilik melihat semua) | Sync memakai satu akun Google; kasir melihat laporan pemilik | Butuh identitas per orang; besar |
+| P4 | **Perkiraan PPh Final UMKM** (0,5% omzet, PP 55/2022) | Usaha kecil-menengah wajib menyetor; angka omzet sudah ada | Harus jelas "perkiraan", bukan nasihat pajak |
+| P5 | **Stok terhubung penjualan** (jual produk mengurangi stok bahan sesuai resep) | Bengkel dan penggilingan mencatat stok dan penjualan terpisah dua kali | Resep sudah ada di Rencana Usaha |
+| P6 | **Progres impor** (persen) untuk berkas besar | Impor 9 ribu baris ±10 detik dengan spinner saja | Sekarang sudah menyebut jumlah baris |
+
+## 9. Ringkasan bukti
+
+| Gate | Hasil |
+|---|---|
+| Unit test, lint | Lulus |
+| Instrumented test | 33 test, 0 gagal (2 dilewati: test screenshot yang dijalankan lewat skrip) |
+| `ScaleSimulationTest` | 5 berkas, semua angka sama persis |
+| Jalan-panduan screenshot (bantuan + panduan) | Lulus; `check_guide_flow.py` OK |
+| Build release R8 di emulator | Tanpa crash, juga setelah sync ditambahkan (APK 4,25 MB) |
+
+## 10. Daftar periksa sebelum menekan "Rilis ke produksi"
+
+Dikerjakan pemilik (butuh akun, kunci, atau Play Console):
+
+1. **Uji sync dengan dua HP sungguhan**: HP A dan B masuk dengan akun Google usaha yang sama; nyalakan
+   sync di A (buat kata sandi), catat satu jualan; nyalakan sync di B dengan kata sandi yang sama;
+   pastikan jualan A muncul di B; catat di B, buka A, pastikan muncul. Coba kata sandi salah di HP
+   ketiga: harus ditolak.
+2. Bangun AAB release dengan kunci rilis (`KEYSTORE_*`), unggah ke jalur internal dulu, pasang dari
+   Play, ulangi uji asap (buat usaha, catat, laporan, cadangan Drive, sync).
+3. Perbarui formulir Data Safety sesuai `docs/STORE_LISTING_AND_POLICIES.md` (sync ditambahkan).
+4. Pastikan halaman kebijakan privasi di adsurkasur.my.id sudah memuat bagian sync (dari repo ini).
+5. Promosikan ke produksi dengan peluncuran bertahap (mis. 20%), pantau ANR/crash di Play Console.
+

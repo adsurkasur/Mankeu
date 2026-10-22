@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- **Sinkronisasi antar-HP** in Pengaturan (DEC-024): phones signed in with the same Google account share one set of books through the app's Drive folder, end-to-end encrypted with a sync passphrase typed once per phone (kept by the Android Keystore). Runs when the app opens, a few seconds after a change, and from "Sinkronkan sekarang"; categories, stock items and products created with the same name on two phones are merged and reported on Beranda. Help article and user guide section 9.6.
 - Beranda explains a negative balance ("Uang kas minus?") and offers "Catat uang awal", which opens money in with Setoran Modal Pemilik selected; a negative cash profit gets one line on why restocking days look like a loss.
 - Import preview names where the rows go ("Masuk ke: usaha · unit"); saving shows "Menyimpan N baris…".
 - **Hapus semua data** in Pengaturan: deletes every business, record, plan, stock item, import history, the automatic recovery copy and the local name on this phone after typing HAPUS; when signed in with Google it can also delete every Mankeu file on Google Drive, the sign-in account, and the Drive permission (DEC-020).
@@ -27,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Kelola kategori: choose Tetap/Variabel for each expense category.
 - Template v3: sheets Produk and Resep Produk; Transaksi gains Produk, Jumlah, Sifat Biaya, Umur Pakai; Rencana Anggaran gains Berulang, Sifat Biaya, Umur Pakai.
 ### Changed
+- Database schema 12: changes are queued for sync only while sync is on; the queue every phone had been filling without use is emptied on upgrade. "Hapus semua data" also turns sync off and forgets its passphrase.
 - A new business starts with one unit, "Utama", already selected; the first business closes the sheet so recording can start at once. With no business yet, the sheet opens straight on its form (DEC-022).
 - One welcome card on Beranda at first launch instead of a guide offer on every page and sheet; every page's tour stays behind the ? button (DEC-022).
 - The description is optional; a blank one becomes the category name. The entry form preselects the category last used.

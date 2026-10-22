@@ -1,12 +1,12 @@
 # User Flow Diagram - Mankeu
 
-Alur navigasi sesuai `MankeuApp` pada Room **schema 11**: empat destinasi di `NavigationBar` (atau `AppRail` pada layar lebar), tiga overlay yang dibuka dari bar atas, dan satu bottom sheet lingkup.
+Alur navigasi sesuai `MankeuApp` pada Room **schema 12**: empat destinasi di `NavigationBar` (atau `AppRail` pada layar lebar), tiga overlay yang dibuka dari bar atas, dan satu bottom sheet lingkup.
 
 ```mermaid
 flowchart TD
     launch(["Buka aplikasi"]) --> workspace{"currentWorkspace menemukan usaha dan unit?"}
     workspace -->|"belum ada"| addBusiness["Tambah usaha<br/>kategori dasar ikut dibuat"]
-    addBusiness --> addProject["Tambah unit<br/>buku Proyeksi dan Realisasi ikut dibuat"]
+    addBusiness --> addProject["Unit Utama dibuat otomatis<br/>buku Rencana dan Realisasi ikut dibuat"]
     addProject --> home
     workspace -->|"ada, pilihan terakhir diingat"| home["Beranda<br/>kas, arus kas, BEP, stok"]
 
@@ -14,11 +14,11 @@ flowchart TD
     scopeHeader -->|"ketuk ringkasan"| scopeSheet["ManageScopeSheet<br/>ganti, tambah, ubah, hapus atau arsipkan"]
     scopeHeader -->|"tombol mode"| modeChoice{"Buku aktif"}
     modeChoice -->|"Realisasi"| actualBook["Catatan kas nyata<br/>warna primaryContainer"]
-    modeChoice -->|"Proyeksi"| planBook["Rencana usaha<br/>warna secondaryContainer"]
+    modeChoice -->|"Rencana"| planBook["Rencana usaha<br/>warna secondaryContainer"]
 
     home --> navBar{"NavigationBar"}
     navBar -->|"Catatan, Realisasi"| entry["Catatan<br/>formulir dan daftar catatan"]
-    navBar -->|"Catatan, Proyeksi"| planPage["Rencana Usaha<br/>produk, resep biaya, biaya tetap, aset, periode"]
+    navBar -->|"Catatan, Rencana"| planPage["Rencana Usaha<br/>produk, resep biaya, biaya tetap, aset, periode"]
     home -->|"speed dial Masuk atau Keluar"| entry
     entry --> entryForm["Formulir<br/>jumlah, keterangan, tanggal, kategori"]
     entryForm --> validate{"Valid?"}
@@ -64,4 +64,4 @@ flowchart TD
 
 1. **Ubah di tempat (DEC-019).** Catatan yang salah dibetulkan di formulir yang sama dengan saat mencatat, tanpa baris tambahan atau tanda khusus pada kartu.
 2. **Hapus selalu dikonfirmasi.** Sheet konfirmasi menampilkan keterangan dan jumlah catatan dengan warna galat sebelum penghapusan.
-3. **Warna buku berbeda** agar catatan kas nyata tidak tercatat ke buku rencana, dan Catatan berganti menjadi Rencana Usaha di mode Proyeksi.
+3. **Warna buku berbeda** agar catatan kas nyata tidak tercatat ke buku rencana, dan Catatan berganti menjadi Rencana Usaha di mode Rencana.

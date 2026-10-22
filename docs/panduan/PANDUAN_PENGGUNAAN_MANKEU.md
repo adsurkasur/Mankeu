@@ -557,7 +557,28 @@ Cadangan menyimpan **seluruh** data di HP dalam satu berkas yang dikunci kata sa
 Sebelum memulihkan, aplikasi otomatis menyalin data yang ada sekarang. Bila ternyata salah berkas,
 data lama bisa dikembalikan lewat **Ekspor data sebelum pemulihan terakhir**.
 
-### 9.6 Menghapus semua data
+### 9.6 Sinkronisasi antar-HP
+
+Bila usaha dicatat dari beberapa HP, misalnya HP Anda dan HP kasir, nyalakan sinkronisasi agar semua
+HP memakai buku yang sama.
+
+1. Di setiap HP, buka **Pengaturan** dan masuk dengan **akun Google yang sama**, yaitu akun usaha,
+   bukan akun pribadi kasir.
+2. Di kartu **Sinkronisasi antar-HP**, ketuk **Nyalakan sync**, lalu buat **kata sandi sync** minimal 8
+   karakter. Pakai kata sandi yang sama di semua HP.
+3. Selesai. Sync berjalan sendiri saat aplikasi dibuka dan beberapa detik setelah ada catatan baru.
+   Kartu menampilkan waktu sinkron terakhir; **Sinkronkan sekarang** menjalankannya saat itu juga.
+
+![Kartu Sinkronisasi antar-HP](gambar/43_sinkronisasi.jpg)
+
+> **Perhatian.** Kata sandi sync tidak bisa dipulihkan. Bila lupa, data sync di Google Drive tidak bisa
+> dibuka oleh siapa pun. Data di setiap HP tetap ada.
+
+> **Untuk yang ingin tahu**: bila dua HP sama-sama membuat kategori, barang, atau produk dengan nama
+> yang sama saat offline, keduanya digabung menjadi satu. Bila catatan yang sama diubah di dua HP,
+> perubahan yang terakhir yang dipakai. Keduanya diberitahukan lewat pemberitahuan di Beranda.
+
+### 9.7 Menghapus semua data
 
 Untuk menyerahkan HP ke orang lain atau berhenti memakai Mankeu:
 

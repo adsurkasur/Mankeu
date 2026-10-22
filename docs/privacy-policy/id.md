@@ -16,11 +16,12 @@ Semua yang Anda masukkan disimpan di basis data lokal (SQLite/Room) di HP Anda, 
 
 Data ini **tidak pernah dikirim, disimpan, atau dianalisis di server milik pengembang**. Pencadangan otomatis Android untuk data aplikasi juga dimatikan.
 
-## 3. Masuk dengan Google dan cadangan Google Drive (opsional)
+## 3. Masuk dengan Google, cadangan, dan sinkronisasi Google Drive (opsional)
 
-- **Masuk dengan Google** hanya dipakai bila Anda memilih mencadangkan data ke Google Drive Anda sendiri. Nama dan email dipakai untuk menampilkan status akun di Pengaturan. Masuk dengan Google membuat akun masuk di Firebase Authentication milik pengembang; akun itu hanya berisi identitas Google Anda, tanpa data keuangan.
+- **Masuk dengan Google** hanya dipakai bila Anda memilih mencadangkan atau menyinkronkan data lewat Google Drive Anda sendiri. Nama dan email dipakai untuk menampilkan status akun di Pengaturan. Masuk dengan Google membuat akun masuk di Firebase Authentication milik pengembang; akun itu hanya berisi identitas Google Anda, tanpa data keuangan.
 - **Enkripsi di HP.** Berkas cadangan (`.aabk`) dienkripsi di HP Anda dengan AES-256-GCM memakai kata sandi yang Anda tentukan, sebelum diunggah. Kata sandi tidak disimpan aplikasi dan tidak bisa dipulihkan.
-- **Folder aplikasi terpisah (`drive.appdata`).** Cadangan disimpan di folder khusus aplikasi di Google Drive Anda. Aplikasi tidak bisa membaca berkas lain di Drive Anda, dan pengembang maupun pihak lain tidak punya akses ke cadangan atau kata sandinya.
+- **Sinkronisasi antar-HP (bila Anda nyalakan).** Perubahan data dikirim ke Google Drive Anda dan diambil oleh HP lain yang masuk dengan akun Google yang sama. Setiap kiriman dienkripsi di HP dengan AES-256-GCM memakai kata sandi sync yang Anda tentukan. Kata sandi itu disimpan di HP dalam bentuk terenkripsi oleh Android Keystore, tidak pernah dikirim, dan tidak bisa dipulihkan. Setiap HP diberi pengenal acak yang hanya dipakai untuk menamai berkas sync di Drive Anda.
+- **Folder aplikasi terpisah (`drive.appdata`).** Cadangan dan berkas sync disimpan di folder khusus aplikasi di Google Drive Anda. Aplikasi tidak bisa membaca berkas lain di Drive Anda, dan pengembang maupun pihak lain tidak punya akses ke cadangan atau kata sandinya.
 
 ## 4. Berkas Excel (.xlsx) dan PDF
 
@@ -37,7 +38,7 @@ Data ini **tidak pernah dikirim, disimpan, atau dianalisis di server milik penge
 
 | Izin | Kegunaan |
 | --- | --- |
-| `INTERNET` | Hanya saat Anda masuk dengan Google atau membuat dan memulihkan cadangan di Google Drive. |
+| `INTERNET` | Hanya saat Anda masuk dengan Google, membuat dan memulihkan cadangan di Google Drive, atau saat sinkronisasi antar-HP menyala. |
 | `ACCESS_NETWORK_STATE` | Dipakai pustaka Google (Sign-In dan Firebase) untuk memeriksa koneksi. |
 | Pemilih berkas Android | Memilih berkas Excel atau cadangan untuk impor, ekspor, dan pemulihan. Tidak perlu izin penyimpanan. |
 

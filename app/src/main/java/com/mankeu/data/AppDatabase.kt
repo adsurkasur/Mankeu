@@ -35,7 +35,7 @@ import com.mankeu.sync.SyncSchema
         SyncOutboxEntity::class,
         SyncMetaEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -360,6 +360,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Schema 12, sync becomes a release feature (DEC-024): change capture runs only while sync is
+         * switched on, so the triggers are recreated with that condition and the outbox written so
+         * far, which nothing ever read, is emptied. No table changes.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                SyncSchema.createTriggers(db)
+                db.execSQL("DELETE FROM sync_outbox")
+            }
+        }
+
         private fun rebuild(db: SupportSQLiteDatabase, table: String, create: String, columns: String, indices: List<String>) {
             db.execSQL(create)
             db.execSQL("INSERT INTO `${table}_new` ($columns) SELECT $columns FROM `$table`")
@@ -392,7 +404,7 @@ abstract class AppDatabase : RoomDatabase() {
             AppDatabase::class.java,
             "mankeu.db",
         )
-            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
             .addCallback(SyncSchema.callback)
             .build()
     }

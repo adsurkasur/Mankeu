@@ -28,7 +28,7 @@ This roadmap is a dependency map, not a fixed queue. Independent tasks may proce
 | AAC-008 | Export and round trip | Template-format Excel export, PDF report, lossless reimport | implemented and tested | AAC-005, AAC-007 |
 | AAC-009 | Receivables/payables | — | dropped by owner decision DEC-011 (strict cash) | — |
 | AAC-010 | Backup/restore | Encrypted versioned local backup, restore, recovery copy | implemented; restores schemas 3–11 | AAC-005 |
-| AAC-011 | Drive/auth and sync | Optional Drive backup and Firebase auth; encrypted multi-device sync | Drive backup and auth implemented; sync framework implemented, not wired (DEC-013) | AAC-010 |
+| AAC-011 | Drive/auth and sync | Optional Drive backup and Firebase auth; encrypted multi-device sync | Drive backup and auth implemented; sync offered as a release feature (DEC-024; real two-phone Drive test pending) (DEC-013) | AAC-010 |
 | AAC-012 | Beta readiness | Privacy, signing, target API, device matrix, release evidence, support/rollback | in progress (`docs/PLAY_STORE_DEPLOYMENT.md`) | core release scope complete |
 | AAC-013 | Research validation | Formative tests, pilot/workshop, SUS, DOI analysis, and publication-quality evidence | planned; protocol first | usable beta |
 
@@ -90,6 +90,6 @@ Exit evidence:
 ## Next
 
 1. Representative device matrix (phone and tablet, low-end Android) for the core workflows.
-2. Decide whether and how multi-device sync is offered (open owner questions in `docs/SYNC_ARCHITECTURE.md`).
+2. Test sync on two real phones with the owner's Google account; then decide compaction (`docs/SYNC_ARCHITECTURE.md`).
 3. Release ownership, signing custody, and the first public Play release.
 4. Research protocol, then formative tests with representative owners.

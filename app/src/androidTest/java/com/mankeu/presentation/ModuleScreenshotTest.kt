@@ -300,6 +300,9 @@ class ModuleScreenshotTest {
         clickDescription("Pengaturan")
         scrollTo("Panduan Aplikasi")
         shot("40_pengaturan_panduan")
+        scrollTo("Sinkronisasi antar-HP")
+        shot("43_sinkronisasi")
+        scrollTo("Panduan Aplikasi")
         toggleNear("Tampilkan sapaan panduan di Beranda")
         clickDescription("Kembali")
         // The only offer left is the welcome on Beranda.

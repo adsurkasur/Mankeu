@@ -1,6 +1,6 @@
 # Arsitektur Sistem Mankeu
 
-Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite **schema 11** di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional dan kerangka sinkronisasi (DEC-013, belum tersambung ke UI).
+Aplikasi native Android yang **offline-first**: semua data keuangan tinggal di Room SQLite **schema 12** di perangkat. Firebase Auth dan Google Drive hanya dipakai untuk cadangan terenkripsi opsional dan kerangka sinkronisasi (DEC-013, belum tersambung ke UI).
 
 ## 1. Lapisan dan dependensi
 
@@ -32,7 +32,7 @@ flowchart TB
     subgraph dataLayer ["Data: Room"]
         repository["FinanceRepository<br/>satu corong semua penulisan<br/>recordEvent, updateEvent, deleteEvent<br/>commitImport, undoImportBatch"]
         dao["FinanceDao<br/>proyeksi sempit dan agregasi SQL"]
-        database[("AppDatabase schema 11")]
+        database[("AppDatabase schema 12")]
     end
 
     subgraph ioLayer ["Subsistem I/O"]
@@ -41,7 +41,7 @@ flowchart TB
         backupManager["EncryptedBackupManager<br/>PBKDF2-HMAC-SHA256 dan AES-256-GCM"]
         driveClient["GoogleDriveBackupClient<br/>HttpURLConnection dan org.json"]
         authManager["FirebaseAuthManager"]
-        syncFramework["SyncEngine dan SyncCoordinator<br/>trigger ke sync_outbox<br/>belum dipanggil UI"]
+        syncFramework["SyncController, SyncEngine, SyncCoordinator<br/>trigger ke sync_outbox saat sync menyala<br/>otomatis + tombol (DEC-024)"]
     end
 
     appContainer --> mainActivity
@@ -85,7 +85,7 @@ flowchart TD
     mainScaffoldWide --> screenContent
     screenContent --> homeScreen["HomeScreen"]
     screenContent --> entryScreen["EntryScreen di Realisasi<br/>formulir, cari, saring Semua Masuk Keluar"]
-    screenContent --> planScreen["PlanScreen di Proyeksi<br/>produk, biaya, periode"]
+    screenContent --> planScreen["PlanScreen di Rencana<br/>produk, biaya, periode"]
     screenContent --> stockScreen["StockScreen<br/>barang unit dan bersama"]
     screenContent --> reportsScreen["ReportsScreen<br/>Laba Rugi dan Arus Kas, Kelayakan dan BEP,<br/>Realisasi vs Target"]
     homeScreen --> metricCards["SimpleMetricCard<br/>read-out tanpa klik"]

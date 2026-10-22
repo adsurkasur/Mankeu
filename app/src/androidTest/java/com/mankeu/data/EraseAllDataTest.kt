@@ -42,6 +42,8 @@ class EraseAllDataTest {
 
     @Test
     fun everyTableIsEmptyAndTheDeviceGetsANewSyncIdentity() = runBlocking {
+        // A phone with sync on, so its writes are queued (capture needs sync on since schema 12).
+        com.mankeu.sync.SyncEngine(database).enable()
         val businessId = repository.createBusiness("Warung Uji")
         val projectId = repository.createProject(businessId, "Cabang Uji")
         val bookId = database.financeDao().getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
@@ -61,9 +63,9 @@ class EraseAllDataTest {
         assertNotEquals(oldDevice, meta(SyncSchema.DEVICE_ID))
         assertEquals(null, meta(SyncSchema.APPLYING_REMOTE))
 
-        // Change capture is back on: a new business after the wipe is recorded for sync again.
+        // Sync went with the data (DEC-024): a new business is not queued until sync is switched on again.
         repository.createBusiness("Usaha Baru")
-        assertTrue(count("sync_outbox") > 0)
+        assertEquals(0, count("sync_outbox"))
     }
 
     @Test

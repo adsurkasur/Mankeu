@@ -1,6 +1,6 @@
 # State Diagrams - Siklus Hidup Mankeu
 
-Diselaraskan dengan Room **schema 11**. Sejak DEC-019 catatan kas tidak punya kolom status: catatan ada, diubah di tempat, atau dihapus.
+Diselaraskan dengan Room **schema 12**. Sejak DEC-019 catatan kas tidak punya kolom status: catatan ada, diubah di tempat, atau dihapus.
 
 ## 1. Catatan kas (`financial_events`)
 
@@ -63,7 +63,7 @@ stateDiagram-v2
     state "PROJECTION, secondaryContainer" as Projection
 
     [*] --> Realization : bawaan saat aplikasi dibuka
-    Realization --> Projection : pilih Proyeksi
+    Realization --> Projection : pilih Rencana
     Projection --> Realization : pilih Realisasi
 
     note right of Projection

@@ -1,6 +1,6 @@
 # Sequence Diagrams - Mankeu
 
-Diselaraskan dengan Room **schema 11** (DEC-012, DEC-019).
+Diselaraskan dengan Room **schema 12** (DEC-012, DEC-019).
 
 ## 1. Mencatat atau mengubah catatan kas
 
@@ -41,7 +41,7 @@ sequenceDiagram
         Repo->>Dao: insertEvent, id sama bila Ubah
         Repo->>Dao: insertJournal
         Repo->>Dao: insertPostings
-        Repo-->>Db: Commit, trigger mengisi sync_outbox
+        Repo-->>Db: Commit, trigger mengisi sync_outbox bila sync menyala
         Repo-->>VM: selesai
         VM-->>Entry: Tersimpan atau Catatan diperbarui
         Db-->>VM: Invalidation Room memicu Flow

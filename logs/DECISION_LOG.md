@@ -1,5 +1,20 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-024] Sync Between Phones Is a Release Feature (Schema 12)
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner, pre-release grill: "Jadikan fitur rilis", then account, passphrase, trigger and conflict choices). Implemented; engine and UI tested on the emulator; not yet tested against a real Google account on two phones.
+- **Context**: DEC-013 built an end-to-end encrypted sync framework but nothing used it, while its triggers filled `sync_outbox` on every phone (about four rows per transaction, never read). The owner chose to ship sync rather than remove it.
+- **Decision**:
+  1. One Google account for all phones of a business; sync lives in that account's `drive.appdata` folder.
+  2. Sync passphrase typed once per phone (at least 8 characters, same on every phone), kept encrypted by a non-exportable Android Keystore key (`SyncPassphraseStore`). Switching on verifies it against another phone's change set before anything is written.
+  3. Runs on app start, 5 seconds after the last local change, and from "Sinkronkan sekarang"; automatic rounds fail quietly into the Pengaturan card (`SyncController`, `SyncCard`).
+  4. Conflicts are automatic: last writer wins per row; a category, stock item or product with the same natural key on two phones is merged through an id alias kept in `sync_meta`, references rewritten; merges and skipped edits become a SYSTEM notice on that phone.
+  5. Schema 12: change capture only while `sync_meta.sync_enabled` is set; the old outbox is emptied. Switching on asks for a full snapshot; switching off clears the outbox.
+  6. `DriveTokenProvider` is the one place that obtains the Drive token (backup, "Hapus semua data" and sync used three copies).
+- **Alternatives considered**: deleting the framework (smallest code, but the owner wants multi-phone use); a shared Drive folder across accounts (needs the wider `drive.file` scope and sharing flows); WorkManager background sync (more battery and permissions for little gain); asking the owner on every conflict (confusing for novices).
+- **Still open**: compaction of old change sets (needs published cursors); a real two-phone test with the owner's account.
+- **Affected components**: `sync/` (SyncSchema, SyncEngine, SyncCoordinator, SyncController, SyncPassphraseStore), `auth/DriveTokenProvider`, `data/AppDatabase` (`MIGRATION_11_12`), `MankeuApplication`, `MainActivity`, `presentation/` (AppViewModel, MankeuApp, screens/SyncCard, screens/AccountSettingsScreen, guide), strings, help article `data_sync`, privacy policy ID/EN, Data Safety notes, SYNC_ARCHITECTURE and related docs, tests.
+
 ### [DEC-023] First Production Release Is 0.1.0, Minified With R8
 - **Date**: 2026-10-22
 - **Status**: Accepted (owner chose the version in the pre-release grill; R8 is the agent's call). Release build verified on the emulator.

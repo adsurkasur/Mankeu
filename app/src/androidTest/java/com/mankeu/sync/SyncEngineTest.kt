@@ -7,6 +7,7 @@ import com.mankeu.data.AppDatabase
 import com.mankeu.data.EventDraft
 import com.mankeu.data.FinanceRepository
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -50,9 +51,12 @@ class SyncEngineTest {
     private val passphrase = "sandi-sinkron-1".toCharArray()
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlocking {
         a = Device()
         b = Device()
+        // Capture runs only while sync is on (schema 12, DEC-024).
+        a.engine.enable()
+        b.engine.enable()
     }
 
     @After
@@ -74,8 +78,8 @@ class SyncEngineTest {
         assertEquals(1, pulled.pulledSets)
         assertEquals(0, pulled.rejected)
         assertEquals(750_000L, b.cash(projectId))
-        // Applying remote changes must not queue them to be pushed back.
-        assertFalse(pulled.pushed)
+        // B's own first round sent its (empty) full snapshot; applying A's changes queued nothing.
+        assertFalse(coordinatorB.syncOnce(passphrase).pushed)
 
         b.record(businessId, projectId, FinancialEventType.CASH_EXPENSE, 50_000)
         coordinatorB.syncOnce(passphrase)
@@ -118,10 +122,45 @@ class SyncEngineTest {
         assertTrue(b.database.financeDao().getBusinesses().isEmpty())
     }
 
-    private suspend fun Device.record(businessId: String, projectId: String, type: FinancialEventType, amount: Long): String {
+    /** Both phones add "Bensin Motor" offline and record with it; after sync each keeps one. */
+    @Test
+    fun theSameCategoryCreatedOfflineOnTwoPhonesIsMergedAndReferencesFollow() = runBlocking {
+        val (businessId, projectId) = a.repository.run { createBusiness("Bengkel").let { it to createProject(it, "Utama") } }
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        val onA = a.repository.createCategory(businessId, "Bensin Motor", CategoryRole.EXPENSE)
+        val onB = b.repository.createCategory(businessId, "bensin motor", CategoryRole.EXPENSE)
+        val spentOnA = a.record(businessId, projectId, FinancialEventType.CASH_EXPENSE, 40_000, onA)
+        val spentOnB = b.record(businessId, projectId, FinancialEventType.CASH_EXPENSE, 25_000, onB)
+
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val atB = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        val atA = SyncCoordinator(a.engine, store).syncOnce(passphrase)
+
+        assertEquals(1, atB.merged)
+        assertEquals(1, atA.merged)
+        assertEquals(0, atB.rejected + atA.rejected)
+        for ((device, own) in listOf(a to onA, b to onB)) {
+            val dao = device.database.financeDao()
+            assertEquals(listOf(own), dao.getCategories(businessId).filter { it.normalizedName == "bensin motor" }.map { it.id })
+            assertEquals(own, dao.getEvent(spentOnA)!!.categoryId)
+            assertEquals(own, dao.getEvent(spentOnB)!!.categoryId)
+            assertEquals(-65_000L, device.cash(projectId))
+        }
+    }
+
+    @Test
+    fun nothingIsCapturedWhileSyncIsOff() = runBlocking {
+        a.engine.disable()
+        a.repository.createBusiness("Tanpa Sync")
+
+        assertTrue(a.database.syncDao().pending().isEmpty())
+    }
+
+    private suspend fun Device.record(businessId: String, projectId: String, type: FinancialEventType, amount: Long, categoryId: String? = null): String {
         val bookId = database.financeDao().getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
         return repository.recordEvent(
-            EventDraft(businessId, projectId, bookId, type, amount, LocalDate.of(2026, 10, 20), "Uji $type", ""),
+            EventDraft(businessId, projectId, bookId, type, amount, LocalDate.of(2026, 10, 20), "Uji $type", "", categoryId = categoryId),
         )
     }
 

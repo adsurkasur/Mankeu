@@ -77,6 +77,7 @@ import com.mankeu.presentation.components.TourTarget
 import com.mankeu.presentation.components.tourTarget
 
 import com.mankeu.auth.AuthUser
+import com.mankeu.sync.SyncController
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Login
@@ -117,6 +118,10 @@ fun SettingsScreen(
     /** "Hapus semua data" (DEC-020); the flag says whether Drive and the sign-in account go too. */
     onEraseAllData: (includeCloud: Boolean) -> Unit,
     isErasing: Boolean,
+    syncState: SyncController.State,
+    onEnableSync: (CharArray) -> Unit,
+    onDisableSync: () -> Unit,
+    onSyncNow: () -> Unit,
 ) {
     LazyColumn(
         state = rememberTourListState(),
@@ -131,6 +136,16 @@ fun SettingsScreen(
                 authUser = authUser,
                 onSignInGoogle = onSignInGoogle,
                 onSignOut = onSignOut,
+            )
+        }
+        item {
+            SyncCard(
+                state = syncState,
+                signedIn = authUser != null,
+                onSignIn = onSignInGoogle,
+                onEnable = onEnableSync,
+                onDisable = onDisableSync,
+                onSyncNow = onSyncNow,
             )
         }
 
@@ -459,7 +474,7 @@ private fun AccountCard(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "Google Drive Aktif",
+                                stringResource(R.string.account_drive_active),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = semantic.success,

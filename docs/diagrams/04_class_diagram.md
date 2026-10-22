@@ -1,6 +1,6 @@
 # Class Diagram - Domain, Data, dan Presentasi Mankeu
 
-Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber pada Room **schema 11**. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.
+Nama kelas, properti, dan metode di bawah ini sama dengan kode sumber pada Room **schema 12**. Hanya anggota yang relevan bagi alur bisnis yang ditampilkan.
 
 ```mermaid
 classDiagram

@@ -1,6 +1,6 @@
 # Use Case Diagram - Mankeu
 
-Mankeu adalah aplikasi satu pengguna tanpa peran atau hak akses bertingkat: satu pemilik usaha mengelola seluruh buku di perangkatnya. Aktor lain adalah sistem eksternal. Diselaraskan dengan kode pada Room **schema 11** (DEC-011 sampai DEC-019).
+Mankeu adalah aplikasi satu pengguna tanpa peran atau hak akses bertingkat: satu pemilik usaha mengelola seluruh buku di perangkatnya. Aktor lain adalah sistem eksternal. Diselaraskan dengan kode pada Room **schema 12** (DEC-011 sampai DEC-019).
 
 ```mermaid
 flowchart LR
@@ -12,7 +12,7 @@ flowchart LR
     subgraph mankeuSystem ["Aplikasi Mankeu"]
         subgraph scopeModule ["1. Lingkup dan buku"]
             ucScope["Kelola usaha dan unit"]
-            ucMode["Beralih buku Proyeksi atau Realisasi"]
+            ucMode["Beralih buku Rencana atau Realisasi"]
             ucCategory["Kelola kategori dan sifat biaya"]
         end
 

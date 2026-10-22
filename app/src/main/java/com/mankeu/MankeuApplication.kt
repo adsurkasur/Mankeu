@@ -1,12 +1,16 @@
 package com.mankeu
 
 import android.app.Application
+import com.mankeu.auth.DriveTokenProvider
 import com.mankeu.auth.FirebaseAuthManager
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
 import com.mankeu.data.FinanceRepository
 import com.mankeu.importer.FinanceWorkbookImporter
+import com.mankeu.sync.SyncController
+import com.mankeu.sync.SyncEngine
+import com.mankeu.sync.SyncPassphraseStore
 import java.io.File
 
 class MankeuApplication : Application() {
@@ -18,4 +22,7 @@ class MankeuApplication : Application() {
     }
     val authService by lazy { FirebaseAuthManager() }
     val cloudBackupClient by lazy { GoogleDriveBackupClient() }
+    val syncController by lazy {
+        SyncController(database, SyncEngine(database), cloudBackupClient, DriveTokenProvider(this), SyncPassphraseStore(this))
+    }
 }

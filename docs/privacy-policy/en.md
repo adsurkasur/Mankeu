@@ -16,11 +16,12 @@ Everything you enter is stored in the local database (SQLite/Room) on your phone
 
 This data is **never sent to, stored on, or analysed by developer-owned servers**. Android's automatic app-data backup is turned off.
 
-## 3. Google Sign-In and Google Drive backup (optional)
+## 3. Google Sign-In, Google Drive backup and sync (optional)
 
-- **Google Sign-In** is used only if you choose to back up to your own Google Drive. Your name and email are shown as the account status in Settings. Signing in creates a sign-in account in the developer's Firebase Authentication project; it holds only your Google identity, no financial data.
+- **Google Sign-In** is used only if you choose to back up or sync through your own Google Drive. Your name and email are shown as the account status in Settings. Signing in creates a sign-in account in the developer's Firebase Authentication project; it holds only your Google identity, no financial data.
 - **Encrypted on your phone.** Backup files (`.aabk`) are encrypted on your phone with AES-256-GCM under a password you choose, before upload. The password is not stored by the app and cannot be recovered.
-- **Separate app folder (`drive.appdata`).** Backups are stored in a private app folder on your Google Drive. The app cannot read your other Drive files, and neither the developer nor anyone else can access your backups or their password.
+- **Sync between phones (when you turn it on).** Changes are sent to your Google Drive and picked up by your other phones signed in with the same Google account. Every upload is encrypted on the phone with AES-256-GCM under a sync passphrase you choose. The passphrase is kept on the phone encrypted by the Android Keystore, is never sent, and cannot be recovered. Each phone gets a random identifier used only to name its sync files in your Drive.
+- **Separate app folder (`drive.appdata`).** Backups and sync files are stored in a private app folder on your Google Drive. The app cannot read your other Drive files, and neither the developer nor anyone else can access your backups or their password.
 
 ## 4. Excel (.xlsx) and PDF files
 
@@ -37,7 +38,7 @@ This data is **never sent to, stored on, or analysed by developer-owned servers*
 
 | Permission | Purpose |
 | --- | --- |
-| `INTERNET` | Only when you sign in with Google or create and restore a Google Drive backup. |
+| `INTERNET` | Only when you sign in with Google, create and restore a Google Drive backup, or while sync between phones is on. |
 | `ACCESS_NETWORK_STATE` | Used by the Google libraries (Sign-In and Firebase) to check the connection. |
 | Android file picker | Picks Excel or backup files for import, export and restore. No storage permission is needed. |
 

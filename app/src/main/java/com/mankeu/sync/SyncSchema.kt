@@ -10,8 +10,9 @@ import java.util.UUID
  *
  * Every data table gets three triggers that append to `sync_outbox`. Doing it in SQL instead of in
  * the repository means no write path can forget to record itself — imports, restores and future
- * code included. The triggers are silent while [APPLYING_REMOTE] is set in `sync_meta`, so applying
- * another device's changes (or a restore) never echoes back as local changes.
+ * code included. The triggers record only while [SYNC_ENABLED] is set (schema 12: before that the
+ * outbox grew by about four rows per transaction on every device, synced or not), and are silent
+ * while [APPLYING_REMOTE] is set, so applying another device's changes never echoes back.
  *
  * Room does not manage triggers. They are created in [MIGRATION_TRIGGERS_SINCE] onwards by the
  * migration, on fresh installs by [callback], and **any later migration that rebuilds a data table
@@ -22,12 +23,15 @@ import java.util.UUID
 object SyncSchema {
     const val MIGRATION_TRIGGERS_SINCE = 8
     const val APPLYING_REMOTE = "applying_remote"
+    /** Present while the owner has sync switched on; turning sync on also asks for a full snapshot. */
+    const val SYNC_ENABLED = "sync_enabled"
     const val DEVICE_ID = "device_id"
     /** Set after a restore replaced the whole database; the next sync must push a full snapshot. */
     const val REQUIRES_FULL_SNAPSHOT = "requires_full_snapshot"
 
     fun createTriggers(db: SupportSQLiteDatabase) {
-        val quiet = "WHEN NOT EXISTS (SELECT 1 FROM sync_meta WHERE `key` = '$APPLYING_REMOTE')"
+        val quiet = "WHEN EXISTS (SELECT 1 FROM sync_meta WHERE `key` = '$SYNC_ENABLED') " +
+            "AND NOT EXISTS (SELECT 1 FROM sync_meta WHERE `key` = '$APPLYING_REMOTE')"
         val now = "CAST(strftime('%s','now') AS INTEGER) * 1000"
         val existing = db.query("SELECT name FROM sqlite_master WHERE type = 'table'").use { c ->
             buildSet { while (c.moveToNext()) add(c.getString(0)) }

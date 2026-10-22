@@ -171,6 +171,7 @@ private val AT_DATA_IMPORT = ShowSpec(TourTarget.IMPORT_FILE_PICKER, overlay = O
 private val AT_DATA_HISTORY = ShowSpec(TourTarget.DATA_HISTORY, overlay = Overlay.DATA)
 private val AT_DATA_EXPORT = ShowSpec(TourTarget.DATA_EXPORT, overlay = Overlay.DATA)
 private val AT_DATA_BACKUP = ShowSpec(TourTarget.DATA_BACKUP, overlay = Overlay.DATA, needsUnit = false)
+private val AT_SETTINGS_SYNC = ShowSpec(TourTarget.SETTINGS_SYNC, overlay = Overlay.SETTINGS, needsUnit = false)
 
 /** Every help article: task-first titles, a short body, numbered steps (one per line), and where to show it. */
 enum class HelpArticle(
@@ -207,6 +208,7 @@ enum class HelpArticle(
     DATA_UNDO(HelpGroup.DATA, R.string.help_data_undo_title, R.string.help_data_undo_body, R.string.help_data_undo_steps, AT_DATA_HISTORY),
     DATA_BACKUP(HelpGroup.DATA, R.string.help_data_backup_title, R.string.help_data_backup_body, R.string.help_data_backup_steps, AT_DATA_BACKUP),
     DATA_RESTORE(HelpGroup.DATA, R.string.help_data_restore_title, R.string.help_data_restore_body, R.string.help_data_restore_steps, AT_DATA_BACKUP),
+    DATA_SYNC(HelpGroup.DATA, R.string.help_data_sync_title, R.string.help_data_sync_body, R.string.help_data_sync_steps, AT_SETTINGS_SYNC),
 
     FAQ_CASH_NEGATIVE(HelpGroup.FAQ, R.string.help_faq_cash_title, R.string.help_faq_cash_body, R.string.help_faq_cash_steps, AT_HOME_CASH),
     FAQ_NO_BEP(HelpGroup.FAQ, R.string.help_faq_bep_title, R.string.help_faq_bep_body, R.string.help_faq_bep_steps, AT_PLAN_PRODUCTS),

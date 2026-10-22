@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Beranda explains a negative balance ("Uang kas minus?") and offers "Catat uang awal", which opens money in with Setoran Modal Pemilik selected; a negative cash profit gets one line on why restocking days look like a loss.
+- Import preview names where the rows go ("Masuk ke: usaha · unit"); saving shows "Menyimpan N baris…".
 - **Hapus semua data** in Pengaturan: deletes every business, record, plan, stock item, import history, the automatic recovery copy and the local name on this phone after typing HAPUS; when signed in with Google it can also delete every Mankeu file on Google Drive, the sign-in account, and the Drive permission (DEC-020).
 - **Ubah** on every record card: the entry form opens filled in and saving corrects the record in place (DEC-019).
 - User guide for small-business owners (`docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`): step-by-step use of every feature with 47 screenshots generated from the real app, quick and full reading paths, appendices for seasonal farming and multi-branch stock.
@@ -25,6 +27,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Kelola kategori: choose Tetap/Variabel for each expense category.
 - Template v3: sheets Produk and Resep Produk; Transaksi gains Produk, Jumlah, Sifat Biaya, Umur Pakai; Rencana Anggaran gains Berulang, Sifat Biaya, Umur Pakai.
 ### Changed
+- A new business starts with one unit, "Utama", already selected; the first business closes the sheet so recording can start at once. With no business yet, the sheet opens straight on its form (DEC-022).
+- One welcome card on Beranda at first launch instead of a guide offer on every page and sheet; every page's tour stays behind the ? button (DEC-022).
+- The description is optional; a blank one becomes the category name. The entry form preselects the category last used.
+- "Proyeksi" is now "Rencana", and the Rencana/Realisasi switch appears once a unit exists. Laporan says "Untung / Rugi kas" like Beranda.
+- Version 0.1.0; release builds are minified with R8 (DEC-023).
+### Fixed
+- "Tambah Usaha" (and the other empty-state buttons for a business or unit) opened Berkas dan Data instead of the business form.
+- Catat Pemasukan preselected "Pendapatan Lain", so sales of a new owner were recorded as other income and the break-even status was wrong.
+- The import "Batal" buttons did not cancel; reading now stops for real and saving no longer offers a cancel it cannot honour.
+- Beranda summary and monthly cash flow loaded every posting of the book on each change; both are now summed by the database (9k-row book: 556 ms → 29 ms).
+- Cost-composition percentages used an English decimal point; the search hint still mentioned people's names.
 - Texts that still named removed features now describe the app as it is: the Proyeksi tooltip ("rencana usaha, produk, dan biaya" instead of "asumsi"), the financing note in Laporan, and unit errors ("Unit tidak ditemukan", "Nama unit wajib diisi" instead of "lahan").
 - "Balik Transaksi" is gone: a wrong record is fixed with **Ubah** or removed with **Hapus**. On upgrade (schema 11), records that were reversed earlier are deleted together with their reversals; cash and reports do not change, and a notice says how many went. Old backups are cleaned the same way on restore (DEC-019).
 - "Balik batch" is now **Batalkan impor**: undoing an import deletes the records it added; the import stays in the history as "dibatalkan".

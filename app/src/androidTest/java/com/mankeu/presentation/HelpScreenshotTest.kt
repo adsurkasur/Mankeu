@@ -115,7 +115,7 @@ class HelpScreenshotTest {
     /** A coffee stall with two products, a plan, this month's sales, stock and one import batch. */
     private suspend fun seed(repository: FinanceRepository): WorkspaceSelection {
         val business = repository.createBusiness("Kedai Kopi Senja")
-        val unit = repository.createProject(business, "Gerai Utama")
+        val unit = repository.createProject(business, "Utama")
         val today = LocalDate.now()
         val month = YearMonth.from(today)
         repository.commitImport(

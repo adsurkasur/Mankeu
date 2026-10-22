@@ -82,8 +82,8 @@ dipakai bila Anda memilih mencadangkan ke Google Drive.
 | Istilah | Artinya | Contoh |
 |---|---|---|
 | **Usaha** | Bisnis Anda. Setiap usaha punya daftar kategori sendiri. | Kedai Kopi Senja |
-| **Unit** | Cabang, gerai, kebun, atau musim tanam di dalam usaha. Semua catatan, rencana, dan stok milik satu unit. | Gerai Utama |
-| **Proyeksi** | Buku rencana: apa yang akan dijual, berapa biayanya, berapa modal yang dibutuhkan. | Rencana 12 bulan kedai |
+| **Unit** | Cabang, gerai, kebun, atau musim tanam di dalam usaha. Semua catatan, rencana, dan stok milik satu unit. | Utama |
+| **Rencana** | Buku rencana: apa yang akan dijual, berapa biayanya, berapa modal yang dibutuhkan. | Rencana 12 bulan kedai |
 | **Realisasi** | Buku kenyataan: uang yang benar-benar masuk dan keluar. | Penjualan kopi hari ini |
 
 ### Mankeu mencatat uang tunai
@@ -99,45 +99,40 @@ pinjaman, atau cicilan. Bila pembeli belum membayar, catat penjualannya saat uan
 2. **Tombol ?** membuka bantuan untuk halaman yang sedang dibuka.
 3. **Ikon map** membuka Berkas dan Data: impor, ekspor, dan cadangan.
 4. **Ikon orang** membuka Pengaturan.
-5. **Proyeksi / Realisasi** untuk berpindah buku.
+5. **Rencana / Realisasi** untuk berpindah buku. Tombol ini baru muncul setelah usaha dibuat.
 6. **Bilah bawah**: Beranda, Catatan, Stok, Laporan.
 
 ---
 
 ## 3. Memulai: Usaha dan Unit
 
-Saat pertama dibuka, aplikasi masih kosong. Aplikasi tidak membuatkan nama usaha secara otomatis,
-supaya semua catatan benar-benar milik Anda.
+Saat pertama dibuka, aplikasi masih kosong dan menyapa dengan kartu **Selamat datang**. Pilih
+**Lihat** untuk panduan singkat, atau **Tutup**. Kapan pun butuh bantuan, ketuk tombol **?** di
+kanan atas.
 
 ### 3.1 Membuat usaha
 
 1. Ketuk tulisan **Belum ada usaha** di kiri atas, atau tombol **Tambah Usaha** di tengah layar.
-   Lembar *Usaha dan Cabang / Unit* terbuka.
-
-   ![Lembar Usaha dan Cabang/Unit masih kosong](gambar/02_sheet_usaha_kosong.jpg)
-
-2. Ketuk **Tambah Usaha**.
-3. Tulis nama usaha Anda, lalu ketuk **Simpan**. Kategori pembukuan awal dibuat otomatis dan bisa
+   Formulir **Tambah usaha** langsung terbuka.
+2. Tulis nama usaha Anda, lalu ketuk **Simpan**. Kategori pembukuan awal dibuat otomatis dan bisa
    diubah nanti lewat Berkas dan Data.
 
-   ![Mengisi nama usaha](gambar/03_tambah_usaha.jpg)
+   ![Mengisi nama usaha](gambar/02_tambah_usaha.jpg)
 
-### 3.2 Membuat unit
+3. Usaha baru langsung punya satu unit bernama **Utama**, dan Beranda siap dipakai dengan semua angka
+   masih Rp0. Anda bisa langsung mencatat.
 
-1. Buka lagi lembar *Usaha dan Cabang / Unit* dengan mengetuk nama usaha di kiri atas.
-2. Ketuk **Tambah Unit Usaha**.
-3. Tulis nama cabang, gerai, atau kebun, misalnya *Gerai Utama*, lalu ketuk **Simpan**.
+   ![Beranda usaha baru](gambar/03_beranda_unit_baru.jpg)
 
-   ![Mengisi nama unit](gambar/04_tambah_unit.jpg)
+### 3.2 Menambah cabang atau unit lain
 
-4. Usaha dan unit yang sedang dipakai bertanda **Sedang dipakai**.
+Usaha dengan satu tempat cukup memakai unit **Utama**. Bila Anda punya cabang, kebun, atau musim
+tanam yang ingin dipisah:
 
-   ![Usaha dan unit sudah dibuat](gambar/05_sheet_usaha_terisi.jpg)
-
-5. Geser lembar ke bawah untuk menutupnya. Beranda menampilkan unit yang baru dibuat, dengan semua
-   angka masih Rp0.
-
-   ![Beranda unit baru](gambar/06_beranda_unit_baru.jpg)
+1. Ketuk nama usaha di kiri atas. Lembar *Usaha dan Cabang / Unit* terbuka.
+2. Ketuk **Tambah Unit Usaha**, tulis namanya, misalnya *Cabang Pasar*, lalu ketuk **Simpan**.
+3. Untuk mengganti nama unit **Utama**, ketuk **Ubah** pada kartunya.
+4. Geser lembar ke bawah untuk menutupnya.
 
 ### 3.3 Berpindah unit
 
@@ -153,9 +148,9 @@ sama.
 ## 4. Menyusun Rencana Usaha
 
 Rencana Usaha menjawab pertanyaan *berapa yang harus terjual agar tidak rugi, dan berapa modal yang
-dibutuhkan*. Rencana disusun di buku **Proyeksi**.
+dibutuhkan*. Rencana disusun di buku **Rencana**.
 
-1. Pilih **Proyeksi** di bagian atas.
+1. Pilih **Rencana** di bagian atas.
 2. Buka **Catatan** di bilah bawah. Halaman **Rencana Usaha** terbuka.
 
 ![Rencana Usaha masih kosong](gambar/09_rencana_kosong.jpg)
@@ -299,7 +294,8 @@ ke kas setelah dicatat di sini, saat uangnya benar-benar disetor.
 1. Ketuk **+**, lalu **Catat Pemasukan**.
 2. Isi **Jumlah uang** tanpa titik, misalnya `15000000`. Di bawahnya muncul ejaan rupiahnya untuk
    dicek: Rp15.000.000.
-3. Isi **Keterangan**, misalnya *Modal awal*.
+3. Isi **Keterangan**, misalnya *Modal awal*. Keterangan boleh dikosongkan; aplikasi memakai nama
+   kategorinya.
 4. Pilih **Kategori**: **Setoran Modal Pemilik**.
 5. Periksa **Tanggal**, lalu ketuk **Simpan catatan**.
 
@@ -308,6 +304,10 @@ ke kas setelah dicatat di sini, saat uangnya benar-benar disetor.
 > **Perhatian.** Setoran modal menambah **uang kas**, tetapi **bukan pendapatan**. Laba tidak
 > berubah.
 
+> **Tips.** Lupa mencatat uang awal? Bila uang kas di Beranda minus, muncul kartu **Uang kas
+> minus?** dengan tombol **Catat uang awal**. Tombol itu membuka formulir ini dengan kategori
+> Setoran Modal Pemilik sudah terpilih.
+
 ### 6.3 Mencatat penjualan
 
 1. Ketuk **+**, lalu **Catat Pemasukan**.
@@ -315,7 +315,8 @@ ke kas setelah dicatat di sini, saat uangnya benar-benar disetor.
 3. Bila produk Anda sudah dibuat di Rencana Usaha ([bagian 4](#4-menyusun-rencana-usaha)), pilih
    **Produk (opsional)**, misalnya *Kopi Susu*, lalu isi **Volume** (jumlah terjual), misalnya
    `460`. Jumlah uang terisi otomatis sebesar volume × harga: 460 × Rp10.000 = Rp4.600.000.
-4. Isi keterangan, lalu ketuk **Simpan catatan**.
+4. Isi keterangan bila perlu, lalu ketuk **Simpan catatan**. Kategori yang terakhir Anda pakai
+   terpilih otomatis untuk catatan berikutnya.
 
 ![Form penjualan dengan produk dan volume](gambar/17_form_penjualan.jpg)
 
@@ -470,7 +471,7 @@ Di bawahnya, **Pergerakan Kas Bulanan** menampilkan grafik kas per bulan.
 ### 8.4 Kelayakan dan BEP
 
 Tab **Kelayakan & BEP** menampilkan Status BEP bulan ini (di Realisasi) atau kelayakan rencana (di
-Proyeksi), beserta rinciannya.
+Rencana), beserta rinciannya.
 
 ![Kelayakan dan BEP di Laporan](gambar/30_laporan_kelayakan.jpg)
 
@@ -515,8 +516,10 @@ komputer.
    `YYYY-MM-DD`, misalnya `2026-10-21`.
 3. Kembali ke Berkas dan Data, pastikan unit tujuan sudah terpilih, lalu ketuk **Pilih file .xlsx**.
 4. Periksa **pratinjau**: jumlah transaksi, item rencana, produk, barang, periode rencana, total uang
-   masuk dan keluar, kategori baru, serta barang yang dilewati karena namanya sudah ada.
-5. Ketuk **Setujui dan impor**.
+   masuk dan keluar, kategori baru, serta barang yang dilewati karena namanya sudah ada. Baris
+   **Masuk ke** menyebut usaha dan unit tujuan; bila salah, tutup pratinjau dan pilih unit lain dulu.
+5. Ketuk **Setujui dan impor**. Berkas besar (ribuan baris) butuh beberapa detik; biarkan aplikasi
+   terbuka sampai muncul **Impor selesai**. Semua baris tersimpan sekaligus, atau tidak sama sekali.
 
 ![Pratinjau impor](gambar/33_pratinjau_impor.jpg)
 
@@ -596,16 +599,16 @@ Ketuk **Mengerti** untuk menutup sorotan.
 
 ### 10.3 Panduan halaman
 
-Saat pertama membuka sebuah halaman, muncul kartu kecil **Baru di halaman ini? Lihat panduan
-singkat**. Pilih **Lihat** untuk mengikuti panduan langkah demi langkah, **Nanti** untuk
-melewatinya sampai aplikasi dibuka lagi, atau **Jangan tawarkan lagi**.
+Saat aplikasi pertama dibuka, Beranda menampilkan kartu **Selamat datang**. Pilih **Lihat** untuk
+mengikuti panduan langkah demi langkah, atau **Tutup**. Halaman lain tidak menampilkan tawaran;
+panduan setiap halaman selalu ada lewat tombol **?** → **Putar panduan halaman ini**.
 
 ![Tawaran panduan](gambar/41_tawaran_panduan.jpg)
 
 ![Langkah panduan](gambar/42_tur_langkah.jpg)
 
 Di **Pengaturan → Panduan Aplikasi**, Anda bisa membuka Pusat Bantuan, menyalakan atau mematikan
-tawaran panduan, dan mengulang semua panduan dari awal.
+sapaan panduan di Beranda, dan mengulang semua panduan dari awal.
 
 ![Pengaturan panduan](gambar/40_pengaturan_panduan.jpg)
 
@@ -618,7 +621,7 @@ dengan Mankeu di bulan pertama.
 
 | Urutan | Yang dilakukan | Bagian |
 |---|---|---|
-| 1 | Membuat usaha *Kedai Kopi Senja* dan unit *Gerai Utama* | [3](#3-memulai-usaha-dan-unit) |
+| 1 | Membuat usaha *Kedai Kopi Senja* dan unit *Utama* | [3](#3-memulai-usaha-dan-unit) |
 | 2 | Menyusun rencana 12 bulan: dua produk, tiga biaya tetap, mesin espresso, modal | [4](#4-menyusun-rencana-usaha) |
 | 3 | Membaca kelayakan: layak, omzet impas Rp4.040.816, kebutuhan modal Rp4.300.000 sudah tertutup | [5](#5-membaca-kelayakan-bep-dan-kebutuhan-modal) |
 | 4 | Mencatat modal awal Rp15.000.000 | [6.2](#62-mencatat-modal-awal) |
@@ -713,7 +716,7 @@ Bila masih bingung, ketuk **?** di halaman tersebut, atau cari di **Pusat Bantua
 | **Opname** | Menghitung ulang barang di rak dan menyesuaikan catatan |
 | **Penyusutan** | Harga aset dibagi umur pakainya, dihitung sebagai beban bulanan |
 | **Prive** | Uang usaha yang diambil untuk keperluan pribadi |
-| **Proyeksi** | Buku rencana usaha |
+| **Rencana** | Buku rencana usaha |
 | **R/C Ratio** | Penerimaan dibagi biaya. Di atas 1 berarti untung. |
 | **Realisasi** | Buku catatan kenyataan |
 | **Resep biaya** | Biaya bahan untuk membuat satu satuan produk |
@@ -730,7 +733,7 @@ lahan tetap harus dibayar.
 
 ### Mengisi produk musiman
 
-1. Di Rencana Usaha (Proyeksi → Catatan), ketuk **Tambah** di bagian **Produk**.
+1. Di Rencana Usaha (Rencana → Catatan), ketuk **Tambah** di bagian **Produk**.
 2. Isi *Cabai merah*, satuan *kg*, target *400* kg per bulan, harga *Rp35.000*.
 3. Isi **Mulai dijual bulan ke-** dengan **4**.
 4. Isi resep, misalnya *Panen dan angkut* Rp3.000 per kg, lalu ketuk **Simpan**.

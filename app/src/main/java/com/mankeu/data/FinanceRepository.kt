@@ -151,7 +151,7 @@ class FinanceRepository(private val database: AppDatabase) {
 
     fun categoryTotals(bookId: String): Flow<List<CategoryTotalRow>> = dao.observeCategoryTotals(bookId)
 
-    fun accountingSummary(bookId: String) = dao.observePostingRows(bookId).map { it.summary() }
+    fun accountingSummary(bookId: String) = dao.observePostingTotals(bookId).map { it.summary() }
 
     private fun List<PostingWithEventRow>.summary() = PostingReportCalculator.calculate(
         map {
@@ -1016,7 +1016,8 @@ class FinanceRepository(private val database: AppDatabase) {
         type = type,
         amountRupiah = amountRupiah,
         date = date,
-        description = description.trim(),
+        // A blank description takes the category's name, so "jualan hari ini" can be one tap (2026-10-22).
+        description = description.trim().ifBlank { category.trim().ifBlank { defaultCategory(type) } },
         category = category.trim().ifBlank { defaultCategory(type) },
         categoryId = categoryId,
         reference = reference?.trim()?.ifBlank { null },

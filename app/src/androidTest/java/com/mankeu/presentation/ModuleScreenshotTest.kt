@@ -119,20 +119,14 @@ class ModuleScreenshotTest {
         val month = YearMonth.now()
         // --- 1. Memulai -------------------------------------------------------------------------
         shot("01_beranda_kosong")
+        // With no business yet the sheet opens straight on its form; saving creates unit "Utama"
+        // and closes the sheet (owner decision 2026-10-22).
         click("Belum ada usaha")
-        shot("02_sheet_usaha_kosong")
-        click("Tambah Usaha")
         type("Nama usaha", "Kedai Kopi Senja")
-        shot("03_tambah_usaha")
+        shot("02_tambah_usaha")
         click("Simpan")
-        click("Tambah Unit Usaha")
-        type("Nama proyek / unit usaha", "Gerai Utama")
-        shot("04_tambah_unit")
-        click("Simpan")
-        shot("05_sheet_usaha_terisi")
-        // The sheet has no close button: swipe it down, as an owner does.
-        closeScopeSheet()
-        shot("06_beranda_unit_baru")
+        settle()
+        shot("03_beranda_unit_baru")
 
         // --- 2. Modal awal lewat tombol Catat -----------------------------------------------------
         clickDescription("Catat")
@@ -145,7 +139,7 @@ class ModuleScreenshotTest {
         click("Simpan catatan")
 
         // --- 3. Rencana Usaha ---------------------------------------------------------------------
-        click("Proyeksi")
+        click("Rencana")
         click("Catatan")
         shot("09_rencana_kosong")
         click("Ubah")
@@ -306,23 +300,25 @@ class ModuleScreenshotTest {
         clickDescription("Pengaturan")
         scrollTo("Panduan Aplikasi")
         shot("40_pengaturan_panduan")
-        toggleNear("Tawarkan panduan saat membuka halaman baru")
+        toggleNear("Tampilkan sapaan panduan di Beranda")
         clickDescription("Kembali")
+        // The only offer left is the welcome on Beranda.
+        click("Beranda")
         settle()
         shot("41_tawaran_panduan")
         click("Lihat")
         settle(1000)
         shot("42_tur_langkah")
         click("Lewati")
-        // Offers back off, so later pages and sheets are photographed without the card.
+        // Switched off again so the appendices are photographed without the card.
         clickDescription("Pengaturan")
         scrollTo("Panduan Aplikasi")
-        toggleNear("Tawarkan panduan saat membuka halaman baru")
+        toggleNear("Tampilkan sapaan panduan di Beranda")
         clickDescription("Kembali")
 
         // --- Lampiran A: usaha tani musiman ---------------------------------------------------------
-        newBusiness("Kedai Kopi Senja", "Tani Cabai Makmur", "Kebun 1")
-        click("Proyeksi")
+        newBusiness(vm, "Kedai Kopi Senja", "Tani Cabai Makmur", "Kebun 1")
+        click("Rencana")
         click("Catatan")
         vm.setPlanPeriod(month, month.plusMonths(11))
         settle()
@@ -355,7 +351,7 @@ class ModuleScreenshotTest {
         shot("A3_produk_musiman")
 
         // --- Lampiran B: toko dua cabang dengan stok bersama -----------------------------------------
-        newBusiness("Tani Cabai Makmur", "Toko Sembako Berkah", "Pusat")
+        newBusiness(vm, "Tani Cabai Makmur", "Toko Sembako Berkah", "Pusat")
         click("Toko Sembako Berkah")
         scrollTo("Tambah Unit Usaha")
         click("Tambah Unit Usaha")
@@ -376,19 +372,19 @@ class ModuleScreenshotTest {
 
     // --- helpers ---------------------------------------------------------------------------------
 
-    /** Opens the scope sheet from the header ([current] usaha), adds an usaha and its first unit. */
-    private fun newBusiness(current: String, business: String, unit: String) {
+    /**
+     * Opens the scope sheet from the header ([current] usaha) and adds an usaha. It starts with unit
+     * "Utama", renamed to [unit] the way an owner with a named field would.
+     */
+    private fun newBusiness(vm: AppViewModel, current: String, business: String, unit: String) {
         click(current)
         click("Tambah Usaha")
         type("Nama usaha", business)
         click("Simpan")
-        // Adding an usaha closes the sheet; its first unit is added from a fresh one.
-        click(business)
-        scrollTo("Tambah Unit Usaha")
-        click("Tambah Unit Usaha")
-        type("Nama proyek / unit usaha", unit)
-        click("Simpan")
+        settle()
         closeScopeSheet()
+        vm.updateProjectDetails(projectId(vm), unit, "", null, null)
+        settle()
     }
 
     private fun closeScopeSheet() {

@@ -25,7 +25,7 @@ evidence_basis:
 Compact-width destinations (bottom bar; rail from 840dp):
 
 - `Beranda`: cash, key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even;
-- `Catatan`: entry form and record list with Ubah/Hapus in Realisasi; Rencana Usaha in Proyeksi;
+- `Catatan`: entry form and record list with Ubah/Hapus in Realisasi; Rencana Usaha in the Rencana book;
 - `Stok`: stock items of the selected unit and shared items;
 - `Laporan`: Laba Rugi dan Arus Kas, Kelayakan & BEP, Realisasi vs Target.
 
@@ -54,7 +54,7 @@ Overlays from the top bar: `Berkas & Data` (import, export, backup, categories, 
 2. Ask for a business name. The application never creates one on the user's behalf — see D-015.
 3. Ask for a first unit (`Unit Usaha`: branch, field, season). It is not optional and no `Umum` unit is invented; a
    book pair only exists once the user has named the scope it belongs to.
-4. Offer page tours as a small card (Lihat / Nanti / Jangan tawarkan lagi), never started on their own (DEC-018).
+4. Offer one welcome card on Beranda at first launch (Lihat / Tutup) that points to the ? button; no offers on other pages or sheets, whose tours stay behind ? (DEC-022, superseding DEC-018's per-page offers).
 5. Defer account, Drive, research consent, and optional templates until relevant.
 
 No onboarding page may block offline use merely to obtain analytics, authentication, or marketing data.
@@ -119,7 +119,7 @@ Regenerate with `python3 docs/evidence/theme/generate_palette.py --audit`. Full 
 
 The table audits the generated system as the script produces it, which includes a filled
 `warning`/`onWarning` pair. `Theme.kt` does not declare that pair, because nothing in the app draws
-text on a filled warning surface — the Proyeksi chip and the notice card both use the container
+text on a filled warning surface — the Rencana chip and the notice card both use the container
 pair. It is measured here so that the day something does need it, the value is known to be safe.
 
 | Mode | Pair | Foreground | Background | Ratio | Needs | Result |
@@ -213,7 +213,7 @@ Failures: 0
 
 ## Book-mode colour identity
 
-Proyeksi and Realisasi must be distinguishable at a glance, not only during the transition between
+Rencana and Realisasi must be distinguishable at a glance, not only during the transition between
 them. An early attempt paired `secondaryContainer` with `successContainer`; in a green-seeded
 palette those are two near-identical pale greens and the difference was invisible on device. The
 shipped pairing is semantic: a plan is provisional and wears the warning container, a realisation is

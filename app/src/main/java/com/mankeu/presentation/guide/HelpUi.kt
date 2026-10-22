@@ -64,7 +64,7 @@ val LocalOpenHelp = staticCompositionLocalOf<(HelpArticle) -> Unit> { {} }
  * take or leave, so the screen stays usable for someone who does not want a walkthrough.
  */
 @Composable
-fun TourOfferCard(stepCount: Int, onStart: () -> Unit, onLater: () -> Unit, onNever: () -> Unit, modifier: Modifier = Modifier) {
+fun TourOfferCard(stepCount: Int, onStart: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -83,9 +83,8 @@ fun TourOfferCard(stepCount: Int, onStart: () -> Unit, onLater: () -> Unit, onNe
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onNever) { Text(stringResource(R.string.tour_offer_never)) }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onLater) { Text(stringResource(R.string.tour_offer_later)) }
+                TextButton(onClick = onClose) { Text(stringResource(R.string.tour_offer_later)) }
                 Button(onClick = onStart) { Text(stringResource(R.string.tour_offer_start), fontWeight = FontWeight.Bold) }
             }
         }

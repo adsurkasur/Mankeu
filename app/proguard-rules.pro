@@ -26,8 +26,7 @@
     volatile <fields>;
 }
 
-# AndroidX Navigation & Lifecycle
--keep class androidx.navigation.** { *; }
+# AndroidX Lifecycle
 -keepclassmembers class * extends androidx.lifecycle.ViewModel {
     public <init>(...);
 }

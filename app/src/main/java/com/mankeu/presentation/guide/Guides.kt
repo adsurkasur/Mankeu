@@ -37,7 +37,7 @@ import com.mankeu.presentation.components.TourTarget
  */
 enum class Tour(val id: String, val version: Int, val steps: List<TourStep>) {
     HOME(
-        "home", 2,
+        "home", 3,
         listOf(
             TourStep(TourTarget.SCOPE_BUSINESS, R.string.tour2_home_scope_title, R.string.tour2_home_scope_desc, Icons.Default.Storefront, helpArticle = HelpArticle.START_SCOPE),
             TourStep(TourTarget.SCOPE_BOOK, R.string.tour2_home_book_title, R.string.tour2_home_book_desc, Icons.Default.SwapHoriz, helpArticle = HelpArticle.START_BOOKS),

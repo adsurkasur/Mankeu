@@ -109,7 +109,7 @@ fun PlanScreen(
     onSavePlanLine: (String?, String, String, Long, Recurrence, CostNature?, YearMonth?, Int?) -> Unit,
     onArchivePlanLine: (String) -> Unit,
     onSetPeriod: (YearMonth, YearMonth) -> Unit,
-    onOpenData: () -> Unit,
+    onManageScope: () -> Unit,
 ) {
     var editor by remember { mutableStateOf<PlanEditor?>(null) }
     val categories = remember(state.categories) { state.categories.associateBy { it.id } }
@@ -129,7 +129,7 @@ fun PlanScreen(
                     stringResource(R.string.setup_project_title),
                     stringResource(R.string.setup_project_body),
                     stringResource(R.string.scope_add_project),
-                    onOpenData,
+                    onManageScope,
                     learn = HelpArticle.START_SCOPE,
                 )
             }

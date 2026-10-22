@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.Flow
  * description, a category name and a reference for every row. A book with a few
  * thousand transactions therefore rebuilt several megabytes of strings on every database change,
  * to add up six numbers per month. These five columns are all the arithmetic ever touched.
+ * Since the 2026-10-22 audit each row is already a month's total per type and role (summed by the
+ * database), so a year is a few dozen rows however busy the book is.
  */
 data class CashFlowRow(
     val id: String,
@@ -179,10 +181,10 @@ interface FinanceDao {
 
     @Query(
         """
-        SELECT id, dateEpochDay, type, cashFlowRole, amountRupiah
+        SELECT MIN(id) AS id, MIN(dateEpochDay) AS dateEpochDay, type, cashFlowRole, SUM(amountRupiah) AS amountRupiah
         FROM financial_events
         WHERE bookId = :bookId
-        ORDER BY dateEpochDay, createdAtEpochMillis
+        GROUP BY strftime('%Y-%m', dateEpochDay * 86400, 'unixepoch'), type, cashFlowRole
         """,
     )
     fun observeCashFlowRows(bookId: String): Flow<List<CashFlowRow>>
@@ -227,17 +229,22 @@ interface FinanceDao {
     @Query("SELECT * FROM postings WHERE journalId = :journalId ORDER BY id")
     suspend fun getPostings(journalId: String): List<PostingEntity>
 
+    /**
+     * Posting totals per (cash-flow role, account, side): all `PostingReportCalculator` ever sums.
+     * Returning every posting instead put a year of a medium business (tens of thousands of rows)
+     * into memory on each database change, twice, for six numbers (audit 2026-10-22).
+     */
     @Query(
         """
-        SELECT e.id AS eventId, e.cashFlowRole, p.account, p.side, p.amountRupiah
+        SELECT '' AS eventId, e.cashFlowRole, p.account, p.side, SUM(p.amountRupiah) AS amountRupiah
         FROM financial_events e
         INNER JOIN journal_entries j ON j.sourceEventId = e.id
         INNER JOIN postings p ON p.journalId = j.id
         WHERE e.bookId = :bookId
-        ORDER BY e.dateEpochDay, e.createdAtEpochMillis, p.id
+        GROUP BY e.cashFlowRole, p.account, p.side
         """,
     )
-    fun observePostingRows(bookId: String): Flow<List<PostingWithEventRow>>
+    fun observePostingTotals(bookId: String): Flow<List<PostingWithEventRow>>
 
     @Query(
         """

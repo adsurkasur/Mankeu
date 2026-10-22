@@ -21,15 +21,15 @@ V1 is an offline native Android cash book and business planner for small busines
 ## Primary task flows
 
 1. Start privately on-device; create a business, then a unit (branch, field, season). Nothing is created on the owner's behalf.
-2. Switch explicitly between `Proyeksi` and `Realisasi`.
-3. In Proyeksi, build the plan in Rencana Usaha: period, products with cost recipes and a first selling month, monthly fixed costs, one-off costs and income, assets with useful life, planned capital.
+2. Switch explicitly between `Rencana` and `Realisasi` (shown once a unit exists).
+3. In Rencana, build the plan in Rencana Usaha: period, products with cost recipes and a first selling month, monthly fixed costs, one-off costs and income, assets with useful life, planned capital.
 4. In Realisasi, record Uang Masuk or Uang Keluar. The category decides whether it is income, expense, owner capital, owner drawing, or an asset purchase.
 5. Correct a record with Ubah or remove it with Hapus.
 6. Keep stock per unit or shared: stock in, stock out, stock count, low-stock warning.
 7. Read profit and loss, cash flow, feasibility and break-even, and plan versus actual.
 8. Export the template-format workbook or a PDF; import a filled template into the selected unit and undo it if needed.
 9. Create a password-encrypted backup to a file or Google Drive and restore it after a preview.
-10. Find help: offered page tours and the Pusat Bantuan.
+10. Find help: a welcome card on first launch, page tours behind the ? button, and the Pusat Bantuan.
 11. Delete all data from Pengaturan, including the Mankeu files on Google Drive and the sign-in account (DEC-020).
 
 ## Native information architecture
@@ -37,7 +37,7 @@ V1 is an offline native Android cash book and business planner for small busines
 ### Compact phone
 
 - **Beranda**: cash, the four key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even status.
-- **Catatan**: the entry form and the record list (search, Semua/Masuk/Keluar) in Realisasi; Rencana Usaha in Proyeksi.
+- **Catatan**: the entry form and the record list (search, Semua/Masuk/Keluar) in Realisasi; Rencana Usaha in Rencana.
 - **Stok**: items of the selected unit and shared items.
 - **Laporan**: Laba Rugi dan Arus Kas, Kelayakan & BEP, Realisasi vs Target.
 - **Overlays** from the top bar: Berkas & Data (import, export, backup, categories, import history), Pengaturan, Pusat Bantuan.

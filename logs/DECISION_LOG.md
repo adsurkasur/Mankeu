@@ -1,5 +1,30 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-023] First Production Release Is 0.1.0, Minified With R8
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner chose the version in the pre-release grill; R8 is the agent's call). Release build verified on the emulator.
+- **Context**: The owner asked for a full pre-release audit ahead of a public production release on Play (until now only the internal testing track, v0.0.4 to v0.0.6). The release build had `isMinifyEnabled = false`; the debug APK is 27 MB.
+- **Decision**: `versionName` 0.1.0, `versionCode` 7. Release builds use R8 with `isShrinkResources = true` (unsigned release APK 4.2 MB). The existing keep rules stay; the `androidx.navigation` rule went with the unused dependency.
+- **Alternatives considered**: 1.0.0 (owner preferred 0.1.0 while the product is still young); keeping R8 off (rejected: six times larger download for the same app).
+- **Verification**: the minified build, signed with the debug key, was installed on the emulator from a clean state: create a business, record without a description, open the three report tabs, Stok and Pusat Bantuan; no crash in the crash buffer.
+- **Affected components**: `app/build.gradle.kts`, `app/proguard-rules.pro`, `gradle/libs.versions.toml`, README, PROJECT_GUIDE.
+
+### [DEC-022] What a First-Time Owner Meets: One Form, One Welcome, Plain Words
+- **Date**: 2026-10-22
+- **Status**: Accepted (owner, pre-release grill after the agent walked the app as a first-time warung owner and as a trained admin). Implemented; walked again on the release build.
+- **Context**: From a clean install the walk found: "Tambah Usaha" opened Berkas dan Data (Excel import) instead of the business form; a single-location owner had to create a business and then a "unit"; five "Lihat panduan?" cards appeared before the first record, one covering the + button (a tap started a tour) and the "tersimpan" message; "Catat Pemasukan" preselected "Pendapatan Lain" (alphabetical), so every sale became other income and break-even was wrong; a required description on every repeated record; Proyeksi/Realisasi shown before any business existed; a red negative balance after the first sale and restock because the money already in the drawer had never been recorded; "Laba Bersih" in Laporan for what Beranda calls "Untung / Rugi kas"; the search hint still offered "nama orang" from the removed credit features; import "Batal" buttons that did not cancel.
+- **Decision**:
+  1. Every empty state that asks for a business or unit opens the Usaha dan Unit sheet; with no business yet the sheet opens straight on the form. A new business starts with unit "Utama" (EN "Main"), selected, and the first business closes the sheet.
+  2. One welcome card on Beranda at first launch ("Selamat datang! … Kapan pun butuh bantuan, ketuk tombol ?"), Lihat / Tutup; no offers on other pages or sheets; every tour stays behind ?. Supersedes DEC-018 point 2 (per-page offers, "Nanti", "Jangan tawarkan lagi"). `Tour.HOME` raised to 3.
+  3. The entry form preselects the category last used for that direction, else the starting list's order (Penjualan & Jasa, Bahan Baku & Stok).
+  4. The description is optional; a blank one becomes the category name (in `EventDraft.toEvent`, so every write path gets it).
+  5. The book switch is hidden until a unit exists, and "Proyeksi" is called "Rencana" everywhere (EN "Plan").
+  6. Beranda in Realisasi: when cash is negative and no capital is recorded, a card explains and "Catat uang awal" opens money-in with Setoran Modal Pemilik preselected; when cash profit is negative, one line says stock counts as a cost on the day it is paid.
+  7. Import: reading can be cancelled for real; saving shows "Menyimpan N baris…" without a cancel (it is one transaction); the preview names the target ("Masuk ke: usaha · unit").
+  8. Kept on purpose: the app says "kamu", the user guide says "Anda".
+- **Alternatives considered**: two fields on one form (business + unit name); keeping per-page offers but moving the card (the owner judged it intrusive after the walk); keeping the description required.
+- **Affected components**: `presentation/` (MankeuApp, AppViewModel, HomeScreen, EntryScreen, ManageScopeScreen, MoreScreen, PlanScreen, StockSection, guide/TourHost, guide/HelpUi, guide/Guides), `data/FinanceRepository`, strings ID/EN, `docs/guide/help_strings.py`, screenshot tests, user guide, docs.
+
 ### [DEC-021] The Privacy Policy Has One Source: Markdown in This Repository, Rendered by adsurkasur.my.id
 - **Date**: 2026-10-22
 - **Status**: Accepted (owner: "biar dari adsurkasur-aura itu bisa langsung diperbarui kalau kita update di mankeu").

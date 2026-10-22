@@ -18,11 +18,10 @@ def t(key, id_, en):
 # --- Mechanism -------------------------------------------------------------------------------
 t("tour_btn_got_it", "Mengerti", "Got it")
 t("tour_learn_more", "Pelajari lebih lanjut", "Learn more")
-t("tour_offer_text", "Baru di halaman ini? Lihat panduan singkat (%1$d langkah).", "New to this page? Take a short guide (%1$d steps).")
+t("tour_offer_text", "Selamat datang! Mau lihat panduan singkat (%1$d langkah)? Kapan pun butuh bantuan, ketuk tombol ? di kanan atas.", "Welcome! Take a short guide (%1$d steps)? Whenever you need help, tap the ? button at the top right.")
 t("tour_offer_start", "Lihat", "Show me")
-t("tour_offer_later", "Nanti", "Later")
-t("tour_offer_never", "Jangan tawarkan lagi", "Don't offer again")
-t("settings_tour_offers", "Tawarkan panduan saat membuka halaman baru", "Offer a guide when I open a page for the first time")
+t("tour_offer_later", "Tutup", "Close")
+t("settings_tour_offers", "Tampilkan sapaan panduan di Beranda", "Show the welcome guide on the home page")
 t("help_center_title", "Pusat Bantuan", "Help Center")
 t("help_search_hint", "Cari bantuan, mis. stok, BEP, impor", "Search help, e.g. stock, break-even, import")
 t("help_search_empty", "Tidak ada topik yang cocok. Coba kata lain.", "No matching topic. Try another word.")
@@ -49,7 +48,7 @@ t("tour2_home_scope_title", "Usaha dan unit", "Business and unit")
 t("tour2_home_scope_desc", "Ketuk di sini untuk memilih atau menambah usaha dan cabang/unit. Semua angka di aplikasi milik unit yang dipilih.",
   "Tap here to pick or add a business and a branch/unit. Every figure in the app belongs to the selected unit.")
 t("tour2_home_book_title", "Rencana atau kenyataan", "Plan or reality")
-t("tour2_home_book_desc", "Proyeksi berisi rencana usaha. Realisasi berisi uang yang benar-benar masuk dan keluar.",
+t("tour2_home_book_desc", "Rencana berisi rencana usaha. Realisasi berisi uang yang benar-benar masuk dan keluar.",
   "Plan holds your business plan. Actual holds the money that really came in and went out.")
 t("tour2_home_cash_title", "Uang kas", "Cash")
 t("tour2_home_cash_desc", "Sisa uang dari semua catatan di unit ini. Jika minus padahal uangnya ada, catat dulu modal awal.",
@@ -135,21 +134,21 @@ def art(key, title, body, steps):
 
 art("start_scope",
     ("Membuat usaha dan cabang/unit", "Creating a business and a branch/unit"),
-    ("Usaha adalah bisnismu, misalnya Toko Sembako Berkah. Unit adalah cabang, kebun, atau musim tanam di dalamnya. Catatan, rencana, dan stok selalu milik satu unit.",
-     "A business is your company, for example Berkah Grocery. A unit is a branch, field or growing season inside it. Records, plans and stock always belong to one unit."),
+    ("Usaha adalah bisnismu, misalnya Toko Sembako Berkah. Usaha baru langsung punya satu unit bernama Utama, jadi kamu bisa langsung mencatat. Punya cabang, kebun, atau musim tanam yang ingin dipisah? Tambahkan unit lain. Catatan, rencana, dan stok selalu milik satu unit.",
+     "A business is your company, for example Berkah Grocery. A new business starts with one unit called Main, so you can record right away. Have branches, fields or seasons to keep apart? Add more units. Records, plans and stock always belong to one unit."),
     (["Ketuk nama usaha di bagian atas layar.",
-      "Ketuk Tambah Usaha, tulis namanya, lalu Simpan.",
-      "Buka lagi bagian atas, ketuk Tambah Unit Usaha, lalu beri nama cabang atau kebunnya.",
+      "Ketuk Tambah Usaha, tulis namanya, lalu Simpan. Unit Utama dibuat otomatis.",
+      "Untuk cabang lain: buka lagi bagian atas, ketuk Tambah Unit Usaha, lalu beri nama cabangnya.",
       "Untuk pindah, ketuk Pakai ini pada unit yang ingin dipakai."],
      ["Tap the business name at the top of the screen.",
-      "Tap Add Business, type its name, then Save.",
-      "Open the top again, tap Add Business Unit, and name the branch or field.",
+      "Tap Add Business, type its name, then Save. The Main unit is created for you.",
+      "For another branch: open the top again, tap Add Business Unit, and name it.",
       "To switch, tap Use this on the unit you want."]))
 art("start_books",
-    ("Proyeksi dan Realisasi", "Projection and Actual"),
-    ("Setiap unit punya dua buku. Proyeksi adalah rencana: produk, target, biaya, dan modal. Realisasi adalah kenyataan: uang yang benar-benar masuk dan keluar. Keduanya terpisah, lalu dibandingkan di Laporan.",
+    ("Rencana dan Realisasi", "Plan and Actual"),
+    ("Setiap unit punya dua buku. Rencana adalah rencana: produk, target, biaya, dan modal. Realisasi adalah kenyataan: uang yang benar-benar masuk dan keluar. Keduanya terpisah, lalu dibandingkan di Laporan.",
      "Every unit has two books. Plan is the plan book: products, targets, costs and capital. Actual is reality: money that really came in and went out. They stay separate and are compared in Reports."),
-    (["Pilih Proyeksi di bagian atas untuk membuat atau mengubah rencana usaha.",
+    (["Pilih Rencana di bagian atas untuk membuat atau mengubah rencana usaha.",
       "Pilih Realisasi untuk mencatat transaksi harian.",
       "Buka Laporan, tab Realisasi vs Target, untuk melihat seberapa jauh kenyataan dari rencana."],
      ["Choose Plan at the top to build or change the business plan.",
@@ -157,7 +156,7 @@ art("start_books",
       "Open Reports, the Actual vs Target tab, to see how far reality is from the plan."]))
 art("start_home",
     ("Membaca Beranda", "Reading the Home screen"),
-    ("Beranda merangkum unit yang dipilih: uang kas, untung atau rugi, pendapatan, dan biaya. Di Proyeksi, Beranda menampilkan ringkasan rencana usaha.",
+    ("Beranda merangkum unit yang dipilih: uang kas, untung atau rugi, pendapatan, dan biaya. Di buku Rencana, Beranda menampilkan ringkasan rencana usaha.",
      "Home sums up the selected unit: cash, profit or loss, income and costs. In Plan it shows a summary of the business plan."),
     (["Uang kas adalah sisa uang dari semua catatan di unit ini.",
       "Untung atau rugi kas adalah pendapatan dikurangi biaya, tanpa modal dan tanpa beli alat.",
@@ -215,9 +214,9 @@ art("record_fix",
       "A record that should not exist at all: tap Delete, then confirm."]))
 art("plan_create",
     ("Membuat Rencana Usaha", "Building a business plan"),
-    ("Rencana Usaha ada di Catatan saat Proyeksi dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.",
+    ("Rencana Usaha ada di Catatan saat Rencana dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.",
      "The business plan lives in Records when Plan is selected. From it the app calculates the break-even point, profit per month and the capital you need."),
-    (["Pilih Proyeksi di bagian atas, lalu buka Catatan.",
+    (["Pilih Rencana di bagian atas, lalu buka Catatan.",
       "Atur periode rencana, misalnya 12 bulan.",
       "Tambahkan produk dengan harga, target per bulan, dan resep biayanya.",
       "Tambahkan biaya tetap bulanan, biaya lain, aset, dan setoran modal.",
@@ -323,7 +322,7 @@ art("report_target",
     ("Realisasi vs Target", "Actual vs Target"),
     ("Tab ini membandingkan rata-rata per bulan dari rencana dengan rata-rata per bulan dari catatan nyata, sehingga kamu tahu pos mana yang meleset.",
      "This tab compares the plan's average per month with the actual records' average per month, so you see which items are off."),
-    (["Buat Rencana Usaha di Proyeksi lebih dulu.",
+    (["Buat Rencana Usaha di buku Rencana lebih dulu.",
       "Catat transaksi di Realisasi.",
       "Buka Laporan, tab Realisasi vs Target."],
      ["Build the business plan in Plan first.",
@@ -395,7 +394,7 @@ art("faq_bep",
     ("Kenapa BEP tidak muncul?", "Why is there no break-even?"),
     ("BEP gabungan butuh target per bulan di setiap produk dan harga jual di atas biaya variabelnya. Tanpa produk sama sekali, tidak ada yang bisa dihitung.",
      "The combined break-even needs a monthly target on every product and a price above its variable cost. Without products there is nothing to calculate."),
-    (["Buka Rencana Usaha di Proyeksi.",
+    (["Buka Rencana Usaha di buku Rencana.",
       "Pastikan setiap produk punya target per bulan.",
       "Periksa margin di form produk: bila merah, harga di bawah biaya variabel."],
      ["Open the business plan in Plan.",

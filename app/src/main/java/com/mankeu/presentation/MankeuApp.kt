@@ -212,7 +212,6 @@ fun MankeuApp(
     var showing by rememberSaveable { mutableStateOf<HelpArticle?>(null) }
     var helpArticle by rememberSaveable { mutableStateOf<HelpArticle?>(null) }
     var helpSheet by rememberSaveable { mutableStateOf(false) }
-    val toursLater = remember { mutableStateListOf<Tour>() }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
     // recreate() is not instantaneous — resources reload and the whole tree recomposes — and
     // without this the screen simply froze on the old language for a beat and then snapped.
@@ -407,7 +406,7 @@ fun MankeuApp(
         }
     }
     val tourController = remember(prefs) {
-        TourController(prefs::shouldOfferTour, prefs::markTourSeen, { prefs.updateTourOffers(false) }, { openHelp(it) }, toursLater)
+        TourController(prefs::shouldOfferTour, prefs::markTourSeen) { openHelp(it) }
     }
     LaunchedEffect(captureShow) { captureShow?.let(show) }
 
@@ -572,7 +571,6 @@ fun MankeuApp(
                                         onTourOffersChange = prefs::updateTourOffers,
                                         onResetTours = {
                                             prefs.resetAllTours()
-                                            toursLater.clear()
                                             overlay = Overlay.NONE
                                             destination = Destination.HOME
                                         },
@@ -621,7 +619,8 @@ fun MankeuApp(
                                                     viewModel = viewModel,
                                                     isSaving = isSaving,
                                                     onNavigate = { destination = it },
-                                                    onOpenData = { overlay = Overlay.DATA },
+                                                    onManageScope = { manageScope = true },
+                                                    onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                     onStartTour = { activeTour = it },
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
@@ -653,7 +652,8 @@ fun MankeuApp(
                                                 viewModel = viewModel,
                                                 isSaving = isSaving,
                                                 onNavigate = { destination = it },
-                                                onOpenData = { overlay = Overlay.DATA },
+                                                onManageScope = { manageScope = true },
+                                                onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                 onStartTour = { activeTour = it },
                                                 requestedKind = requestedEntryKind,
                                                 onRequestedKindConsumed = { requestedEntryKind = null },
@@ -673,13 +673,18 @@ fun MankeuApp(
                             )
                         }
 
+                val firstUnitName = stringResource(R.string.default_unit_name)
                 if (manageScope) {
                     ManageScopeSheet(
                         state = state,
                         onDismiss = { manageScope = false },
                         onSelectBusiness = viewModel::selectBusiness,
                         onSelectProject = viewModel::selectProject,
-                        onCreateBusiness = viewModel::createBusiness,
+                        onCreateBusiness = { name ->
+                            // The first business closes the sheet: it already has its unit, so Beranda is ready.
+                            if (state.businesses.isEmpty()) manageScope = false
+                            viewModel.createBusiness(name, firstUnitName)
+                        },
                         onCreateProject = viewModel::createProject,
                         onRenameBusiness = viewModel::renameBusiness,
                         onRemoveBusiness = viewModel::removeBusiness,
@@ -724,12 +729,14 @@ fun MankeuApp(
                     TourOfferCard(
                         stepCount = pageTour.steps.size,
                         onStart = { activeTour = pageTour },
-                        onLater = { tourController.notNow(pageTour) },
-                        onNever = { tourController.never() },
+                        // Closing is final: the welcome is a greeting, not a reminder. ? keeps the tour.
+                        onClose = { tourController.seen(pageTour) },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .navigationBarsPadding()
-                            .padding(start = 16.dp, end = 16.dp, bottom = if (overlay == Overlay.NONE) 88.dp else 16.dp)
+                            // Above the navigation bar, the record button and the snackbar: at 88 dp it sat on
+                            // the "+" (a tap started the tour) and hid "Tersimpan" (audit 2026-10-22).
+                            .padding(start = 16.dp, end = 16.dp, bottom = if (overlay == Overlay.NONE) 168.dp else 16.dp)
                             .zIndex(50f),
                     )
                 }
@@ -1043,7 +1050,8 @@ private fun ScopeHeader(
                 animationSpec = tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing),
                 label = "modeContent",
             )
-            SingleChoiceSegmentedButtonRow(
+            // Hidden until there is a unit: before that the two books are words without meaning (2026-10-22).
+            if (state.selectedProjectId != null) SingleChoiceSegmentedButtonRow(
                 Modifier.fillMaxWidth().tourTarget(TourTarget.SCOPE_BOOK),
             ) {
                 BookMode.entries.forEachIndexed { index, mode ->
@@ -1240,7 +1248,9 @@ private fun ScreenContent(
     viewModel: AppViewModel,
     isSaving: Boolean,
     onNavigate: (Destination) -> Unit,
-    onOpenData: () -> Unit,
+    /** Opens the Usaha dan Unit sheet: every empty state asking for a business or unit leads there. */
+    onManageScope: () -> Unit,
+    onQuickRecord: (FinancialEventType) -> Unit,
     onStartTour: ((Tour) -> Unit)? = null,
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
@@ -1279,15 +1289,16 @@ private fun ScreenContent(
                 Destination.HOME -> HomeScreen(
                     state = state,
                     onNavigate = onNavigate,
-                    onOpenData = onOpenData,
+                    onManageScope = onManageScope,
                     onOpenPlan = { onNavigate(Destination.ENTRY) },
+                    onQuickRecord = onQuickRecord,
                     expanded = expanded,
                 )
                 Destination.STOCK -> StockScreen(
                     items = state.stockItems,
                     hasBusiness = state.selectedBusinessId != null,
                     unitName = state.projects.firstOrNull { it.id == state.selectedProjectId }?.name,
-                    onOpenData = onOpenData,
+                    onManageScope = onManageScope,
                     onCreateStockItem = viewModel::createStockItem,
                     onRecordStockMovement = viewModel::recordStockMovement,
                     expanded = expanded,
@@ -1300,14 +1311,14 @@ private fun ScreenContent(
                         onSavePlanLine = viewModel::savePlanLine,
                         onArchivePlanLine = viewModel::archivePlanLine,
                         onSetPeriod = viewModel::setPlanPeriod,
-                        onOpenData = onOpenData,
+                        onManageScope = onManageScope,
                     )
                 } else EntryScreen(
                     state = state,
                     isSaving = isSaving,
                     onRecord = viewModel::record,
                     onDelete = viewModel::deleteTransaction,
-                    onOpenData = onOpenData,
+                    onManageScope = onManageScope,
                     onStartTour = onStartTour?.let { { it(Tour.ENTRY) } },
                     requestedKind = requestedKind,
                     onRequestedKindConsumed = onRequestedKindConsumed,

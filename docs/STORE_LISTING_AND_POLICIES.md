@@ -134,7 +134,7 @@ Catat uang masuk dan keluar, susun rencana usaha, hitung titik impas, dan pantau
 • Mencatat uang yang benar-benar berpindah. Tanpa utang, piutang, atau pinjaman.
 
 2. RENCANA USAHA & TITIK IMPAS (BEP)
-• Buku Proyeksi terpisah dari Buku Realisasi.
+• Buku Rencana terpisah dari Buku Realisasi.
 • Produk dengan resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana.
 • BEP unit dan rupiah (juga untuk banyak produk), laba per bulan, R/C, B/C, dan kebutuhan modal.
 • Bandingkan realisasi dengan target per bulan.

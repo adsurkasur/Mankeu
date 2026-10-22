@@ -23,7 +23,7 @@
     <string name="scope_loading_project">Memuat unit usaha…</string>
     <string name="scope_empty_business">Belum ada usaha</string>
     <string name="scope_empty_project">Belum ada cabang / unit usaha</string>
-    <string name="scope_mode_plan">Proyeksi</string>
+    <string name="scope_mode_plan">Rencana</string>
     <string name="scope_mode_actual">Realisasi</string>
 
     <!-- Money direction, in the owner's workbook vocabulary -->
@@ -44,8 +44,12 @@
     <string name="home_balance_sub_actual">Sisa uang kas dari transaksi nyata pada unit usaha ini</string>
     <string name="home_balance_sub_plan">Perkiraan saldo kas dari simulasi rencana/proyeksi</string>
     <string name="home_profit">Untung / Rugi kas</string>
+    <string name="home_cash_loss_note">Belanja stok dan bahan dihitung sebagai biaya pada hari dibayar, jadi hari kulakan bisa tampak rugi. Lihat per bulan di Laporan agar adil.</string>
     <string name="home_cash_flow">Uang masuk bersih</string>
-    <string name="home_search_hint">Cari keterangan, kategori, atau nama orang</string>
+    <string name="home_search_hint">Cari keterangan atau kategori</string>
+    <string name="home_negative_cash_title">Uang kas minus?</string>
+    <string name="home_negative_cash_body">Kalau uangnya ada di laci atau rekening, kemungkinan uang yang sudah ada sebelum mulai mencatat belum dicatat. Catat sekali sebagai Setoran Modal Pemilik, lalu angka kas akan sesuai.</string>
+    <string name="home_negative_cash_action">Catat uang awal</string>
     <string name="home_empty_title">Belum ada catatan</string>
     <string name="home_empty_body">Mulai dari uang masuk, uang keluar, atau ambil dari file Excel.</string>
     <string name="home_empty_action">Catat sekarang</string>
@@ -62,6 +66,7 @@
     <string name="entry_amount">Jumlah uang</string>
     <string name="entry_amount_invalid">Jumlah tidak sah</string>
     <string name="entry_description">Keterangan</string>
+    <string name="entry_description_optional">Boleh kosong; akan diisi nama kategori.</string>
     <string name="entry_category">Kategori</string>
     <string name="entry_category_pick">Pilih kategori</string>
     <string name="entry_date">Tanggal</string>
@@ -76,7 +81,6 @@
     <string name="entry_saving">Menyimpan…</string>
     <string name="entry_save">Simpan catatan</string>
     <string name="entry_err_amount">Jumlah uang harus lebih dari nol.</string>
-    <string name="entry_err_description">Keterangan wajib diisi.</string>
     <string name="entry_err_date">Tanggal harus berformat YYYY-MM-DD.</string>
     <string name="entry_err_category">Pilih kategori dulu.</string>
     <string name="entry_err_quantity">Volume harus berupa angka lebih dari nol (contoh: 2,5).</string>
@@ -105,13 +109,13 @@
     <string name="reports_empty_body">Laporan dihitung dari catatan transaksi. Catat pemasukan atau pengeluaran pertama, atau ambil dari berkas Excel, lalu angkanya muncul di sini.</string>
     <string name="reports_empty_action">Catat transaksi</string>
     <string name="reports_empty_plan_title">Buku rencana masih kosong</string>
-    <string name="reports_empty_plan_body">Isi RAB pada buku Proyeksi, atau impor berkas Excel yang memuatnya, untuk melihat titik impas dan kelayakan usaha.</string>
+    <string name="reports_empty_plan_body">Isi RAB pada buku Rencana, atau impor berkas Excel yang memuatnya, untuk melihat titik impas dan kelayakan usaha.</string>
     <string name="reports_title">Laporan dan Analisis</string>
     <string name="reports_subtitle">Dihitung otomatis dari catatan transaksi dan anggaran.</string>
     <string name="reports_tab_financials">Laba Rugi dan Arus Kas</string>
     <string name="reports_tab_feasibility">Kelayakan &amp; BEP</string>
     <string name="reports_tab_comparison">Realisasi vs Target</string>
-    <string name="reports_net_profit">Laba Bersih</string>
+    <string name="reports_net_profit">Untung / Rugi kas</string>
     <string name="reports_income_statement">Laporan Laba Rugi</string>
     <string name="reports_operating_income">Pendapatan Operasional</string>
     <string name="reports_operating_expense">Biaya Operasional</string>
@@ -213,9 +217,9 @@
     <string name="scope_add_project">Tambah Unit Usaha</string>
     <string name="scope_no_options">Belum ada data</string>
     <string name="setup_business_title">Mulai dengan menambah usaha</string>
-    <string name="setup_business_body">Beri nama usaha kamu sendiri, misalnya \"Toko Berkah Jaya\". Aplikasi tidak membuatkan nama otomatis supaya catatan tetap milik kamu.</string>
+    <string name="setup_business_body">Tulis nama usaha kamu, misalnya \"Warung Bu Ani\". Setelah itu kamu bisa langsung mencatat uang masuk dan keluar.</string>
     <string name="setup_project_title">Tambah cabang, outlet, atau proyek</string>
-    <string name="setup_project_body">Setiap unit usaha punya buku Proyeksi dan Realisasi sendiri. Tambahkan satu cabang / unit usaha dulu sebelum mencatat transaksi.</string>
+    <string name="setup_project_body">Catatan disimpan per tempat usaha, misalnya \"Warung utama\" atau \"Cabang pasar\". Punya satu tempat saja? Tambahkan satu, lalu mulai mencatat.</string>
 
     <!-- Tur panduan -->
     <string name="tour_step_counter">Langkah %1$d dari %2$d</string>
@@ -248,6 +252,8 @@
     <string name="import_sub">Isi template Mankeu di Excel, lalu impor di sini. Pratinjau dulu; belum ada data berubah.</string>
     <string name="import_pick">Pilih file .xlsx</string>
     <string name="import_loading">Membaca dan merekonsiliasi seluruh workbook…</string>
+    <string name="import_target">Masuk ke</string>
+    <string name="import_committing">Menyimpan %1$d baris… Jangan tutup aplikasi; semua baris tersimpan sekaligus atau tidak sama sekali.</string>
     <string name="import_pick_other">Pilih file lain</string>
     <string name="import_pick_another_workbook">Impor workbook lain</string>
     <string name="import_done">Impor selesai: %1$d baris ditambahkan ke unit usaha ini.</string>
@@ -304,7 +310,7 @@
     <string name="restore_confirm">Pulihkan sekarang</string>
     <string name="action_back_step">Kembali</string>
 
-    <string name="compare_plan">Proyeksi %1$s</string>
+    <string name="compare_plan">Rencana %1$s</string>
     <string name="compare_actual">Realisasi %1$s</string>
     <string name="compare_delta">Selisih %1$s</string>
     <string name="entry_clear">Hapus</string>
@@ -312,9 +318,10 @@
     <string name="entry_hint_expense">Contoh: Belanja kulakan stok / bahan baku</string>
 
     <!-- Snackbar / status messages emitted by AppViewModel (see UiText) -->
-    <string name="msg_business_created">Usaha dibuat. Tambahkan cabang atau unit usaha untuk mulai mencatat.</string>
+    <string name="msg_business_created">Usaha dibuat dengan satu tempat usaha \"Utama\". Kamu bisa langsung mencatat; cabang lain bisa ditambah kapan saja.</string>
+    <string name="default_unit_name">Utama</string>
     <string name="msg_business_create_failed">Usaha tidak dapat dibuat.</string>
-    <string name="msg_project_created">Unit usaha dibuat dengan buku Proyeksi dan Realisasi.</string>
+    <string name="msg_project_created">Unit usaha dibuat dengan buku Rencana dan Realisasi.</string>
     <string name="msg_project_create_failed">Unit usaha tidak dapat dibuat.</string>
     <string name="msg_business_renamed">Nama usaha diperbarui.</string>
     <string name="msg_business_rename_failed">Nama usaha tidak dapat diperbarui.</string>
@@ -448,7 +455,7 @@
 
     <!-- Catatan -->
     <string name="tooltip_mode_actual">Buku Realisasi: transaksi yang benar-benar terjadi.</string>
-    <string name="tooltip_mode_plan">Buku Proyeksi: rencana usaha, produk, dan biaya. Tidak mengubah uang kas nyata.</string>
+    <string name="tooltip_mode_plan">Buku Rencana: rencana usaha, produk, dan biaya. Tidak mengubah uang kas nyata.</string>
     <string name="tooltip_feasibility_status">Status kelayakan usaha: R/C 1,00 atau lebih dan B/C di atas 0,00 menandakan usaha menguntungkan.</string>
     <string name="stock_title">Persediaan &amp; Stok Barang</string>
     <string name="stock_value">Total nilai persediaan</string>
@@ -500,7 +507,7 @@
     <string name="import_ready_products">Produk baru</string>
     <string name="plan_open">Buka Rencana Usaha</string>
     <string name="plan_empty_title">Rencana usaha masih kosong</string>
-    <string name="plan_empty_body">Buka Catatan dalam mode Proyeksi untuk mengisi produk dan resepnya, biaya tetap bulanan, aset, dan setoran modal. Titik impas dan kelayakan dihitung dari situ.</string>
+    <string name="plan_empty_body">Buka Catatan dalam mode Rencana untuk mengisi produk dan resepnya, biaya tetap bulanan, aset, dan setoran modal. Titik impas dan kelayakan dihitung dari situ.</string>
     <string name="plan_bep_month">Omzet impas per bulan</string>
     <string name="plan_target_above">Target omzet %1$s per bulan sudah melewati titik impas.</string>
     <string name="plan_target_below">Target omzet %1$s per bulan, kurang %2$s dari titik impas.</string>
@@ -606,11 +613,10 @@
     <!-- GUIDE:BEGIN generated by docs/guide/help_strings.py -->
     <string name="tour_btn_got_it">Mengerti</string>
     <string name="tour_learn_more">Pelajari lebih lanjut</string>
-    <string name="tour_offer_text">Baru di halaman ini? Lihat panduan singkat (%1$d langkah).</string>
+    <string name="tour_offer_text">Selamat datang! Mau lihat panduan singkat (%1$d langkah)? Kapan pun butuh bantuan, ketuk tombol ? di kanan atas.</string>
     <string name="tour_offer_start">Lihat</string>
-    <string name="tour_offer_later">Nanti</string>
-    <string name="tour_offer_never">Jangan tawarkan lagi</string>
-    <string name="settings_tour_offers">Tawarkan panduan saat membuka halaman baru</string>
+    <string name="tour_offer_later">Tutup</string>
+    <string name="settings_tour_offers">Tampilkan sapaan panduan di Beranda</string>
     <string name="help_center_title">Pusat Bantuan</string>
     <string name="help_search_hint">Cari bantuan, mis. stok, BEP, impor</string>
     <string name="help_search_empty">Tidak ada topik yang cocok. Coba kata lain.</string>
@@ -634,7 +640,7 @@
     <string name="tour2_home_scope_title">Usaha dan unit</string>
     <string name="tour2_home_scope_desc">Ketuk di sini untuk memilih atau menambah usaha dan cabang/unit. Semua angka di aplikasi milik unit yang dipilih.</string>
     <string name="tour2_home_book_title">Rencana atau kenyataan</string>
-    <string name="tour2_home_book_desc">Proyeksi berisi rencana usaha. Realisasi berisi uang yang benar-benar masuk dan keluar.</string>
+    <string name="tour2_home_book_desc">Rencana berisi rencana usaha. Realisasi berisi uang yang benar-benar masuk dan keluar.</string>
     <string name="tour2_home_cash_title">Uang kas</string>
     <string name="tour2_home_cash_desc">Sisa uang dari semua catatan di unit ini. Jika minus padahal uangnya ada, catat dulu modal awal.</string>
     <string name="tour2_home_record_title">Catat uang masuk dan keluar</string>
@@ -689,13 +695,13 @@
     <string name="tour2_settings_drive_title">Google Drive</string>
     <string name="tour2_settings_drive_desc">Masuk dengan akun Google agar cadangan bisa disimpan di Drive pribadimu.</string>
     <string name="help_start_scope_title">Membuat usaha dan cabang/unit</string>
-    <string name="help_start_scope_body">Usaha adalah bisnismu, misalnya Toko Sembako Berkah. Unit adalah cabang, kebun, atau musim tanam di dalamnya. Catatan, rencana, dan stok selalu milik satu unit.</string>
-    <string name="help_start_scope_steps">Ketuk nama usaha di bagian atas layar.\nKetuk Tambah Usaha, tulis namanya, lalu Simpan.\nBuka lagi bagian atas, ketuk Tambah Unit Usaha, lalu beri nama cabang atau kebunnya.\nUntuk pindah, ketuk Pakai ini pada unit yang ingin dipakai.</string>
-    <string name="help_start_books_title">Proyeksi dan Realisasi</string>
-    <string name="help_start_books_body">Setiap unit punya dua buku. Proyeksi adalah rencana: produk, target, biaya, dan modal. Realisasi adalah kenyataan: uang yang benar-benar masuk dan keluar. Keduanya terpisah, lalu dibandingkan di Laporan.</string>
-    <string name="help_start_books_steps">Pilih Proyeksi di bagian atas untuk membuat atau mengubah rencana usaha.\nPilih Realisasi untuk mencatat transaksi harian.\nBuka Laporan, tab Realisasi vs Target, untuk melihat seberapa jauh kenyataan dari rencana.</string>
+    <string name="help_start_scope_body">Usaha adalah bisnismu, misalnya Toko Sembako Berkah. Usaha baru langsung punya satu unit bernama Utama, jadi kamu bisa langsung mencatat. Punya cabang, kebun, atau musim tanam yang ingin dipisah? Tambahkan unit lain. Catatan, rencana, dan stok selalu milik satu unit.</string>
+    <string name="help_start_scope_steps">Ketuk nama usaha di bagian atas layar.\nKetuk Tambah Usaha, tulis namanya, lalu Simpan. Unit Utama dibuat otomatis.\nUntuk cabang lain: buka lagi bagian atas, ketuk Tambah Unit Usaha, lalu beri nama cabangnya.\nUntuk pindah, ketuk Pakai ini pada unit yang ingin dipakai.</string>
+    <string name="help_start_books_title">Rencana dan Realisasi</string>
+    <string name="help_start_books_body">Setiap unit punya dua buku. Rencana adalah rencana: produk, target, biaya, dan modal. Realisasi adalah kenyataan: uang yang benar-benar masuk dan keluar. Keduanya terpisah, lalu dibandingkan di Laporan.</string>
+    <string name="help_start_books_steps">Pilih Rencana di bagian atas untuk membuat atau mengubah rencana usaha.\nPilih Realisasi untuk mencatat transaksi harian.\nBuka Laporan, tab Realisasi vs Target, untuk melihat seberapa jauh kenyataan dari rencana.</string>
     <string name="help_start_home_title">Membaca Beranda</string>
-    <string name="help_start_home_body">Beranda merangkum unit yang dipilih: uang kas, untung atau rugi, pendapatan, dan biaya. Di Proyeksi, Beranda menampilkan ringkasan rencana usaha.</string>
+    <string name="help_start_home_body">Beranda merangkum unit yang dipilih: uang kas, untung atau rugi, pendapatan, dan biaya. Di buku Rencana, Beranda menampilkan ringkasan rencana usaha.</string>
     <string name="help_start_home_steps">Uang kas adalah sisa uang dari semua catatan di unit ini.\nUntung atau rugi kas adalah pendapatan dikurangi biaya, tanpa modal dan tanpa beli alat.\nKomposisi biaya menunjukkan ke mana uang paling banyak keluar.</string>
     <string name="help_record_income_title">Mencatat penjualan</string>
     <string name="help_record_income_body">Setiap uang yang masuk dari pembeli dicatat sebagai Pemasukan berkategori penjualan. Jika produkmu sudah ada di Rencana Usaha, pilih produk dan jumlahnya agar BEP bulan ini bisa dihitung.</string>
@@ -710,8 +716,8 @@
     <string name="help_record_fix_body">Setiap kartu catatan punya dua tombol: Ubah (ikon pensil) dan Hapus (ikon tempat sampah). Ubah membuka formulir yang sudah terisi; setelah disimpan, catatan lama diganti dengan yang benar. Hapus membuang catatan itu untuk selamanya.</string>
     <string name="help_record_fix_steps">Buka Catatan dan cari catatan yang salah.\nKetuk Ubah pada kartunya. Formulir terbuka dengan isi catatan itu.\nPerbaiki nominal, tanggal, kategori, atau keterangannya, lalu ketuk Simpan.\nCatatan yang sama sekali tidak perlu: ketuk Hapus, lalu konfirmasi.</string>
     <string name="help_plan_create_title">Membuat Rencana Usaha</string>
-    <string name="help_plan_create_body">Rencana Usaha ada di Catatan saat Proyeksi dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.</string>
-    <string name="help_plan_create_steps">Pilih Proyeksi di bagian atas, lalu buka Catatan.\nAtur periode rencana, misalnya 12 bulan.\nTambahkan produk dengan harga, target per bulan, dan resep biayanya.\nTambahkan biaya tetap bulanan, biaya lain, aset, dan setoran modal.\nLihat kartu Kelayakan di atas untuk hasilnya.</string>
+    <string name="help_plan_create_body">Rencana Usaha ada di Catatan saat Rencana dipilih. Dari isian ini aplikasi menghitung titik impas, laba per bulan, dan modal yang dibutuhkan.</string>
+    <string name="help_plan_create_steps">Pilih Rencana di bagian atas, lalu buka Catatan.\nAtur periode rencana, misalnya 12 bulan.\nTambahkan produk dengan harga, target per bulan, dan resep biayanya.\nTambahkan biaya tetap bulanan, biaya lain, aset, dan setoran modal.\nLihat kartu Kelayakan di atas untuk hasilnya.</string>
     <string name="help_plan_products_title">Produk dan resep biaya</string>
     <string name="help_plan_products_body">Resep adalah biaya bahan untuk satu satuan produk. Bahan yang dibeli per kemasan cukup ditulis harga kemasan dan berapa satuan yang dihasilkan, misalnya Rp15.000 untuk 50 cup.</string>
     <string name="help_plan_products_steps">Di Rencana Usaha, ketuk Tambah pada bagian Produk.\nIsi nama, satuan, harga jual, dan target terjual per bulan.\nTambahkan komponen resep: nama bahan, biaya, dan untuk berapa satuan.\nPerhatikan margin di bawah form: harga harus di atas biaya variabel.</string>
@@ -738,7 +744,7 @@
     <string name="help_report_bep_steps">Pastikan Realisasi dipilih, lalu buka Laporan atau Beranda.\nLihat apakah penjualan bulan ini sudah melewati titik impas.\nSelisih resep positif bisa berarti harga bahan naik, boros, atau masih tersisa sebagai stok.\nBila belum ada penjualan bulan ini, statusnya Belum Dapat Dinilai.</string>
     <string name="help_report_target_title">Realisasi vs Target</string>
     <string name="help_report_target_body">Tab ini membandingkan rata-rata per bulan dari rencana dengan rata-rata per bulan dari catatan nyata, sehingga kamu tahu pos mana yang meleset.</string>
-    <string name="help_report_target_steps">Buat Rencana Usaha di Proyeksi lebih dulu.\nCatat transaksi di Realisasi.\nBuka Laporan, tab Realisasi vs Target.</string>
+    <string name="help_report_target_steps">Buat Rencana Usaha di buku Rencana lebih dulu.\nCatat transaksi di Realisasi.\nBuka Laporan, tab Realisasi vs Target.</string>
     <string name="help_report_export_title">Ekspor Excel dan PDF</string>
     <string name="help_report_export_body">Excel berisi seluruh data unit ini dalam format template Mankeu, sehingga bisa diimpor lagi tanpa kehilangan data. PDF berisi laporan yang siap dibaca atau dicetak.</string>
     <string name="help_report_export_steps">Ketuk ikon map di bagian atas untuk membuka Berkas dan Data.\nDi Ekspor dan cadangan, pilih Excel, PDF, atau Template Excel.\nPilih tempat menyimpan berkas. Nama berkas memuat nama unit dan tanggal.</string>
@@ -759,7 +765,7 @@
     <string name="help_faq_cash_steps">Catat Pemasukan dengan kategori Setoran Modal Pemilik sebesar uang awal usaha.\nGunakan tanggal sebelum transaksi pertama.\nKas akan naik, sedangkan laba tidak berubah.</string>
     <string name="help_faq_bep_title">Kenapa BEP tidak muncul?</string>
     <string name="help_faq_bep_body">BEP gabungan butuh target per bulan di setiap produk dan harga jual di atas biaya variabelnya. Tanpa produk sama sekali, tidak ada yang bisa dihitung.</string>
-    <string name="help_faq_bep_steps">Buka Rencana Usaha di Proyeksi.\nPastikan setiap produk punya target per bulan.\nPeriksa margin di form produk: bila merah, harga di bawah biaya variabel.</string>
+    <string name="help_faq_bep_steps">Buka Rencana Usaha di buku Rencana.\nPastikan setiap produk punya target per bulan.\nPeriksa margin di form produk: bila merah, harga di bawah biaya variabel.</string>
     <string name="help_faq_import_title">Kenapa berkas impor ditolak?</string>
     <string name="help_faq_import_body">Mankeu hanya membaca template Mankeu dengan nama lembar dan judul kolom yang persis sama. Pesan penolakan menyebut lembar dan sel yang salah.</string>
     <string name="help_faq_import_steps">Baca daftar masalah di pratinjau, misalnya Transaksi!A3 tanggal salah.\nPerbaiki sel itu di Excel. Tanggal ditulis YYYY-MM-DD.\nJangan ganti nama lembar atau judul kolom. Bila ragu, ekspor template baru dan salin isinya.</string>

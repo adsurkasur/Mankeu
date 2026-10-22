@@ -20,7 +20,7 @@ Mankeu is a standalone Android application with a universal financial core and o
 ### Businesses and projects
 
 - **FR-BIZ-001:** A user can create, rename, archive, restore, and delete multiple businesses.
-- **FR-BIZ-002:** A business can contain multiple units (branches, fields, seasons, or activities), each with its own Proyeksi and Realisasi book.
+- **FR-BIZ-002:** A business can contain multiple units (branches, fields, seasons, or activities), each with its own Rencana (plan, formerly "Proyeksi") and Realisasi book. A new business starts with one unit, "Utama", so a single-location owner can record at once (audit 2026-10-22).
 - **FR-BIZ-003:** Every record belongs to an explicit unit the owner created; the app never invents a hidden default unit.
 - **FR-BIZ-004:** Agriculture-specific attributes are optional template metadata, not required business fields.
 

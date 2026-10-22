@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://github.com/adsurkasur/Mankeu/actions/workflows/android.yml"><img src="https://github.com/adsurkasur/Mankeu/actions/workflows/android.yml/badge.svg" alt="Android CI" /></a>
   <a href="https://github.com/adsurkasur/Mankeu/actions/workflows/deploy_play_store.yml"><img src="https://github.com/adsurkasur/Mankeu/actions/workflows/deploy_play_store.yml/badge.svg" alt="Play Store Deploy" /></a>
-  <a href="https://github.com/adsurkasur/Mankeu/releases"><img src="https://img.shields.io/badge/Release-v0.0.6-2E7D32?style=flat-square" alt="Release v0.0.6" /></a>
+  <a href="https://github.com/adsurkasur/Mankeu/releases"><img src="https://img.shields.io/badge/Release-v0.1.0-2E7D32?style=flat-square" alt="Release v0.1.0" /></a>
   <img src="https://img.shields.io/badge/Platform-Android_8.0+_(API_26+)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Platform Android" />
   <img src="https://img.shields.io/badge/UI-Jetpack_Compose_Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Compose Material 3" />
   <img src="https://img.shields.io/badge/Architecture-Offline--First_%7C_Room-black?style=flat-square" alt="Offline-First" />
@@ -29,7 +29,7 @@
 **Mankeu** adalah aplikasi Android native yang dirancang khusus untuk memecahkan problematika pencatatan keuangan pada Usaha Mikro, Kecil, dan Menengah (UMKM). Berbeda dengan software akuntansi konvensional yang rumit atau aplikasi kasir sederhana yang tidak memiliki analisis bisnis, Mankeu menggabungkan kemudahan pencatatan harian dengan akuntansi berstandar industri dan simulasi kelayakan usaha:
 
 - 🔒 **100% Offline-First & Privat**: Beroperasi penuh tanpa butuh koneksi internet, tanpa kewajiban login, dan tanpa ketergantungan pada server pihak ketiga. Data keuangan Anda aman di genggaman Anda.
-- ⚖️ **Dual-Book Scenarios (Proyeksi vs Realisasi)**: Memisahkan secara tegas antara rencana/simulasi bisnis (*Plan*) dan realisasi operasional (*Actual*), tanpa saling mencemari data.
+- ⚖️ **Dual-Book Scenarios (Rencana vs Realisasi)**: Memisahkan secara tegas antara rencana/simulasi bisnis (*Plan*) dan realisasi operasional (*Actual*), tanpa saling mencemari data.
 - 📊 **Rencana Usaha & Titik Impas**: Susun produk beserta resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana; Mankeu menghitung BEP unit dan Rupiah, laba per bulan, R/C, B/C, dan kebutuhan modal.
 - 💼 **Multi Usaha & Multi Unit**: Kelola beberapa usaha (toko, kuliner, bengkel, jasa, pertanian), masing-masing dengan unit atau cabang yang datanya terpisah.
 - 📦 **Stok Barang**: Barang per unit atau dipakai bersama semua unit, dengan peringatan stok menipis.
@@ -54,9 +54,9 @@
 - **Ubah dan Hapus**: Catatan yang salah isi diperbaiki langsung lewat **Ubah**; catatan yang tidak perlu dihapus. Jurnal ikut dibangun ulang sehingga laporan selalu seimbang (DEC-019).
 - **Produk dan kuantitas opsional**: Uang masuk dapat menyebut produk; jumlah mengikuti kuantitas × harga.
 
-### 2. Dua Buku: Realisasi dan Proyeksi
+### 2. Dua Buku: Realisasi dan Rencana
 - **Realisasi**: Catatan kas nyata yang sudah terjadi.
-- **Proyeksi (Rencana Usaha)**: Periode rencana, produk dengan resep biaya per unit (beserta hasil per resep), bulan mulai dijual untuk produk musiman, biaya tetap bulanan, biaya dan pemasukan sekali, aset dengan umur pakai, serta setoran modal yang direncanakan.
+- **Rencana (Rencana Usaha)**: Periode rencana, produk dengan resep biaya per unit (beserta hasil per resep), bulan mulai dijual untuk produk musiman, biaya tetap bulanan, biaya dan pemasukan sekali, aset dengan umur pakai, serta setoran modal yang direncanakan.
 - **Analisis Kelayakan Seketika**:
   - BEP gabungan berdasarkan bauran penjualan, plus BEP per produk
   - Laba per bulan, R/C ratio, dan B/C ratio

@@ -94,6 +94,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.DefaultMasterData
 import com.mankeu.domain.CostNature
 import com.mankeu.data.PlanAssembly
 import com.mankeu.domain.FinancialEventType
@@ -156,7 +157,7 @@ fun EntryScreen(
         CostNature?, String?, Int?, String?,
     ) -> Unit,
     onDelete: (String) -> Unit,
-    onOpenData: () -> Unit,
+    onManageScope: () -> Unit,
     isSaving: Boolean = false,
     onStartTour: (() -> Unit)? = null,
     /** Set by the Beranda/Catat speed dial: open straight onto this kind's form. */
@@ -232,7 +233,6 @@ fun EntryScreen(
     }
 
     val errAmount = stringResource(R.string.entry_err_amount)
-    val errDescription = stringResource(R.string.entry_err_description)
     val errDate = stringResource(R.string.entry_err_date)
     val errCategory = stringResource(R.string.entry_err_category)
     val errQuantity = stringResource(R.string.entry_err_quantity)
@@ -240,9 +240,8 @@ fun EntryScreen(
     val errLife = stringResource(R.string.entry_err_life)
     // These three errors are shown on their own field and focus it, so the keyboard's
     // bring-into-view scrolls the field above the IME. The rest keep the line above Simpan.
-    val inlineErrors = setOf(errAmount, errDescription)
+    val inlineErrors = setOf(errAmount)
     val amountFocus = remember { FocusRequester() }
-    val descriptionFocus = remember { FocusRequester() }
     val feedback = LocalFeedback.current
 
     val kind = entryKinds.firstOrNull { it.type == selected }
@@ -252,8 +251,15 @@ fun EntryScreen(
     val compatibleCategories = state.categories
         .filter { CategoryRole.parse(it.role).cashTypeFor(incoming) != null }
         .sortedBy { CategoryRole.parse(it.role) !in setOf(CategoryRole.REVENUE, CategoryRole.EXPENSE) }
+    // Default: the category last used for this direction (a warung records the same few things all
+    // day), else the starting list's order. Alphabetical order used to preselect "Pendapatan Lain"
+    // for every sale, which an owner new to the app never changed (audit 2026-10-22).
     LaunchedEffect(selected, compatibleCategories) {
-        if (compatibleCategories.none { it.id == categoryId }) categoryId = compatibleCategories.firstOrNull()?.id
+        if (compatibleCategories.none { it.id == categoryId }) {
+            val starting = DefaultMasterData.categories.map { it.name }
+            categoryId = state.events.firstOrNull { e -> compatibleCategories.any { it.id == e.categoryId } }?.categoryId
+                ?: compatibleCategories.minByOrNull { c -> starting.indexOf(c.name).let { if (it < 0) Int.MAX_VALUE else it } }?.id
+        }
     }
     LaunchedEffect(state.categories, pendingCategoryName) {
         pendingCategoryName?.let { pending ->
@@ -268,7 +274,13 @@ fun EntryScreen(
     LaunchedEffect(requestedKind) {
         requestedKind?.let {
             editingId = null
-            selected = it
+            // OWNER_CAPITAL is "record opening money": money in, preset to the capital category.
+            if (it == FinancialEventType.OWNER_CAPITAL) {
+                selected = FinancialEventType.CASH_INCOME
+                categoryId = state.categories.firstOrNull { c -> CategoryRole.parse(c.role) == CategoryRole.CAPITAL_IN }?.id
+            } else {
+                selected = it
+            }
             localError = null
             justSaved = false
             onRequestedKindConsumed()
@@ -325,7 +337,7 @@ fun EntryScreen(
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
                         Button(
-                            onClick = onOpenData,
+                            onClick = onManageScope,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
                                 contentColor = MaterialTheme.colorScheme.onError,
@@ -585,17 +597,10 @@ fun EntryScreen(
 
                 OutlinedTextField(
                     value = description,
-                    onValueChange = {
-                        description = it
-                        if (localError == errDescription) localError = null
-                    },
+                    onValueChange = { description = it },
                     label = { Text(stringResource(R.string.entry_description)) },
-                    isError = localError == errDescription,
-                    supportingText = if (localError == errDescription) {
-                        { Text(errDescription) }
-                    } else {
-                        null
-                    },
+                    // Optional (owner decision 2026-10-22): a blank one becomes the category name.
+                    supportingText = { Text(stringResource(R.string.entry_description_optional)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
@@ -610,7 +615,7 @@ fun EntryScreen(
                             },
                         )
                     },
-                    modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocus),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 ChoiceMenu(
                     modifier = Modifier.tourTarget(TourTarget.ENTRY_CATEGORY),
@@ -850,7 +855,6 @@ fun EntryScreen(
                         val category = compatibleCategories.firstOrNull { it.id == categoryId }
                         localError = when {
                             parsedAmount == null || parsedAmount <= 0 -> errAmount
-                            description.isBlank() -> errDescription
                             parsedDate == null -> errDate
                             category == null -> errCategory
                             quantity.isNotBlank() && parsedQuantity == null -> errQuantity
@@ -861,7 +865,6 @@ fun EntryScreen(
                             feedback(FeedbackEvent.REJECT)
                             when (localError) {
                                 errAmount -> amountFocus.requestFocus()
-                                errDescription -> descriptionFocus.requestFocus()
                             }
                         }
                         if (localError == null && parsedAmount != null && parsedDate != null && category != null) {

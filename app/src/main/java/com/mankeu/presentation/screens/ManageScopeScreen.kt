@@ -140,7 +140,8 @@ fun ManageScopeScreen(
     onStartTour: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    var addBusiness by rememberSaveable { mutableStateOf(false) }
+    // With nothing yet, the only thing to do here is name the business: open its form straight away.
+    var addBusiness by rememberSaveable { mutableStateOf(state.businesses.isEmpty()) }
     var addProject by rememberSaveable { mutableStateOf(false) }
     var renameBusiness by remember { mutableStateOf<BusinessEntity?>(null) }
     var removeBusiness by remember { mutableStateOf<BusinessEntity?>(null) }

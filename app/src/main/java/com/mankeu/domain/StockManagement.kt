@@ -272,13 +272,3 @@ class RecordStockMovementUseCase(
         return Result.success(newStock)
     }
 }
-
-/**
- * Use Case: Mendapatkan ringkasan stok & deteksi item dengan stok menipis (Low Stock Alert).
- */
-class GetStockSummaryUseCase(
-    private val stockDao: StockDao,
-) {
-    suspend fun execute(businessId: String, projectId: String? = null): StockSummary =
-        StockCalculation.summarize(stockDao.getStockItems(businessId, projectId).map { it.toDomain() })
-}

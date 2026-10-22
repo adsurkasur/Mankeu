@@ -42,8 +42,12 @@
     <string name="home_balance_sub_actual">What is left from actual records on this unit</string>
     <string name="home_balance_sub_plan">Estimated cash from the plan you made</string>
     <string name="home_profit">Cash profit / loss</string>
+    <string name="home_cash_loss_note">Stock and supplies count as a cost on the day they are paid, so a restocking day can look like a loss. Check month by month in Reports.</string>
     <string name="home_cash_flow">Net money in</string>
-    <string name="home_search_hint">Search notes, category, or person</string>
+    <string name="home_search_hint">Search notes or category</string>
+    <string name="home_negative_cash_title">Cash below zero?</string>
+    <string name="home_negative_cash_body">If the money is in the drawer or the bank, the money you had before you started recording is probably missing. Record it once as owner capital and the cash figure will match.</string>
+    <string name="home_negative_cash_action">Record starting money</string>
     <string name="home_empty_title">No records yet</string>
     <string name="home_empty_body">Start with money in, money out, or bring in an Excel file.</string>
     <string name="home_empty_action">Record now</string>
@@ -60,6 +64,7 @@
     <string name="entry_amount">Amount</string>
     <string name="entry_amount_invalid">Invalid amount</string>
     <string name="entry_description">Notes</string>
+    <string name="entry_description_optional">Optional; the category name is used if left blank.</string>
     <string name="entry_category">Category</string>
     <string name="entry_category_pick">Pick a category</string>
     <string name="entry_date">Date</string>
@@ -74,7 +79,6 @@
     <string name="entry_saving">Saving…</string>
     <string name="entry_save">Save record</string>
     <string name="entry_err_amount">Amount must be more than zero.</string>
-    <string name="entry_err_description">Notes are required.</string>
     <string name="entry_err_date">Date must look like YYYY-MM-DD.</string>
     <string name="entry_err_category">Pick a category first.</string>
     <string name="entry_err_quantity">Volume must be a number greater than zero (for example 2.5).</string>
@@ -109,7 +113,7 @@
     <string name="reports_tab_financials">Profit, Loss and Cash Flow</string>
     <string name="reports_tab_feasibility">Feasibility &amp; BEP</string>
     <string name="reports_tab_comparison">Actual vs Target</string>
-    <string name="reports_net_profit">Net profit</string>
+    <string name="reports_net_profit">Cash profit / loss</string>
     <string name="reports_income_statement">Profit and loss</string>
     <string name="reports_operating_income">Operating income</string>
     <string name="reports_operating_expense">Operating costs</string>
@@ -193,9 +197,9 @@
     <string name="scope_add_project">Add Business Unit</string>
     <string name="scope_no_options">Nothing here yet</string>
     <string name="setup_business_title">Start by adding your business</string>
-    <string name="setup_business_body">Give the business a name of your own. The app never invents one for you, so the records stay yours.</string>
+    <string name="setup_business_body">Type your business name, for example \"Sari Grocery\". Then you can start recording money in and out right away.</string>
     <string name="setup_project_title">Add a branch, outlet, or project</string>
-    <string name="setup_project_body">Every business unit keeps its own Plan and Actual books. Add one unit before recording transactions.</string>
+    <string name="setup_project_body">Records are kept per place of business, for example \"Main shop\" or \"Market branch\". Only one place? Add it, then start recording.</string>
 
     <!-- Guided tour and about -->
     <string name="tour_replay">Guide for this page</string>
@@ -245,6 +249,8 @@
     <string name="import_sub">Fill in the Mankeu template in Excel, then import it here. Preview first; nothing changes yet.</string>
     <string name="import_pick">Choose an .xlsx file</string>
     <string name="import_loading">Reading and reconciling the whole workbook…</string>
+    <string name="import_target">Goes into</string>
+    <string name="import_committing">Saving %1$d rows… Keep the app open; all rows are saved together or none are.</string>
     <string name="import_pick_other">Choose a different file</string>
     <string name="import_pick_another_workbook">Import another workbook</string>
     <string name="import_done">Import finished: %1$d rows added to this business unit.</string>
@@ -309,7 +315,8 @@
     <string name="entry_hint_expense">For example: bought store inventory stock</string>
 
     <!-- Snackbar / status messages emitted by AppViewModel (see UiText) -->
-    <string name="msg_business_created">Business created. Add a branch or unit to start recording.</string>
+    <string name="msg_business_created">Business created with one place of business, \"Main\". You can start recording; add branches any time.</string>
+    <string name="default_unit_name">Main</string>
     <string name="msg_business_create_failed">The business could not be created.</string>
     <string name="msg_project_created">Business unit created, with its Plan and Actual books.</string>
     <string name="msg_project_create_failed">The business unit could not be created.</string>
@@ -497,7 +504,7 @@
     <string name="import_ready_products">New products</string>
     <string name="plan_open">Open business plan</string>
     <string name="plan_empty_title">The business plan is empty</string>
-    <string name="plan_empty_body">Open Records in Projection mode to add products and their recipes, monthly fixed costs, assets and capital contributions. Break-even and feasibility are calculated from those.</string>
+    <string name="plan_empty_body">Open Records in Plan mode to add products and their recipes, monthly fixed costs, assets and capital contributions. Break-even and feasibility are calculated from those.</string>
     <string name="plan_bep_month">Break-even revenue per month</string>
     <string name="plan_target_above">The target revenue of %1$s per month is above break-even.</string>
     <string name="plan_target_below">The target revenue of %1$s per month is %2$s short of break-even.</string>
@@ -603,11 +610,10 @@
     <!-- GUIDE:BEGIN generated by docs/guide/help_strings.py -->
     <string name="tour_btn_got_it">Got it</string>
     <string name="tour_learn_more">Learn more</string>
-    <string name="tour_offer_text">New to this page? Take a short guide (%1$d steps).</string>
+    <string name="tour_offer_text">Welcome! Take a short guide (%1$d steps)? Whenever you need help, tap the ? button at the top right.</string>
     <string name="tour_offer_start">Show me</string>
-    <string name="tour_offer_later">Later</string>
-    <string name="tour_offer_never">Don\'t offer again</string>
-    <string name="settings_tour_offers">Offer a guide when I open a page for the first time</string>
+    <string name="tour_offer_later">Close</string>
+    <string name="settings_tour_offers">Show the welcome guide on the home page</string>
     <string name="help_center_title">Help Center</string>
     <string name="help_search_hint">Search help, e.g. stock, break-even, import</string>
     <string name="help_search_empty">No matching topic. Try another word.</string>
@@ -686,9 +692,9 @@
     <string name="tour2_settings_drive_title">Google Drive</string>
     <string name="tour2_settings_drive_desc">Sign in with Google so backups can be stored in your own Drive.</string>
     <string name="help_start_scope_title">Creating a business and a branch/unit</string>
-    <string name="help_start_scope_body">A business is your company, for example Berkah Grocery. A unit is a branch, field or growing season inside it. Records, plans and stock always belong to one unit.</string>
-    <string name="help_start_scope_steps">Tap the business name at the top of the screen.\nTap Add Business, type its name, then Save.\nOpen the top again, tap Add Business Unit, and name the branch or field.\nTo switch, tap Use this on the unit you want.</string>
-    <string name="help_start_books_title">Projection and Actual</string>
+    <string name="help_start_scope_body">A business is your company, for example Berkah Grocery. A new business starts with one unit called Main, so you can record right away. Have branches, fields or seasons to keep apart? Add more units. Records, plans and stock always belong to one unit.</string>
+    <string name="help_start_scope_steps">Tap the business name at the top of the screen.\nTap Add Business, type its name, then Save. The Main unit is created for you.\nFor another branch: open the top again, tap Add Business Unit, and name it.\nTo switch, tap Use this on the unit you want.</string>
+    <string name="help_start_books_title">Plan and Actual</string>
     <string name="help_start_books_body">Every unit has two books. Plan is the plan book: products, targets, costs and capital. Actual is reality: money that really came in and went out. They stay separate and are compared in Reports.</string>
     <string name="help_start_books_steps">Choose Plan at the top to build or change the business plan.\nChoose Actual to record daily transactions.\nOpen Reports, the Actual vs Target tab, to see how far reality is from the plan.</string>
     <string name="help_start_home_title">Reading the Home screen</string>

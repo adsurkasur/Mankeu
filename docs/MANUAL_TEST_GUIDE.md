@@ -57,7 +57,7 @@ Setoran modal dan prive tidak boleh mengubah pendapatan, beban, atau laba. Pembe
 
 ## 5. Rencana usaha
 
-Pindah ke buku **Proyeksi** dan buka **Catatan** (menjadi Rencana Usaha):
+Pindah ke buku **Rencana** dan buka **Catatan** (menjadi Rencana Usaha):
 
 1. Atur periode rencana 12 bulan.
 2. Tambah produk dengan harga jual, target per bulan, dan satu komponen resep biaya.

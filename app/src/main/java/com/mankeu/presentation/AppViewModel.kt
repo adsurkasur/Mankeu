@@ -53,6 +53,7 @@ import com.mankeu.backup.cloud.DriveBackupFile
 import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -116,6 +117,8 @@ data class AppUiState(
 sealed interface ImportUiState {
     data object Idle : ImportUiState
     data object Loading : ImportUiState
+    /** Writing the batch: one transaction, so it cannot be cancelled halfway and offers no Batal. */
+    data class Committing(val rows: Int) : ImportUiState
     data class Ready(val preview: WorkbookImportPreview, val review: ImportReview) : ImportUiState
     data class Committed(val count: Int) : ImportUiState
     data class Failure(val message: UiText) : ImportUiState
@@ -407,11 +410,19 @@ class AppViewModel(
         }
     }
 
-    fun createBusiness(name: String) = mutating {
-        runCatching { repository.createBusiness(name) }
-            .onSuccess { businessId ->
+    /**
+     * A new business starts with one unit, [firstUnitName], already selected: most owners have one
+     * place, and making them create "a unit" before the first record was a step they did not
+     * understand (owner decision after the audit walk, 2026-10-22). Branches are added later.
+     */
+    fun createBusiness(name: String, firstUnitName: String) = mutating {
+        runCatching {
+            val businessId = repository.createBusiness(name)
+            businessId to repository.createProject(businessId, firstUnitName)
+        }
+            .onSuccess { (businessId, projectId) ->
                 selectedBusinessId.value = businessId
-                selectedProjectId.value = null
+                selectedProjectId.value = projectId
                 message.value = UiText.of(R.string.msg_business_created)
             }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_business_create_failed) }
@@ -649,7 +660,15 @@ class AppViewModel(
             .onFailure { message.value = UiText.fromError(it, R.string.msg_stock_movement_failed) }
     }
 
-    fun previewWorkbook(contentResolver: ContentResolver, uri: Uri) = viewModelScope.launch {
+    /** The running preview, so Batal really stops it instead of being overwritten by its result. */
+    private var previewJob: Job? = null
+
+    fun previewWorkbook(contentResolver: ContentResolver, uri: Uri) {
+        previewJob?.cancel()
+        previewJob = viewModelScope.launch { preview(contentResolver, uri) }
+    }
+
+    private suspend fun preview(contentResolver: ContentResolver, uri: Uri) {
         importState.value = ImportUiState.Loading
         val result = runCatching {
             withContext(Dispatchers.IO) {
@@ -671,6 +690,7 @@ class AppViewModel(
                 }
             }
         }
+        if (importState.value != ImportUiState.Loading) return
         importState.value = result.fold(
             onSuccess = { (preview, review) ->
                 when {
@@ -687,7 +707,7 @@ class AppViewModel(
         val preview = (importState.value as? ImportUiState.Ready)?.preview ?: return@mutating
         val businessId = selectedBusinessId.value ?: return@mutating
         val projectId = selectedProjectId.value ?: return@mutating
-        importState.value = ImportUiState.Loading
+        importState.value = ImportUiState.Committing(preview.rowCount)
         val result = runCatching { withContext(Dispatchers.IO) { repository.commitImport(businessId, projectId, preview) } }
         importState.value = result.fold(
             onSuccess = { ImportUiState.Committed(it) },
@@ -696,6 +716,8 @@ class AppViewModel(
     }
 
     fun resetImportState() {
+        if (importState.value is ImportUiState.Committing) return
+        previewJob?.cancel()
         importState.value = ImportUiState.Idle
     }
 

@@ -112,8 +112,10 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     state: AppUiState,
     onNavigate: (Destination) -> Unit,
-    onOpenData: () -> Unit,
+    onManageScope: () -> Unit,
     onOpenPlan: () -> Unit = {},
+    /** Opens the entry form for a kind; OWNER_CAPITAL presets money in with the capital category. */
+    onQuickRecord: (FinancialEventType) -> Unit = {},
     expanded: Boolean = false,
 ) {
     // Proyeksi reads the business plan (DEC-014) whenever the unit has one; postings otherwise.
@@ -151,7 +153,7 @@ fun HomeScreen(
                     stringResource(R.string.setup_business_title),
                     stringResource(R.string.setup_business_body),
                     stringResource(R.string.scope_add_business),
-                    onOpenData,
+                    onManageScope,
                     learn = HelpArticle.START_SCOPE,
                 )
             }
@@ -163,7 +165,7 @@ fun HomeScreen(
                     stringResource(R.string.setup_project_title),
                     stringResource(R.string.setup_project_body),
                     stringResource(R.string.scope_add_project),
-                    onOpenData,
+                    onManageScope,
                     learn = HelpArticle.START_SCOPE,
                 )
             }
@@ -178,6 +180,20 @@ fun HomeScreen(
                 modifier = Modifier.tourTarget(TourTarget.HERO_SUMMARY),
                 onClick = { onNavigate(Destination.REPORTS) },
             )
+        }
+        // A first-time owner who records sales and restocking but not the money already in the
+        // drawer sees a red, negative balance and reads it as a loss (audit 2026-10-22). Say why
+        // and offer the one entry that fixes it, until capital is recorded or cash is positive.
+        if (state.selectedBookMode == BookMode.REALIZATION && summary.cashBalanceRupiah < 0 && summary.financingCashFlowRupiah <= 0) {
+            item {
+                EmptyCard(
+                    stringResource(R.string.home_negative_cash_title),
+                    stringResource(R.string.home_negative_cash_body),
+                    stringResource(R.string.home_negative_cash_action),
+                    { onQuickRecord(FinancialEventType.OWNER_CAPITAL) },
+                    learn = HelpArticle.FAQ_CASH_NEGATIVE,
+                )
+            }
         }
         item {
             Column(
@@ -204,6 +220,16 @@ fun HomeScreen(
                         SimpleMetric(stringResource(R.string.reports_operating_expense), summary.operatingExpenseRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
                     ),
                 )
+                // Cash basis: restocking is a cost the day it is paid, so a restock day reads as a loss.
+                // Said here, where a new owner sees the red figure (owner decision 2026-10-22).
+                if (state.selectedBookMode == BookMode.REALIZATION && summary.profitRupiah < 0) {
+                    Text(
+                        stringResource(R.string.home_cash_loss_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp),
+                    )
+                }
             }
         }
         item {
@@ -570,7 +596,7 @@ private fun ExpenseDistributionCard(
                                     modifier = Modifier.weight(1f),
                                 )
                                 Text(
-                                    "${String.format(java.util.Locale.US, "%.1f", slice.percentage)}%",
+                                    "${String.format(appLocale(), "%.1f", slice.percentage)}%",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,

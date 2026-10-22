@@ -112,7 +112,7 @@ fun StockScreen(
     hasBusiness: Boolean,
     /** The selected unit's name; null when none is selected, and every new item is then shared. */
     unitName: String?,
-    onOpenData: () -> Unit,
+    onManageScope: () -> Unit,
     onCreateStockItem: (String, String, Long, BigDecimal, BigDecimal, Boolean) -> Unit,
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
     expanded: Boolean = false,
@@ -153,7 +153,7 @@ fun StockScreen(
                     stringResource(R.string.setup_business_title),
                     stringResource(R.string.setup_business_body),
                     stringResource(R.string.scope_add_business),
-                    onOpenData,
+                    onManageScope,
                     learn = HelpArticle.START_SCOPE,
                 )
             }

@@ -155,7 +155,14 @@ fun DataScreen(
     ) {
         // No SectionTitle here: OverlayScaffold already puts "Berkas dan Data" in the TopAppBar,
         // and repeating it as an H1 pushed the first real control a third of the way down.
-        item { ImportCard(importState, onChooseWorkbook, onCommitImport, onResetImport, onExportTemplate) }
+        item {
+            // Import adds to the selected unit (DEC-012); with several units the preview must say which.
+            val target = listOfNotNull(
+                state.businesses.firstOrNull { it.id == state.selectedBusinessId }?.name,
+                state.projects.firstOrNull { it.id == state.selectedProjectId }?.name,
+            ).joinToString(" · ")
+            ImportCard(importState, target, onChooseWorkbook, onCommitImport, onResetImport, onExportTemplate)
+        }
         // Add/rename used to live here as four cramped buttons that could only touch the *active*
         // farm and field. Everything scope-shaped now lives on one screen that can see the whole
         // tree; this card is just the way in.
@@ -308,6 +315,7 @@ fun RestorePreviewDialog(
 @Composable
 private fun ImportCard(
     importState: ImportUiState,
+    target: String,
     onChooseWorkbook: () -> Unit,
     onCommit: () -> Unit,
     onResetImport: () -> Unit,
@@ -334,7 +342,7 @@ private fun ImportCard(
                 step = when (importState) {
                     ImportUiState.Idle, is ImportUiState.Failure -> 1
                     ImportUiState.Loading, is ImportUiState.Ready -> 2
-                    is ImportUiState.Committed -> 3
+                    is ImportUiState.Committing, is ImportUiState.Committed -> 3
                 },
             )
             when (importState) {
@@ -354,6 +362,14 @@ private fun ImportCard(
                             Text(stringResource(R.string.action_cancel))
                         }
                     }
+                }
+                is ImportUiState.Committing -> Column(
+                    Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    CircularProgressIndicator()
+                    Text(stringResource(R.string.import_committing, importState.rows), style = MaterialTheme.typography.bodyMedium)
                 }
                 is ImportUiState.Failure -> {
                     Surface(
@@ -434,6 +450,7 @@ private fun ImportCard(
                         NoticeCard(stringResource(R.string.import_stock_skipped), review.existingStockNames.joinToString(), Icons.Default.Info)
                     }
                     review.conflicts.forEach { Text(it, color = semantic.danger, fontWeight = FontWeight.Bold) }
+                    ReportRow(stringResource(R.string.import_target), target)
                     Button(
                         onClick = onCommit,
                         enabled = preview.canCommit && review.conflicts.isEmpty(),

@@ -1,33 +1,28 @@
 package com.mankeu.presentation.guide
 
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.mankeu.presentation.components.SpotlightTour
 
-/**
- * Offer, seen and "not now" state of page tours, shared by the shell and by sheets that carry a
- * tour of their own (the entry form, Usaha dan Unit). "Nanti" lasts until the app is opened again.
- */
+/** Offer and seen state of page tours, shared by the shell and by sheets that carry a tour of their own. */
 class TourController(
     private val shouldOffer: (Tour) -> Boolean,
     private val markSeen: (Tour) -> Unit,
-    private val disableOffers: () -> Unit,
     val openHelp: (HelpArticle) -> Unit,
-    private val later: MutableCollection<Tour>,
 ) {
-    fun offer(tour: Tour): Boolean = shouldOffer(tour) && tour !in later
+    /**
+     * One welcome on Beranda, nothing on other pages or sheets: offering a guide on every first visit
+     * put five cards in front of a new owner before the first record (owner decision after the
+     * audit walk, 2026-10-22). Every page keeps its tour behind the ? button.
+     */
+    fun offer(tour: Tour): Boolean = tour == Tour.HOME && shouldOffer(tour)
     fun seen(tour: Tour) = markSeen(tour)
-    fun notNow(tour: Tour) { later += tour }
-    fun never() = disableOffers()
 }
 
 val LocalTourController = staticCompositionLocalOf<TourController?> { null }
@@ -35,7 +30,6 @@ val LocalTourController = staticCompositionLocalOf<TourController?> { null }
 /** A tour that lives inside a bottom sheet. [running] is also set by the sheet's own ? button. */
 class SheetTourState(val tour: Tour) {
     var running by mutableStateOf(false)
-    var offerHidden by mutableStateOf(false)
 }
 
 @Composable
@@ -53,14 +47,6 @@ fun BoxScope.SheetTour(state: SheetTourState) {
             modifier = Modifier.matchParentSize(),
             isBottomSheet = true,
             onLearnMore = { article -> state.running = false; controller.seen(tour); controller.openHelp(article) },
-        )
-    } else if (!state.offerHidden && controller.offer(tour)) {
-        TourOfferCard(
-            stepCount = tour.steps.size,
-            onStart = { state.running = true },
-            onLater = { controller.notNow(tour); state.offerHidden = true },
-            onNever = { controller.never(); state.offerHidden = true },
-            modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 12.dp),
         )
     }
 }

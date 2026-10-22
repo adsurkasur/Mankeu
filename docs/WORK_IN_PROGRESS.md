@@ -21,6 +21,32 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ---
 
-## Pekerjaan aktif
+## Pekerjaan aktif: Audit pra-rilis produksi (2026-10-22)
 
-Tidak ada. Pekerjaan terakhir (DEC-019, Ubah/Hapus, skema 11) sudah di-commit; ringkasan di `logs/ACTIVITY_LOG.md`.
+Permintaan pemilik: audit seluruh proyek sebelum rilis; semua docs diperbarui; logika bisnis distress-test dengan
+simulasi UMKM nyata (mikro, kecil, menengah) dan pengguna dengan keahlian berbeda (paham vs awam); intuitif harus
+benar-benar masuk akal; audit performa dan kode (ponytail-audit).
+
+Keputusan grill (2026-10-22):
+- Target: **rilis produksi publik** di Play (sekarang hanya internal testing).
+- Sync multi-HP (DEC-013, belum tersambung): **dijadikan fitur rilis**. Desainnya di-grill tersendiri.
+- Batas usaha menengah (piutang/utang, DEC-011 kas murni): **dicatat sebagai usulan fitur** untuk diputuskan setelah audit.
+- Temuan: **yang jelas langsung diperbaiki + dites**; keputusan produk dikumpulkan untuk grill.
+
+| Tahap | Isi | Status |
+|---|---|---|
+| 1 | Ponytail-audit (kode) | pindaian selesai, temuan di bawah |
+| 2 | Grill desain sync | berjalan |
+| 3 | Simulasi UMKM: persona mikro/kecil/menengah × awam/paham; angka dicek manual; uji nyata emulator | belum |
+| 4 | Performa: data skala menengah (puluhan ribu transaksi), waktu buka layar, ukuran DB | belum |
+| 5 | Perbaikan temuan jelas + test | belum |
+| 6 | Sync sebagai fitur rilis (implementasi, test, uji dua emulator bila bisa) | belum |
+| 7 | Kesiapan Play produksi (target SDK, Data Safety, listing, versi, ukuran) | belum |
+| 8 | Semua docs diperbarui; laporan `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md`; log; commit, push, pointer | belum |
+
+### Catatan langkah
+
+- Ponytail-audit: kode ramping. Temuan: `GetStockSummaryUseCase` tak terpakai (hapus); `RecordStockMovementUseCase`
+  pembungkus satu pemanggil (lebur ke repository); dependensi `navigation-compose` tak dipakai (hapus); lapisan sync tak
+  tersambung **dan `sync_outbox` tumbuh tanpa batas** (±4 baris per transaksi, tak pernah dikosongkan) → ditangani lewat
+  tahap 6.

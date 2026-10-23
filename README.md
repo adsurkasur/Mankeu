@@ -1,163 +1,152 @@
 <p align="center">
-  <img src="docs/playstore/feature_graphic_1024x500.png" alt="Mankeu Feature Graphic" width="100%" />
+  <img src="docs/playstore/feature_graphic_1024x500.png" alt="Mankeu — Manajemen Keuangan Usaha dan Pembukuan UMKM" width="100%" />
 </p>
 
-<p align="center">
-  <img src="docs/playstore/app_icon_512x512.png" alt="Mankeu Icon" width="84" height="84" style="border-radius: 18px;" />
-</p>
-
-<h1 align="center">Mankeu — Manajemen Keuangan & Perencanaan Usaha UMKM</h1>
+<h1 align="center">Mankeu</h1>
 
 <p align="center">
-  <strong>Aplikasi pembukuan dan analisis kelayakan finansial mobile-first, 100% offline-first, dan privat untuk pelaku UMKM.</strong>
+  <strong>Buku kas dan rencana usaha untuk UMKM. Offline, privat, dan dibuat untuk pemilik usaha, bukan akuntan.</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/adsurkasur/Mankeu/actions/workflows/android.yml"><img src="https://github.com/adsurkasur/Mankeu/actions/workflows/android.yml/badge.svg" alt="Android CI" /></a>
-  <a href="https://github.com/adsurkasur/Mankeu/actions/workflows/deploy_play_store.yml"><img src="https://github.com/adsurkasur/Mankeu/actions/workflows/deploy_play_store.yml/badge.svg" alt="Play Store Deploy" /></a>
-  <a href="https://github.com/adsurkasur/Mankeu/releases"><img src="https://img.shields.io/badge/Release-v0.1.0-2E7D32?style=flat-square" alt="Release v0.1.0" /></a>
-  <img src="https://img.shields.io/badge/Platform-Android_8.0+_(API_26+)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Platform Android" />
-  <img src="https://img.shields.io/badge/UI-Jetpack_Compose_Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Compose Material 3" />
-  <img src="https://img.shields.io/badge/Architecture-Offline--First_%7C_Room-black?style=flat-square" alt="Offline-First" />
-  <img src="https://img.shields.io/badge/Security-AES--256_Encrypted-green?style=flat-square" alt="AES-256 Encrypted" />
+  <a href="https://github.com/adsurkasur/Mankeu/releases"><img src="https://img.shields.io/badge/versi-0.1.0-2E7D32" alt="Versi 0.1.0" /></a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026)-3DDC84?logo=android&logoColor=white" alt="Android 8.0+" />
+  <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin dan Jetpack Compose" />
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/lisensi-GPLv3-blue" alt="Lisensi GPLv3" /></a>
 </p>
 
 ---
 
-## 📌 Sekilas Tentang Mankeu
+## Tentang
 
-**Mankeu** adalah aplikasi Android native yang dirancang khusus untuk memecahkan problematika pencatatan keuangan pada Usaha Mikro, Kecil, dan Menengah (UMKM). Berbeda dengan software akuntansi konvensional yang rumit atau aplikasi kasir sederhana yang tidak memiliki analisis bisnis, Mankeu menggabungkan kemudahan pencatatan harian dengan akuntansi berstandar industri dan simulasi kelayakan usaha:
+Mankeu membantu pemilik usaha mikro, kecil, dan menengah menjawab tiga pertanyaan sehari-hari:
+**berapa uang yang ada, apakah usaha ini untung, dan kapan balik modal.** Aplikasi mencatat uang
+masuk dan keluar, menyusun rencana usaha lengkap dengan titik impas, dan membandingkan rencana itu
+dengan kenyataan.
 
-- 🔒 **100% Offline-First & Privat**: Beroperasi penuh tanpa butuh koneksi internet, tanpa kewajiban login, dan tanpa ketergantungan pada server pihak ketiga. Data keuangan Anda aman di genggaman Anda.
-- ⚖️ **Dual-Book Scenarios (Rencana vs Realisasi)**: Memisahkan secara tegas antara rencana/simulasi bisnis (*Plan*) dan realisasi operasional (*Actual*), tanpa saling mencemari data.
-- 📊 **Rencana Usaha & Titik Impas**: Susun produk beserta resep biaya per unit, biaya tetap bulanan, aset, dan modal rencana; Mankeu menghitung BEP unit dan Rupiah, laba per bulan, R/C, B/C, dan kebutuhan modal.
-- 💼 **Multi Usaha & Multi Unit**: Kelola beberapa usaha (toko, kuliner, bengkel, jasa, pertanian), masing-masing dengan unit atau cabang yang datanya terpisah.
-- 📦 **Stok Barang**: Barang per unit atau dipakai bersama semua unit, dengan peringatan stok menipis.
-- 📑 **Templat Excel (.xlsx) Mankeu**: Templat kosong dan berkas ekspor memakai format yang sama, sehingga hasil ekspor dapat diimpor kembali tanpa kehilangan data.
-- 🛡️ **Cadangan Terenkripsi AES-256**: Simpan cadangan terenkripsi ke berkas lokal atau ke Google Drive pribadi Anda.
+- **Offline dan privat.** Semua data tersimpan di HP. Tidak perlu login, tidak ada iklan, tidak ada
+  pelacak, dan tidak ada server milik pengembang.
+- **Dua buku per unit usaha.** *Rencana* berisi rencana usaha; *Realisasi* berisi uang yang benar-benar
+  berpindah. Keduanya terpisah dan dibandingkan di Laporan.
+- **Untuk pengguna awam.** Satu formulir untuk memulai, kategori terpilih otomatis, keterangan boleh
+  kosong, dan penjelasan langsung di layar saat angka terlihat mengkhawatirkan.
+- **Uang dihitung tepat.** Semua nominal disimpan sebagai rupiah bulat, tanpa pembulatan desimal.
 
----
+## Tampilan
 
-## 📱 Galeri Antarmuka
+<table>
+  <tr>
+    <td align="center"><img src="docs/assets/store/screenshot-01-beranda.png" width="200" alt="Beranda" /><br /><sub><b>Beranda</b><br />Kas, untung/rugi, komposisi biaya</sub></td>
+    <td align="center"><img src="docs/assets/store/screenshot-02-rencana-kelayakan.png" width="200" alt="Rencana Usaha" /><br /><sub><b>Rencana Usaha</b><br />Kelayakan, BEP, kebutuhan modal</sub></td>
+    <td align="center"><img src="docs/assets/store/screenshot-03-catatan-ubah-hapus.png" width="200" alt="Catatan" /><br /><sub><b>Catatan</b><br />Ubah dan hapus langsung</sub></td>
+    <td align="center"><img src="docs/assets/store/screenshot-04-laporan-bep.png" width="200" alt="Laporan" /><br /><sub><b>Laporan</b><br />Status BEP bulan ini</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/assets/store/screenshot-05-stok.png" width="200" alt="Stok" /><br /><sub><b>Stok</b><br />Per unit atau dipakai bersama</sub></td>
+    <td align="center"><img src="docs/assets/store/screenshot-06-impor-excel.png" width="200" alt="Impor Excel" /><br /><sub><b>Impor Excel</b><br />Pratinjau sebelum disimpan</sub></td>
+    <td align="center"><img src="docs/assets/store/screenshot-07-sinkronisasi.png" width="200" alt="Sinkronisasi" /><br /><sub><b>Sinkronisasi</b><br />Beberapa HP, satu buku</sub></td>
+    <td></td>
+  </tr>
+</table>
 
-| Beranda & Kas Realisasi | Perencanaan & Kelayakan Usaha | Tema Gelap Dinamis | Multi Unit Usaha |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/playstore/screenshots/01_beranda_realisasi.png" width="220" /> | <img src="docs/playstore/screenshots/02_proyeksi_anggaran.png" width="220" /> | <img src="docs/playstore/screenshots/03_mode_gelap.png" width="220" /> | <img src="docs/playstore/screenshots/04_unit_usaha_aktif.png" width="220" /> |
+## Fitur
 
----
+### Pencatatan kas
+- **Uang masuk dan uang keluar.** Kategori menentukan jenisnya: penjualan, biaya, setoran modal,
+  ambil pribadi (prive), atau beli peralatan.
+- **Ubah dan hapus.** Catatan yang salah diperbaiki di tempat; laporan selalu ikut seimbang.
+- **Produk dan jumlah (opsional).** Penjualan dapat menyebut produk; nominal mengikuti jumlah × harga.
+- **Kas murni.** Hanya uang yang benar-benar berpindah yang dicatat: tanpa piutang, utang, cicilan,
+  atau bunga.
 
-## 🚀 Fitur Unggulan
+### Rencana usaha dan kelayakan
+- Periode rencana, produk dengan resep biaya per unit, produk musiman, biaya tetap bulanan, biaya dan
+  pemasukan sekali, aset dengan umur pakai, serta setoran modal.
+- Titik impas gabungan (bauran penjualan) dan per produk, laba per bulan, R/C dan B/C, serta
+  kebutuhan modal dari defisit kas terdalam.
+- Status BEP bulan berjalan di buku Realisasi.
 
-### 1. Pencatatan Kas yang Sederhana
-- **Uang Masuk & Uang Keluar**: Dua tombol saja. Kategori yang dipilih menentukan jenisnya: pemasukan, pengeluaran, setoran modal, ambil pribadi (prive), atau beli aset.
-- **Kas murni**: Mankeu hanya mencatat uang yang benar-benar berpindah. Tidak ada piutang, utang, pinjaman, cicilan, atau bunga (DEC-011).
-- **Ubah dan Hapus**: Catatan yang salah isi diperbaiki langsung lewat **Ubah**; catatan yang tidak perlu dihapus. Jurnal ikut dibangun ulang sehingga laporan selalu seimbang (DEC-019).
-- **Produk dan kuantitas opsional**: Uang masuk dapat menyebut produk; jumlah mengikuti kuantitas × harga.
+### Laporan
+- Laba rugi dan arus kas (operasi, investasi, pendanaan) dengan grafik bulanan.
+- Rincian kelayakan per bulan dan perbandingan Realisasi vs Target.
+- Ekspor PDF untuk dicetak atau diarsipkan.
 
-### 2. Dua Buku: Realisasi dan Rencana
-- **Realisasi**: Catatan kas nyata yang sudah terjadi.
-- **Rencana (Rencana Usaha)**: Periode rencana, produk dengan resep biaya per unit (beserta hasil per resep), bulan mulai dijual untuk produk musiman, biaya tetap bulanan, biaya dan pemasukan sekali, aset dengan umur pakai, serta setoran modal yang direncanakan.
-- **Analisis Kelayakan Seketika**:
-  - BEP gabungan berdasarkan bauran penjualan, plus BEP per produk
-  - Laba per bulan, R/C ratio, dan B/C ratio
-  - Kebutuhan modal dari defisit kas kumulatif terdalam
-  - Status BEP bulan berjalan di buku Realisasi
+### Stok
+- Barang milik satu unit atau dipakai bersama seluruh unit usaha.
+- Barang masuk, keluar, dan opname, dengan peringatan stok menipis dan nilai persediaan.
 
-### 3. Stok Barang
-- Barang milik satu unit atau dipakai bersama semua unit usaha.
-- Barang masuk, barang keluar, dan opname, dengan peringatan stok menipis dan nilai persediaan.
+### Data dan keamanan
+- **Templat Excel Mankeu.** Templat kosong dan hasil ekspor memakai format yang sama, sehingga
+  ekspor dapat diimpor kembali tanpa kehilangan data. Impor menampilkan pratinjau, unit tujuan, dan
+  peringatan duplikat, dan dapat dibatalkan.
+- **Cadangan terenkripsi.** AES-256-GCM dengan kunci dari kata sandi (PBKDF2-HMAC-SHA256, 310.000
+  iterasi), disimpan sebagai berkas atau di folder aplikasi Google Drive pribadi.
+- **Sinkronisasi antar-HP (opsional).** HP pemilik dan HP kasir memakai buku yang sama lewat Google
+  Drive, terenkripsi ujung ke ujung dengan kata sandi sync. Berjalan otomatis; nama yang sama dari dua
+  HP digabung dan diberitahukan.
 
-### 4. Laporan Keuangan
-- **Laba Rugi dan Arus Kas**: Pemasukan, pengeluaran, laba, serta arus kas operasi, investasi, dan pendanaan, dengan grafik bulanan.
-- **Kelayakan & BEP**: Rincian bulanan biaya tetap, biaya sekali, penyusutan, biaya variabel, pendapatan, laba, R/C, dan B/C.
-- **Realisasi vs Target**: Rata-rata per bulan rencana dibandingkan dengan rata-rata per bulan realisasi, berbasis kas.
-- **Ekspor PDF** untuk dicetak atau diarsipkan.
+### Bantuan
+- Sapaan singkat saat pertama dibuka, panduan tiap halaman lewat tombol **?**, dan Pusat Bantuan
+  dengan pencarian, langkah bernomor, dan tombol **Tunjukkan di aplikasi**.
+- [Panduan penggunaan](docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md) untuk pemilik usaha, lengkap dengan
+  gambar.
 
-### 5. Templat Excel (.xlsx)
-- **Satu format** (DEC-012): lembar Petunjuk, Transaksi, Rencana Anggaran, Produk, Resep Produk, Stok Barang, dan Kategori. Templat kosong dan ekspor memakai format yang sama.
-- **Impor ketat**: Hanya templat Mankeu yang diterima. Berkas lain ditolak dengan daftar lembar atau kolom yang bermasalah dan tautan unduh templat. Tidak ada tebakan kolom.
-- **Impor ke unit terpilih**: Kategori yang belum ada ditampilkan di pratinjau sebelum disimpan, dan impor berkas yang sama memunculkan peringatan duplikat.
-- **Batalkan impor**: Menghapus semua catatan yang ditambahkan impor itu; riwayat impornya tetap tercatat.
+## Teknologi
 
-### 6. Keamanan & Cadangan Data
-- **Offline-First Room DB**: Seluruh data tersimpan di SQLite lokal perangkat tanpa memerlukan koneksi server.
-- **Enkripsi AES-256-GCM**: Kunci diturunkan dari kata sandi dengan PBKDF2-HMAC-SHA256 310.000 iterasi.
-- **Google Drive opsional**: Cadangan terenkripsi disimpan di folder aplikasi pribadi (`appDataFolder`); Drive hanya melihat ciphertext.
-
-### 7. Panduan dan Pusat Bantuan
-- Panduan per halaman **ditawarkan**, tidak dimulai sendiri, dan dapat dimatikan di Pengaturan (DEC-018).
-- **Pusat Bantuan** berisi artikel berbasis tugas dengan pencarian, langkah bernomor, gambar, dan tombol **Tunjukkan di aplikasi**.
-
----
-
-## 🛠️ Arsitektur & Teknologi
-
-Mankeu dibangun menggunakan standar rekayasa perangkat lunak modern Google Android:
-
-| Komponen | Teknologi / Pustaka |
+| Bagian | Pilihan |
 | :--- | :--- |
-| **Bahasa Pemrograman** | Kotlin 2.0+ (100% Coroutines & StateFlow) |
-| **Antarmuka (UI)** | Jetpack Compose, Material Design 3 (Dynamic Color, Light & Dark Theme) |
-| **Arsitektur** | Domain Kotlin murni, Room repository, satu `AppViewModel` dengan `StateFlow` |
-| **Basis Data Lokal** | Room (SQLite), schema 12, migrasi teruji tanpa migrasi destruktif |
-| **Aritmatika Uang** | Pure Integer Arithmetic (`Long` Rupiah — zero floating-point drift) |
-| **Format Lembar Kerja** | Pembaca dan penulis OOXML sendiri (parser DOM platform, tanpa Apache POI) |
-| **Kriptografi** | `javax.crypto` platform: PBKDF2-HMAC-SHA256 dan AES-256-GCM |
-| **Cadangan Cloud** | Google Drive REST API v3 (`appDataFolder`); sinkronisasi antar-HP terenkripsi ujung ke ujung (`sync/`, DEC-024) |
-| **Continuous Integration** | GitHub Actions (Build, Test, Lint, Auto-Release) |
+| Bahasa | Kotlin, coroutines dan `StateFlow` |
+| Antarmuka | Jetpack Compose, Material 3 (tema terang dan gelap) |
+| Data lokal | Room (SQLite), skema 12, semua migrasi diuji |
+| Uang | Rupiah bulat (`Long`) di seluruh perhitungan dan penyimpanan |
+| Excel | Pembaca dan penulis OOXML sendiri, tanpa Apache POI |
+| Kriptografi | `javax.crypto` bawaan platform: PBKDF2-HMAC-SHA256, AES-256-GCM, Android Keystore |
+| Cloud (opsional) | Google Drive REST API v3 (`appDataFolder`), Firebase Authentication |
+| Build | Gradle, R8 untuk rilis, GitHub Actions |
+## Membangun dari kode sumber
 
----
+**Prasyarat:** JDK 17, Android SDK Platform 36.
 
-## 📚 Dokumentasi
+```bash
+./gradlew testDebugUnitTest      # unit test JVM
+./gradlew lintDebug              # lint
+./gradlew connectedDebugAndroidTest   # instrumented test (emulator/perangkat menyala)
+./gradlew assembleDebug          # APK debug: app/build/outputs/apk/debug/
+./gradlew bundleRelease          # AAB rilis (penandatanganan lewat variabel KEYSTORE_*)
+```
 
-Peta seluruh dokumen ada di [`docs/README.md`](docs/README.md). Panduan untuk pemilik usaha: [`docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md`](docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md). Keputusan produk dan teknis: [`logs/DECISION_LOG.md`](logs/DECISION_LOG.md).
+Penandatanganan dan alur rilis Play Console dijelaskan di
+[`docs/PLAY_STORE_DEPLOYMENT.md`](docs/PLAY_STORE_DEPLOYMENT.md).
 
----
+## Kualitas
 
-## 💻 Membangun & Menjalankan Proyek (Build Guide)
+- **Test unit dan instrumented** untuk keseimbangan jurnal, rencana usaha dan BEP, stok, migrasi
+  skema, cadangan terenkripsi, round-trip templat Excel, sinkronisasi dua HP, dan alur di ViewModel.
+- **Simulasi skala UMKM**: setahun data usaha mikro, kecil, dan menengah diimpor lewat jalur Excel
+  yang asli, dan setiap angka dicocokkan dengan hitungan independen
+  ([bukti](docs/evidence/2026-10-22_simulasi_skala_umkm/)).
+- **Audit pra-rilis** beserta uji sebagai pengguna awam dan mahir:
+  [`docs/audit/2026-10-22_AUDIT_PRA_RILIS.md`](docs/audit/2026-10-22_AUDIT_PRA_RILIS.md).
 
-### Prasyarat
-- **JDK 17** atau yang lebih baru.
-- **Android SDK Platform 36** dan Build-Tools 36.0.0.
-- Android Studio Ladybug / Meerkat atau VS Code + Android Extension.
+Standar lengkapnya ada di [`docs/QUALITY_GATES.md`](docs/QUALITY_GATES.md).
 
-### Perintah Gradle
+## Dokumentasi
 
-1. **Menjalankan Unit Test**:
-   ```bash
-   ./gradlew testDebugUnitTest
-   ```
+| Dokumen | Isi |
+| :--- | :--- |
+| [Panduan penggunaan](docs/panduan/PANDUAN_PENGGUNAAN_MANKEU.md) | Cara memakai Mankeu, langkah demi langkah |
+| [Peta dokumentasi](docs/README.md) | Semua dokumen produk dan teknis |
+| [Log keputusan](logs/DECISION_LOG.md) | Keputusan produk dan teknis (DEC-xxx) |
+| [Changelog](logs/CHANGELOG.md) | Perubahan per versi |
+| [Kebijakan privasi](docs/privacy-policy/id.md) | Data apa yang ada dan di mana disimpan |
 
-2. **Menjalankan Linting**:
-   ```bash
-   ./gradlew lintDebug
-   ```
+## Status
 
-3. **Membangun Debug APK**:
-   ```bash
-   ./gradlew assembleDebug
-   ```
-   *Berkas APK terletak pada `app/build/outputs/apk/debug/app-debug.apk`.*
+Versi **0.1.0** disiapkan untuk rilis produksi pertama di Google Play. Versi sebelumnya (0.0.4–0.0.6)
+beredar di jalur pengujian internal.
 
-4. **Membangun Release App Bundle (AAB)**:
-   ```bash
-   ./gradlew bundleRelease
-   ```
+## Lisensi
 
----
-
-## 🧪 Jaminan Kualitas (Quality Gates)
-
-Setiap baris kode di repositori Mankeu mematuhi standar ketat:
-- **Unit test JVM dan instrumented test**: Menguji keseimbangan jurnal, rencana usaha dan BEP, stok, enkripsi cadangan, round-trip templat Excel, migrasi skema, ubah/hapus catatan, dan pembatalan impor.
-- **Strict Lint Compliance**: Tanpa error kompilasi dan bebas peringatan kritis.
-- **Exact Rupiah Invariant**: Seluruh perhitungan nilai uang menggunakan bilangan bulat (`Long`), menjamin akurasi 100% tanpa risiko pembulatan desimal komputer.
-
----
-
-## 📄 Lisensi & Privasi
-
-- **Lisensi**: Proyek ini dilisensikan di bawah [GNU General Public License v3.0 (GPLv3)](./LICENSE).
-  - Hak Cipta © 2026 adsurkasur <adsurkasur.dev@gmail.com>.
-  - Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini dengan syarat mencantumkan hak cipta asli dan merilis seluruh turunan kode di bawah lisensi GPLv3 yang sama.
-- **Privasi**: Aplikasi ini beroperasi 100% *offline-first*. Tidak mengumpulkan, menjual, atau mentransmisikan data finansial pengguna ke server luar. Seluruh data keuangan berada sepenuhnya dalam kontrol lokal pengguna.
+Dirilis di bawah [GNU General Public License v3.0](./LICENSE).
+Hak cipta © 2026 adsurkasur &lt;adsurkasur.dev@gmail.com&gt;.

@@ -46,7 +46,7 @@ dengan kenyataan.
     <td align="center"><img src="docs/assets/store/screenshot-05-stok.png" width="200" alt="Stok" /><br /><sub><b>Stok</b><br />Per unit atau dipakai bersama</sub></td>
     <td align="center"><img src="docs/assets/store/screenshot-06-impor-excel.png" width="200" alt="Impor Excel" /><br /><sub><b>Impor Excel</b><br />Pratinjau sebelum disimpan</sub></td>
     <td align="center"><img src="docs/assets/store/screenshot-07-sinkronisasi.png" width="200" alt="Sinkronisasi" /><br /><sub><b>Sinkronisasi</b><br />Beberapa HP, satu buku</sub></td>
-    <td></td>
+    <td align="center"><img src="docs/assets/store/screenshot-08-pusat-bantuan.png" width="200" alt="Pusat Bantuan" /><br /><sub><b>Pusat Bantuan</b><br />Artikel, cari, tunjukkan di aplikasi</sub></td>
   </tr>
 </table>
 

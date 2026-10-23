@@ -233,6 +233,7 @@ The following visual assets are prepared and cataloged in `docs/assets/store/`:
 | **Screenshot 05** | 720 x 1440 px PNG Phone (1:2) | Stok per unit | `docs/assets/store/screenshot-05-stok.png` |
 | **Screenshot 06** | 720 x 1440 px PNG Phone (1:2) | Pratinjau impor Excel | `docs/assets/store/screenshot-06-impor-excel.png` |
 | **Screenshot 07** | 720 x 1440 px PNG Phone (1:2) | Sinkronisasi antar-HP | `docs/assets/store/screenshot-07-sinkronisasi.png` |
+| **Screenshot 08** | 720 x 1440 px PNG Phone (1:2) | Pusat Bantuan | `docs/assets/store/screenshot-08-pusat-bantuan.png` |
 
 Screenshots are cut from the user-guide captures by `py -I scripts/make_store_screenshots.py` (after `scripts/capture_module_screenshots.ps1`), so they always show the current app. Play rejects a long side over twice the short side; the old 1080 x 2400 shots (2.22) and the pre-DEC-014 tablet shots were removed on 2026-10-22.
 

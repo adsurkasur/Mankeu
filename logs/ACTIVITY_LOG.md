@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-23 16:45] [Claude Code (Opus 5.5) — Screenshot Pusat Bantuan di galeri dan set toko]
+- **Goal**: Owner: add a Pusat Bantuan screenshot so the README gallery is full.
+- **Actions**: `scripts/make_store_screenshots.py` makes an eighth shot from `37_pusat_bantuan.jpg`; README gallery is now two full rows of four; STORE_LISTING and PLAY_CONSOLE_ENTRY_GUIDE list screenshot 08 (Play allows eight phone screenshots).
+- **Files**: `scripts/make_store_screenshots.py`, `docs/assets/store/screenshot-08-pusat-bantuan.png`, `README.md`, `docs/STORE_LISTING_AND_POLICIES.md`, `docs/PLAY_CONSOLE_ENTRY_GUIDE.md`, logs.
+- **Verification**: script output 720x1440 (1:2); README rendered with GitHub's Markdown API and inspected: both gallery rows full; `check_doc_links.py` 0 broken.
+
 ### [2026-10-23 16:30] [Claude Code (Opus 5.5) — README profesional, galeri diperbaiki]
 - **Goal**: Owner: README needs an update, should be professional, and its screenshots looked broken.
 - **Actions**: Cause of the broken images: the README gallery pointed at `docs/playstore/screenshots/`, removed in the review fixes (`e5f388a`) when the outdated store screenshots were replaced; the README was not checked then. Rewrote the README: concise product summary, a two-row gallery of the seven current screenshots (`docs/assets/store/`) with captions, features matching the app at 0.1.0 (Rencana/Realisasi, Ubah/Hapus, sync between phones, single welcome card), technology table (schema 12, Keystore, R8), build commands, quality evidence (tests, scale simulations, audit), documentation table, status and licence. Removed unverifiable claims ("100% akurasi", "setiap baris kode") and the Play deploy badge.

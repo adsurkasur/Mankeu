@@ -158,6 +158,7 @@ Aset visual resmi dengan resolusi presisi telah dibuat dan siap di-drag-and-drop
 | **Screenshot 5** | Stok per unit (720 × 1440, 1:2) | `docs/assets/store/screenshot-05-stok.png` |
 | **Screenshot 6** | Pratinjau impor Excel (720 × 1440, 1:2) | `docs/assets/store/screenshot-06-impor-excel.png` |
 | **Screenshot 7** | Sinkronisasi antar-HP (720 × 1440, 1:2) | `docs/assets/store/screenshot-07-sinkronisasi.png` |
+| **Screenshot 8** | Pusat Bantuan (720 × 1440, 1:2) | `docs/assets/store/screenshot-08-pusat-bantuan.png` |
 
 ---
 

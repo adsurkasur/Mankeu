@@ -22,6 +22,7 @@ SHOTS = [
     ("26_stok_daftar.jpg", "screenshot-05-stok.png"),
     ("33_pratinjau_impor.jpg", "screenshot-06-impor-excel.png"),
     ("43_sinkronisasi.jpg", "screenshot-07-sinkronisasi.png"),
+    ("37_pusat_bantuan.jpg", "screenshot-08-pusat-bantuan.png"),
 ]
 
 os.makedirs(TARGET, exist_ok=True)

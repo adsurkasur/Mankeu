@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-10-27
 ### Added
 - **Sinkronisasi antar-HP** in Pengaturan (DEC-024): phones signed in with the same Google account share one set of books through the app's Drive folder, end-to-end encrypted with a sync passphrase typed once per phone (kept by the Android Keystore). Runs when the app opens, a few seconds after a change, and from "Sinkronkan sekarang"; categories, stock items and products created with the same name on two phones are merged and reported on Beranda. Help article and user guide section 9.6.
 - Beranda explains a negative balance ("Uang kas minus?") and offers "Catat uang awal", which opens money in with Setoran Modal Pemilik selected; a negative cash profit gets one line on why restocking days look like a loss.

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-27 11:00] [Claude Code (Opus 5.5) — Rilis v0.1.0]
+- **Goal**: Owner needs a downloadable v0.1.0 APK for this afternoon's presentation (latest GitHub release was still v0.0.6).
+- **Actions**: Wrote release notes `docs/releases/v0.1.0.md`; CHANGELOG `[Unreleased]` becomes `[0.1.0] - 2026-10-27`; tagged `v0.1.0`, which runs `deploy_play_store.yml` (signed AAB+APK, AAB to the Play internal track, GitHub Release with the APK).
+- **Files**: `docs/releases/v0.1.0.md`, `logs/CHANGELOG.md`, logs.
+- **Verification**: Android CI on main green at `c577909`; release workflow result checked after tag push.
+
 ### [2026-10-27 09:30] [Claude Code (Opus 5.5) — Skenario simulasi demo]
 - **Goal**: Owner asked whether Mankeu is ready to test and for one guide document for this afternoon's simulation demo.
 - **Actions**: Readiness check: repo clean and equal to origin; unit tests, lint and debug build green today. Wrote `docs/simulasi/SKENARIO_SIMULASI_DEMO.md`: nine scenes (offline, start, business plan and feasibility, first month with an Ubah fix, Beranda and reports, negative-cash help for novices, medium-scale Excel import, stock and help, closing), exact inputs and the figures that must appear (taken from the verified user guide sections 5 and 11 and the scale simulation `expected.json`), preparation (real phone preferred; emulator file-picker and voice-IME issues), a figure cheat sheet, fallbacks and audience questions. Sync is shown as a card only, since the real two-phone test is still pending. Linked from `docs/README.md`.

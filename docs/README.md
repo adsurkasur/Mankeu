@@ -53,6 +53,7 @@ Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 12,
 ## Pengguna dan bantuan
 
 - [`panduan/PANDUAN_PENGGUNAAN_MANKEU.md`](panduan/PANDUAN_PENGGUNAAN_MANKEU.md): panduan penggunaan untuk pemilik usaha.
+- [`simulasi/SKENARIO_SIMULASI_DEMO.md`](simulasi/SKENARIO_SIMULASI_DEMO.md): naskah simulasi demo dengan angka yang harus muncul di layar.
 - [`guide/help_strings.py`](guide/help_strings.py): sumber teks tur dan Pusat Bantuan (ID/EN).
 
 ## Riset dan bukti

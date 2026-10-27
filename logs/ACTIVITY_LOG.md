@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-27 09:30] [Claude Code (Opus 5.5) — Skenario simulasi demo]
+- **Goal**: Owner asked whether Mankeu is ready to test and for one guide document for this afternoon's simulation demo.
+- **Actions**: Readiness check: repo clean and equal to origin; unit tests, lint and debug build green today. Wrote `docs/simulasi/SKENARIO_SIMULASI_DEMO.md`: nine scenes (offline, start, business plan and feasibility, first month with an Ubah fix, Beranda and reports, negative-cash help for novices, medium-scale Excel import, stock and help, closing), exact inputs and the figures that must appear (taken from the verified user guide sections 5 and 11 and the scale simulation `expected.json`), preparation (real phone preferred; emulator file-picker and voice-IME issues), a figure cheat sheet, fallbacks and audience questions. Sync is shown as a card only, since the real two-phone test is still pending. Linked from `docs/README.md`.
+- **Files**: `docs/simulasi/SKENARIO_SIMULASI_DEMO.md`, `docs/README.md`, logs.
+- **Verification**: figures cross-checked against the guide and `expected.json`; Es Teh step uses product and volume so the month's break-even matches; `check_doc_links.py` 0 broken. The demo script itself was not walked end to end today.
+
 ### [2026-10-23 16:45] [Claude Code (Opus 5.5) — Screenshot Pusat Bantuan di galeri dan set toko]
 - **Goal**: Owner: add a Pusat Bantuan screenshot so the README gallery is full.
 - **Actions**: `scripts/make_store_screenshots.py` makes an eighth shot from `37_pusat_bantuan.jpg`; README gallery is now two full rows of four; STORE_LISTING and PLAY_CONSOLE_ENTRY_GUIDE list screenshot 08 (Play allows eight phone screenshots).

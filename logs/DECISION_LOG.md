@@ -1,5 +1,16 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-025] Owner Sets Product Direction; Usefulness to Owners Over Inherited Rules
+- **Date**: 2026-10-29
+- **Status**: Accepted (owner, 2026-10-29). Strategy only; no code changed yet.
+- **Context**: At a demo to an entrepreneur on 2026-10-28 the owner found Mankeu confusing and unable to answer how entrepreneurs actually work: HPP per production batch and per wholesale order, sales on credit and consignment, and data privacy. Several of these gaps come from earlier lecturer directives, notably DEC-011 (strict cash, which removed debt, receivables and consignment). A flow test as a new entrepreneur (`docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`) confirmed the gaps.
+- **Decision**:
+  1. The owner decides product direction from now on. The measure is real usefulness to small-business owners who already know Excel. The app is not competing with any other tool.
+  2. Earlier directives that make the app worse for owners may be reversed. Each reversal gets its own DEC entry naming what it supersedes (the first expected: a receivables and consignment ledger superseding DEC-011 K-1).
+  3. Work follows the priority list in section CP7 of the flow-test report, starting with the bottom-sheet bugs and a product-centred HPP model.
+- **Alternatives considered**: keeping every inherited directive and only polishing the UI (rejected by owner: it keeps the gaps the entrepreneur named); feature parity with the lecturer's Apps Script (rejected: not the goal).
+- **Affected components**: product strategy; future DECs; `AGENTS.md` import rule on credit columns will change when DEC-011 is superseded.
+
 ### [DEC-024] Sync Between Phones Is a Release Feature (Schema 12)
 - **Date**: 2026-10-22
 - **Status**: Accepted (owner, pre-release grill: "Jadikan fitur rilis", then account, passphrase, trigger and conflict choices). Implemented. Engine, controller and ViewModel triggers are tested with two phones over an in-memory store (`SyncEngineTest`, `SyncControllerTest`, `ViewModelFlowsTest`); the settings card was checked on the emulator. **Not yet tested against Google Drive with a real account on two phones.** Corrected after the review of 2026-10-22, which also fixed: a debounce that cancelled a running round (push numbers are now reserved before upload, upload + acknowledge are non-cancellable), a download error reported as a wrong passphrase, and a first-round network failure that switched sync off.

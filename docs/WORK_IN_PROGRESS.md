@@ -23,6 +23,11 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-Tidak ada. Review run audit dan perbaikannya selesai (laporan: `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md` bagian 11).
+**Uji alur sebagai pengusaha baru (2026-10-29)**, dicatat per checkpoint di
+`docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`. Semua checkpoint (CP1–CP7) selesai; belum ada perubahan kode.
+Arah produk: DEC-025. Langkah berikutnya menunggu pilihan pemilik dari daftar prioritas CP7 (usulan pertama:
+bug bottom sheet di `MankeuSheet.kt`).
+
+Sebelumnya: review run audit dan perbaikannya selesai (laporan: `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md` bagian 11).
 Sisa untuk pemilik: bagian 10 laporan itu (uji sync dua HP dengan akun Google nyata, AAB bertanda tangan, Data Safety,
 peluncuran bertahap) dan usulan fitur usaha menengah (bagian 8).

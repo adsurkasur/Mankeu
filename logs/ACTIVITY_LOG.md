@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 12:45] [Claude Code (Opus 5.5) — Uji alur sebagai pengusaha baru]
+- **Goal**: After the 2026-10-28 entrepreneur demo the owner found the app confusing and asked for the flow to be walked on the emulator to understand the context, documented per checkpoint for handoff.
+- **Actions**: Read code for privacy (local data, encrypted Drive backup, no app lock), the date-range "batas waktu" (plan period edited in two places, used only by the plan) and DEC-011 history. Walked a fresh install as a banana-chip business on the emulator: create business, plan a product with a batch recipe and a fixed cost, record a 5-dus sale, open an expense form, Stok, and all three report tabs. Reproduced two owner-reported bottom-sheet bugs (swipe-to-scroll dismisses the sheet; dropdown placed at the pre-keyboard position) and traced likely causes in `MankeuSheet.kt`. Wrote the findings and a nine-point priority list. Recorded the owner's direction as DEC-025.
+- **Files**: `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md` (new), `docs/WORK_IN_PROGRESS.md`, `logs/DECISION_LOG.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: every finding marked verified (seen on emulator `Medium_Phone` with the debug APK at `ddad1c6`, or in code with file:line), user-confirmed, inferred or proposed. Not tested: Excel import/export, Drive backup/sync, PDF, dark mode, multi-unit; real Gboard keyboard flicker (emulator IME is Google voice input).
+
 ### [2026-10-27 11:00] [Claude Code (Opus 5.5) — Rilis v0.1.0]
 - **Goal**: Owner needs a downloadable v0.1.0 APK for this afternoon's presentation (latest GitHub release was still v0.0.6).
 - **Actions**: Wrote release notes `docs/releases/v0.1.0.md`; CHANGELOG `[Unreleased]` becomes `[0.1.0] - 2026-10-27`; tagged `v0.1.0`, which runs `deploy_play_store.yml` (signed AAB+APK, AAB to the Play internal track, GitHub Release with the APK).

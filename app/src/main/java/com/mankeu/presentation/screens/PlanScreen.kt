@@ -12,20 +12,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,14 +37,11 @@ import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.data.BudgetItemEntity
 import com.mankeu.data.CategoryEntity
-import com.mankeu.data.ComponentDraft
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.LegacyProductShape
-import com.mankeu.data.ProductRecord
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
+import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.Recurrence
-import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.AppUiState
 import com.mankeu.presentation.ChoiceMenu
 import com.mankeu.presentation.appLocale
@@ -58,10 +52,7 @@ import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.PlanFeasibilityCard
 import com.mankeu.presentation.components.ReportCard
 import com.mankeu.presentation.components.SectionTitle
-import com.mankeu.presentation.components.sanitizeDecimal
 import com.mankeu.presentation.toRupiah
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -94,7 +85,6 @@ private enum class LineSection(val titleRes: Int, val hintRes: Int, val roles: S
 }
 
 private sealed interface PlanEditor {
-    data class Product(val existing: ProductRecord?) : PlanEditor
     data class Line(val section: LineSection, val existing: BudgetItemEntity?) : PlanEditor
     data object Period : PlanEditor
 }
@@ -102,8 +92,8 @@ private sealed interface PlanEditor {
 @Composable
 fun PlanScreen(
     state: AppUiState,
-    onSaveProduct: (String?, String, String, Long, String?, List<ComponentDraft>, Int) -> Unit,
-    onArchiveProduct: (String) -> Unit,
+    /** Opens the full-page product editor; null = a new product. */
+    onOpenProduct: (String?) -> Unit,
     onSavePlanLine: (String?, String, String, Long, Recurrence, CostNature?, YearMonth?, Int?) -> Unit,
     onArchivePlanLine: (String) -> Unit,
     onSetPeriod: (YearMonth, YearMonth) -> Unit,
@@ -153,26 +143,24 @@ fun PlanScreen(
             PlanSectionCard(
                 title = stringResource(R.string.plan_section_products),
                 hint = stringResource(R.string.plan_section_products_hint),
-                onAdd = { editor = PlanEditor.Product(null) },
+                onAdd = { onOpenProduct(null) },
             ) {
                 state.products.forEach { row ->
-                    val vc = PlanAssembly.products(listOf(row), materialPrices).firstOrNull()?.variableCostPerUnit?.setScale(0, RoundingMode.HALF_UP)?.toLong() ?: 0L
+                    val cost = ProductCosting.cost(row.spec, materialPrices)
                     val economics = stringResource(
                         R.string.plan_product_row,
                         (row.mainUnit?.priceRupiah ?: 0).toRupiah(),
                         row.mainUnit?.name ?: row.product.unit,
-                        vc.toRupiah(),
+                        (cost.perSaleUnit.firstOrNull()?.hppRupiah ?: 0L).toRupiah(),
                         row.product.targetPerMonthText ?: "-",
                     )
-                    PlanRow(
-                        title = row.product.name,
-                        subtitle = if (row.product.sellFromMonth > 1) {
-                            economics + " · " + stringResource(R.string.plan_product_sell_from_value, row.product.sellFromMonth)
-                        } else {
-                            economics
-                        },
-                        onClick = { editor = PlanEditor.Product(row) },
+                    // An HPP missing a price or a recipe is a floor, not the HPP: say so (Task 2 review M-3).
+                    val parts = listOfNotNull(
+                        economics,
+                        stringResource(R.string.plan_product_sell_from_value, row.product.sellFromMonth).takeIf { row.product.sellFromMonth > 1 },
+                        hppLines(cost).single().takeIf { !cost.complete },
                     )
+                    PlanRow(title = row.product.name, subtitle = parts.joinToString(" · "), onClick = { onOpenProduct(row.product.id) })
                 }
             }
         }
@@ -197,17 +185,6 @@ fun PlanScreen(
 
     when (val current = editor) {
         null -> Unit
-        is PlanEditor.Product -> ProductSheet(
-            existing = current.existing,
-            materialPrices = materialPrices,
-            periodMonths = months.size,
-            onDismiss = { editor = null },
-            onSave = { name, unit, price, target, components, sellFrom ->
-                onSaveProduct(current.existing?.product?.id, name, unit, price, target, components, sellFrom)
-                editor = null
-            },
-            onDelete = current.existing?.let { { onArchiveProduct(it.product.id); editor = null } },
-        )
         is PlanEditor.Line -> PlanLineSheet(
             section = current.section,
             existing = current.existing,
@@ -281,137 +258,6 @@ private fun PlanRow(title: String, subtitle: String, onClick: () -> Unit) {
     ) {
         Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-/** One recipe line being edited. Strings, because they are text fields until saved. */
-private class ComponentInput(name: String = "", amount: String = "", yieldText: String = "1") {
-    var name by mutableStateOf(name)
-    var amount by mutableStateOf(amount)
-    var yieldText by mutableStateOf(yieldText)
-}
-
-@Composable
-private fun ProductSheet(
-    existing: ProductRecord?,
-    materialPrices: Map<String, Long>,
-    periodMonths: Int,
-    onDismiss: () -> Unit,
-    onSave: (String, String, Long, String?, List<ComponentDraft>, Int) -> Unit,
-    onDelete: (() -> Unit)?,
-) {
-    var name by rememberSaveable { mutableStateOf(existing?.product?.name.orEmpty()) }
-    var unit by rememberSaveable { mutableStateOf(existing?.product?.unit.orEmpty()) }
-    var price by rememberSaveable { mutableStateOf(existing?.mainUnit?.priceRupiah?.toString().orEmpty()) }
-    var target by rememberSaveable { mutableStateOf(existing?.product?.targetPerMonthText.orEmpty()) }
-    var sellFrom by rememberSaveable { mutableStateOf((existing?.product?.sellFromMonth ?: 1).toString()) }
-    val components = remember {
-        mutableStateListOf<ComponentInput>().apply {
-            existing?.let { LegacyProductShape.components(it, materialPrices) }?.forEach { add(ComponentInput(it.name, it.amountRupiah.toString(), it.yieldText)) }
-            if (isEmpty()) add(ComponentInput())
-        }
-    }
-    var error by remember { mutableStateOf<String?>(null) }
-    val errName = stringResource(R.string.plan_err_product)
-    val errComponent = stringResource(R.string.plan_err_component)
-    val errSellFrom = stringResource(R.string.plan_err_sell_from, periodMonths)
-
-    // Live unit economics, so the owner sees the effect of each recipe line while typing it.
-    val vc = components.sumOf { c ->
-        val amount = c.amount.toLongOrNull() ?: 0L
-        val yield = TransactionCalculation.parseQuantity(c.yieldText)
-        if (amount > 0 && yield != null) BigDecimal.valueOf(amount).divide(yield, 2, RoundingMode.HALF_UP) else BigDecimal.ZERO
-    }.setScale(0, RoundingMode.HALF_UP).toLong()
-    val parsedPrice = price.toLongOrNull()
-
-    MankeuSheet(
-        title = stringResource(if (existing == null) R.string.plan_product_new else R.string.plan_product_edit),
-        onDismiss = onDismiss,
-        onConfirm = {
-            val filled = components.filter { it.name.isNotBlank() || it.amount.isNotBlank() }
-            val drafts = filled.map { c ->
-                val amount = c.amount.toLongOrNull()
-                val yield = c.yieldText.ifBlank { "1" }
-                if (c.name.isBlank() || amount == null || amount <= 0 || TransactionCalculation.parseQuantity(yield) == null) null
-                else ComponentDraft(c.name.trim(), amount, yield)
-            }
-            error = when {
-                name.isBlank() || unit.isBlank() || parsedPrice == null || parsedPrice <= 0 -> errName
-                drafts.any { it == null } -> errComponent
-                target.isNotBlank() && TransactionCalculation.parseQuantity(target) == null -> errName
-                sellFrom.toIntOrNull()?.takeIf { it in 1..periodMonths } == null -> errSellFrom
-                else -> null
-            }
-            if (error == null) onSave(name.trim(), unit.trim(), parsedPrice!!, target.ifBlank { null }, drafts.filterNotNull(), sellFrom.toInt())
-        },
-    ) {
-        OutlinedTextField(
-            value = name, onValueChange = { name = it }, singleLine = true,
-            label = { Text(stringResource(R.string.plan_product_name)) }, modifier = Modifier.fillMaxWidth(),
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(
-                value = unit, onValueChange = { unit = it }, singleLine = true,
-                label = { Text(stringResource(R.string.plan_product_unit)) }, modifier = Modifier.weight(1f),
-            )
-            OutlinedTextField(
-                value = target, onValueChange = { target = sanitizeDecimal(it) }, singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                label = { Text(stringResource(R.string.plan_product_target)) }, modifier = Modifier.weight(1f),
-            )
-        }
-        MoneyField(stringResource(R.string.plan_product_price), price) { price = it }
-        OutlinedTextField(
-            value = sellFrom, onValueChange = { sellFrom = it.filter(Char::isDigit).take(3) }, singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(stringResource(R.string.plan_product_sell_from)) },
-            supportingText = { Text(stringResource(R.string.plan_product_sell_from_hint)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Text(stringResource(R.string.plan_recipe_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.plan_recipe_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        components.forEachIndexed { index, c ->
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = c.name, onValueChange = { c.name = it }, singleLine = true,
-                            label = { Text(stringResource(R.string.plan_component_name)) }, modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = { components.removeAt(index) }) {
-                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_delete))
-                        }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        MoneyField(stringResource(R.string.plan_component_cost), c.amount, Modifier.weight(1f)) { c.amount = it }
-                        OutlinedTextField(
-                            value = c.yieldText, onValueChange = { c.yieldText = sanitizeDecimal(it) }, singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            label = { Text(stringResource(R.string.plan_component_yield, unit.ifBlank { "unit" })) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-        }
-        TextButton(onClick = { components.add(ComponentInput()) }) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Text(stringResource(R.string.plan_component_add))
-        }
-        Text(
-            if (parsedPrice != null && parsedPrice > 0) {
-                stringResource(R.string.plan_product_economics, vc.toRupiah(), (parsedPrice - vc).toRupiah())
-            } else {
-                stringResource(R.string.plan_product_vc, vc.toRupiah())
-            },
-            fontWeight = FontWeight.Bold,
-            color = if (parsedPrice != null && parsedPrice <= vc) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        )
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
-        onDelete?.let {
-            TextButton(onClick = it) { Text(stringResource(R.string.plan_remove), color = MaterialTheme.colorScheme.error) }
-        }
     }
 }
 

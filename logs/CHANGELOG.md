@@ -7,8 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Product stock is automatic: production adds, sales subtract (spec #9).
 - A material's price follows its latest purchase (spec #20).
+- Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.
 
 ### Changed
+- Tab Stok menjadi Produk; bahan ada di bagian Bahan & barang.
 - Template Excel v5: lembar Produk, Satuan Jual, Resep per batch; kolom Satuan dan Bahan di Transaksi. File template lama ditolak dengan daftar kolom yang berbeda.
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 

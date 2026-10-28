@@ -29,8 +29,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 peta fase `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`. **Fase 0 selesai** dan sudah di main (DEC-027).
 **Rencana Fase 1 tertulis**: `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md` (7 tugas, schema 13). Bagian
 "Keputusan rencana" berisi sembilan keputusan penulis rencana yang menunggu tinjauan pemilik; keputusan itu dicatat
-sebagai DEC-028 di Task 2. Eksekusi di branch `fase1-produk-hpp`: Task 1 (HPP/stok domain) dan Task 2 (schema 13,
-migrasi, backup, lapisan data, DEC-028) selesai. Berikutnya: Task 3 (stok dari penjualan, harga bahan dari belanja).
+sebagai DEC-028 di Task 2. Eksekusi di branch `fase1-produk-hpp`: Task 1 sampai Task 5 selesai (domain HPP/stok,
+schema 13, stok dari penjualan, template v5, tab Produk dan editor produk). Berikutnya: Task 6.
 
 Sebelumnya: review run audit dan perbaikannya selesai (laporan: `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md` bagian 11).
 Sisa untuk pemilik: bagian 10 laporan itu (uji sync dua HP dengan akun Google nyata, AAB bertanda tangan, Data Safety,

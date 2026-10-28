@@ -1,8 +1,7 @@
 package com.mankeu.presentation
 
-import com.mankeu.data.ComponentDraft
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.LegacyProductShape
+import com.mankeu.data.ProductDraft
 import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.ActualMonthAnalysis
@@ -673,10 +672,14 @@ class AppViewModel(
             .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
     }
 
-    fun saveProduct(id: String?, name: String, unit: String, priceRupiah: Long, targetPerMonthText: String?, components: List<ComponentDraft>, sellFromMonth: Int = 1) = mutating {
+    /** Creates ([id] null) or replaces a product; [onSuccess] runs only once it is stored, so a refused form stays open. */
+    fun saveProduct(id: String?, draft: ProductDraft, onSuccess: () -> Unit = {}) = mutating {
         val projectId = selectedProjectId.value ?: return@mutating
-        runCatching { repository.saveProduct(projectId, id, LegacyProductShape.draft(name, unit, priceRupiah, targetPerMonthText, components, sellFromMonth)) }
-            .onSuccess { message.value = UiText.of(R.string.msg_product_saved, name.trim()) }
+        runCatching { repository.saveProduct(projectId, id, draft) }
+            .onSuccess {
+                message.value = UiText.of(R.string.msg_product_saved, draft.name.trim())
+                onSuccess()
+            }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
     }
 

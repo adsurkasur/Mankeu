@@ -1,16 +1,14 @@
 package com.mankeu.presentation.screens
 
-import com.mankeu.presentation.guide.HelpArticle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -45,7 +43,6 @@ import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.LocalMankeuSemanticColors
-import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.sanitizeDecimal
@@ -99,105 +96,92 @@ internal fun StockCard(items: List<StockItem>, onManage: (() -> Unit)?) {
 }
 
 /**
- * The Stok destination: inventory summary, every item with its level and value, and the add /
- * movement sheets. Stock belongs to the selected unit or, when shared, to every unit of the
- * business (schema 10); never to a Proyeksi/Realisasi book.
+ * Add and movement sheets of the material list. Kept outside the LazyColumn, whose items are
+ * disposed when scrolled away, so a sheet does not close while the list moves under it.
  */
 @Composable
-fun StockScreen(
+internal fun MaterialSheets(
     items: List<StockItem>,
-    hasBusiness: Boolean,
     /** The selected unit's name; null when none is selected, and every new item is then shared. */
     unitName: String?,
-    onManageScope: () -> Unit,
+    adding: Boolean,
+    movementItemId: String?,
+    onCloseAdd: () -> Unit,
+    onCloseMovement: () -> Unit,
     onCreateStockItem: (String, String, Long, BigDecimal, BigDecimal, Boolean) -> Unit,
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
-    expanded: Boolean = false,
 ) {
-    var showAddItem by rememberSaveable { mutableStateOf(false) }
-    var movementItemId by rememberSaveable { mutableStateOf<String?>(null) }
-    val semantic = LocalMankeuSemanticColors.current
-
-    if (showAddItem) {
+    if (adding) {
         AddStockItemSheet(
             unitName = unitName,
-            onDismiss = { showAddItem = false },
+            onDismiss = onCloseAdd,
             onSave = { name, unit, price, initial, minAlert, shared ->
                 onCreateStockItem(name, unit, price, initial, minAlert, shared)
-                showAddItem = false
+                onCloseAdd()
             },
         )
     }
     items.firstOrNull { it.id == movementItemId }?.let { item ->
         StockMovementSheet(
             item = item,
-            onDismiss = { movementItemId = null },
+            onDismiss = onCloseMovement,
             onSave = { type, quantity, notes ->
                 onRecordStockMovement(item.id, type, quantity, notes)
-                movementItemId = null
+                onCloseMovement()
             },
         )
     }
+}
 
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = if (expanded) 24.dp else 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (!hasBusiness) {
-            item {
-                EmptyCard(
-                    stringResource(R.string.setup_business_title),
-                    stringResource(R.string.setup_business_body),
-                    stringResource(R.string.scope_add_business),
-                    onManageScope,
-                    learn = HelpArticle.START_SCOPE,
-                )
-            }
-            return@LazyColumn
+/**
+ * The "Bahan & barang" part of the Produk tab: inventory summary and every material with its level
+ * and value. Stock belongs to the selected unit or, when shared, to every unit of the business
+ * (schema 10); never to a Proyeksi/Realisasi book. The sheets are [MaterialSheets].
+ */
+internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -> Unit, onOpenItem: (String) -> Unit) {
+    item { StockCard(items = items, onManage = null) }
+    item {
+        Button(onClick = onAddItem, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.stock_add_item))
         }
-        item { StockCard(items = items, onManage = null) }
+    }
+    if (items.isNotEmpty()) {
         item {
-            Button(onClick = { showAddItem = true }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.stock_add_item))
-            }
+            Text(stringResource(R.string.stock_tap_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (items.isNotEmpty()) {
-            item {
-                Text(stringResource(R.string.stock_tap_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        items(items, key = { it.id }) { item ->
-            Card(
-                modifier = Modifier.fillMaxWidth()
-                    .clickable { movementItemId = item.id },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-            ) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(item.name, fontWeight = FontWeight.Bold)
-                        val detail = stringResource(
-                            R.string.stock_row_detail,
-                            item.currentStock.toQuantityText(),
-                            item.unit,
-                            StockCalculation.computeInventoryValue(listOf(item)).toRupiah(),
-                        )
+    }
+    items(items, key = { it.id }) { item ->
+        val semantic = LocalMankeuSemanticColors.current
+        Card(
+            modifier = Modifier.fillMaxWidth()
+                .clickable { onOpenItem(item.id) },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        ) {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(item.name, fontWeight = FontWeight.Bold)
+                    val detail = stringResource(
+                        R.string.stock_row_detail,
+                        item.currentStock.toQuantityText(),
+                        item.unit,
+                        StockCalculation.computeInventoryValue(listOf(item)).toRupiah(),
+                    )
+                    Text(
+                        if (item.shared) detail + " · " + stringResource(R.string.stock_shared_badge) else detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (item.isLowStock) {
+                    Surface(shape = RoundedCornerShape(8.dp), color = semantic.dangerContainer) {
                         Text(
-                            if (item.shared) detail + " · " + stringResource(R.string.stock_shared_badge) else detail,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            stringResource(R.string.stock_low_badge),
+                            color = semantic.onDangerContainer,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         )
-                    }
-                    if (item.isLowStock) {
-                        Surface(shape = RoundedCornerShape(8.dp), color = semantic.dangerContainer) {
-                            Text(
-                                stringResource(R.string.stock_low_badge),
-                                color = semantic.onDangerContainer,
-                                style = MaterialTheme.typography.labelMedium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            )
-                        }
                     }
                 }
             }
@@ -291,4 +275,4 @@ private fun QuantityField(label: String, value: String, hint: String? = null, on
 
 private fun String.toQuantity(): BigDecimal = TransactionCalculation.parseQuantity(this) ?: BigDecimal.ZERO
 
-private fun BigDecimal.toQuantityText(): String = stripTrailingZeros().toPlainString().replace('.', ',')
+internal fun BigDecimal.toQuantityText(): String = stripTrailingZeros().toPlainString().replace('.', ',')

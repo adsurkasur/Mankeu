@@ -99,6 +99,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -127,7 +128,8 @@ import com.mankeu.presentation.screens.HomeScreen
 import com.mankeu.presentation.screens.ManageScopeSheet
 import com.mankeu.presentation.screens.PlanScreen
 import com.mankeu.presentation.screens.ReportsScreen
-import com.mankeu.presentation.screens.StockScreen
+import com.mankeu.presentation.screens.ProductEditorScreen
+import com.mankeu.presentation.screens.ProductsScreen
 import com.mankeu.presentation.screens.RestorePreviewDialog
 import com.mankeu.presentation.screens.SettingsScreen
 import java.time.LocalDate
@@ -143,14 +145,14 @@ import java.time.LocalDate
 enum class Destination(val labelRes: Int, val icon: ImageVector) {
     HOME(R.string.nav_home, Icons.Default.Home),
     ENTRY(R.string.nav_entry, Icons.AutoMirrored.Filled.ReceiptLong),
-    STOCK(R.string.nav_stock, Icons.Default.Inventory2),
+    PRODUCTS(R.string.nav_products, Icons.Default.Inventory2),
     REPORTS(R.string.nav_reports, Icons.Default.Assessment),
 }
 
-/** Cash is recorded from these; elsewhere the speed dial would sit over Laporan and Stok content. */
+/** Cash is recorded from these; elsewhere the speed dial would sit over Laporan and Produk content. */
 private val RECORDING_DESTINATIONS = setOf(Destination.HOME, Destination.ENTRY)
 
-enum class Overlay { NONE, DATA, SETTINGS, HELP }
+enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT }
 
 @Composable
 fun MankeuApp(
@@ -194,6 +196,9 @@ fun MankeuApp(
     var manageScope by rememberSaveable { mutableStateOf(false) }
     var helpArticle by rememberSaveable { mutableStateOf<HelpArticle?>(null) }
     var helpSheet by rememberSaveable { mutableStateOf(false) }
+    // The product the full-page editor (Overlay.PRODUCT) is open on; null = a new product.
+    var productEditorId by rememberSaveable { mutableStateOf<String?>(null) }
+    val openProduct: (String?) -> Unit = { id -> productEditorId = id; overlay = Overlay.PRODUCT }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
     // recreate() is not instantaneous — resources reload and the whole tree recomposes — and
     // without this the screen simply froze on the old language for a beat and then snapped.
@@ -510,6 +515,22 @@ fun MankeuApp(
                                     HelpCenter(article = helpArticle, onOpen = { helpArticle = it }, onShow = show)
                                 }
 
+                                Overlay.PRODUCT -> OverlayScaffold(
+                                    title = stringResource(if (productEditorId == null) R.string.editor_title_new else R.string.editor_title_edit),
+                                    onBack = { overlay = Overlay.NONE },
+                                    snackbarHost = snackbarHost,
+                                ) {
+                                    key(productEditorId) {
+                                        ProductEditorScreen(
+                                            existing = state.products.firstOrNull { it.product.id == productEditorId },
+                                            materials = state.stockItems,
+                                            // Closed only once saved: a refusal keeps the owner's input and shows why.
+                                            onSave = { viewModel.saveProduct(productEditorId, it) { overlay = Overlay.NONE } },
+                                            onDelete = productEditorId?.let { id -> { viewModel.archiveProduct(id); overlay = Overlay.NONE } },
+                                        )
+                                    }
+                                }
+
                                 Overlay.NONE -> BoxWithConstraints(Modifier.fillMaxSize()) {
                                     val expanded = maxWidth >= 840.dp
                                     if (expanded) {
@@ -544,6 +565,7 @@ fun MankeuApp(
                                                     onNavigate = { destination = it },
                                                     onManageScope = { manageScope = true },
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
+                                                    onOpenProduct = openProduct,
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,
@@ -576,6 +598,7 @@ fun MankeuApp(
                                                 onNavigate = { destination = it },
                                                 onManageScope = { manageScope = true },
                                                 onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
+                                                onOpenProduct = openProduct,
                                                 requestedKind = requestedEntryKind,
                                                 onRequestedKindConsumed = { requestedEntryKind = null },
                                                 expanded = false,
@@ -1118,6 +1141,7 @@ private fun ScreenContent(
     /** Opens the Usaha dan Unit sheet: every empty state asking for a business or unit leads there. */
     onManageScope: () -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
+    onOpenProduct: (String?) -> Unit,
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
@@ -1160,11 +1184,15 @@ private fun ScreenContent(
                     onQuickRecord = onQuickRecord,
                     expanded = expanded,
                 )
-                Destination.STOCK -> StockScreen(
-                    items = state.stockItems,
+                Destination.PRODUCTS -> ProductsScreen(
+                    products = state.products,
+                    materials = state.stockItems,
                     hasBusiness = state.selectedBusinessId != null,
                     unitName = state.projects.firstOrNull { it.id == state.selectedProjectId }?.name,
                     onManageScope = onManageScope,
+                    onOpenProduct = onOpenProduct,
+                    onProduce = viewModel::recordProduction,
+                    onCountStock = viewModel::countProductStock,
                     onCreateStockItem = viewModel::createStockItem,
                     onRecordStockMovement = viewModel::recordStockMovement,
                     expanded = expanded,
@@ -1172,8 +1200,7 @@ private fun ScreenContent(
                 Destination.ENTRY -> if (state.selectedBookMode == BookMode.PROJECTION) {
                     PlanScreen(
                         state = state,
-                        onSaveProduct = viewModel::saveProduct,
-                        onArchiveProduct = viewModel::archiveProduct,
+                        onOpenProduct = onOpenProduct,
                         onSavePlanLine = viewModel::savePlanLine,
                         onArchivePlanLine = viewModel::archivePlanLine,
                         onSetPeriod = viewModel::setPlanPeriod,

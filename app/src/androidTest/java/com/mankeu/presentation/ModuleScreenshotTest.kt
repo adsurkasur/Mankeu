@@ -31,7 +31,9 @@ import com.mankeu.auth.GoogleIdentity
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
-import com.mankeu.data.ComponentDraft
+import com.mankeu.data.ProductDraft
+import com.mankeu.data.RecipeLineDraft
+import com.mankeu.data.SaleUnitDraft
 import com.mankeu.data.FinanceRepository
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
@@ -146,20 +148,33 @@ class ModuleScreenshotTest {
         vm.setPlanPeriod(month, month.plusMonths(11))
         settle()
         clickNear("Tambah", "Produk")
+        // The full-page product editor (Fase 1): one batch of 6 cups, same Rp5.000 per cup as before.
         type("Nama produk", "Kopi Susu")
-        type("Satuan (cup, porsi, kg)", "cup")
-        type("Target per bulan", "700")
-        type("Harga jual per satuan", "10000")
-        type("Komponen", "Susu")
-        type("Biaya", "18000")
-        replace("Untuk berapa cup", "6")
-        click("Tambah komponen")
-        type("Komponen", "Kopi dan cup", index = 1)
-        type("Biaya", "2000", index = 1)
+        type("Satuan terkecil", "cup")
+        type("Satu batch menghasilkan", "6")
+        click("Tambah biaya lain")
+        type("Biaya (mis. gas, upah)", "Susu")
+        type("Biaya per batch", "18000")
+        click("Tambah biaya lain")
+        type("Biaya (mis. gas, upah)", "Kopi dan cup", index = 1)
+        type("Biaya per batch", "12000", index = 1)
+        scrollTo("Harga jual")
+        type("Harga jual", "10000")
+        scrollTo("Untuk rencana usaha")
+        click("Untuk rencana usaha")
+        type("Target terjual per bulan", "700")
         field("Nama produk", 0).bringIntoView()
         shot("11_form_produk")
         click("Simpan")
-        vm.saveProduct(null, "Es Teh", "gelas", 5_000, "400", listOf(ComponentDraft("Teh, gula, es", 1_500, "1")))
+        vm.saveProduct(
+            null,
+            ProductDraft(
+                name = "Es Teh", baseUnit = "gelas", batchYieldText = "1",
+                units = listOf(SaleUnitDraft(name = "gelas", contentText = "1", priceRupiah = 5_000)),
+                recipe = listOf(RecipeLineDraft("Teh, gula, es", amountRupiah = 1_500)),
+                targetPerMonthText = "400",
+            ),
+        )
         settle()
         clickNear("Tambah", "Biaya Tetap per Bulan")
         type("Nama", "Sewa lapak")
@@ -235,8 +250,9 @@ class ModuleScreenshotTest {
         scrollTo("Status BEP Bulan Ini")
         shot("23_status_bep")
 
-        // --- 5. Stok -----------------------------------------------------------------------------
-        click("Stok")
+        // --- 5. Stok (Bahan & barang on the Produk tab) ----------------------------------------
+        click("Produk")
+        scrollTo("Tambah Barang")
         shot("24_stok_kosong")
         click("Tambah Barang")
         type("Nama barang", "Susu UHT")
@@ -345,7 +361,7 @@ class ModuleScreenshotTest {
         click("Pakai ini")
         closeScopeSheet()
         click("Realisasi")
-        click("Stok")
+        click("Produk")
         addStock("Gula", "kg", "15500", "50", "10", shared = false)
         addStock("Kantong plastik", "pak", "12000", "30", "5", shared = true, shotName = "B1_form_barang_bersama")
         shot("B2_stok_pusat")
@@ -379,6 +395,7 @@ class ModuleScreenshotTest {
     }
 
     private fun addStock(name: String, unit: String, price: String, initial: String, min: String, shared: Boolean, shotName: String? = null) {
+        scrollTo("Tambah Barang")
         click("Tambah Barang")
         type("Nama barang", name)
         type("Satuan (mis. kg, pcs, cup)", unit)

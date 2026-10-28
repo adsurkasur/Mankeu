@@ -233,7 +233,7 @@ fun HomeScreen(
             )
         }
         item {
-            StockCard(items = state.stockItems, onManage = { onNavigate(Destination.STOCK) })
+            StockCard(items = state.stockItems, onManage = { onNavigate(Destination.PRODUCTS) })
         }
         // Feasibility is the reason the plan exists, so it gets its own card with a meter rather
         // than more figures in the grid. Realisasi asks the same question of this month.

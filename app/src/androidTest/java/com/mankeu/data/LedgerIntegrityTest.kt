@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.mankeu.backup.BackupTable
-import com.mankeu.backup.BackupValue
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.PasswordBackupCipher
 import com.mankeu.backup.PortableBackupCodec
@@ -21,7 +19,6 @@ import com.mankeu.domain.PostingReportCalculator
 import com.mankeu.domain.PostingSide
 import com.mankeu.importer.ImportTransaction
 import com.mankeu.importer.WorkbookImportPreview
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -159,85 +156,23 @@ class LedgerIntegrityTest {
         assertEquals("REVERSED", dao.getImportBatch(batch.id)!!.state)
     }
 
+    /** Pre-0.1.0 schemas are not carried forward (spec #1): an older backup is refused and nothing changes. */
     @Test
-    fun backupTakenOnSchemaThreeRestoresIntoCurrentSchema() = runBlocking {
+    fun backupTakenBeforeSchemaTwelveIsRefused() = runBlocking {
         record(CASH_INCOME, 750_000)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val manager = EncryptedBackupManager(database, File(context.cacheDir, "ledger-integrity-recovery.aabk"))
         val password = "sandi-uji-123".toCharArray()
         val current = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(manager.create(password), password))
-        // Shaped the way v0.0.4 wrote it: schema 3, a `units` table, `categories.defaultUnitId`,
-        // and no `stock_*` tables (added in schema 6).
-        // It also carries a credit sale, which strict cash (DEC-011) must purge on restore.
-        val schemaThree = current.copy(
-            schemaVersion = 3,
-            tables = current.tables.filterNot { it.name.startsWith("stock_") }.map { table ->
-                when (table.name) {
-                    "categories" -> table.copy(columns = table.columns + "defaultUnitId", rows = table.rows.map { it + BackupValue.Null })
-                    "financial_events" -> table.copy(rows = table.rows + listOf(legacyCreditSale(table)))
-                    else -> table
-                }
-            } + BackupTable("units", listOf("id", "businessId", "name"), emptyList()),
-        )
+        val old = current.copy(schemaVersion = 11)
         record(CASH_EXPENSE, 50_000)
 
-        val prepared = manager.prepareRestore(
-            PasswordBackupCipher.encrypt(PortableBackupCodec.encode(schemaThree), password),
-            password,
-        )
-        manager.restore(prepared, password)
+        val failure = runCatching {
+            manager.restore(manager.prepareRestore(PasswordBackupCipher.encrypt(PortableBackupCodec.encode(old), password), password), password)
+        }.exceptionOrNull()
 
-        assertEquals(750_000, summary().cashBalanceRupiah)
-        assertTrue(dao.getEventsForBook(bookId).none { it.type == "CREDIT_SALE" })
-        assertTrue(dao.observeNotices().first().any { it.batchId == null && "non-kas" in it.title })
-    }
-
-    /** A schema-10 backup still holds pairs from "Balik Transaksi"; restoring it drops each pair (DEC-019). */
-    @Test
-    fun backupTakenOnSchemaTenRestoresWithoutReversalPairs() = runBlocking {
-        record(CASH_INCOME, 750_000)
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val manager = EncryptedBackupManager(database, File(context.cacheDir, "ledger-integrity-recovery.aabk"))
-        val password = "sandi-uji-123".toCharArray()
-        val current = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(manager.create(password), password))
-        val reversalColumns = listOf(BackupValue.Text("POSTED"), BackupValue.Null)
-        fun pairRow(table: BackupTable, id: String, type: String, reversedBy: BackupValue) = table.rows.first().mapIndexed { index, value ->
-            when (table.columns[index]) {
-                "id" -> BackupValue.Text(id)
-                "type" -> BackupValue.Text(type)
-                else -> value
-            }
-        } + reversalColumns + reversedBy
-        val schemaTen = current.copy(
-            schemaVersion = 10,
-            tables = current.tables.map { table ->
-                if (table.name != "financial_events") return@map table
-                table.copy(
-                    columns = table.columns + listOf("status", "reversesEventId", "reversedByEventId"),
-                    rows = table.rows.map { it + reversalColumns + BackupValue.Null } +
-                        listOf(
-                            pairRow(table, "typo", "CASH_EXPENSE", BackupValue.Text("typo-undo")),
-                            pairRow(table, "typo-undo", "REVERSAL", BackupValue.Null),
-                        ),
-                )
-            },
-        )
-        record(CASH_EXPENSE, 50_000)
-
-        manager.restore(manager.prepareRestore(PasswordBackupCipher.encrypt(PortableBackupCodec.encode(schemaTen), password), password), password)
-
-        assertEquals(1, dao.getEventsForBook(bookId).size)
-        assertEquals(750_000, summary().cashBalanceRupiah)
-        assertTrue(dao.observeNotices().first().any { it.batchId == null && it.title == "2 catatan yang dibalik dihapus" })
-    }
-
-    /** A copy of the table's first row turned into a pre-schema-8 credit sale. */
-    private fun legacyCreditSale(table: BackupTable): List<BackupValue> = table.rows.first().mapIndexed { index, value ->
-        when (table.columns[index]) {
-            "id" -> BackupValue.Text("legacy-credit-sale")
-            "type" -> BackupValue.Text("CREDIT_SALE")
-            else -> value
-        }
+        assertTrue("Expected a schema refusal, got $failure", failure is IllegalArgumentException)
+        assertEquals(700_000, summary().cashBalanceRupiah)
     }
 
     private suspend fun record(type: FinancialEventType, amount: Long): String = repository.recordEvent(draft(type, amount))

@@ -1,8 +1,5 @@
 package com.mankeu.backup
 
-import com.mankeu.data.LegacyPlanConversion
-import com.mankeu.data.ReversalCleanup
-import com.mankeu.data.StrictCashCleanup
 import com.mankeu.sync.SyncSchema
 import android.content.ContentValues
 import android.database.Cursor
@@ -268,7 +265,7 @@ class EncryptedBackupManager(
             var rowCount = 0
             prepared.snapshot.tables.associateBy { it.name }.let { tables ->
                 TABLES.forEach { tableName ->
-                    // Tables added after the snapshot's schema (stock, schema 6) are simply empty.
+                    // A table absent from the snapshot is left empty.
                     val table = tables[tableName] ?: return@forEach
                     val liveColumns = writable.query("PRAGMA table_info(`$tableName`)").use { cursor ->
                         buildSet { while (cursor.moveToNext()) add(cursor.getString(cursor.getColumnIndexOrThrow("name"))) }
@@ -283,45 +280,11 @@ class EncryptedBackupManager(
                     }
                 }
             }
-            if (prepared.snapshot.schemaVersion < NO_REVERSAL_SCHEMA) {
-                ReversalCleanup.delete(writable, reversalPairIds(prepared.snapshot), source = "Pemulihan cadangan skema ${prepared.snapshot.schemaVersion}")
-            }
-            if (prepared.snapshot.schemaVersion < STRICT_CASH_SCHEMA) {
-                StrictCashCleanup.run(writable, source = "Pemulihan cadangan skema ${prepared.snapshot.schemaVersion}")
-            }
-            if (prepared.snapshot.schemaVersion < PLAN_SCHEMA) {
-                LegacyPlanConversion.applyDefaultCostNatures(writable)
-                prepared.snapshot.tables.firstOrNull { it.name == "scenario_assumptions" }?.let { old ->
-                    val rows = old.rows.map { row ->
-                        old.columns.zip(row).associate { (column, value) ->
-                            column to when (value) {
-                                BackupValue.Null -> null
-                                is BackupValue.Integer -> value.value
-                                is BackupValue.Real -> value.value
-                                is BackupValue.Text -> value.value
-                                is BackupValue.Blob -> null
-                            }
-                        }
-                    }
-                    LegacyPlanConversion.convertAssumptions(writable, rows, source = "Pemulihan cadangan skema ${prepared.snapshot.schemaVersion}")
-                }
-            }
             writable.execSQL("DELETE FROM sync_outbox")
             writable.execSQL("INSERT OR REPLACE INTO sync_meta(`key`, value) VALUES ('${SyncSchema.REQUIRES_FULL_SNAPSHOT}', '1')")
             RestoreResult(TABLES.size, rowCount, recoveryCreated = true)
             }
         }
-    }
-
-    /** Reversal rows and the originals they undid; their columns are gone from schema 11 on. */
-    private fun reversalPairIds(snapshot: PortableBackup): List<String> {
-        val table = snapshot.tables.firstOrNull { it.name == "financial_events" } ?: return emptyList()
-        fun at(column: String) = table.columns.indexOf(column)
-        val (id, type, reversedBy) = Triple(at("id"), at("type"), at("reversedByEventId"))
-        if (id < 0 || type < 0) return emptyList()
-        return table.rows.filter { row ->
-            (row[type] as? BackupValue.Text)?.value == "REVERSAL" || (reversedBy >= 0 && row[reversedBy] != BackupValue.Null)
-        }.mapNotNull { (it[id] as? BackupValue.Text)?.value }
     }
 
     fun hasLatestRecovery(): Boolean = recoveryFile.isFile && recoveryFile.length() > 0
@@ -339,18 +302,13 @@ class EncryptedBackupManager(
 
     private fun validate(snapshot: PortableBackup) {
         val current = currentSchemaVersion()
-        // Exact-match used to make every backup taken before an app update unrestorable after it —
-        // a v0.0.4 (schema 3) backup was rejected by v0.0.5 (schema 4). See OLDEST_RESTORABLE_SCHEMA.
+        // Exact-match would make every backup taken before an app update unrestorable after it;
+        // see OLDEST_RESTORABLE_SCHEMA.
         require(snapshot.schemaVersion in OLDEST_RESTORABLE_SCHEMA..current) {
             "Versi basis data cadangan (${snapshot.schemaVersion}) tidak dapat dipulihkan ke aplikasi ini ($current)."
         }
         val names = snapshot.tables.map { it.name }.toSet()
-        // An older snapshot may still carry a table a later schema retired (`units`, schema 3), and
-        // lacks the tables a later schema added (`stock_*`, schema 6).
-        val required = TABLES -
-            (if (snapshot.schemaVersion < STOCK_SCHEMA) STOCK_TABLES else emptySet()) -
-            (if (snapshot.schemaVersion < PLAN_SCHEMA) PLAN_TABLES else emptySet())
-        require(names.containsAll(required) && (snapshot.schemaVersion < current || names.size == TABLES.size)) {
+        require(names.containsAll(TABLES) && names.size == TABLES.size) {
             "Daftar tabel cadangan tidak lengkap atau tidak dikenali."
         }
     }
@@ -411,22 +369,11 @@ class EncryptedBackupManager(
         const val MAX_RECOVERY_BYTES = 160 * 1024 * 1024
 
         /**
-         * Every migration from schema 3 on only drops a table or column, changes an index, or adds
-         * a nullable column or a new table (3→4 retired `units` and `categories.defaultUnitId`;
-         * 4→5 un-uniqued an index; 5→6 added nullable CVP columns and `stock_*`; 6→7 dropped
-         * `obligations`/`settlements`), so an older snapshot restores by leaving out what no longer
-         * exists and leaving new tables empty. 7→8 also purged non-cash rows; a pre-8 snapshot gets
-         * the same [StrictCashCleanup] after it is restored. 10→11 dropped the reversal columns after
-         * deleting reversal pairs; a pre-11 snapshot gets the same [ReversalCleanup]. A migration that adds or
-         * reshapes a column must raise this, or transform the snapshot the way the migration does.
+         * Pre-0.1.0 schemas are not carried forward (spec #1), so nothing older than 12 is restorable.
+         * A later migration that adds or reshapes a column must raise this, or transform the snapshot
+         * the way the migration does.
          */
-        const val OLDEST_RESTORABLE_SCHEMA = 3
-        const val STOCK_SCHEMA = 6
-        val STOCK_TABLES = setOf("stock_items", "stock_movements")
-        const val STRICT_CASH_SCHEMA = 8
-        const val PLAN_SCHEMA = 9
-        const val NO_REVERSAL_SCHEMA = 11
-        val PLAN_TABLES = setOf("products", "product_cost_components")
+        const val OLDEST_RESTORABLE_SCHEMA = 12
         val TABLES = AppDatabase.DATA_TABLES
     }
 }

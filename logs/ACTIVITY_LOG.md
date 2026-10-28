@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 01:30] [Claude Code (Sonnet) — Fase 0 Task 2: schema lama]
+- **Goal**: Drop the schema 3-11 migrations and the legacy data cleaners; only schema 12 is carried forward (spec #1, DEC-026).
+- **Actions**: Removed every `MIGRATION_x_y` from `AppDatabase`; `create` now uses `fallbackToDestructiveMigrationFrom(dropAllTables = true, 1..11)`. `EncryptedBackupManager`: removed the reversal/strict-cash/plan restore branches and `reversalPairIds`, table validation is exact (`TABLES`), `OLDEST_RESTORABLE_SCHEMA = 12`, dead constants and old KDoc removed. Deleted `StrictCashCleanup`, `ReversalCleanup`, `LegacyPlanConversion`, `MigrationTest`, schema JSON 1-11. Replaced the two old-schema restore tests in `LedgerIntegrityTest` with one expecting refusal.
+- **Files**: `app/src/main/java/com/mankeu/data/AppDatabase.kt`, `app/src/main/java/com/mankeu/backup/EncryptedBackupManager.kt`, `app/src/androidTest/java/com/mankeu/data/LedgerIntegrityTest.kt`, deleted files above, `app/schemas/com.mankeu.data.AppDatabase/1-11.json`.
+- **Verification**: `:app:testDebugUnitTest :app:assembleDebug` green (69 unit tests); `:app:connectedDebugAndroidTest` green (41 tests, 2 skipped by design); emulator: business created on the branch-base debug build survived `adb install -r` of the new build.
+
 ### [2026-10-29 01:14] [Claude Code (Sonnet) — Fase 0 Task 1: bottom sheet]
 - **Goal**: Long forms must not be dismissed by scrolling content back to the top, and the sheet must not bounce with the keyboard.
 - **Actions**: Added `MankeuSheetTest` (instrumented, red first). In `MankeuSheet` set `sheetGesturesEnabled = false`, removed the drag handle (top padding 20dp instead), removed `animateContentSize` from the content column and unused imports, rewrote the stale KDoc (it claimed snap points). Fix round 1: the same behaviour (no drag, no handle) applied to the raw `ModalBottomSheet` in EntryScreen (transaction form), HelpUi and ManageScopeScreen, with 20dp top padding; added `EntrySheetSwipeTest`. Audit doc marks swipe-dismiss verified, bounce/dropdown fixed but not retested.

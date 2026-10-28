@@ -105,7 +105,11 @@ Masalah:
 
 ### Bug: bottom sheet "balapan" dengan keyboard (user-confirmed, sebagian verified)
 
-**Status: diperbaiki, verified** (lihat catatan Fase 0 Task 1 di bawah bagian geser-untuk-scroll).
+**Status (Fase 0 Task 1): diperbaiki, belum diuji ulang (perlu HP nyata / data demo).** `animateContentSize` dihapus dari
+kolom isi `MankeuSheet`, sehingga animasi tinggi tidak lagi mengejar animasi keyboard. Pantulan dan posisi dropdown
+setelah perbaikan belum diamati: keyboard emulator adalah input suara Google, dan data demo terhapus oleh tes
+instrumented sehingga form biaya tetap tidak dapat dibuka ulang. Yang teramati hanya sheet "Tambah usaha" dengan
+keyboard terbuka tetap di tempat setelah dua kali geser turun.
 
 Laporan pemilik: sheet naik-turun dan keyboard berkedip saat mengisi form.
 
@@ -125,15 +129,12 @@ Dugaan penyebab (inferred, belum diuji perbaikannya), `presentation/components/M
 - Keyboard emulator adalah input suara Google, jadi kedipan keyboard sungguhan (Gboard) belum bisa diamati di sini.
   Perlu diuji di HP nyata setelah perbaikan.
 
-**Status: diperbaiki, verified (Fase 0 Task 1).** `MankeuSheet` kini `sheetGesturesEnabled = false`, tanpa drag handle,
-dan kolom isi tanpa `animateContentSize`. Bukti: tes instrumented `MankeuSheetTest` (merah sebelum perbaikan dengan pesan
-"sheet ditutup oleh geser isi", hijau sesudahnya) dan emulator `Medium_Phone`: sheet "Tambah usaha" dengan keyboard terbuka
-tetap terbuka dan tidak bergeser setelah dua kali geser turun. Belum diuji: dropdown pada form biaya tetap (data uji
-terhapus oleh tes instrumented, perlu dibuat ulang) dan kedipan Gboard asli (**perlu HP nyata**; keyboard emulator adalah
-input suara Google). Sheet lain yang memakai `ModalBottomSheet` langsung (HelpUi, EntryScreen, ManageScopeScreen) belum
-tersentuh dan masih bisa diseret tutup.
-
 ### Bug: menggeser untuk scroll malah menutup sheet (user-confirmed, verified)
+
+**Status (Fase 0 Task 1): diperbaiki untuk semua sheet, verified.** `MankeuSheet`, form transaksi (`EntryScreen`),
+`HelpSheet` dan `ManageScopeSheet` kini `sheetGesturesEnabled = false` dan tanpa drag handle; sheet hanya tertutup lewat
+tombol, Back, atau scrim. Bukti: tes instrumented `MankeuSheetTest` dan `EntrySheetSwipeTest` (merah sebelum, hijau
+sesudah perbaikan) pada emulator `Medium_Phone`.
 
 Terulang di emulator pada form "Uang masuk": isi digulir ke bawah, lalu pengguna menggeser ke bawah untuk kembali ke
 atas. Begitu isi sudah di posisi paling atas, gerakan yang sama langsung menyeret sheet turun dan menutupnya.

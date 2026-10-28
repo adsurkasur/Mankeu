@@ -424,6 +424,8 @@ fun EntryScreen(
         ModalBottomSheet(
             onDismissRequest = { feedback(FeedbackEvent.TAP); selected = null },
             sheetState = sheetState,
+            sheetGesturesEnabled = false,
+            dragHandle = null,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             contentColor = MaterialTheme.colorScheme.onSurface,
             tonalElevation = 0.dp,
@@ -440,7 +442,7 @@ fun EntryScreen(
                     .fillMaxWidth()
                     .imePadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
               Column(

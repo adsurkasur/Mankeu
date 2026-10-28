@@ -1,10 +1,10 @@
 # Activity Log
 
-### [2026-10-29 01:15] [Claude Code (Sonnet) — Fase 0 Task 1: bottom sheet]
+### [2026-10-29 01:14] [Claude Code (Sonnet) — Fase 0 Task 1: bottom sheet]
 - **Goal**: Long forms must not be dismissed by scrolling content back to the top, and the sheet must not bounce with the keyboard.
-- **Actions**: Added `MankeuSheetTest` (instrumented, red first). In `MankeuSheet` set `sheetGesturesEnabled = false`, removed the drag handle (top padding 20dp instead), removed `animateContentSize` from the content column and unused imports, rewrote the stale KDoc (it claimed snap points). Marked both sheet bugs fixed in the audit doc.
-- **Files**: `app/src/main/java/com/mankeu/presentation/components/MankeuSheet.kt`, `app/src/androidTest/java/com/mankeu/presentation/components/MankeuSheetTest.kt`, `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`, `logs/ACTIVITY_LOG.md`.
-- **Verification**: connectedDebugAndroidTest MankeuSheetTest red then green; `:app:testDebugUnitTest :app:assembleDebug` pass; emulator: sheet with keyboard up stays open after swipes. Not verified: fixed-cost dropdown, real Gboard flicker (needs a real phone). HelpUi, EntryScreen, ManageScopeScreen still use raw `ModalBottomSheet`.
+- **Actions**: Added `MankeuSheetTest` (instrumented, red first). In `MankeuSheet` set `sheetGesturesEnabled = false`, removed the drag handle (top padding 20dp instead), removed `animateContentSize` from the content column and unused imports, rewrote the stale KDoc (it claimed snap points). Fix round 1: the same behaviour (no drag, no handle) applied to the raw `ModalBottomSheet` in EntryScreen (transaction form), HelpUi and ManageScopeScreen, with 20dp top padding; added `EntrySheetSwipeTest`. Audit doc marks swipe-dismiss verified, bounce/dropdown fixed but not retested.
+- **Files**: `app/src/main/java/com/mankeu/presentation/components/MankeuSheet.kt`, `app/src/androidTest/java/com/mankeu/presentation/components/MankeuSheetTest.kt`, `.../EntrySheetSwipeTest.kt`, `guide/HelpUi.kt`, `screens/EntryScreen.kt`, `screens/ManageScopeScreen.kt`, `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: connectedDebugAndroidTest (components package, 2 tests) red then green; `:app:testDebugUnitTest :app:assembleDebug` pass; emulator: sheet with keyboard up stays open after swipes. Not verified: fixed-cost dropdown, real Gboard flicker (needs a real phone). 
 
 ### [2026-10-29 14:00] [Claude Code (Opus 5.5) — Audit, grill, dan rencana redesign]
 - **Goal**: Owner asked to audit, grill (via question tool) and plan before any code change.

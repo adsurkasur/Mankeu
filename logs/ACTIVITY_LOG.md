@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 05:44] [Claude Code (Opus) — Fase 1 Task 2 review fix]
+- **Goal**: Fix the Important finding of the Task 2 review.
+- **Actions**: `docs/DATABASE_MIGRATIONS.md` sync-between-versions bullet now matches the code and DEC-028 §7 (a schema-12 phone refuses schema-13 change sets; a schema-13 phone accepts schema-12 ones and drops their old product columns/table). Same wrong direction corrected in the phase 1 plan's ruling §7.
+- **Files**: `docs/DATABASE_MIGRATIONS.md`, `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only; checked against `SyncEngine.applyRemote` (`changeSet.schemaVersion <= schemaVersion(db)`).
+
 ### [2026-10-29 05:38] [Claude Code (Opus) — Fase 1 Task 2: schema 13 dan lapisan data produk]
 - **Goal**: Fase 1 Task 2: schema 12 → 13 for the product model (sale units, per-batch recipe, product movements, expense → material link), migration, schema-12 backup upgrade and product data layer, with the old UI working through a legacy adapter.
 - **Actions**: New entities `ProductUnitEntity`, `ProductRecipeLineEntity`, `ProductMovementEntity`; `ProductEntity` loses `priceRupiah`, gains `batchYieldText`; `FinancialEventEntity.stockItemId`. `Migration12To13` (rebuild `products`, create the three tables, convert old rows through `LegacyProductShape`, recreate sync triggers); `BackupUpgrade` reshapes schema-12 snapshots the same way in `prepareRestore`. `ProductRecord` (spec, main unit, stock) replaces `ProductWithComponents`; repository `products`, `saveProduct(ProductDraft)`, `recordProduction`, `countProductStock`; v4 import, export, plan, ViewModel, PlanScreen and the entry form's product default go through the adapter / main sale unit. Material prices come from `basePriceRupiah` until Task 3. DEC-028 records the nine plan rulings (§7 corrected to the actual sync rule). Docs: DATABASE_MIGRATIONS (12 → 13), DOMAIN_MODEL, ER diagram.

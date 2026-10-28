@@ -59,8 +59,8 @@ Masing-masing dicatat di DEC-028 (Task 2). Format: keputusan — alasan — biay
    satuan dasar, satuan jual lamanya menjadi satuan jual pertama (isi 1, id tetap `<produk>-u0`), dan tiap komponen
    "Rp X untuk N unit" menjadi biaya bebas `round(X ÷ N)`. Pembulatan maksimal ±Rp0,5 per komponen per unit. Id
    ditentukan dari data, jadi dua HP yang bermigrasi sendiri-sendiri menghasilkan baris yang sama. Biaya bila salah: HPP produk lama bisa bergeser Rp1.
-7. **Sinkron antar versi berbeda:** HP schema 13 menolak menerima dari HP schema 12, karena perilaku itu sudah ada
-   (`schemaVersion <= own`). Perubahan produk yang dikirim HP schema 12 ke HP schema 13 kehilangan satuan jual dan
+7. **Sinkron antar versi berbeda:** HP schema 12 menolak menerima dari HP schema 13, karena perilaku itu sudah ada
+   (hanya menerima `schemaVersion <= own`); HP schema 13 tetap menerima dari HP schema 12. Perubahan produk yang dikirim HP schema 12 ke HP schema 13 kehilangan satuan jual dan
    resepnya. Catatan rilis: "perbarui semua HP". Biaya bila salah: produk yang diubah di HP lama selama masa transisi perlu diisi ulang.
 8. **Satuan jual pertama = satuan utama.** Satuan ini dipakai Rencana Usaha (target per bulan, BEP) dan sebagai isian
    awal form penjualan, sampai Fase 3 merombak Rencana. Biaya bila salah: urutan satuan perlu diatur ulang di editor.

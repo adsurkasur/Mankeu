@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 05:13] [Claude Code (Opus) — rencana Fase 1]
+- **Goal**: Write the detailed implementation plan for redesign phase 1 (spec #5, #6, #9, #20).
+- **Actions**: Read the current product, stock, plan, import/export, backup and sync code, then wrote `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md`: 7 tasks (domain HPP/stock; schema 13 with migration 12→13, schema-12 backup upgrade and a legacy-shape adapter; stock from sales and material price from latest purchase, both derived on read; template v5 product sheets; Produk tab and full-page editor; sale unit, material picker and HPP warning in the entry form; emulator acceptance and phase close). Nine plan-level rulings (reuse `stock_items` as materials, purchases do not add material stock, HPP snapshot moved to phase 2, etc.) are listed for owner review and become DEC-028 in Task 2. Roadmap row F1 and WORK_IN_PROGRESS point to the plan.
+- **Files**: `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md` (new), `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`, `docs/WORK_IN_PROGRESS.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only; no code changed. Self-review against the spec (coverage, placeholders, type consistency) done in the plan's last section.
+
 ### [2026-10-29 02:12] [Claude Code (Sonnet) — Fase 0 fix review akhir]
 - **Goal**: Fix the findings of the final whole-branch review of phase 0.
 - **Actions**: `SyncSchema.callback` now recreates the sync triggers and device id after the destructive fallback (flag in `onDestructiveMigration`, setup in `onOpen`, because Room has not recreated the tables yet at that point); stale KDoc and unused `MIGRATION_TRIGGERS_SINCE` removed; `AppDatabase.create` takes the database name (test seam). `GoogleIdentity.revokeAndSignOut` replaces signOut + separate revokeAccess on erase-with-cloud. DEC references fixed; DEC-027 gets consequences and open stale docs; flow-test, DATABASE_MIGRATIONS, CHANGELOG and redesign-spec wording corrected.

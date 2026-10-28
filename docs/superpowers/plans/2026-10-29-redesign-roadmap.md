@@ -9,7 +9,7 @@ hasil fase sebelumnya. Hanya Fase 0 yang sudah rinci.
 | Fase | Isi | Keputusan | Rencana rinci |
 |---|---|---|---|
 | 0 | Pembersihan dan bug sheet | #1, #8 (Firebase), #13 (sheet pendek), #16 (tur) | `2026-10-29-fase0-pembersihan.md` |
-| 1 | Model produk: satuan dasar + satuan jual, bahan, resep per batch, HPP, stok produk, Produksi, peringatan harga bahan | #5, #6, #9, #20 | ditulis saat mulai |
+| 1 | Model produk: satuan dasar + satuan jual, bahan, resep per batch, HPP, stok produk, Produksi, peringatan harga bahan | #5, #6, #9, #20 | `2026-10-29-fase1-produk-hpp.md` (snapshot HPP per penjualan pindah ke F2, lihat §Keputusan rencana 5) |
 | 2 | Penjualan nota multi-produk, status bayar, piutang, utang pemasok, konsinyasi, pelunasan; laba saat terjual | #2, #3, #7, #17 | ditulis saat mulai |
 | 3 | Navigasi baru, form halaman penuh, Rencana tanpa periode, unit tersembunyi, Beranda baru | #4, #13, #14, #15 | ditulis saat mulai |
 | 4 | Laporan: laba dengan HPP, arus kas terpisah, rencana vs realisasi, ringkas (tabel/lipat), grafik Canvas, bahasa awam, PDF formal | #3, #19 | ditulis saat mulai |

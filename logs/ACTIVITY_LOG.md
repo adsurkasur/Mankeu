@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 14:00] [Claude Code (Opus 5.5) — Audit, grill, dan rencana redesign]
+- **Goal**: Owner asked to audit, grill (via question tool) and plan before any code change.
+- **Actions**: Whole-repo ponytail audit (legacy migrations and cleanups, Firebase Auth, spotlight tours, Vico, dead skeleton, three data-copy paths). Grilled the owner in five rounds plus two follow-ups (plan period explained and removed; raw-material price changes added as decision 20). Wrote the redesign spec (20 decisions + audit), a phase roadmap (F0–F7 with acceptance per phase) and a bite-sized plan for phase 0. Recorded DEC-026.
+- **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`, `docs/superpowers/plans/2026-10-29-fase0-pembersihan.md`, `docs/WORK_IN_PROGRESS.md`, `logs/DECISION_LOG.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: plan facts checked against code (file:line for MankeuSheet, AppDatabase migrations, EncryptedBackupManager restore branches, Firebase wiring, tour references in 10 screens and 3 tests; Room 2.8.4, Compose BOM 2026.06.00). No code changed; plans not executed.
+
 ### [2026-10-29 12:45] [Claude Code (Opus 5.5) — Uji alur sebagai pengusaha baru]
 - **Goal**: After the 2026-10-28 entrepreneur demo the owner found the app confusing and asked for the flow to be walked on the emulator to understand the context, documented per checkpoint for handoff.
 - **Actions**: Read code for privacy (local data, encrypted Drive backup, no app lock), the date-range "batas waktu" (plan period edited in two places, used only by the plan) and DEC-011 history. Walked a fresh install as a banana-chip business on the emulator: create business, plan a product with a batch recipe and a fixed cost, record a 5-dus sale, open an expense form, Stok, and all three report tabs. Reproduced two owner-reported bottom-sheet bugs (swipe-to-scroll dismisses the sheet; dropdown placed at the pre-keyboard position) and traced likely causes in `MankeuSheet.kt`. Wrote the findings and a nine-point priority list. Recorded the owner's direction as DEC-025.

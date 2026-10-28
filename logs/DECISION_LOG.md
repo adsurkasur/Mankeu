@@ -1,5 +1,14 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-026] Redesign Around Products and Orders (20 Owner Decisions)
+- **Date**: 2026-10-29
+- **Status**: Accepted (owner, grill 2026-10-29). Planned in phases; phase 0 has a detailed plan, nothing implemented yet.
+- **Context**: The flow test (`docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`) showed the app is built around accounting books while owners think in products, batches, wholesale orders, credit and consignment. A whole-repo over-engineering audit found legacy code that collides with the redesign.
+- **Decision**: The 20 decisions in `docs/superpowers/specs/2026-10-29-redesign-spec.md`, in short: start clean from schema 12; receivables, consignment and supplier payables (no loans or interest), superseding DEC-011 K-1; profit recognised at sale minus HPP, cash flow separate; navigation Beranda / Catat / Produk / Laporan without the global Rencana/Realisasi switch; base unit plus sale units; HPP from a per-batch recipe of materials at their last purchase price, with a warning when it changes, and an HPP snapshot per sale; automatic product stock with a Produksi action; multi-product sales notes; a plan without a period (a normal month plus start-up capital); Firebase Auth removed; two data-copy paths; new Excel template only (old one rejected); optional app lock; due-date card plus notification via AlarmManager; full-screen long forms; units hidden until needed; spotlight tours removed; everyday language on screen, formal terms only in PDF.
+- **Alternatives considered**: per question in the grill; notably keeping the plan period (rejected: owners plan a normal month), HPP from production records or weighted average (deferred: too much input), cash-basis profit (rejected: overstates profit without HPP), keeping the mode switch with new labels (rejected: the confusion is structural).
+- **Supersedes**: DEC-011 K-1 (strict cash) once phase 2 lands; DEC-017 plan period once phase 3 lands; DEC-018 tours and DEC-020 Firebase account parts in phase 0.
+- **Affected components**: whole app; roadmap `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`.
+
 ### [DEC-025] Owner Sets Product Direction; Usefulness to Owners Over Inherited Rules
 - **Date**: 2026-10-29
 - **Status**: Accepted (owner, 2026-10-29). Strategy only; no code changed yet.

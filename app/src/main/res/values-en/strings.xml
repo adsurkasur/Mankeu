@@ -391,6 +391,7 @@
     <string name="settings_sound">Sound on touch</string>
     <string name="settings_sound_help">A short sound when you save or choose. Follows your phone’s touch-sound setting.</string>
     <string name="settings_contact_title">Contact us</string>
+    <string name="settings_help_desc">Short guides for every feature, with example screens.</string>
     <string name="settings_contact_desc">Questions, feedback, or a figure that looks wrong? Send a message; include the unit name and the transaction date so it can be traced.</string>
     <string name="settings_contact_btn">Send an email</string>
     <string name="settings_contact_subject">Mankeu feedback %1$s</string>
@@ -400,7 +401,7 @@
     <string name="settings_erase_btn">Delete all data…</string>
     <string name="dialog_erase_title">Delete all data?</string>
     <string name="dialog_erase_body">Every business, unit, record, business plan, stock item, import history, automatic recovery copy and local name on this phone will be deleted. This cannot be undone. Make a backup first if you still want to keep the data.</string>
-    <string name="dialog_erase_cloud">Also delete every Mankeu backup on Google Drive and the Mankeu sign-in account</string>
+    <string name="dialog_erase_cloud">Also delete every Mankeu backup and sync copy on Google Drive, and sign the Google account out of the app</string>
     <string name="dialog_erase_cloud_help">Other files in your Google Drive are not touched. You are signed out of Google in Mankeu afterwards.</string>
     <string name="dialog_erase_type">Type %1$s (capital letters) to continue</string>
     <string name="dialog_erase_word">DELETE</string>

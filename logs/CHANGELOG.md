@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Bottom sheets no longer close when you scroll a long form, and the keyboard no longer makes them bounce.
+
+### Removed
+- Spotlight tours (the help center and the ? help sheet stay).
+- Firebase Auth: sign-in uses the Google account directly.
+- Support for data and backups from before 0.1.0 (schema 12 is the minimum; older backups are refused).
 
 ## [0.1.0] - 2026-10-27
 ### Added

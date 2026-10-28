@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 02:03] [Claude Code (Sonnet) — Fase 0 Task 6: tutup fase]
+- **Goal**: Close redesign phase 0 (Task 5 skipped, see below) and record DEC-027.
+- **Actions**: Task 5 not done: `SkeletonMetricGrid` is used by `HomeScreen.kt` (loading state), so it is not dead code and was kept. Task 6: corrected the invented clock times of the two earlier entries to the real commit times (829f986 00:57, 5881cb4 00:38); `docs/DATABASE_MIGRATIONS.md` now states schema 12 is the floor; `dialog_erase_cloud` reworded (no Mankeu account), new `settings_help_desc` shown on the Settings Pusat Bantuan card (ID/EN); DEC-027, CHANGELOG `[Unreleased]`, WORK_IN_PROGRESS updated.
+- **Files**: `logs/{ACTIVITY_LOG,DECISION_LOG,CHANGELOG}.md`, `docs/{DATABASE_MIGRATIONS,WORK_IN_PROGRESS}.md`, `AccountSettingsScreen.kt`, `res/values{,-en}/strings.xml`.
+- **Verification**: `:app:testDebugUnitTest` 68 passed, 0 failed; `:app:lintDebug` and `:app:assembleDebug` green; `:app:connectedDebugAndroidTest` 43 tests finished, 0 failed, 2 skipped (HelpScreenshotTest, ModuleScreenshotTest are skipped in the normal run, so the Lampiran A failure was not exercised). Clean-install smoke on the emulator: no tour offer, business created, product added in Rencana, one Rp100.000 sale recorded, Laporan shows income Rp100.000 and closing cash Rp100.000. Not verified: real Google sign-in, Gboard bounce.
+
 ### [2026-10-29 02:00] [Claude Code (Sonnet) — Fase 0 Task 4: tanpa tur]
 - **Goal**: Remove spotlight tours, keep Pusat Bantuan (spec #16, DEC-026).
 - **Actions**: Deleted `SpotlightTour.kt`, `TourHost.kt`, `Tour`/`tourFor`, tour target modifiers and list-state plumbing on all screens, the welcome offer card, tour prefs, Settings tour switch/reset, scope-sheet ? button; `TourTarget` became `ShowPlace` (names help screenshots only). "Tunjukkan di aplikasi" still navigates (page, book mode, overlay) without highlight. The ? button opens a help sheet of the page's articles via `articlesFor(destination, bookMode, overlay)`. Tour strings removed at the source (`docs/guide/help_strings.py`, regenerated) and in strings.xml ID/EN. Docs notes (WORK_IN_PROGRESS, ARCHITECTURE, UX_AND_ACCESSIBILITY) updated.
@@ -30,13 +36,13 @@
 - **Files**: `app/src/main/java/com/mankeu/presentation/components/MankeuSheet.kt`, `app/src/androidTest/java/com/mankeu/presentation/components/MankeuSheetTest.kt`, `.../EntrySheetSwipeTest.kt`, `guide/HelpUi.kt`, `screens/EntryScreen.kt`, `screens/ManageScopeScreen.kt`, `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`, `logs/ACTIVITY_LOG.md`.
 - **Verification**: connectedDebugAndroidTest (components package, 2 tests) red then green; `:app:testDebugUnitTest :app:assembleDebug` pass; emulator: sheet with keyboard up stays open after swipes. Not verified: fixed-cost dropdown, real Gboard flicker (needs a real phone). 
 
-### [2026-10-29 14:00] [Claude Code (Opus 5.5) — Audit, grill, dan rencana redesign]
+### [2026-10-29 00:57] [Claude Code (Opus 5.5) — Audit, grill, dan rencana redesign]
 - **Goal**: Owner asked to audit, grill (via question tool) and plan before any code change.
 - **Actions**: Whole-repo ponytail audit (legacy migrations and cleanups, Firebase Auth, spotlight tours, Vico, dead skeleton, three data-copy paths). Grilled the owner in five rounds plus two follow-ups (plan period explained and removed; raw-material price changes added as decision 20). Wrote the redesign spec (20 decisions + audit), a phase roadmap (F0–F7 with acceptance per phase) and a bite-sized plan for phase 0. Recorded DEC-026.
 - **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`, `docs/superpowers/plans/2026-10-29-fase0-pembersihan.md`, `docs/WORK_IN_PROGRESS.md`, `logs/DECISION_LOG.md`, `logs/ACTIVITY_LOG.md`.
 - **Verification**: plan facts checked against code (file:line for MankeuSheet, AppDatabase migrations, EncryptedBackupManager restore branches, Firebase wiring, tour references in 10 screens and 3 tests; Room 2.8.4, Compose BOM 2026.06.00). No code changed; plans not executed.
 
-### [2026-10-29 12:45] [Claude Code (Opus 5.5) — Uji alur sebagai pengusaha baru]
+### [2026-10-29 00:38] [Claude Code (Opus 5.5) — Uji alur sebagai pengusaha baru]
 - **Goal**: After the 2026-10-28 entrepreneur demo the owner found the app confusing and asked for the flow to be walked on the emulator to understand the context, documented per checkpoint for handoff.
 - **Actions**: Read code for privacy (local data, encrypted Drive backup, no app lock), the date-range "batas waktu" (plan period edited in two places, used only by the plan) and DEC-011 history. Walked a fresh install as a banana-chip business on the emulator: create business, plan a product with a batch recipe and a fixed cost, record a 5-dus sale, open an expense form, Stok, and all three report tabs. Reproduced two owner-reported bottom-sheet bugs (swipe-to-scroll dismisses the sheet; dropdown placed at the pre-keyboard position) and traced likely causes in `MankeuSheet.kt`. Wrote the findings and a nine-point priority list. Recorded the owner's direction as DEC-025.
 - **Files**: `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md` (new), `docs/WORK_IN_PROGRESS.md`, `logs/DECISION_LOG.md`, `logs/ACTIVITY_LOG.md`.

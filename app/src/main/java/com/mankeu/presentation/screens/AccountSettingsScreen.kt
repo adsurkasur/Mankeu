@@ -149,6 +149,11 @@ fun SettingsScreen(
             ) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.help_center_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(
+                        stringResource(R.string.settings_help_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     // Was an OutlinedButton: a hairline border on a surface-coloured card gave
                     // this the visual weight of a caption, and the owner reported not seeing it as
                     // an action at all. FilledTonalButton is Material 3's own answer for a

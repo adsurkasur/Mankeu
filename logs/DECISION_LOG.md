@@ -1,5 +1,16 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-027] Phase 0 Redesign: Schema 12 Minimum, No Firebase Auth, No Spotlight Tours
+- **Date**: 2026-10-29
+- **Status**: Accepted and implemented on branch `fase0-pembersihan` (not yet merged when written).
+- **Context**: DEC-026 starts the redesign with a cleanup phase so later phases build on less legacy code.
+- **Decision**: (1) Schema 12 is the oldest supported: migrations 3 to 11, `StrictCashCleanup`, `ReversalCleanup` and `LegacyPlanConversion` are removed, `fallbackToDestructiveMigrationFrom(1..11)`, `OLDEST_RESTORABLE_SCHEMA = 12`, older backups refused. (2) Firebase Auth is removed; `GoogleIdentity` reads Google Sign-In directly, and erase-with-cloud signs the Google account out. (3) Spotlight tours are removed; the help center and per-page help sheet stay (`TourTarget` renamed `ShowPlace`). (4) Bottom sheets can no longer be drag-dismissed, and the drag handle and `animateContentSize` race with `imePadding` are gone.
+- **Rationale/alternatives**: no real user data exists before 0.1.0, so keeping old-schema paths only costs tests and risk. Keeping Firebase Auth gave no function the Drive token did not already give.
+- **Supersedes**: migration parts of DEC-006, DEC-011, DEC-017, DEC-019; tour part of DEC-018; Firebase account part of DEC-020.
+- **Not verified**: real Google sign-in and the Drive token (emulator has no account); the keyboard bounce and dropdown position on a real keyboard (Gboard); the `ModuleScreenshotTest` "Lampiran A" failure, which predates this phase (reproduced on the baseline) and remains open.
+- **Open for the owner**: the privacy policy, store listing, Data Safety form and `CLOUD_SYNC_AND_AUTH` doc still describe a Firebase account and need an owner decision before the next Play upload.
+- **Affected components**: `AppDatabase`, `EncryptedBackupManager`, auth/sync, `MankeuSheet` and raw sheets, help/guide UI, build and CI config.
+
 ### [DEC-026] Redesign Around Products and Orders (20 Owner Decisions)
 - **Date**: 2026-10-29
 - **Status**: Accepted (owner, grill 2026-10-29). Planned in phases; phase 0 has a detailed plan, nothing implemented yet.

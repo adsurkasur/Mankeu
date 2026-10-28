@@ -393,6 +393,7 @@
     <string name="settings_sound">Suara saat menyentuh</string>
     <string name="settings_sound_help">Bunyi pendek saat menyimpan atau memilih. Mengikuti pengaturan suara sentuh di HP kamu.</string>
     <string name="settings_contact_title">Hubungi Kami</string>
+    <string name="settings_help_desc">Panduan singkat untuk setiap fitur, lengkap dengan contoh tampilannya.</string>
     <string name="settings_contact_desc">Ada pertanyaan, masukan, atau menemukan hitungan yang janggal? Kirim pesan; sertakan nama unit usaha dan tanggal transaksinya agar mudah ditelusuri.</string>
     <string name="settings_contact_btn">Kirim email</string>
     <string name="settings_contact_subject">Masukan Mankeu %1$s</string>
@@ -402,7 +403,7 @@
     <string name="settings_erase_btn">Hapus semua data…</string>
     <string name="dialog_erase_title">Hapus semua data?</string>
     <string name="dialog_erase_body">Semua usaha, unit, catatan, rencana usaha, stok, riwayat impor, salinan pemulihan otomatis, dan nama lokal di HP ini akan dihapus. Ini tidak dapat dibatalkan. Buat cadangan dulu bila datanya masih ingin disimpan.</string>
-    <string name="dialog_erase_cloud">Hapus juga semua cadangan Mankeu di Google Drive dan akun masuk Mankeu</string>
+    <string name="dialog_erase_cloud">Hapus juga semua cadangan dan salinan sinkronisasi Mankeu di Google Drive, lalu keluarkan akun Google dari aplikasi</string>
     <string name="dialog_erase_cloud_help">Berkas lain di Google Drive kamu tidak tersentuh. Setelah ini kamu keluar dari akun Google di Mankeu.</string>
     <string name="dialog_erase_type">Ketik %1$s (huruf besar) untuk melanjutkan</string>
     <string name="dialog_erase_word">HAPUS</string>

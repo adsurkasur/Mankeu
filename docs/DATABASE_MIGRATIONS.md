@@ -2,6 +2,8 @@
 
 The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported schemas live in `app/schemas/com.mankeu.data.AppDatabase/<version>.json` and must be committed with every schema change.
 
+> **Schema 12 is the floor (DEC-026, DEC-027).** The migrations 3→11 and their cleanups (`StrictCashCleanup`, `ReversalCleanup`, `LegacyPlanConversion`) were removed. Installs older than schema 12 are recreated empty (`fallbackToDestructiveMigrationFrom(1..11)`), and backups older than schema 12 are refused (`OLDEST_RESTORABLE_SCHEMA = 12`). The version history and the compatibility notes below are history of how those schemas behaved, not current behaviour.
+
 ## Version history
 
 | Schema | Shipped in | Change | Migration |
@@ -18,7 +20,7 @@ The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported 
 | 11 | unreleased | Ubah and Hapus replace "Balik Transaksi" (DEC-019): every reversal pair is deleted; `financial_events.status/reversesEventId/reversedByEventId` and `journal_entries.reversalOfJournalId` (with their indices) dropped | `MIGRATION_10_11`: `ReversalCleanup.run` deletes each `REVERSAL` row and the original it undid, with journals, postings and provenance (each pair nets to zero, so cash and reports do not change) and leaves a SYSTEM notice; rebuild both tables, then `SyncSchema.createTriggers`. Verified by `MigrationTest.migrate10To11…` |
 | 12 | unreleased | Sync becomes a release feature (DEC-024): change capture only while `sync_meta.sync_enabled` is set | `MIGRATION_11_12`: `SyncSchema.createTriggers` with the new condition, `DELETE FROM sync_outbox`. No table changes; backups of any earlier schema restore as before. Verified by `MigrationTest.migrate11To12…` |
 
-`fallbackToDestructiveMigration` is **not** configured. An upgrade without a matching migration crashes on open instead of deleting a user's books, and that crash is caught in development by installing over existing data.
+Since phase 0, `fallbackToDestructiveMigrationFrom(1..11)` is configured for schemas 1 to 11 only (the app never shipped them to real users beyond testers). From schema 12 on there is no fallback: an upgrade without a matching migration crashes on open instead of deleting a user's books, and that crash is caught in development by installing over existing data.
 
 ## Re-import and upgrade notes
 
@@ -27,7 +29,7 @@ The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported 
 
 ## Backup compatibility
 
-`EncryptedBackupManager` restores a backup whose schema is between `OLDEST_RESTORABLE_SCHEMA` (3) and the app's current schema, inclusive.
+`EncryptedBackupManager` restores a backup whose schema is between `OLDEST_RESTORABLE_SCHEMA` (12; was 3 before phase 0) and the app's current schema, inclusive.
 
 | Backup made on | Restores on v0.0.4 | v0.0.5 | v0.0.6 |
 | :-- | :-: | :-: | :-: |
@@ -35,7 +37,7 @@ The Room database is `mankeu.db`, class `com.mankeu.data.AppDatabase`. Exported 
 | v0.0.5 (schema 4) | no | yes | yes |
 | v0.0.6 (schema 5) | no | no | yes |
 
-The current build (schema 12) restores all three rows above, plus schema 6 to 11 backups. A backup older than schema 10 restores with the new columns at their SQL defaults: products sell from month 1, stock is shared, batches have no period to undo.
+The current build (schema 12) refuses every backup older than schema 12, so the rows above and the notes below only describe the old behaviour. Previously it restored all three rows above, plus schema 6 to 11 backups. A backup older than schema 10 restores with the new columns at their SQL defaults: products sell from month 1, stock is shared, batches have no period to undo.
 
 - An older snapshot is restored by inserting only the columns the live table still has. Tables a later schema retired (`units`, `obligations`, `settlements`) are ignored.
 - A snapshot older than schema 11 may hold "Balik Transaksi" pairs. Their columns no longer exist, so `EncryptedBackupManager` finds the pairs in the snapshot itself and passes their ids to `ReversalCleanup.delete` after restore (same deletion and notice as `MIGRATION_10_11`).

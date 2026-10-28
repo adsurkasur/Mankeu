@@ -46,7 +46,7 @@ class TemplateImportTest {
         assertEquals(
             listOf(
                 ImportTransaction("Transaksi!A2", DAY, "Setoran modal awal", "Setoran Modal Pemilik", incoming = true, amountRupiah = 5_000_000),
-                ImportTransaction("Transaksi!A3", DAY, "Beli kopi", "Bahan Baku & Stok", incoming = false, amountRupiah = 1_150_000, costNature = CostNature.FIXED, quantityText = "10", unit = "kg", materialName = "Gula"),
+                ImportTransaction("Transaksi!A3", DAY, "Beli kopi", "Bahan Baku & Stok", incoming = false, amountRupiah = 1_150_000, costNature = CostNature.FIXED, quantityText = "10", unit = "kg", materialName = "Gula", unitPriceRupiah = 115_000),
                 ImportTransaction("Transaksi!A4", DAY, "Jual kopi", "Penjualan & Jasa", incoming = true, amountRupiah = 4_000_000, productName = "Kopi Susu", quantityText = "40", unit = "pak"),
                 ImportTransaction("Transaksi!A5", DAY, "Mesin espresso", "Pembelian Aset", incoming = false, amountRupiah = 3_600_000, usefulLifeMonths = 24),
             ),
@@ -281,6 +281,43 @@ class TemplateImportTest {
 
         assertTrue(errors.joinToString(), "Lembar \"Satuan Jual\" tidak ada." in errors)
         assertTrue(errors.joinToString(), "Lembar \"Produk\" kolom B1 harus \"Satuan Dasar\", tertulis \"Satuan\"." in errors)
+    }
+
+    @Test
+    fun `an archived material used by a recipe and a purchase keeps its Bahan through export and import`() {
+        val archived = StockItemEntity(id = "t", businessId = "b", name = "Tepung", unit = "kg", basePriceRupiah = 12_000, createdAtEpochMillis = 0, archived = true)
+        val b = bundle()
+        val withArchived = b.copy(
+            stockItems = b.stockItems + archived,
+            products = b.products.map { r -> r.copy(recipe = r.recipe + ProductRecipeLineEntity(id = "k3", productId = "kopi", name = "Tepung", stockItemId = "t", quantityText = "1", sortOrder = 2)) },
+            books = b.books.map { book ->
+                if (book.book.mode != BookMode.REALIZATION.name) book
+                else book.copy(events = book.events + event("e7", FinancialEventType.CASH_EXPENSE, 24_000, "Beli tepung", "Bahan Baku & Stok", createdAt = 7).copy(stockItemId = "t", quantityText = "2", unit = "kg"))
+            },
+        )
+
+        val preview = importer.preview("ekspor.xlsx", FinanceWorkbookExporter().export(withArchived))
+
+        assertEquals(emptyList<String>(), preview.errors)
+        assertEquals("Tepung", preview.products.single().recipe.single { it.name == "Tepung" }.materialName)
+        assertEquals("Tepung", preview.transactions.single { it.description == "Beli tepung" }.materialName)
+        // Re-import resolves a Bahan only through Stok Barang, so the archived material must be listed there.
+        assertTrue(preview.stockItems.joinToString(), preview.stockItems.any { it.name == "Tepung" })
+    }
+
+    @Test
+    fun `a manual unit price that amount divided by quantity cannot reproduce survives the round trip`() {
+        val b = bundle()
+        val manual = b.copy(
+            books = b.books.map { book ->
+                if (book.book.mode != BookMode.REALIZATION.name) book
+                else book.copy(events = book.events + event("e8", FinancialEventType.CASH_EXPENSE, 4_667, "Beli gula", "Bahan Baku & Stok", createdAt = 8).copy(stockItemId = "s", quantityText = "0.3", unit = "kg", unitPriceRupiah = 15_555))
+            },
+        )
+
+        val row = importer.preview("ekspor.xlsx", FinanceWorkbookExporter().export(manual)).transactions.single { it.description == "Beli gula" }
+
+        assertEquals(15_555L, row.unitPriceRupiah)
     }
 
     // --- fixtures ---------------------------------------------------------------------------

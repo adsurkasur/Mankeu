@@ -124,4 +124,10 @@ class TransactionCalculationTest {
         assertEquals("2,5", formulaResult.quantityText)
         assertEquals(20_000L, formulaResult.unitPriceRupiah)
     }
+
+    @Test
+    fun `a derived purchase price that rounds to zero is no price`() {
+        assertEquals(27_500L, TransactionCalculation.derivedUnitPriceRupiah(55_000, BigDecimal("2")))
+        assertNull(TransactionCalculation.derivedUnitPriceRupiah(1, BigDecimal("3")))
+    }
 }

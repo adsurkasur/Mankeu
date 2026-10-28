@@ -61,7 +61,7 @@ class FinanceWorkbookExporter(
     fun template(categories: List<TemplateCategory>): ByteArray = writer.write(
         listOf(
             guide(emptyList()),
-            WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList(), setOf(3, 4)),
+            WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList(), setOf(3, 4, 11)),
             WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList(), setOf(5, 6)),
             WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
             WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList(), setOf(3)),
@@ -76,6 +76,8 @@ class FinanceWorkbookExporter(
         val categories = bundle.categories.associateBy { it.id }
         val productNames = bundle.products.associate { it.product.id to it.product.name }
         val stockNames = bundle.stockItems.associate { it.id to it.name }
+        val referencedStock = bundle.products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } }.toSet() +
+            bundle.books.flatMap { b -> b.events.mapNotNull { it.stockItemId } }
         return writer.write(
             listOfNotNull(
                 guide(
@@ -94,7 +96,7 @@ class FinanceWorkbookExporter(
                 products(bundle.products),
                 saleUnits(bundle.products),
                 recipes(bundle.products, stockNames),
-                stock(bundle.stockItems),
+                stock(bundle.stockItems, referencedStock),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
                 reportTable(bundle.books),
                 bundle.plan?.let(::feasibilityTable),
@@ -122,7 +124,7 @@ class FinanceWorkbookExporter(
             listOf("Format", MankeuTemplate.MARKER),
             listOf("Versi format", MankeuTemplate.VERSION),
         ) + context + listOf(
-            listOf("Transaksi", "Satu baris satu transaksi buku Realisasi. Isi Pemasukan ATAU Pengeluaran saja. Tanggal YYYY-MM-DD. Penjualan: Produk, Jumlah, dan Satuan (satuan jual produk itu). Belanja bahan: Bahan (nama di lembar Stok Barang), Jumlah, dan Satuan beli; harga bahan mengikuti belanja terbaru. Sifat Biaya (Tetap/Variabel) opsional, mengganti sifat kategori. Umur Pakai hanya untuk beli aset."),
+            listOf("Transaksi", "Satu baris satu transaksi buku Realisasi. Isi Pemasukan ATAU Pengeluaran saja. Tanggal YYYY-MM-DD. Penjualan: Produk, Jumlah, dan Satuan (satuan jual produk itu). Belanja bahan: Bahan (nama di lembar Stok Barang), Jumlah, dan Satuan beli; harga bahan mengikuti belanja terbaru. Harga Satuan (Rp) opsional; kosong berarti Pengeluaran dibagi Jumlah. Sifat Biaya (Tetap/Variabel) opsional, mengganti sifat kategori. Umur Pakai hanya untuk beli aset."),
             listOf("Kategori", "Tulis nama kategori. Kategori yang belum ada dibuat otomatis saat impor. Lihat daftar di lembar Kategori."),
             listOf("Modal & prive", "Setoran modal: Pemasukan berkategori 'Setoran Modal Pemilik'. Ambil uang pribadi: Pengeluaran berkategori 'Ambil untuk Pribadi (Prive)'. Beli alat: Pengeluaran berkategori 'Beli Peralatan & Aset'."),
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
@@ -152,9 +154,10 @@ class FinanceWorkbookExporter(
                     event.usefulLifeMonths,
                     event.unit.takeIf { event.productId != null || event.stockItemId != null },
                     event.stockItemId?.let(stockNames::get),
+                    event.unitPriceRupiah.takeIf { event.productId != null || event.stockItemId != null },
                 )
             },
-        currencyColumns = setOf(3, 4),
+        currencyColumns = setOf(3, 4, 11),
     )
 
     private fun budget(items: List<BudgetItemEntity>, categories: Map<String, CategoryEntity>) = WorkbookTable(
@@ -205,10 +208,11 @@ class FinanceWorkbookExporter(
         currencyColumns = setOf(4),
     )
 
-    private fun stock(items: List<StockItemEntity>) = WorkbookTable(
+    /** Archived items are written only when something still names them, so the re-import resolves every Bahan. */
+    private fun stock(items: List<StockItemEntity>, referenced: Set<String>) = WorkbookTable(
         name = MankeuTemplate.STOCK,
         headers = MankeuTemplate.STOCK_HEADERS,
-        rows = items.filterNot { it.archived }.map { listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.currentStockText), quantity(it.minAlertStockText)) },
+        rows = items.filter { !it.archived || it.id in referenced }.map { listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.currentStockText), quantity(it.minAlertStockText)) },
         currencyColumns = setOf(2),
     )
 

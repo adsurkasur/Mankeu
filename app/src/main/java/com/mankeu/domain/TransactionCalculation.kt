@@ -46,6 +46,10 @@ object TransactionCalculation {
             .longValueExact()
     }
 
+    /** [computeUnitPriceRupiah] for a purchase; a result that rounds to Rp0 is no price (null), so it cannot zero a material. */
+    fun derivedUnitPriceRupiah(totalRupiah: Long, quantity: BigDecimal): Long? =
+        computeUnitPriceRupiah(totalRupiah, quantity).takeIf { it > 0 }
+
     /**
      * Validates whether a total amount is mathematically consistent with quantity and unit price.
      * Returns true if either quantity or unit price is absent (lump-sum), or if total == round(quantity * unitPrice).

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 06:10] [Claude Code (Opus) — Fase 1 Task 4 fix round 1]
+- **Goal**: Review fixes I1 (archived material lost on export) and I2 (manual unit price changed by round trip) for template v5.
+- **Actions**: Export now writes archived stock items that a recipe line or transaction names (`buildProjectExportBundle` loads them; `Stok Barang` lists them). Transaksi gains `Harga Satuan (Rp)` (column L): exported for product/material rows, read into `ImportTransaction.unitPriceRupiah`, used by `commitImport` before the `withPurchasePrice` fallback. `TransactionCalculation.derivedUnitPriceRupiah` (pure, null when Rp0) now backs `withPurchasePrice`. Scale-simulation asset files got the new header.
+- **Files**: `importer/ImportModels.kt`, `importer/FinanceWorkbookImporter.kt`, `exporter/FinanceWorkbookExporter.kt`, `data/FinanceRepository.kt`, `domain/TransactionCalculation.kt`, tests `TemplateImportTest`, `TransactionCalculationTest`, five `androidTest/assets/simulasi/*.xlsx`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: new tests red first (3 failures in TemplateImportTest; unresolved `derivedUnitPriceRupiah`), then `:app:testDebugUnitTest` green; connected ImportCommitTest + ScaleSimulationTest + ViewModelFlowsTest 15 passed.
+
 ### [2026-10-29 05:59] [Claude Code (Opus) â€” Fase 1 Task 4: template Excel v5 untuk lembar produk]
 - **Goal**: Fase 1 Task 4: Excel template v5 so an export of the new product shape re-imports without loss (DEC-012, DEC-028 Â§9).
 - **Actions**: `MankeuTemplate` v5: Produk (Satuan Dasar, Hasil per Batch, Target, Mulai Dijual), new Satuan Jual, Resep Produk (Bahan, Jumlah per Batch, Biaya per Batch), Transaksi + Satuan, Bahan; `OPTIONAL` removed. `ImportProduct` carries `units` and `recipe` (`ImportSaleUnit`, `ImportRecipeLine`); `ImportComponent` removed. Importer validates the new sheets cell by cell. Exporter writes them and no longer uses `LegacyProductShape` or `materialPrices`. `reviewImport` reports unknown materials and units that are not the product's; `commitImport` inserts stock before products, links recipe lines and purchases to materials and prices purchases with `withPurchasePrice`. Carry-over fix: `withPurchasePrice` leaves the unit price null when amount / quantity rounds to Rp0.

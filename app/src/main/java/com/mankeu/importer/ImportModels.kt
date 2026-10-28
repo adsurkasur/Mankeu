@@ -31,7 +31,7 @@ object MankeuTemplate {
 
     val TRANSACTION_HEADERS = listOf(
         "Tanggal", "Keterangan", "Kategori", "Pemasukan (Rp)", "Pengeluaran (Rp)",
-        "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)", "Satuan", "Bahan",
+        "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)", "Satuan", "Bahan", "Harga Satuan (Rp)",
     )
     val BUDGET_HEADERS = listOf(
         "Bulan", "Kategori", "Item", "Jumlah", "Satuan", "Harga Satuan (Rp)", "Total (Rp)",
@@ -85,6 +85,8 @@ data class ImportTransaction(
     /** Sale unit (sales) or purchase unit (material purchases). */
     val unit: String? = null,
     val materialName: String? = null,
+    /** As typed in the entry form; blank means amount / quantity (material purchases). */
+    val unitPriceRupiah: Long? = null,
 )
 
 /** One `Rencana Anggaran` row, for the Proyeksi book. */

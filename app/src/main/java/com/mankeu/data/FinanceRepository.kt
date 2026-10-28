@@ -194,6 +194,7 @@ class FinanceRepository(private val database: AppDatabase) {
             val business = dao.getBusiness(project.businessId) ?: error("Usaha tidak ditemukan.")
             val categories = dao.getCategories(business.id)
             val plan = planAnalysis(project, categories)
+            val products = productsOf(project.id)
             val exportBooks = ensureBookPair(project.id).values.map { book ->
                 // Proyeksi reports from the business plan when there is one, as on every screen.
                 val summary = plan?.summary?.takeIf { book.mode == BookMode.PROJECTION.name } ?: dao.getPostingRows(book.id).map { PostingTotalRow(it.cashFlowRole, it.account, it.side, it.amountRupiah) }.summary()
@@ -212,11 +213,19 @@ class FinanceRepository(private val database: AppDatabase) {
                 importBatches = dao.getImportBatches(project.id),
                 notices = dao.getImportNotices(project.id),
                 provenance = dao.getProvenance(project.id),
-                stockItems = stockDao.getStockItems(business.id, project.id),
-                products = productsOf(project.id),
+                stockItems = exportedStock(business.id, project.id, products, exportBooks),
+                products = products,
                 plan = plan,
             )
         }
+
+    /** What the unit sees, plus archived items a recipe line or a transaction still names, so a re-import can resolve them. */
+    private suspend fun exportedStock(businessId: String, projectId: String, products: List<ProductRecord>, books: List<FinanceExportBook>): List<StockItemEntity> {
+        val visible = stockDao.getStockItems(businessId, projectId)
+        val referenced = (products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } } + books.flatMap { b -> b.events.mapNotNull { it.stockItemId } }).toSet()
+        val missing = (referenced - visible.map { it.id }.toSet()).mapNotNull { stockDao.getStockItem(it) }.filter { it.businessId == businessId }
+        return visible + missing
+    }
 
     suspend fun exportProjectWorkbook(projectId: String): ByteArray =
         FinanceWorkbookExporter().export(buildProjectExportBundle(projectId))
@@ -681,8 +690,7 @@ class FinanceRepository(private val database: AppDatabase) {
     private fun MoneyEvent.withPurchasePrice(): MoneyEvent {
         if (stockItemId == null || unitPriceRupiah != null) return this
         val quantity = TransactionCalculation.parseQuantity(quantityText) ?: return this
-        // A tiny purchase can round to Rp0; that is no price, and must not zero the material.
-        return copy(unitPriceRupiah = TransactionCalculation.computeUnitPriceRupiah(amountRupiah, quantity).takeIf { it > 0 })
+        return copy(unitPriceRupiah = TransactionCalculation.derivedUnitPriceRupiah(amountRupiah, quantity))
     }
 
     /**
@@ -919,6 +927,7 @@ class FinanceRepository(private val database: AppDatabase) {
                     usefulLifeMonths = row.usefulLifeMonths,
                     unit = row.unit,
                     stockItemId = row.materialName?.let { materialIds.getValue(normalize(it)) },
+                    unitPriceRupiah = row.unitPriceRupiah,
                 ).withPurchasePrice(),
             )
         }

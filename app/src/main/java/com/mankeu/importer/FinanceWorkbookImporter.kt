@@ -89,6 +89,7 @@ class FinanceWorkbookImporter(
             usefulLifeMonths = row.months(8, errors),
             unit = row.text(9),
             materialName = row.text(10),
+            unitPriceRupiah = row.money(11, errors),
         )
     }
 

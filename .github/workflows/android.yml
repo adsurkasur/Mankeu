@@ -25,45 +25,6 @@ jobs:
           packages: platform-tools
       - name: Install Android platform
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
-      - name: Decode Google Services Configuration
-        run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" ]; then
-            echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > app/google-services.json
-            echo "Decoded google-services.json from secret"
-          elif [ ! -f "app/google-services.json" ]; then
-            echo "Creating mock google-services.json fallback"
-            cat << 'EOF' > app/google-services.json
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "mankeu-app",
-              "storage_bucket": "mankeu-app.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.mankeu"
-                  }
-                },
-                "oauth_client": [],
-                "api_key": [
-                  {
-                    "current_key": "dummy_api_key"
-                  }
-                ],
-                "services": {
-                  "analytics_service": {
-                    "status": 1
-                  }
-                }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOF
-          fi
       - name: Verify domain, lint, debug APK, and instrumented-test compile
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug compileDebugAndroidTestSources
 
@@ -85,17 +46,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Mock google-services.json
-        run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" ]; then
-            echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > app/google-services.json
-          else
-            cat << 'EOF' > app/google-services.json
-          {"project_info":{"project_number":"000000000000","project_id":"mankeu-app","storage_bucket":"mankeu-app.appspot.com"},
-           "client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000000000","android_client_info":{"package_name":"com.mankeu"}},
-           "oauth_client":[],"api_key":[{"current_key":"dummy_api_key"}],"services":{}}],"configuration_version":"1"}
-          EOF
-          fi
       - name: Instrumented tests on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:

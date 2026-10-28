@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             initializer {
                 with(application as MankeuApplication) {
                     AppViewModel(
-                        repository, workbookImporter, backupManager, authService, cloudBackupClient,
+                        repository, workbookImporter, backupManager, identity, cloudBackupClient,
                         syncController = syncController,
                         rememberedSelection = readSelection(),
                         onSelectionChanged = ::writeSelection,

@@ -70,7 +70,7 @@ keytool -genkey -v \
 ```
 
 ### Step 2: Extract SHA-1 and SHA-256 Fingerprints
-To ensure Firebase Authentication (Google Sign-In) and Google Drive API integration work on production builds:
+To ensure Google Sign-In and Google Drive API integration work on production builds:
 
 ```bash
 keytool -list -v -keystore arina-release.jks -alias arina-release
@@ -83,12 +83,11 @@ Certificate fingerprints:
   SHA256: YY:YY:YY:YY:YY:...
 ```
 
-### Step 3: Register Release SHA-1 in Firebase Console
-1. Open the [Firebase Console](https://console.firebase.google.com/).
-2. Select the `umkm-man-keu` project.
-3. Go to **Project Settings** (`⚙️`) -> **Your apps** -> select `com.mankeu`.
-4. Click **Add fingerprint** and paste the **SHA-1** and **SHA-256** values from the release keystore.
-5. Re-download `google-services.json` if configuration changes were made.
+### Step 3: Register Release SHA-1 on the Google Cloud OAuth client
+Mankeu uses Google Sign-In directly (no Firebase, no `google-services.json`; spec #8).
+1. Open [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
+2. Open (or create) the **Android** OAuth client for package `com.mankeu`.
+3. Paste the **SHA-1** from the release keystore (and the Play App Signing SHA-1 once the app is on Play).
 
 ---
 
@@ -133,7 +132,6 @@ Configure the following secrets in **GitHub Repository** -> **Settings** -> **Se
 | `KEY_ALIAS` | Key alias inside the keystore | `arina-release` |
 | `KEY_PASSWORD` | Password for the specific key alias | Plaintext password |
 | `PLAY_STORE_SERVICE_ACCOUNT_JSON` | Entire plaintext content of Google Play API Service Account JSON | Copy & paste downloaded `.json` content directly |
-| `GOOGLE_SERVICES_JSON_BASE64` *(Optional)* | Base64-encoded `google-services.json` if not committed directly | `base64 -w 0 app/google-services.json` |
 
 ---
 

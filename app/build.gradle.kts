@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    alias(libs.plugins.google.services)
 }
 
 android {
@@ -120,9 +119,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     ksp(libs.androidx.room.compiler)
 
-    // Firebase Authentication for user identity (local-first; no analytics per O-011)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
 
     testImplementation(libs.junit)

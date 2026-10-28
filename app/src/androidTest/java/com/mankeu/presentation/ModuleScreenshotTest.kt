@@ -28,7 +28,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.mankeu.auth.FirebaseAuthManager
+import com.mankeu.auth.GoogleIdentity
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
@@ -82,7 +82,7 @@ class ModuleScreenshotTest {
             val repository = FinanceRepository(database)
             val vm = AppViewModel(
                 repository, FinanceWorkbookImporter(), EncryptedBackupManager(database, File(context.cacheDir, "module.aabk")),
-                FirebaseAuthManager(), GoogleDriveBackupClient(),
+                GoogleIdentity(context), GoogleDriveBackupClient(),
             )
             // Indonesian everywhere, sheets and dialogs included: they read the Activity's resources.
             val indonesian = Locale.forLanguageTag("id")

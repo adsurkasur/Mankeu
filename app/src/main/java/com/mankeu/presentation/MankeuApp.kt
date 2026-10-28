@@ -225,27 +225,15 @@ fun MankeuApp(
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         runCatching {
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account.idToken
-            if (idToken != null) {
-                viewModel.signInWithGoogleIdToken(idToken)
-            } else {
-                viewModel.setAuthenticatedUser(
-                    com.mankeu.auth.AuthUser(
-                        uid = account.id ?: account.email ?: "google-user",
-                        email = account.email,
-                        displayName = account.displayName,
-                        photoUrl = account.photoUrl?.toString(),
-                    )
-                )
-            }
+            task.getResult(ApiException::class.java)
+            viewModel.onGoogleSignedIn()
         }.onFailure { err ->
             val apiEx = err as? ApiException
             val statusCode = apiEx?.statusCode
             // Status 12501 indicates the user voluntarily dismissed the account picker
             if (statusCode != 12501) {
                 val errorText = when (statusCode) {
-                    10 -> "Gagal masuk Google (Kode 10: DEVELOPER_ERROR). SHA-1/OAuth Client ID belum didaftarkan di Firebase Console."
+                    10 -> "Gagal masuk Google (Kode 10: DEVELOPER_ERROR). SHA-1 aplikasi belum terdaftar di OAuth client Google Cloud."
                     12500 -> "Gagal masuk Google (Kode 12500: SIGN_IN_FAILED). Play Services atau akun Google bermasalah."
                     7 -> "Gagal masuk Google (Kode 7: NETWORK_ERROR). Periksa koneksi internet."
                     else -> "Gagal masuk Google: ${err.localizedMessage ?: err.message ?: "Terjadi kesalahan."}"
@@ -260,14 +248,6 @@ fun MankeuApp(
             .requestEmail()
             .requestScopes(Scope("https://www.googleapis.com/auth/drive.appdata"))
 
-        val webClientIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-        if (webClientIdRes != 0) {
-            @Suppress("LocalContextGetResourceValueCall")
-            val webClientId = context.resources.getString(webClientIdRes)
-            if (webClientId.isNotBlank()) {
-                gsoBuilder.requestIdToken(webClientId)
-            }
-        }
         val client = GoogleSignIn.getClient(context, gsoBuilder.build())
         googleSignInLauncher.launch(client.signInIntent)
     }

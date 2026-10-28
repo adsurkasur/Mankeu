@@ -2,7 +2,7 @@ package com.mankeu
 
 import android.app.Application
 import com.mankeu.auth.DriveTokenProvider
-import com.mankeu.auth.FirebaseAuthManager
+import com.mankeu.auth.GoogleIdentity
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
@@ -20,7 +20,7 @@ class MankeuApplication : Application() {
     val backupManager: EncryptedBackupManager by lazy {
         EncryptedBackupManager(database, File(noBackupFilesDir, "umkm-before-restore.aabk"))
     }
-    val authService by lazy { FirebaseAuthManager() }
+    val identity by lazy { GoogleIdentity(this) }
     val cloudBackupClient by lazy { GoogleDriveBackupClient() }
     val syncController by lazy {
         val tokens = DriveTokenProvider(this)

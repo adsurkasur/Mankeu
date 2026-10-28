@@ -20,7 +20,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.mankeu.auth.FirebaseAuthManager
+import com.mankeu.auth.GoogleIdentity
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
@@ -73,7 +73,7 @@ class HelpScreenshotTest {
             val selection = runBlocking { seed(repository) }
             val viewModel = AppViewModel(
                 repository, FinanceWorkbookImporter(), EncryptedBackupManager(database, File(context.cacheDir, "help-shot.aabk")),
-                FirebaseAuthManager(), GoogleDriveBackupClient(), rememberedSelection = selection,
+                GoogleIdentity(context), GoogleDriveBackupClient(), rememberedSelection = selection,
             )
             val indonesian = Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag("id")) }
             val localized = context.createConfigurationContext(indonesian)

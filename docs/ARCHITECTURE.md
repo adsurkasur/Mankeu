@@ -31,7 +31,7 @@ This choice can be revisited if an iOS requirement becomes funded and concrete. 
 | Dependency injection | Manual, a lazy container in `MankeuApplication` and `viewModelFactory` (Hilt rejected, D-082) |
 | Serialization | `PortableBackupCodec` (versioned binary snapshot) for backups and sync change sets; `org.json` for Drive |
 | Charts | Vico |
-| Identity and cloud backup | Firebase Auth, Google Drive REST `appDataFolder` (optional) |
+| Identity and cloud backup | Google Sign-In, Google Drive REST `appDataFolder` (optional) |
 | Tests | JVM unit tests, Room integration and migration tests (`MigrationTestHelper`), screenshot walks on the emulator |
 
 Official references:
@@ -107,8 +107,8 @@ One Gradle module, `:app`, with packages `domain`, `data`, `importer`, `exporter
 ## Backup, Drive, sync, and authentication
 
 - **Backup/restore** (implemented): `EncryptedBackupManager` snapshots every table in `AppDatabase.DATA_TABLES`, encrypts it with AES-256-GCM under a PBKDF2-HMAC-SHA256 key, and writes it to a user-chosen file or to Drive `appDataFolder` (latest five kept). Restore validates the schema (3 to current), keeps an encrypted recovery copy, and upgrades old snapshots with the same cleanups as the migrations.
-- **Erase all data** (implemented, DEC-020): `FinanceRepository.eraseAllData` empties every data table and the sync state; `GoogleDriveBackupClient.deleteAllAppData` removes every file in the app folder; `FirebaseAuthManager.deleteAccount` removes the sign-in user.
-- **Authentication** (implemented, optional): Firebase Auth with Google Sign-In, only to reach the user's Drive (D-033, D-040).
+- **Erase all data** (implemented, DEC-020): `FinanceRepository.eraseAllData` empties every data table and the sync state; `GoogleDriveBackupClient.deleteAllAppData` removes every file in the app folder; the Google grant is revoked by the UI layer (there is no server-side sign-in record).
+- **Authentication** (implemented, optional): Google Sign-In (no Firebase), only to reach the user's Drive (D-033, D-040).
 - **Synchronization** (release feature, DEC-024; see `docs/SYNC_ARCHITECTURE.md`): SQLite triggers record changes in `sync_outbox`; `SyncEngine` and `SyncCoordinator` exchange encrypted change sets over Drive with row-level last-writer-wins (DEC-013). Details and open owner questions in `docs/SYNC_ARCHITECTURE.md`.
 
 ## Security and privacy baseline

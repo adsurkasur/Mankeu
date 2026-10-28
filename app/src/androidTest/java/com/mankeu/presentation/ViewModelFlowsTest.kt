@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.mankeu.auth.FirebaseAuthManager
+import com.mankeu.auth.GoogleIdentity
 import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
@@ -118,7 +118,7 @@ class ViewModelFlowsTest {
                 repository,
                 FinanceWorkbookImporter(),
                 EncryptedBackupManager(database, File(context.cacheDir, "vm-flows-recovery.aabk")),
-                FirebaseAuthManager(),
+                GoogleIdentity(context),
                 GoogleDriveBackupClient(),
                 syncController = sync,
             )

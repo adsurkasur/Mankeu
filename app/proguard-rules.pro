@@ -8,12 +8,10 @@
 # Domain entities and calculations
 -keep class com.mankeu.domain.** { *; }
 
-# Authentication, Google Play Services & Firebase
+# Authentication, Google Play Services
 -keep class com.google.android.gms.auth.api.** { *; }
 -keep class com.google.android.gms.common.** { *; }
--keep class com.google.firebase.auth.** { *; }
 -dontwarn com.google.android.gms.**
--dontwarn com.google.firebase.**
 -keep class com.mankeu.auth.** { *; }
 
 # Cloud Backup & Encryption models

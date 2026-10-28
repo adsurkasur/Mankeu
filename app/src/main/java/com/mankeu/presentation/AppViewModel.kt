@@ -46,14 +46,13 @@ import com.mankeu.domain.TransactionCalculation
 import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.importer.WorkbookImportPreview
 import com.mankeu.R
-import com.mankeu.auth.FirebaseAuthManager
+import com.mankeu.auth.GoogleIdentity
 import com.mankeu.auth.AuthUser
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.sync.SyncController
 import com.mankeu.sync.SyncPassphraseLost
 import com.mankeu.sync.WrongSyncPassphrase
 import com.mankeu.backup.cloud.DriveBackupFile
-import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -147,7 +146,7 @@ class AppViewModel(
     private val repository: FinanceRepository,
     private val importer: FinanceWorkbookImporter,
     private val backupManager: EncryptedBackupManager,
-    private val authService: FirebaseAuthManager,
+    private val identity: GoogleIdentity,
     private val cloudBackupClient: GoogleDriveBackupClient,
     /** The usaha and unit open when the app was last closed, and where to save each new choice. */
     private val rememberedSelection: WorkspaceSelection? = null,
@@ -159,7 +158,7 @@ class AppViewModel(
     private val selectedProjectId = MutableStateFlow<String?>(null)
     private val selectedBookMode = MutableStateFlow(BookMode.REALIZATION)
 
-    val authUser: StateFlow<AuthUser?> = authService.currentUser
+    val authUser: StateFlow<AuthUser?> = identity.currentUser
     val syncState: StateFlow<SyncController.State> = syncController?.state ?: MutableStateFlow(SyncController.State.Off)
     private var syncJob: Job? = null
     val driveBackups = MutableStateFlow<List<DriveBackupFile>>(emptyList())
@@ -943,58 +942,30 @@ class AppViewModel(
         )
     }
 
-    fun signInWithGoogleIdToken(idToken: String) = viewModelScope.launch {
-        transferState.value = TransferUiState.Working(UiText.of(R.string.work_restoring_backup))
-        val result = authService.signInWithGoogleIdToken(idToken)
-        transferState.value = result.fold(
-            onSuccess = { user ->
-                message.value = UiText.of(R.string.msg_sign_in_ok, user.displayName ?: user.email ?: "")
-                TransferUiState.Idle
-            },
-            onFailure = {
-                TransferUiState.Failure(UiText.fromError(it, R.string.msg_sign_in_failed))
-            }
-        )
-    }
-
-    fun signInWithCredential(credential: AuthCredential) = viewModelScope.launch {
-        val result = authService.signInWithCredential(credential)
-        transferState.value = result.fold(
-            onSuccess = { user ->
-                message.value = UiText.of(R.string.msg_sign_in_ok, user.displayName ?: user.email ?: "")
-                TransferUiState.Idle
-            },
-            onFailure = {
-                TransferUiState.Failure(UiText.fromError(it, R.string.msg_sign_in_failed))
-            }
-        )
-    }
-
-    fun setAuthenticatedUser(user: AuthUser?) {
-        authService.setCustomUser(user)
+    fun onGoogleSignedIn() {
+        identity.refresh()
+        val user = identity.currentUser.value ?: return
+        message.value = UiText.of(R.string.msg_sign_in_ok, user.displayName ?: user.email ?: "")
     }
 
     fun signOut() {
-        authService.signOut()
+        identity.signOut()
         driveBackups.value = emptyList()
         message.value = UiText.of(R.string.msg_sign_out_ok)
     }
 
     /**
      * "Hapus semua data" (DEC-020). With [driveAccessToken], Drive goes first: if it fails, nothing
-     * on the phone has been touched yet and the owner can retry. Then the Firebase user record, the
+     * on the phone has been touched yet and the owner can retry. Then the
      * database, and the recovery copy. [onErased] clears what the UI layer owns (local name,
      * Google grant).
      */
     fun eraseAllData(driveAccessToken: String?, onErased: () -> Unit) = mutating {
         cancelPreparedRestore()
         val result = runCatching {
-            val accountDeleted = if (driveAccessToken != null) {
-                cloudBackupClient.deleteAllAppData(driveAccessToken)
-                authService.deleteAccount()
-            } else {
-                true
-            }
+            // No account record exists server-side any more; the Google grant is revoked by the UI layer.
+            if (driveAccessToken != null) cloudBackupClient.deleteAllAppData(driveAccessToken)
+            val accountDeleted = true
             repository.eraseAllData()
             withContext(Dispatchers.IO) { backupManager.deleteLatestRecovery() }
             accountDeleted

@@ -102,7 +102,7 @@ dengan kenyataan.
 | Uang | Rupiah bulat (`Long`) di seluruh perhitungan dan penyimpanan |
 | Excel | Pembaca dan penulis OOXML sendiri, tanpa Apache POI |
 | Kriptografi | `javax.crypto` bawaan platform: PBKDF2-HMAC-SHA256, AES-256-GCM, Android Keystore |
-| Cloud (opsional) | Google Drive REST API v3 (`appDataFolder`), Firebase Authentication |
+| Cloud (opsional) | Google Drive REST API v3 (`appDataFolder`), Google Sign-In |
 | Build | Gradle, R8 untuk rilis, GitHub Actions |
 ## Membangun dari kode sumber
 

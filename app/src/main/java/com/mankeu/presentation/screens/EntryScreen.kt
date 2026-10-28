@@ -255,6 +255,9 @@ fun EntryScreen(
     val kind = entryKinds.firstOrNull { it.type == selected }
     val selectedRole = CategoryRole.parse(state.categories.firstOrNull { it.id == categoryId }?.role)
     val incoming = selected == FinancialEventType.CASH_INCOME
+    // The material only counts while the form is a purchase; one effective value drives the lock, hint and save.
+    val materialId = stockItemId.takeIf { !incoming && selectedRole == CategoryRole.EXPENSE }
+    LaunchedEffect(materialId, stockItemId) { if (materialId == null && stockItemId != null) stockItemId = null }
     // Operating categories first, then capital/drawing/asset ones (which never touch profit).
     val compatibleCategories = state.categories
         .filter { CategoryRole.parse(it.role).cashTypeFor(incoming) != null }
@@ -711,7 +714,7 @@ fun EntryScreen(
                     // what it does to product costs (spec #20).
                     ChoiceMenu(
                         fieldLabel = stringResource(R.string.entry_material),
-                        label = state.stockItems.firstOrNull { it.id == stockItemId }?.name
+                        label = state.stockItems.firstOrNull { it.id == materialId }?.name
                             ?: stringResource(R.string.entry_material_none),
                         options = listOf("" to stringResource(R.string.entry_material_none)) +
                             state.stockItems.map { it.id to it.name },
@@ -723,7 +726,7 @@ fun EntryScreen(
                             }
                         },
                     )
-                    if (stockItemId != null) {
+                    if (materialId != null) {
                         Text(stringResource(R.string.entry_material_hint), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -797,7 +800,7 @@ fun EntryScreen(
                         OutlinedTextField(
                             value = unit,
                             onValueChange = { unit = it },
-                            readOnly = stockItemId != null,
+                            readOnly = materialId != null,
                             label = { Text(stringResource(R.string.entry_unit)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -916,7 +919,7 @@ fun EntryScreen(
                                 budgetItemId,
                                 CostNature.entries.firstOrNull { it.name == costNature }.takeIf { selectedRole == CategoryRole.EXPENSE },
                                 productId.takeIf { incoming && selectedRole == CategoryRole.REVENUE },
-                                stockItemId.takeIf { !incoming && selectedRole == CategoryRole.EXPENSE },
+                                materialId,
                                 usefulLife.toIntOrNull().takeIf { selectedRole == CategoryRole.ASSET },
                                 editingId,
                             )

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 06:57] [Claude Code (Opus) — Fase 1 Task 6 fix round 1]
+- **Goal**: Review I-1: a chosen material stayed set (and locked the unit field) after switching to Masuk or to a non-expense category.
+- **Actions**: `EntryScreen` derives `materialId = stockItemId.takeIf { !incoming && selectedRole == EXPENSE }` and uses it for the picker label, hint, `readOnly` and save; a `LaunchedEffect` clears `stockItemId` when the form is no longer a purchase.
+- **Files**: `presentation/screens/EntryScreen.kt`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: unit suite and assembleDebug ok; connected ViewModelFlowsTest + EntrySheetSwipeTest 5/5. No Compose test: it needs a seeded business with categories, materials and a rendered form, which this suite has no fixture for; not exercised on the emulator.
+
 ### [2026-10-29 06:58] [Claude Code (Opus) — Fase 1 Task 6: form catat dengan satuan jual, bahan, peringatan HPP]
 - **Goal**: Fase 1 Task 6: sales pick a sale unit, purchases can name a material, and a price change shows its HPP and profit impact (spec #5 #20). Carry-over M-4.
 - **Actions**: `AppViewModel.record(stockItemId)`, `PriceAlert`, `AppUiState.priceAlert`, `dismissPriceAlert()` (alert only when the material's derived price changed and a product uses it); `EntryScreen`: `applySaleUnit`, sale-unit `ChoiceMenu` for products with several units, material `ChoiceMenu` on expenses (fills unit and current price, unit read-only), `stockItemId` through edit/save/reset; `MankeuApp` `AlertDialog` (Tutup / Lihat produk -> Produk tab). M-4: a product without sale units falls back to its base unit with an empty price. 8 strings (id/en). The brief's "Oke" string does not exist, so the existing `action_close` ("Tutup") is used.

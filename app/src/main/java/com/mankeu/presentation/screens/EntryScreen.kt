@@ -257,7 +257,10 @@ fun EntryScreen(
     val incoming = selected == FinancialEventType.CASH_INCOME
     // The material only counts while the form is a purchase; one effective value drives the lock, hint and save.
     val materialId = stockItemId.takeIf { !incoming && selectedRole == CategoryRole.EXPENSE }
-    LaunchedEffect(materialId, stockItemId) { if (materialId == null && stockItemId != null) stockItemId = null }
+    // Categories arrive asynchronously; until they do the role is unknown, and an edited purchase must keep its material.
+    LaunchedEffect(materialId, stockItemId, state.categories.isEmpty()) {
+        if (materialId == null && stockItemId != null && state.categories.isNotEmpty()) stockItemId = null
+    }
     // Operating categories first, then capital/drawing/asset ones (which never touch profit).
     val compatibleCategories = state.categories
         .filter { CategoryRole.parse(it.role).cashTypeFor(incoming) != null }

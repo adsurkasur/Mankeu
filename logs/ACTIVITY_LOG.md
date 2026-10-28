@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 06:58] [Claude Code (Opus) — Fase 1 Task 6 controller fix]
+- **Goal**: Close a gap in the Task 6 review fix.
+- **Actions**: The effect that clears the material when the form stops being a purchase now waits until categories are loaded, so editing a recorded purchase cannot lose its material while the category role is still unknown.
+- **Files**: `presentation/screens/EntryScreen.kt`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: `:app:assembleDebug` green; covered again by the final connected run.
+
 ### [2026-10-29 06:57] [Claude Code (Opus) — Fase 1 Task 6 fix round 1]
 - **Goal**: Review I-1: a chosen material stayed set (and locked the unit field) after switching to Masuk or to a non-expense category.
 - **Actions**: `EntryScreen` derives `materialId = stockItemId.takeIf { !incoming && selectedRole == EXPENSE }` and uses it for the picker label, hint, `readOnly` and save; a `LaunchedEffect` clears `stockItemId` when the form is no longer a purchase.

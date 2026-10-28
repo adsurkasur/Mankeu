@@ -208,7 +208,6 @@
     <string name="msg_drive_restore_failed">Could not restore backup from Google Drive.</string>
     <string name="msg_drive_list_failed">Could not read Google Drive backup list.</string>
     <string name="msg_sign_in_ok">Signed in as %1$s.</string>
-    <string name="msg_sign_in_failed">Could not sign in with Google.</string>
     <string name="msg_sign_out_ok">Signed out successfully.</string>
 
     <!-- Business and units -->
@@ -423,7 +422,6 @@
     <string name="dialog_erase_word">DELETE</string>
     <string name="action_erase">Delete all</string>
     <string name="msg_erase_ok">All Mankeu data has been deleted.</string>
-    <string name="msg_erase_ok_account_kept">Data deleted and you are signed out. The Mankeu sign-in account was not deleted because Google asked for a fresh sign-in: sign in again, then repeat Delete all data.</string>
     <string name="msg_erase_failed">Nothing was deleted. Try again.</string>
 
     <!-- Support mailbox. Not translated: an address is an address. -->

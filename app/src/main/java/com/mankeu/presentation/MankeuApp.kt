@@ -265,7 +265,7 @@ fun MankeuApp(
         }
     }
 
-    // "Hapus semua data" (DEC-020). The ViewModel deletes Drive, the account and the database; what
+    // "Hapus semua data" (DEC-020). The ViewModel deletes Drive and the database and signs the account out; what
     // only this layer holds (the local name, the app's Google grant) is cleared once that succeeded.
     val eraseAllData: (Boolean) -> Unit = { includeCloud ->
         val clearUiState = {

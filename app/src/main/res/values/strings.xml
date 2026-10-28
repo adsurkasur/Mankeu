@@ -210,7 +210,6 @@
     <string name="msg_drive_restore_failed">Gagal memulihkan cadangan dari Google Drive.</string>
     <string name="msg_drive_list_failed">Gagal membaca daftar cadangan di Google Drive.</string>
     <string name="msg_sign_in_ok">Berhasil masuk sebagai %1$s.</string>
-    <string name="msg_sign_in_failed">Gagal masuk dengan Google.</string>
     <string name="msg_sign_out_ok">Berhasil keluar akun.</string>
 
     <!-- Usaha dan cabang / unit usaha -->
@@ -426,7 +425,6 @@
     <string name="dialog_erase_word">HAPUS</string>
     <string name="action_erase">Hapus semua</string>
     <string name="msg_erase_ok">Semua data Mankeu sudah dihapus.</string>
-    <string name="msg_erase_ok_account_kept">Data sudah dihapus dan kamu sudah keluar. Akun masuk Mankeu belum terhapus karena Google meminta masuk ulang: masuk lagi, lalu ulangi Hapus semua data.</string>
     <string name="msg_erase_failed">Data belum dihapus. Coba lagi.</string>
 
     <!-- Support mailbox. Not translated: an address is an address. -->

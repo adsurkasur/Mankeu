@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 01:34] [Claude Code (Sonnet) — Fase 0 Task 3 fix: sign-out after erase]
+- **Goal**: Review fixes for Task 3.
+- **Actions**: `eraseAllData` now signs the identity out when Drive is included; removed dead `accountDeleted` branch and strings `msg_erase_ok_account_kept`, `msg_sign_in_failed`; fixed KDoc/comment.
+- **Files**: `presentation/AppViewModel.kt`, `presentation/MankeuApp.kt`, `res/values/strings.xml`, `res/values-en/strings.xml`.
+- **Verification**: unit+lint+assembleDebug green; `ViewModelFlowsTest` 3/3. Cloud-erase sign-out not testable on emulator (no Google account).
+
 ### [2026-10-29 01:30] [Claude Code (Sonnet) — Fase 0 Task 3: tanpa Firebase]
 - **Goal**: Drop Firebase Auth; use the Google account directly through Google Sign-In (spec #8, DEC-026).
 - **Actions**: Added `GoogleIdentity` (AuthModels.kt) and made it the only identity path; `AppViewModel` takes `identity`, new `onGoogleSignedIn()` replaces `signInWithGoogleIdToken`/`signInWithCredential`/`setAuthenticatedUser`; `eraseAllData` no longer deletes a server account. Removed `requestIdToken`/`default_web_client_id` block and the Firebase wording in the DEVELOPER_ERROR message. Deleted `FirebaseAuthManager.kt`; removed firebase-bom, firebase-auth, google-services plugin and version entries, proguard Firebase rules, and the google-services.json steps from both CI workflows (the local `app/google-services.json` was untracked/ignored and was deleted from disk). Updated README, ARCHITECTURE and PLAY_STORE_DEPLOYMENT sentences about Firebase setup. Privacy policy and store-listing docs still mention Firebase and need an owner decision.

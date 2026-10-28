@@ -957,29 +957,28 @@ class AppViewModel(
     /**
      * "Hapus semua data" (DEC-020). With [driveAccessToken], Drive goes first: if it fails, nothing
      * on the phone has been touched yet and the owner can retry. Then the
-     * database, and the recovery copy. [onErased] clears what the UI layer owns (local name,
-     * Google grant).
+     * database and the recovery copy are erased and, when Drive was included, the Google account is
+     * signed out of the app. [onErased] clears what the UI layer owns (local name, Google grant).
      */
     fun eraseAllData(driveAccessToken: String?, onErased: () -> Unit) = mutating {
         cancelPreparedRestore()
         val result = runCatching {
-            // No account record exists server-side any more; the Google grant is revoked by the UI layer.
             if (driveAccessToken != null) cloudBackupClient.deleteAllAppData(driveAccessToken)
-            val accountDeleted = true
             repository.eraseAllData()
             withContext(Dispatchers.IO) { backupManager.deleteLatestRecovery() }
-            accountDeleted
         }
         result.fold(
-            onSuccess = { accountDeleted ->
+            onSuccess = {
                 // The database's sync flags are gone with sync_meta; the stored passphrase must go too.
                 syncController?.disable()
                 driveBackups.value = emptyList()
                 importState.value = ImportUiState.Idle
                 selectedProjectId.value = null
                 selectedBusinessId.value = null
+                // The Google grant itself is revoked by the UI layer; the in-app identity must go too.
+                if (driveAccessToken != null) identity.signOut()
                 onErased()
-                message.value = UiText.of(if (accountDeleted) R.string.msg_erase_ok else R.string.msg_erase_ok_account_kept)
+                message.value = UiText.of(R.string.msg_erase_ok)
             },
             onFailure = { message.value = UiText.fromError(it, R.string.msg_erase_failed) },
         )

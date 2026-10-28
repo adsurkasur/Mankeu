@@ -1,10 +1,6 @@
 package com.mankeu.presentation.screens
 
-import com.mankeu.presentation.guide.rememberSheetTour
-import com.mankeu.presentation.guide.SheetTour
-import com.mankeu.presentation.guide.Tour
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.MankeuTooltip
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
@@ -31,7 +26,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -62,8 +56,6 @@ import com.mankeu.presentation.components.DateField
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.SectionTitle
 import androidx.compose.foundation.layout.Box
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.toDisplayDate
 import java.time.LocalDate
 
@@ -86,7 +78,6 @@ fun ManageScopeSheet(
     onUpdateProject: (String, String, String, LocalDate?, LocalDate?) -> Unit,
     onRemoveProject: (String) -> Unit,
 ) {
-    val scopeTour = rememberSheetTour(Tour.SCOPE)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -108,9 +99,7 @@ fun ManageScopeSheet(
                 onRemoveBusiness = onRemoveBusiness,
                 onUpdateProject = onUpdateProject,
                 onRemoveProject = onRemoveProject,
-                onStartTour = { scopeTour.running = true },
             )
-            SheetTour(scopeTour)
         }
     }
 }
@@ -139,7 +128,6 @@ fun ManageScopeScreen(
     onRemoveBusiness: (String) -> Unit,
     onUpdateProject: (String, String, String, LocalDate?, LocalDate?) -> Unit,
     onRemoveProject: (String) -> Unit,
-    onStartTour: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     // With nothing yet, the only thing to do here is name the business: open its form straight away.
@@ -168,17 +156,6 @@ fun ManageScopeScreen(
                     subtitle = stringResource(R.string.scope_manage_subtitle),
                     modifier = Modifier.weight(1f),
                 )
-                if (onStartTour != null) {
-                    MankeuTooltip(stringResource(R.string.tour_replay)) {
-                        IconButton(onClick = onStartTour) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.HelpOutline,
-                                contentDescription = stringResource(R.string.tour_replay),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
             }
         }
 
@@ -205,7 +182,7 @@ fun ManageScopeScreen(
         item {
             FilledTonalButton(
                 onClick = { addBusiness = true },
-                modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.SCOPE_ADD_BUSINESS),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -241,7 +218,7 @@ fun ManageScopeScreen(
             item {
                 FilledTonalButton(
                     onClick = { addProject = true },
-                    modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.SCOPE_ADD_FIELD),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))

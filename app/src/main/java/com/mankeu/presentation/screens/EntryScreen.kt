@@ -2,11 +2,7 @@ package com.mankeu.presentation.screens
 
 import com.mankeu.domain.MoneyEvent
 import androidx.compose.foundation.layout.Box
-import com.mankeu.presentation.guide.rememberSheetTour
-import com.mankeu.presentation.guide.SheetTour
-import com.mankeu.presentation.guide.Tour
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.rememberTourListState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -108,8 +104,6 @@ import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.EventCard
 import com.mankeu.presentation.components.MoneyField
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.components.SectionTitle
 import com.mankeu.presentation.components.sanitizeDecimal
 import com.mankeu.presentation.components.sanitizeRupiah
@@ -158,7 +152,6 @@ fun EntryScreen(
     onDelete: (String) -> Unit,
     onManageScope: () -> Unit,
     isSaving: Boolean = false,
-    onStartTour: (() -> Unit)? = null,
     /** Set by the Beranda/Catat speed dial: open straight onto this kind's form. */
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
@@ -293,7 +286,6 @@ fun EntryScreen(
     }
 
     LazyColumn(
-        state = rememberTourListState(),
         // bottom clears the speed dial; see HomeScreen for why the list needs it itself.
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -302,7 +294,6 @@ fun EntryScreen(
             SectionTitle(
                 title = stringResource(R.string.entry_title),
                 subtitle = stringResource(R.string.ledger_subtitle, state.eventCount),
-                modifier = Modifier.tourTarget(TourTarget.ENTRY_HISTORY),
             )
         }
 
@@ -430,7 +421,6 @@ fun EntryScreen(
             contentColor = MaterialTheme.colorScheme.onSurface,
             tonalElevation = 0.dp,
         ) {
-          val formTour = rememberSheetTour(Tour.ENTRY_FORM)
           Box(Modifier.fillMaxWidth()) {
             // Same layout contract as MankeuSheet: the keyboard shrinks the sheet (imePadding on the
             // outer column), only the fields scroll inside what is left (weight + verticalScroll),
@@ -451,7 +441,7 @@ fun EntryScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
               ) {
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.ENTRY_KINDS)) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
                         selected = selected == FinancialEventType.CASH_INCOME,
                         onClick = {
@@ -489,7 +479,7 @@ fun EntryScreen(
                 MoneyField(
                     label = stringResource(R.string.entry_amount),
                     value = amount,
-                    modifier = Modifier.focusRequester(amountFocus).tourTarget(TourTarget.ENTRY_AMOUNT),
+                    modifier = Modifier.focusRequester(amountFocus),
                     isError = localError == errAmount,
                     supportingText = {
                         if (localError == errAmount) {
@@ -612,7 +602,6 @@ fun EntryScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 ChoiceMenu(
-                    modifier = Modifier.tourTarget(TourTarget.ENTRY_CATEGORY),
                     fieldLabel = stringResource(R.string.entry_category),
                     label = compatibleCategories.firstOrNull { it.id == categoryId }?.name
                         ?: stringResource(R.string.entry_category_pick),
@@ -905,7 +894,7 @@ fun EntryScreen(
                     // second call regardless, so this is the visible half of the guard rather
                     // than the guard itself.
                     enabled = !isSaving && !justSaved,
-                    modifier = Modifier.weight(1f).height(52.dp).tourTarget(TourTarget.ENTRY_SAVE),
+                    modifier = Modifier.weight(1f).height(52.dp),
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(
@@ -923,7 +912,6 @@ fun EntryScreen(
               }
               Spacer(Modifier.height(4.dp))
             }
-            SheetTour(formTour)
           }
         }
     }

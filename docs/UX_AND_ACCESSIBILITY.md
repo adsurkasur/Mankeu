@@ -54,7 +54,7 @@ Overlays from the top bar: `Berkas & Data` (import, export, backup, categories, 
 2. Ask for a business name. The application never creates one on the user's behalf — see D-015.
 3. Ask for a first unit (`Unit Usaha`: branch, field, season). It is not optional and no `Umum` unit is invented; a
    book pair only exists once the user has named the scope it belongs to.
-4. Offer one welcome card on Beranda at first launch (Lihat / Tutup) that points to the ? button; no offers on other pages or sheets, whose tours stay behind ? (DEC-022, superseding DEC-018's per-page offers).
+4. No spotlight tours or welcome card (redesign spec #16): the flow must be clear without them, and help is the ? button and Pusat Bantuan.
 5. Defer account, Drive, research consent, and optional templates until relevant.
 
 No onboarding page may block offline use merely to obtain analytics, authentication, or marketing data.

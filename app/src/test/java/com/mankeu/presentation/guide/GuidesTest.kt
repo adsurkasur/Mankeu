@@ -8,24 +8,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** The guide's invariants: tours that can be versioned and replayed, and help that can always show its place. */
+/** The guide's invariants: help that can always show its place. */
 class GuidesTest {
     @Test
-    fun `every tour has a unique id, a version and distinct targets`() {
-        assertEquals(Tour.entries.size, Tour.entries.map { it.id }.toSet().size)
-        Tour.entries.forEach { tour ->
-            assertTrue("${tour.name} has no steps", tour.steps.isNotEmpty())
-            assertTrue("${tour.name} version", tour.version >= 1)
-            assertEquals("${tour.name} repeats a target", tour.steps.size, tour.steps.map { it.target }.toSet().size)
-        }
-    }
-
-    @Test
-    fun `each page maps to its tour and the plan page is not the ledger`() {
-        assertEquals(Tour.PLAN, tourFor(Destination.ENTRY, BookMode.PROJECTION, Overlay.NONE))
-        assertEquals(Tour.ENTRY, tourFor(Destination.ENTRY, BookMode.REALIZATION, Overlay.NONE))
-        assertEquals(Tour.DATA, tourFor(Destination.HOME, BookMode.REALIZATION, Overlay.DATA))
-        assertEquals(null, tourFor(Destination.HOME, BookMode.REALIZATION, Overlay.HELP))
+    fun `the page help lists the articles of that page and the plan page is not the ledger`() {
+        val plan = articlesFor(Destination.ENTRY, BookMode.PROJECTION, Overlay.NONE)
+        assertTrue(plan.isNotEmpty() && HelpArticle.PLAN_CREATE in plan && HelpArticle.RECORD_FIX !in plan)
+        assertTrue(HelpArticle.RECORD_FIX in articlesFor(Destination.ENTRY, BookMode.REALIZATION, Overlay.NONE))
+        assertTrue(HelpArticle.DATA_IMPORT in articlesFor(Destination.HOME, BookMode.REALIZATION, Overlay.DATA))
+        assertTrue(articlesFor(Destination.HOME, BookMode.REALIZATION, Overlay.HELP).isEmpty())
     }
 
     /**

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 02:00] [Claude Code (Sonnet) — Fase 0 Task 4: tanpa tur]
+- **Goal**: Remove spotlight tours, keep Pusat Bantuan (spec #16, DEC-026).
+- **Actions**: Deleted `SpotlightTour.kt`, `TourHost.kt`, `Tour`/`tourFor`, tour target modifiers and list-state plumbing on all screens, the welcome offer card, tour prefs, Settings tour switch/reset, scope-sheet ? button; `TourTarget` became `ShowPlace` (names help screenshots only). "Tunjukkan di aplikasi" still navigates (page, book mode, overlay) without highlight. The ? button opens a help sheet of the page's articles via `articlesFor(destination, bookMode, overlay)`. Tour strings removed at the source (`docs/guide/help_strings.py`, regenerated) and in strings.xml ID/EN. Docs notes (WORK_IN_PROGRESS, ARCHITECTURE, UX_AND_ACCESSIBILITY) updated.
+- **Files**: `presentation/{MankeuApp,AppPreferences}.kt`, `presentation/guide/{Guides,HelpUi}.kt`, `presentation/screens/*`, `res/values{,-en}/strings.xml`, `GuidesTest`, `HelpScreenshotTest`, `ModuleScreenshotTest`, docs.
+- **Verification**: unit (68) + lint + assembleDebug green; HelpScreenshotTest passed; clean install shows no tour offer, ? opens help, article opens. Bundled help screenshots still contain the old spotlight dimming (regenerate with the help rewrite). ModuleScreenshotTest fails in Lampiran A ("Produk") both before and after this change.
+
 ### [2026-10-29 01:34] [Claude Code (Sonnet) — Fase 0 Task 3 fix: sign-out after erase]
 - **Goal**: Review fixes for Task 3.
 - **Actions**: `eraseAllData` now signs the identity out when Drive is included; removed dead `accountDeleted` branch and strings `msg_erase_ok_account_kept`, `msg_sign_in_failed`; fixed KDoc/comment.

@@ -1,6 +1,5 @@
 package com.mankeu.presentation.screens
 
-import com.mankeu.presentation.components.rememberTourListState
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
 import com.mankeu.presentation.components.MankeuTooltip
@@ -90,8 +89,6 @@ import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.NoticeCard
 import com.mankeu.presentation.components.ReportRow
 import com.mankeu.presentation.components.SectionTitle
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.toRupiah
 import java.time.Instant
 import java.time.ZoneId
@@ -143,13 +140,11 @@ fun DataScreen(
     onRestoreDriveBackup: (String, String) -> Unit,
     onSignInGoogle: () -> Unit,
     onResetImport: () -> Unit = {},
-    onStartTour: (() -> Unit)? = null,
 ) {
     var masterDataDialog by rememberSaveable { mutableStateOf(false) }
     var backupDialog by rememberSaveable { mutableStateOf(false) }
     val transferWorking = transferState is TransferUiState.Working
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -192,11 +187,11 @@ fun DataScreen(
             }
         }
         if (state.importBatches.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.data_import_history), stringResource(R.string.data_import_history_sub), Modifier.tourTarget(TourTarget.DATA_HISTORY)) }
+            item { SectionTitle(stringResource(R.string.data_import_history), stringResource(R.string.data_import_history_sub)) }
             items(state.importBatches, key = { it.id }) { batch -> ImportBatchCard(batch, onUndoImportBatch) }
         }
         item {
-            Card(modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.DATA_EXPORT), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.data_export_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                     Text(stringResource(R.string.data_export_sub), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -227,7 +222,7 @@ fun DataScreen(
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    OutlinedButton(onClick = { backupDialog = true }, enabled = !transferWorking, modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.DATA_BACKUP)) {
+                    OutlinedButton(onClick = { backupDialog = true }, enabled = !transferWorking, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.Backup, null)
                         Text(" " + stringResource(R.string.data_export_backup))
                     }
@@ -348,7 +343,7 @@ private fun ImportCard(
             when (importState) {
                 ImportUiState.Idle -> Button(
                     onClick = onChooseWorkbook,
-                    modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.IMPORT_FILE_PICKER),
+                    modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.import_pick)) }
                 ImportUiState.Loading -> {
                     Column(

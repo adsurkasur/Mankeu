@@ -1,6 +1,5 @@
 package com.mankeu.presentation.screens
 
-import com.mankeu.presentation.components.rememberTourListState
 import android.content.Intent
 import android.widget.Toast
 import com.mankeu.presentation.components.MankeuAppLogo
@@ -46,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,8 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Switch
-import androidx.compose.material3.TextButton
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -73,8 +71,6 @@ import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
 import com.mankeu.presentation.MotionMode
 import com.mankeu.presentation.ThemeMode
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 
 import com.mankeu.auth.AuthUser
 import com.mankeu.sync.SyncController
@@ -112,9 +108,6 @@ fun SettingsScreen(
     onSignInGoogle: () -> Unit,
     onSignOut: () -> Unit,
     onOpenHelpCenter: () -> Unit,
-    tourOffersEnabled: Boolean,
-    onTourOffersChange: (Boolean) -> Unit,
-    onResetTours: () -> Unit,
     /** "Hapus semua data" (DEC-020); the flag says whether Drive and the sign-in account go too. */
     onEraseAllData: (includeCloud: Boolean) -> Unit,
     isErasing: Boolean,
@@ -124,7 +117,6 @@ fun SettingsScreen(
     onSyncNow: () -> Unit,
 ) {
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -149,19 +141,14 @@ fun SettingsScreen(
             )
         }
 
-        // Tour Guide card
+        // Pusat Bantuan
         item {
             Card(
-                modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.SETTINGS_GUIDES),
+                modifier = Modifier.fillMaxWidth(),
                 colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.settings_tour_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    Text(
-                        stringResource(R.string.settings_tour_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text(stringResource(R.string.help_center_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                     // Was an OutlinedButton: a hairline border on a surface-coloured card gave
                     // this the visual weight of a caption, and the owner reported not seeing it as
                     // an action at all. FilledTonalButton is Material 3's own answer for a
@@ -173,23 +160,6 @@ fun SettingsScreen(
                     ) {
                         Text(stringResource(R.string.help_open_center), fontWeight = FontWeight.Bold)
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.settings_tour_offers), modifier = Modifier.weight(1f))
-                        Switch(checked = tourOffersEnabled, onCheckedChange = onTourOffersChange)
-                    }
-                    // Each page teaches itself once. This is how you get that first visit back —
-                    // for a second person using the same phone, or for testing.
-                    TextButton(
-                        onClick = onResetTours,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.settings_tour_reset), fontWeight = FontWeight.Bold)
-                    }
-                    Text(
-                        stringResource(R.string.settings_tour_reset_help),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
             }
         }
@@ -197,7 +167,6 @@ fun SettingsScreen(
         item {
             SettingCard(
                 title = stringResource(R.string.settings_display),
-                modifier = Modifier.tourTarget(TourTarget.SETTINGS_DISPLAY),
             ) {
                 SegmentedChoice(
                     options = ThemeMode.entries.map { it to stringResource(it.labelRes) },
@@ -430,7 +399,7 @@ private fun AccountCard(
     val semantic = LocalMankeuSemanticColors.current
     val feedback = LocalFeedback.current
     Card(
-        modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.SETTINGS_DRIVE),
+        modifier = Modifier.fillMaxWidth(),
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {

@@ -1,9 +1,6 @@
 package com.mankeu.presentation
 
-import androidx.compose.material.icons.filled.TouchApp
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.key
 import com.mankeu.presentation.components.MankeuTooltip
 
 import android.app.Activity
@@ -108,7 +105,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -120,21 +116,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mankeu.R
 import com.mankeu.domain.BookMode
-import com.mankeu.presentation.components.SpotlightTour
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.TourStep
 import com.mankeu.presentation.guide.HelpArticle
 import com.mankeu.presentation.guide.HelpCenter
 import com.mankeu.presentation.guide.HelpSheet
+import com.mankeu.presentation.guide.articlesFor
 import com.mankeu.presentation.guide.LocalOpenHelp
-import com.mankeu.presentation.guide.LocalTourController
-import com.mankeu.presentation.guide.Tour
-import com.mankeu.presentation.guide.TourController
-import com.mankeu.presentation.guide.TourOfferCard
-import com.mankeu.presentation.guide.tourFor
-import com.mankeu.presentation.components.TourTargetRegistry
-import com.mankeu.presentation.components.LocalTourTargets
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.screens.DataScreen
 import com.mankeu.presentation.screens.EntryScreen
 import com.mankeu.presentation.screens.HomeScreen
@@ -206,10 +192,6 @@ fun MankeuApp(
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     // A sheet, not a route: ModalBottomSheet handles its own back press and scrim.
     var manageScope by rememberSaveable { mutableStateOf(false) }
-    // Page tours are offered, never started on their own (owner decision, 2026-10-21).
-    var activeTour by rememberSaveable { mutableStateOf<Tour?>(null) }
-    // The article whose place "Tunjukkan di aplikasi" is highlighting.
-    var showing by rememberSaveable { mutableStateOf<HelpArticle?>(null) }
     var helpArticle by rememberSaveable { mutableStateOf<HelpArticle?>(null) }
     var helpSheet by rememberSaveable { mutableStateOf(false) }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
@@ -218,7 +200,6 @@ fun MankeuApp(
     var switchingLanguage by remember { mutableStateOf(false) }
     var pendingBackupPassword by remember { mutableStateOf<CharArray?>(null) }
     var pendingRestorePassword by remember { mutableStateOf<CharArray?>(null) }
-    val tourTargets = remember { TourTargetRegistry() }
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -342,24 +323,17 @@ fun MankeuApp(
     }
     val exportRecovery: () -> Unit = { recoveryExporter.launch("umkm-mankeu-sebelum-pemulihan-${LocalDate.now()}.aabk") }
 
-    val dismissTour: () -> Unit = {
-        activeTour?.let(prefs::markTourSeen)
-        activeTour = null
-        showing = null
-    }
     val openHelp: (HelpArticle) -> Unit = { article ->
         helpSheet = false
         manageScope = false
         helpArticle = article
         overlay = Overlay.HELP
     }
-    // "Tunjukkan di aplikasi": go to the page, book mode or overlay the article is about, then
-    // highlight the place. Without an usaha and unit most pages are an empty card, so the owner is
+    // "Tunjukkan di aplikasi": go to the page, book mode or overlay the article is about. Without an usaha and unit most pages are an empty card, so the owner is
     // sent to create them first, with the reason.
     val show: (HelpArticle) -> Unit = { article ->
         val spec = article.show
         helpSheet = false
-        activeTour = null
         if (spec.needsUnit && state.selectedProjectId == null) {
             overlay = Overlay.NONE
             manageScope = true
@@ -368,21 +342,16 @@ fun MankeuApp(
             overlay = spec.overlay
             if (spec.overlay == Overlay.NONE) destination = spec.destination
             spec.bookMode?.let { if (state.selectedBookMode != it) viewModel.selectBookMode(it) }
-            showing = article
         }
-    }
-    val tourController = remember(prefs) {
-        TourController(prefs::shouldOfferTour, prefs::markTourSeen) { openHelp(it) }
     }
     LaunchedEffect(captureShow) { captureShow?.let(show) }
 
     // One handler rather than three stacked ones, so the precedence is stated here instead of
-    // depending on composition order: the tour is modal, then an open overlay, then "not on Beranda".
+    // depending on composition order: an open overlay, then "not on Beranda".
     // Below that the system default applies and back leaves the app, which is what Android expects
     // from the start destination.
-    BackHandler(enabled = activeTour != null || showing != null || overlay != Overlay.NONE || destination != Destination.HOME) {
+    BackHandler(enabled = overlay != Overlay.NONE || destination != Destination.HOME) {
         when {
-            activeTour != null || showing != null -> dismissTour()
             overlay == Overlay.HELP && helpArticle != null -> helpArticle = null
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             else -> destination = Destination.HOME
@@ -391,9 +360,7 @@ fun MankeuApp(
 
     val feedback = rememberFeedback(prefs.hapticsEnabled, prefs.soundEnabled)
     CompositionLocalProvider(
-        LocalTourTargets provides tourTargets,
         LocalFeedback provides feedback,
-        LocalTourController provides tourController,
         LocalOpenHelp provides openHelp,
     ) {
         MankeuTheme(darkTheme = darkTheme, motion = motion) {
@@ -486,7 +453,6 @@ fun MankeuApp(
                                         onBackupToDrive = { password -> withDriveToken { token -> viewModel.backupToDrive(password.toCharArray(), token) } },
                                         onRestoreDriveBackup = { fileId, password -> withDriveToken { token -> viewModel.prepareDriveBackupRestore(fileId, password.toCharArray(), token) } },
                                         onSignInGoogle = launchGoogleSignIn,
-                                        onStartTour = { activeTour = Tour.DATA },
                                     )
                                 }
 
@@ -533,14 +499,6 @@ fun MankeuApp(
                                             helpArticle = null
                                             overlay = Overlay.HELP
                                         },
-                                        // On only while the welcome will really show: after Tutup it reads off, one tap brings it back.
-                                        tourOffersEnabled = prefs.shouldOfferTour(Tour.HOME),
-                                        onTourOffersChange = prefs::updateTourOffers,
-                                        onResetTours = {
-                                            prefs.resetAllTours()
-                                            overlay = Overlay.NONE
-                                            destination = Destination.HOME
-                                        },
                                         onEraseAllData = eraseAllData,
                                         isErasing = isSaving,
                                         syncState = syncState,
@@ -576,7 +534,7 @@ fun MankeuApp(
                                                 onManageScope = { manageScope = true },
                                                 onSelectBookMode = viewModel::selectBookMode,
                                                 onOpenSettings = { overlay = Overlay.SETTINGS },
-                                                onReplayTour = { helpSheet = true },
+                                                onOpenHelpSheet = { helpSheet = true },
                                                 onQuickRecord = { kind ->
                                                     requestedEntryKind = kind
                                                     destination = Destination.ENTRY
@@ -592,7 +550,6 @@ fun MankeuApp(
                                                     onNavigate = { destination = it },
                                                     onManageScope = { manageScope = true },
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
-                                                    onStartTour = { activeTour = it },
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,
@@ -609,7 +566,7 @@ fun MankeuApp(
                                             onManageScope = { manageScope = true },
                                             onSelectBookMode = viewModel::selectBookMode,
                                             onOpenSettings = { overlay = Overlay.SETTINGS },
-                                            onReplayTour = { helpSheet = true },
+                                            onOpenHelpSheet = { helpSheet = true },
                                             onQuickRecord = { kind ->
                                                 requestedEntryKind = kind
                                                 destination = Destination.ENTRY
@@ -625,7 +582,6 @@ fun MankeuApp(
                                                 onNavigate = { destination = it },
                                                 onManageScope = { manageScope = true },
                                                 onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
-                                                onStartTour = { activeTour = it },
                                                 requestedKind = requestedEntryKind,
                                                 onRequestedKindConsumed = { requestedEntryKind = null },
                                                 expanded = false,
@@ -664,58 +620,11 @@ fun MankeuApp(
                     )
                 }
 
-                val pageTour = tourFor(destination, state.selectedBookMode, overlay)
-                activeTour?.let { tour ->
-                    key(tour) {
-                        SpotlightTour(
-                            steps = tour.steps,
-                            onDismiss = dismissTour,
-                            modifier = Modifier.fillMaxSize().zIndex(100f),
-                            onLearnMore = { article -> dismissTour(); openHelp(article) },
-                        )
-                    }
-                }
-                showing?.let { article ->
-                    key(article) {
-                        // Wait for the page (and book mode) transition, so the hole lands on the
-                        // new screen's element and not on the one sliding out.
-                        var ready by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) {
-                            delay(maxOf(motion.mediumMillis, 1).toLong() + 200)
-                            ready = true
-                        }
-                        if (ready) {
-                            SpotlightTour(
-                                steps = listOf(TourStep(article.show.target, article.titleRes, article.bodyRes, Icons.Default.TouchApp)),
-                                onDismiss = { showing = null },
-                                modifier = Modifier.fillMaxSize().zIndex(100f),
-                                showCard = captureShow == null,
-                            )
-                        }
-                    }
-                }
-                if (pageTour != null && activeTour == null && showing == null && !manageScope && !helpSheet &&
-                    captureShow == null && tourController.offer(pageTour)
-                ) {
-                    TourOfferCard(
-                        stepCount = pageTour.steps.size,
-                        onStart = { activeTour = pageTour },
-                        // Closing is final: the welcome is a greeting, not a reminder. ? keeps the tour.
-                        onClose = { tourController.seen(pageTour) },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .navigationBarsPadding()
-                            // Above the navigation bar, the record button and the snackbar: at 88 dp it sat on
-                            // the "+" (a tap started the tour) and hid "Tersimpan" (audit 2026-10-22).
-                            .padding(start = 16.dp, end = 16.dp, bottom = if (overlay == Overlay.NONE) 168.dp else 16.dp)
-                            .zIndex(50f),
-                    )
-                }
+                val pageArticles = articlesFor(destination, state.selectedBookMode, overlay)
                 if (helpSheet) {
                     HelpSheet(
-                        tour = pageTour,
+                        pageArticles = pageArticles,
                         onDismiss = { helpSheet = false },
-                        onPlayTour = { helpSheet = false; activeTour = pageTour },
                         onOpenArticle = openHelp,
                         onOpenCenter = { helpSheet = false; helpArticle = null; overlay = Overlay.HELP },
                     )
@@ -750,11 +659,11 @@ private fun OverlayScaffold(
                 },
                 actions = {
                     if (onHelp != null) {
-                        MankeuTooltip(stringResource(R.string.tour_replay)) {
+                        MankeuTooltip(stringResource(R.string.help_sheet_title)) {
                             IconButton(onClick = onHelp) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.HelpOutline,
-                                    contentDescription = stringResource(R.string.tour_replay),
+                                    contentDescription = stringResource(R.string.help_sheet_title),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -782,7 +691,7 @@ private fun MainScaffold(
     onManageScope: () -> Unit,
     onSelectBookMode: (BookMode) -> Unit,
     onOpenSettings: () -> Unit,
-    onReplayTour: () -> Unit,
+    onOpenHelpSheet: () -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
     compact: Boolean,
     content: @Composable (PaddingValues) -> Unit,
@@ -796,7 +705,7 @@ private fun MainScaffold(
             if (destination in RECORDING_DESTINATIONS && state.selectedProjectId != null &&
                 state.selectedBookMode != BookMode.PROJECTION
             ) {
-                RecordSpeedDial(onRecord = onQuickRecord, modifier = Modifier.tourTarget(TourTarget.HOME_RECORD))
+                RecordSpeedDial(onRecord = onQuickRecord)
             }
         },
         topBar = {
@@ -806,7 +715,7 @@ private fun MainScaffold(
                 onOpenSettings = onOpenSettings,
                 onOpenData = onOpenData,
                 onManageScope = onManageScope,
-                onReplayTour = onReplayTour,
+                onOpenHelpSheet = onOpenHelpSheet,
                 compact = compact,
             )
         },
@@ -842,11 +751,6 @@ private fun AppBottomBar(
             modifier = Modifier.navigationBarsPadding(),
         ) {
             Destination.entries.forEach { item ->
-                val targetModifier = when (item) {
-                    Destination.ENTRY -> Modifier.tourTarget(TourTarget.NAV_ENTRY)
-                    Destination.REPORTS -> Modifier.tourTarget(TourTarget.NAV_REPORTS)
-                    else -> Modifier
-                }
                 NavigationBarItem(
                     selected = destination == item,
                     onClick = {
@@ -860,7 +764,6 @@ private fun AppBottomBar(
                             fontWeight = if (destination == item) FontWeight.Bold else FontWeight.Normal,
                         )
                     },
-                    modifier = targetModifier,
                 )
             }
         }
@@ -879,8 +782,7 @@ private fun AppRail(
             .fillMaxHeight()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(vertical = 16.dp, horizontal = 12.dp)
-            .tourTarget(TourTarget.NAV_REPORTS),
+            .padding(vertical = 16.dp, horizontal = 12.dp),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainer,
         shadowElevation = 8.dp,
@@ -926,7 +828,7 @@ private fun ScopeHeader(
     onOpenSettings: () -> Unit,
     onOpenData: () -> Unit,
     onManageScope: () -> Unit,
-    onReplayTour: () -> Unit,
+    onOpenHelpSheet: () -> Unit,
     compact: Boolean,
 ) {
     val motion = LocalMotion.current
@@ -956,16 +858,16 @@ private fun ScopeHeader(
                 ScopeSummary(
                     state = state,
                     onClick = onManageScope,
-                    modifier = Modifier.weight(1f).tourTarget(TourTarget.SCOPE_BUSINESS),
+                    modifier = Modifier.weight(1f),
                 )
-                // Replays the tour for whatever destination is open. Placed in the header rather
-                // than buried in Pengaturan because the moment someone needs the explanation is the
-                // moment they are staring at the screen that confused them.
-                MankeuTooltip(stringResource(R.string.tour_replay)) {
-                    IconButton(onClick = onReplayTour) {
+                // Opens help for whatever destination is open. Placed in the header rather than buried
+                // in Pengaturan because the moment someone needs the explanation is the moment they
+                // are staring at the screen that confused them.
+                MankeuTooltip(stringResource(R.string.help_sheet_title)) {
+                    IconButton(onClick = onOpenHelpSheet) {
                         Icon(
                             Icons.AutoMirrored.Filled.HelpOutline,
-                            contentDescription = stringResource(R.string.tour_replay),
+                            contentDescription = stringResource(R.string.help_sheet_title),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -1023,7 +925,7 @@ private fun ScopeHeader(
             )
             // Hidden until there is a unit: before that the two books are words without meaning (2026-10-22).
             if (state.selectedProjectId != null) SingleChoiceSegmentedButtonRow(
-                Modifier.fillMaxWidth().tourTarget(TourTarget.SCOPE_BOOK),
+                Modifier.fillMaxWidth(),
             ) {
                 BookMode.entries.forEachIndexed { index, mode ->
                     SegmentedButton(
@@ -1222,7 +1124,6 @@ private fun ScreenContent(
     /** Opens the Usaha dan Unit sheet: every empty state asking for a business or unit leads there. */
     onManageScope: () -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
-    onStartTour: ((Tour) -> Unit)? = null,
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
@@ -1290,7 +1191,6 @@ private fun ScreenContent(
                     onRecord = viewModel::record,
                     onDelete = viewModel::deleteTransaction,
                     onManageScope = onManageScope,
-                    onStartTour = onStartTour?.let { { it(Tour.ENTRY) } },
                     requestedKind = requestedKind,
                     onRequestedKindConsumed = onRequestedKindConsumed,
                     onCreateCategory = viewModel::createCategory,
@@ -1299,7 +1199,6 @@ private fun ScreenContent(
                     state = state,
                     onOpenPlan = { onNavigate(Destination.ENTRY) },
                     onRecordTransaction = { onNavigate(Destination.ENTRY) },
-                    onStartTour = onStartTour?.let { { it(Tour.REPORTS) } },
                 )
             }
         }

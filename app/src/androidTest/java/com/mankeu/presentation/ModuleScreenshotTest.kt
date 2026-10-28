@@ -12,7 +12,6 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.hasText
@@ -74,8 +73,7 @@ class ModuleScreenshotTest {
         assumeTrue(InstrumentationRegistry.getArguments().getString("moduleScreenshots") == "true")
         val prefs = context.getSharedPreferences("mankeu_ui_prefs", Context.MODE_PRIVATE)
         val saved = prefs.all.toMap()
-        prefs.edit().clear().putString("theme_mode", ThemeMode.LIGHT.name).putString("motion_mode", MotionMode.OFF.name)
-            .putBoolean("tour_offers_enabled", false).commit()
+        prefs.edit().clear().putString("theme_mode", ThemeMode.LIGHT.name).putString("motion_mode", MotionMode.OFF.name).commit()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
         out = File(context.filesDir, "module").apply { deleteRecursively(); mkdirs() }
         try {
@@ -286,7 +284,7 @@ class ModuleScreenshotTest {
 
         // --- 8. Bantuan --------------------------------------------------------------------------
         click("Beranda")
-        clickDescription("Panduan halaman ini")
+        clickDescription("Bantuan")
         shot("36_lembar_bantuan")
         click("Buka Pusat Bantuan")
         shot("37_pusat_bantuan")
@@ -296,27 +294,11 @@ class ModuleScreenshotTest {
         click("Tunjukkan di aplikasi")
         settle(1500)
         shot("39_tunjukkan")
-        click("Mengerti")
         clickDescription("Pengaturan")
-        scrollTo("Panduan Aplikasi")
+        scrollTo("Buka Pusat Bantuan")
         shot("40_pengaturan_panduan")
         scrollTo("Sinkronisasi antar-HP")
         shot("43_sinkronisasi")
-        scrollTo("Panduan Aplikasi")
-        toggleNear("Tampilkan sapaan panduan di Beranda")
-        clickDescription("Kembali")
-        // The only offer left is the welcome on Beranda.
-        click("Beranda")
-        settle()
-        shot("41_tawaran_panduan")
-        click("Lihat")
-        settle(1000)
-        shot("42_tur_langkah")
-        click("Lewati")
-        // Switched off again so the appendices are photographed without the card.
-        clickDescription("Pengaturan")
-        scrollTo("Panduan Aplikasi")
-        toggleNear("Tampilkan sapaan panduan di Beranda")
         clickDescription("Kembali")
 
         // --- Lampiran A: usaha tani musiman ---------------------------------------------------------
@@ -479,16 +461,6 @@ class ModuleScreenshotTest {
         val all = compose.onAllNodesWithText(text, useUnmergedTree = true)
         val index = all.fetchSemanticsNodes().withIndex().minBy { kotlin.math.abs(it.value.boundsInRoot.top - top) }.index
         all[index].performClick()
-        settle()
-    }
-
-    /** The switch on the same row as [anchor]. */
-    private fun toggleNear(anchor: String) {
-        settle(200)
-        val top = compose.onAllNodesWithText(anchor, useUnmergedTree = true)[0].fetchSemanticsNode().boundsInRoot.center.y
-        val all = compose.onAllNodes(isToggleable())
-        val index = all.fetchSemanticsNodes().withIndex().minBy { kotlin.math.abs(it.value.boundsInRoot.center.y - top) }.index
-        all[index].performSemanticsAction(SemanticsActions.OnClick)
         settle()
     }
 

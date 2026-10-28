@@ -65,8 +65,7 @@ class HelpScreenshotTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val prefs = context.getSharedPreferences("mankeu_ui_prefs", Context.MODE_PRIVATE)
         val saved = prefs.all.toMap()
-        prefs.edit().putString("theme_mode", ThemeMode.LIGHT.name).putString("motion_mode", MotionMode.OFF.name)
-            .putBoolean("tour_offers_enabled", false).commit()
+        prefs.edit().putString("theme_mode", ThemeMode.LIGHT.name).putString("motion_mode", MotionMode.OFF.name).commit()
         val database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
         try {
             val repository = FinanceRepository(database)
@@ -90,8 +89,7 @@ class HelpScreenshotTest {
             val out = File(context.filesDir, "help").apply { deleteRecursively(); mkdirs() }
             HelpArticle.entries.distinctBy { it.show.imageName }.forEach { article ->
                 compose.runOnIdle { current = article }
-                // The page transition, the show delay and the spotlight's scroll-to-target run on
-                // the test's virtual clock: advance it, sleeping would not.
+                // The page transition runs on the test's virtual clock: advance it, sleeping would not.
                 repeat(30) { compose.mainClock.advanceTimeBy(100) }
                 compose.waitForIdle()
                 save(compose.onRoot().captureToImage().asAndroidBitmap(), File(out, article.show.imageName + ".webp"))

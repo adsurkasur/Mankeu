@@ -21,9 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -56,40 +54,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 
-/** Opens an article in Pusat Bantuan from anywhere (empty states, tour cards). Provided by `MankeuApp`. */
+/** Opens an article in Pusat Bantuan from anywhere (empty states). Provided by `MankeuApp`. */
 val LocalOpenHelp = staticCompositionLocalOf<(HelpArticle) -> Unit> { {} }
-
-/**
- * The first visit to a page offers its tour instead of starting it: a small card the owner can
- * take or leave, so the screen stays usable for someone who does not want a walkthrough.
- */
-@Composable
-fun TourOfferCard(stepCount: Int, onStart: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-    ) {
-        Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 4.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.TipsAndUpdates, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    stringResource(R.string.tour_offer_text, stepCount),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text(stringResource(R.string.tour_offer_close)) }
-                Button(onClick = onStart) { Text(stringResource(R.string.tour_offer_start), fontWeight = FontWeight.Bold) }
-            }
-        }
-    }
-}
 
 /** Pusat Bantuan: a searchable, grouped list, or one article when [article] is set. */
 @Composable
@@ -245,15 +211,13 @@ private fun helpImage(name: String): Int? {
 }
 
 /**
- * What the ? button opens: replay this page's tour, the articles about this page, or Pusat
- * Bantuan. The moment someone needs an explanation is the moment they are looking at the screen.
+ * What the ? button opens: the [pageArticles] about this page, or Pusat Bantuan. The moment someone needs an explanation is the moment they are looking at the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpSheet(
-    tour: Tour?,
+    pageArticles: List<HelpArticle>,
     onDismiss: () -> Unit,
-    onPlayTour: () -> Unit,
     onOpenArticle: (HelpArticle) -> Unit,
     onOpenCenter: () -> Unit,
 ) {
@@ -269,10 +233,7 @@ fun HelpSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(stringResource(R.string.help_sheet_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            if (tour != null) {
-                SheetAction(Icons.Default.PlayCircle, stringResource(R.string.help_play_tour, tour.steps.size), onPlayTour)
-            }
-            val articles = articlesFor(tour).take(5)
+            val articles = pageArticles.take(5)
             if (articles.isNotEmpty()) {
                 HorizontalDivider(Modifier.padding(vertical = 4.dp))
                 Text(stringResource(R.string.help_for_this_page), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)

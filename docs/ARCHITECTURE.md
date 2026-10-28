@@ -74,12 +74,8 @@ Three concerns cut across every screen and are therefore owned by the shell rath
   the duration budget from `LocalMotion`, and `LocalMotion` itself is `MankeuMotion.resolve(...)` of
   the user's Gerakan setting and the system animation scale, so both the app control and the
   platform accessibility setting are honoured (D-025).
-- **Guided tour targets.** `LocalTourTargets` carries a `TourTargetRegistry` that composables write
-  their root-space bounds into via `Modifier.tourTarget(...)`. `SpotlightTour` reads it to punch a
-  real cutout over live UI. The registry is write-only from the screens' point of view and costs
-  nothing when no tour is running, which keeps the tour out of the screens' own logic.
-- **System back.** A single `BackHandler` in the shell states the whole precedence order — modal
-  tour, open overlay, non-start destination, then the platform default. Screens do not register
+- **System back.** A single `BackHandler` in the shell states the whole precedence order — open
+  overlay, non-start destination, then the platform default. Screens do not register
   their own handlers, so the order cannot drift with composition order.
 - **Asking the user something.** Every modal is `MankeuSheet` — one `ModalBottomSheet` with the title
   at the top, scrolling content in the middle and the actions at the bottom, where a thumb is
@@ -88,8 +84,7 @@ Three concerns cut across every screen and are therefore owned by the shell rath
   its `SheetState` is created internally so the experimental Material 3 opt-in does not spread to
   every call site.
 
-Presentation state that is not accounting data (theme, motion, language, local display name, whether
-the tour has been seen) lives in `SharedPreferences` via `AppPreferencesState`, deliberately outside
+Presentation state that is not accounting data (theme, motion, language, local display name) lives in `SharedPreferences` via `AppPreferencesState`, deliberately outside
 the audited Room schema, its migrations, and its export/backup contract.
 
 ## Module shape

@@ -11,8 +11,7 @@ langsung di-push dan pointer superproject diperbarui (instruksi pemilik 2026-10-
 
 Merawat panduan dalam aplikasi:
 - Ubah teks di `docs/guide/help_strings.py`, lalu `python -I docs/guide/help_strings.py`.
-- Isi tur berubah → naikkan `Tour.version` agar pengguna lama ditawari sekali.
-- Tampilan berubah atau artikel/target baru → `scripts/capture_help_screenshots.ps1` (emulator menyala);
+- Tampilan berubah atau artikel/tempat baru (`ShowPlace`) → `scripts/capture_help_screenshots.ps1` (emulator menyala);
   `GuidesTest` gagal bila ada artikel tanpa gambar.
 
 Merawat panduan penggunaan (`docs/panduan/`):

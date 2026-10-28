@@ -1,9 +1,6 @@
 package com.mankeu.presentation.screens
 
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.tourTarget
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.rememberTourListState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -118,7 +115,6 @@ fun PlanScreen(
     val lines = state.planItems.filterNot { it.archived }.groupBy { LineSection.of(it, categories) }
 
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -138,7 +134,7 @@ fun PlanScreen(
         item {
             val locale = appLocale()
             val format = DateTimeFormatter.ofPattern("MMM yyyy", locale)
-            ReportCard(stringResource(R.string.plan_period), Modifier.tourTarget(TourTarget.PLAN_PERIOD)) {
+            ReportCard(stringResource(R.string.plan_period)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         stringResource(R.string.plan_period_value, months.first().format(format), months.last().format(format), months.size),
@@ -149,14 +145,13 @@ fun PlanScreen(
                 }
             }
         }
-        state.plan?.let { plan -> item { PlanFeasibilityCard(plan, Modifier.tourTarget(TourTarget.PLAN_FEASIBILITY)) } }
+        state.plan?.let { plan -> item { PlanFeasibilityCard(plan) } }
 
         item {
             PlanSectionCard(
                 title = stringResource(R.string.plan_section_products),
                 hint = stringResource(R.string.plan_section_products_hint),
                 onAdd = { editor = PlanEditor.Product(null) },
-                modifier = Modifier.tourTarget(TourTarget.PLAN_PRODUCTS),
             ) {
                 state.products.forEach { row ->
                     val vc = PlanAssembly.products(listOf(row)).first().variableCostPerUnit.setScale(0, RoundingMode.HALF_UP).toLong()
@@ -185,7 +180,6 @@ fun PlanScreen(
                     title = stringResource(section.titleRes),
                     hint = stringResource(section.hintRes),
                     onAdd = { editor = PlanEditor.Line(section, null) },
-                    modifier = if (section == LineSection.entries.first()) Modifier.tourTarget(TourTarget.PLAN_COSTS) else Modifier,
                 ) {
                     lines[section].orEmpty().forEach { line ->
                         PlanRow(

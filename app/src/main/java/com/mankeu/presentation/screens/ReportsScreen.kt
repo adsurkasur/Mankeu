@@ -1,7 +1,6 @@
 package com.mankeu.presentation.screens
 
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.rememberTourListState
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
 import com.mankeu.presentation.components.MankeuTooltip
@@ -86,8 +85,6 @@ import com.mankeu.presentation.components.ReportCard
 import com.mankeu.presentation.components.ActualMonthCard
 import com.mankeu.presentation.components.PlanBreakdownCard
 import com.mankeu.presentation.components.PlanFeasibilityCard
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.components.ReportRow
 import com.mankeu.presentation.components.SectionTitle
 import com.mankeu.presentation.toDisplayDate
@@ -113,7 +110,6 @@ fun ReportsScreen(
     state: AppUiState,
     onOpenPlan: () -> Unit = {},
     onRecordTransaction: () -> Unit = {},
-    onStartTour: (() -> Unit)? = null,
 ) {
     var section by rememberSaveable { mutableStateOf(ReportSection.FINANCIALS) }
     val planMode = state.selectedBookMode == BookMode.PROJECTION
@@ -124,7 +120,6 @@ fun ReportsScreen(
     val monthlyCashFlow = plan?.schedule ?: MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
 
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -146,7 +141,7 @@ fun ReportsScreen(
             PrimaryTabRow(
                 selectedTabIndex = ReportSection.entries.indexOf(section),
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.REPORTS_TABS),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 ReportSection.entries.forEach { item ->
                     Tab(
@@ -232,7 +227,7 @@ private fun FinancialsSection(
     summary: com.mankeu.domain.FinancialSummary,
     monthlyCashFlow: List<com.mankeu.domain.MonthlyCashFlow>,
 ) {
-    ReportCard(stringResource(R.string.reports_income_statement), Modifier.tourTarget(TourTarget.REPORTS_PROFIT)) {
+    ReportCard(stringResource(R.string.reports_income_statement)) {
         // The income-versus-expense donut is gone with the hand-rolled charts. Two slices is not a
         // composition — it is one comparison, and the three rows immediately below already state
         // it exactly, with the figures the owner has to reconcile against a workbook. The cost
@@ -247,7 +242,7 @@ private fun FinancialsSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    ReportCard(stringResource(R.string.reports_cash_flow), Modifier.tourTarget(TourTarget.REPORTS_CASHFLOW)) {
+    ReportCard(stringResource(R.string.reports_cash_flow)) {
         ReportRow(stringResource(R.string.reports_cf_operating), summary.operatingCashFlowRupiah)
         ReportRow(stringResource(R.string.reports_cf_investing), summary.investingCashFlowRupiah)
         ReportRow(stringResource(R.string.reports_cf_financing), summary.financingCashFlowRupiah)
@@ -303,13 +298,13 @@ private fun FeasibilitySection(
             )
             return
         }
-        PlanFeasibilityCard(plan, Modifier.tourTarget(TourTarget.REPORTS_FEASIBILITY), onOpenPlan)
+        PlanFeasibilityCard(plan, onOpenPlan = onOpenPlan)
         PlanBreakdownCard(plan)
         return
     }
 
     // Realisasi: this month against its own break-even, then what was actually financed.
-    state.actualMonth?.let { ActualMonthCard(it, state.products, Modifier.tourTarget(TourTarget.REPORTS_FEASIBILITY)) }
+    state.actualMonth?.let { ActualMonthCard(it, state.products) }
     ReportCard(stringResource(R.string.reports_financing_actual_title)) {
         Text(
             stringResource(R.string.reports_financing_actual_note),

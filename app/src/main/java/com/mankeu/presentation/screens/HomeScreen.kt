@@ -1,7 +1,6 @@
 package com.mankeu.presentation.screens
 
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.rememberTourListState
 import com.mankeu.presentation.components.MankeuTooltip
 
 import androidx.compose.animation.AnimatedContent
@@ -97,8 +96,6 @@ import com.mankeu.presentation.components.SimpleMetricGrid
 import com.mankeu.presentation.components.SkeletonHero
 import com.mankeu.presentation.components.SkeletonListItem
 import com.mankeu.presentation.components.SkeletonMetricGrid
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.presentation.LocalMotion
 import com.mankeu.presentation.appLocale
 import com.mankeu.presentation.toRupiah
@@ -127,7 +124,6 @@ fun HomeScreen(
     }
 
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(
             start = if (expanded) 24.dp else 16.dp,
             end = if (expanded) 24.dp else 16.dp,
@@ -177,7 +173,6 @@ fun HomeScreen(
                 amount = summary.cashBalanceRupiah,
                 latestMonth = monthlyCashFlow.lastOrNull(),
                 projectId = state.selectedProjectId,
-                modifier = Modifier.tourTarget(TourTarget.HERO_SUMMARY),
                 onClick = { onNavigate(Destination.REPORTS) },
             )
         }
@@ -257,7 +252,7 @@ fun HomeScreen(
                 }
             }
         } else {
-            state.actualMonth?.let { actual -> item { ActualMonthCard(actual, state.products, Modifier.tourTarget(TourTarget.HOME_BEP)) } }
+            state.actualMonth?.let { actual -> item { ActualMonthCard(actual, state.products) } }
         }
         if (state.notices.isNotEmpty()) {
             item {
@@ -516,8 +511,7 @@ private fun ExpenseDistributionCard(
             shape = MaterialTheme.shapes.large,
             modifier = modifier
                 .fillMaxWidth()
-                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing))
-                .tourTarget(TourTarget.HOME_COST_CHART),
+                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing)),
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),

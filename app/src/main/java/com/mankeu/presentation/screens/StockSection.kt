@@ -1,9 +1,6 @@
 package com.mankeu.presentation.screens
 
 import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.tourTarget
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.rememberTourListState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -143,7 +140,6 @@ fun StockScreen(
     }
 
     LazyColumn(
-        state = rememberTourListState(),
         contentPadding = PaddingValues(horizontal = if (expanded) 24.dp else 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -161,7 +157,7 @@ fun StockScreen(
         }
         item { StockCard(items = items, onManage = null) }
         item {
-            Button(onClick = { showAddItem = true }, modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.STOCK_ADD)) {
+            Button(onClick = { showAddItem = true }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.stock_add_item))
@@ -175,7 +171,6 @@ fun StockScreen(
         items(items, key = { it.id }) { item ->
             Card(
                 modifier = Modifier.fillMaxWidth()
-                    .then(if (item.id == items.first().id) Modifier.tourTarget(TourTarget.STOCK_LIST) else Modifier)
                     .clickable { movementItemId = item.id },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
             ) {

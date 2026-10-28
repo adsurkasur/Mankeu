@@ -1,9 +1,8 @@
-"""Source of the in-app guide text (page tours + Pusat Bantuan), Indonesian and English.
+"""Source of the in-app guide text (Pusat Bantuan), Indonesian and English.
 
 Edit here, then run `python -I docs/guide/help_strings.py` from the repo root: it rewrites the
 generated block between the GUIDE markers in `app/src/main/res/values{,-en}/strings.xml`.
-Steps of an article are one per line ("\n"). Keep tour text to one or two everyday sentences;
-the detail belongs in the article the step links to.
+Steps of an article are one per line ("\n").
 """
 import os
 import re
@@ -16,12 +15,6 @@ def t(key, id_, en):
 
 
 # --- Mechanism -------------------------------------------------------------------------------
-t("tour_btn_got_it", "Mengerti", "Got it")
-t("tour_learn_more", "Pelajari lebih lanjut", "Learn more")
-t("tour_offer_text", "Selamat datang! Mau lihat panduan singkat (%1$d langkah)? Kapan pun butuh bantuan, ketuk tombol ? di kanan atas.", "Welcome! Take a short guide (%1$d steps)? Whenever you need help, tap the ? button at the top right.")
-t("tour_offer_start", "Lihat", "Show me")
-t("tour_offer_close", "Tutup", "Close")
-t("settings_tour_offers", "Tampilkan sapaan panduan di Beranda", "Show the welcome guide on the home page")
 t("help_center_title", "Pusat Bantuan", "Help Center")
 t("help_search_hint", "Cari bantuan, mis. stok, BEP, impor", "Search help, e.g. stock, break-even, import")
 t("help_search_empty", "Tidak ada topik yang cocok. Coba kata lain.", "No matching topic. Try another word.")
@@ -30,7 +23,6 @@ t("help_screenshot_desc", "Contoh tampilan: %1$s", "Example screen: %1$s")
 t("help_show_in_app", "Tunjukkan di aplikasi", "Show me in the app")
 t("help_related", "Topik terkait", "Related topics")
 t("help_sheet_title", "Bantuan", "Help")
-t("help_play_tour", "Putar panduan halaman ini (%1$d langkah)", "Play this page's guide (%1$d steps)")
 t("help_for_this_page", "Untuk halaman ini", "About this page")
 t("help_open_center", "Buka Pusat Bantuan", "Open Help Center")
 t("help_learn_how", "Pelajari caranya", "Learn how")
@@ -42,86 +34,6 @@ t("help_group_stock", "Stok", "Stock")
 t("help_group_report", "Laporan", "Reports")
 t("help_group_data", "Data dan cadangan", "Data and backup")
 t("help_group_faq", "Kenapa ...?", "Why ...?")
-
-# --- Page tours (short) ----------------------------------------------------------------------
-t("tour2_home_scope_title", "Usaha dan unit", "Business and unit")
-t("tour2_home_scope_desc", "Ketuk di sini untuk memilih atau menambah usaha dan cabang/unit. Semua angka di aplikasi milik unit yang dipilih.",
-  "Tap here to pick or add a business and a branch/unit. Every figure in the app belongs to the selected unit.")
-t("tour2_home_book_title", "Rencana atau kenyataan", "Plan or reality")
-t("tour2_home_book_desc", "Rencana berisi rencana usaha. Realisasi berisi uang yang benar-benar masuk dan keluar.",
-  "Plan holds your business plan. Actual holds the money that really came in and went out.")
-t("tour2_home_cash_title", "Uang kas", "Cash")
-t("tour2_home_cash_desc", "Sisa uang dari semua catatan di unit ini. Jika minus padahal uangnya ada, catat dulu modal awal.",
-  "The money left from every record in this unit. If it is negative while you do have money, record your starting capital first.")
-t("tour2_home_record_title", "Catat uang masuk dan keluar", "Record money in and out")
-t("tour2_home_record_desc", "Ketuk tombol ini lalu pilih Pemasukan atau Pengeluaran. Satu catatan untuk satu kejadian.",
-  "Tap this button, then pick income or expense. One record for each event.")
-t("tour2_entry_list_title", "Semua catatan", "All records")
-t("tour2_entry_list_desc", "Daftar semua uang masuk dan keluar, terbaru di atas. Catatan yang salah bisa diubah atau dihapus dari kartunya.",
-  "Every record of money in and out, newest first. A wrong record can be edited or deleted from its card.")
-t("tour2_entry_record_desc", "Ketuk untuk mencatat transaksi baru.", "Tap to record a new transaction.")
-t("tour2_form_kind_title", "Masuk atau keluar", "In or out")
-t("tour2_form_kind_desc", "Pilih dulu: uang masuk ke usaha, atau uang keluar dari usaha.", "First choose: money coming into the business, or going out.")
-t("tour2_form_amount_title", "Jumlah uang", "Amount")
-t("tour2_form_amount_desc", "Tulis jumlahnya dalam rupiah, tanpa titik. Contoh: 150000.", "Type the amount in rupiah, without dots. Example: 150000.")
-t("tour2_form_category_title", "Kategori", "Category")
-t("tour2_form_category_desc", "Kategori menentukan artinya: penjualan, biaya, setoran modal, ambil pribadi, atau beli alat. Untuk penjualan kamu bisa memilih produk dan jumlahnya.",
-  "The category decides what it means: a sale, a cost, capital paid in, a personal withdrawal, or equipment. For a sale you can pick the product and quantity.")
-t("tour2_form_save_title", "Simpan", "Save")
-t("tour2_form_save_desc", "Periksa lagi, lalu simpan. Catatan langsung masuk ke kas dan laporan.", "Check again, then save. The record goes straight into cash and reports.")
-t("tour2_plan_period_title", "Periode rencana", "Plan period")
-t("tour2_plan_period_desc", "Berapa bulan rencana ini berjalan. Biaya sekali bayar dibagi rata ke bulan-bulan ini.",
-  "How many months this plan runs. One-off costs are spread evenly over these months.")
-t("tour2_plan_feasibility_title", "Layak atau tidak", "Feasible or not")
-t("tour2_plan_feasibility_desc", "Dihitung otomatis dari isian di bawah: titik impas (BEP), laba per bulan, dan modal yang dibutuhkan.",
-  "Calculated from everything below: break-even point, profit per month and the capital you need.")
-t("tour2_plan_products_title", "Produk dan resep", "Products and recipes")
-t("tour2_plan_products_desc", "Apa yang dijual, harganya, target per bulan, dan biaya bahan per satuan. Panen musiman? Isi bulan mulai dijual.",
-  "What you sell, its price, the monthly target and the ingredient cost per unit. Seasonal harvest? Fill in the month it starts selling.")
-t("tour2_plan_costs_title", "Biaya, aset, dan modal", "Costs, assets and capital")
-t("tour2_plan_costs_desc", "Isi biaya tetap bulanan seperti sewa dan gaji, biaya sekali bayar, alat yang dibeli, dan modal yang akan disetor.",
-  "Add monthly fixed costs like rent and wages, one-off costs, equipment you buy, and the capital you will put in.")
-t("tour2_stock_add_title", "Tambah barang", "Add an item")
-t("tour2_stock_add_desc", "Catat barang yang disimpan. Pilih milik unit ini saja, atau dipakai semua unit seperti gudang pusat.",
-  "Record an item you keep. Choose whether it belongs to this unit only, or is shared by all units like a central store.")
-t("tour2_stock_list_title", "Barang masuk dan keluar", "Stock in and out")
-t("tour2_stock_list_desc", "Ketuk barang untuk mencatat barang masuk, keluar, atau hasil hitung ulang (opname).",
-  "Tap an item to record stock in, stock out, or a recount.")
-t("tour2_reports_tabs_title", "Tiga laporan", "Three reports")
-t("tour2_reports_tabs_desc", "Laba rugi dan arus kas, kelayakan dan BEP, serta perbandingan kenyataan dengan rencana.",
-  "Profit and cash flow, feasibility and break-even, and reality compared with the plan.")
-t("tour2_reports_profit_title", "Untung atau rugi", "Profit or loss")
-t("tour2_reports_profit_desc", "Pendapatan dikurangi biaya. Setoran modal, ambil pribadi, dan beli alat tidak mengubah laba.",
-  "Income minus costs. Capital paid in, personal withdrawals and equipment purchases do not change profit.")
-t("tour2_reports_cash_title", "Ke mana uangnya", "Where the money went")
-t("tour2_reports_cash_desc", "Arus kas memisahkan uang dari jualan, dari beli alat, dan dari modal atau ambil pribadi.",
-  "Cash flow separates money from trading, from buying equipment, and from capital or personal withdrawals.")
-t("tour2_reports_bep_title", "Sudah balik modal bulan ini?", "Break-even this month?")
-t("tour2_home_bep_desc", "Muncul di Realisasi saat ada penjualan bulan ini: sudah melewati titik impas atau belum, dan apakah belanja bahan sesuai resep.",
-  "Shown in Actual when there are sales this month: whether you are past break-even, and whether ingredient spending matches the recipes.")
-t("tour2_data_import_title", "Impor dari Excel", "Import from Excel")
-t("tour2_data_import_desc", "Isi template Mankeu di Excel, lalu pilih berkasnya. Kamu melihat pratinjau dulu sebelum apa pun berubah.",
-  "Fill in the Mankeu template in Excel, then pick the file. You see a preview before anything changes.")
-t("tour2_data_history_title", "Riwayat impor", "Import history")
-t("tour2_data_history_desc", "Setiap impor bisa dibatalkan di sini jika ternyata salah berkas.", "Every import can be undone here if it was the wrong file.")
-t("tour2_data_export_title", "Ekspor", "Export")
-t("tour2_data_export_desc", "Simpan data unit ini ke Excel, laporan ke PDF, atau unduh template kosong.", "Save this unit's data to Excel, the report to PDF, or download a blank template.")
-t("tour2_data_backup_title", "Cadangan", "Backup")
-t("tour2_data_backup_desc", "Buat cadangan berkata sandi sebelum ganti HP. Tanpa kata sandi itu, cadangan tidak bisa dibuka.",
-  "Make a password-protected backup before changing phones. Without that password the backup cannot be opened.")
-t("tour2_scope_business_title", "Usaha", "Business")
-t("tour2_scope_business_desc", "Satu usaha punya kategori sendiri. Buat usaha baru untuk bisnis yang benar-benar terpisah.",
-  "Each business has its own categories. Create a new one for a truly separate business.")
-t("tour2_scope_unit_title", "Cabang atau unit", "Branch or unit")
-t("tour2_scope_unit_desc", "Cabang, kebun, atau musim tanam di dalam satu usaha. Tiap unit punya catatan, rencana, dan stoknya sendiri.",
-  "A branch, field or season inside one business. Each unit has its own records, plan and stock.")
-t("tour2_settings_guides_title", "Panduan dan bantuan", "Guides and help")
-t("tour2_settings_guides_desc", "Buka Pusat Bantuan, nyalakan atau matikan sapaan panduan di Beranda, atau ulangi semua panduan dari awal.",
-  "Open the Help Center, turn the home welcome on or off, or start every guide again.")
-t("tour2_settings_display_title", "Tampilan", "Display")
-t("tour2_settings_display_desc", "Tema terang atau gelap, bahasa, gerakan, getar, dan suara.", "Light or dark theme, language, motion, vibration and sound.")
-t("tour2_settings_drive_title", "Google Drive", "Google Drive")
-t("tour2_settings_drive_desc", "Masuk dengan akun Google agar cadangan bisa disimpan di Drive pribadimu.", "Sign in with Google so backups can be stored in your own Drive.")
 
 # --- Articles ---------------------------------------------------------------------------------
 

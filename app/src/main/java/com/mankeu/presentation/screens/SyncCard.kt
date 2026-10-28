@@ -30,8 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.presentation.appLocale
 import com.mankeu.presentation.components.MankeuSheet
-import com.mankeu.presentation.components.TourTarget
-import com.mankeu.presentation.components.tourTarget
 import com.mankeu.sync.SyncController
 import com.mankeu.sync.SyncPassphraseLost
 import com.mankeu.sync.WrongSyncPassphrase
@@ -55,7 +53,7 @@ fun SyncCard(
     var askPassphrase by remember { mutableStateOf(false) }
     var confirmOff by remember { mutableStateOf(false) }
     Card(
-        modifier = Modifier.fillMaxWidth().tourTarget(TourTarget.SETTINGS_SYNC),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

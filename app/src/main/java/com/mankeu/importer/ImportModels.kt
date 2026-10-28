@@ -12,29 +12,34 @@ import java.time.YearMonth
  *
  * Version 3 (DEC-014): products and recipes replace the BEP parameter sheet, and plan lines and
  * transactions carry cost nature, recurrence, asset life, product and quantity.
+ * Version 5 (DEC-028): products have a base unit and batch yield, sale units and recipe lines
+ * (material or free cost per batch) have their own sheets, and Transaksi carries unit and material.
+ * Older files are rejected by their headers.
  */
 object MankeuTemplate {
     const val MARKER = "MANKEU_TEMPLATE"
-    const val VERSION = 4
+    const val VERSION = 5
 
     const val GUIDE = "Petunjuk"
     const val TRANSACTIONS = "Transaksi"
     const val BUDGET = "Rencana Anggaran"
     const val PRODUCTS = "Produk"
+    const val SALE_UNITS = "Satuan Jual"
     const val RECIPES = "Resep Produk"
     const val STOCK = "Stok Barang"
     const val CATEGORIES = "Kategori"
 
     val TRANSACTION_HEADERS = listOf(
         "Tanggal", "Keterangan", "Kategori", "Pemasukan (Rp)", "Pengeluaran (Rp)",
-        "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)",
+        "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)", "Satuan", "Bahan",
     )
     val BUDGET_HEADERS = listOf(
         "Bulan", "Kategori", "Item", "Jumlah", "Satuan", "Harga Satuan (Rp)", "Total (Rp)",
         "Berulang", "Sifat Biaya", "Umur Pakai (bulan)",
     )
-    val PRODUCT_HEADERS = listOf("Nama", "Satuan", "Harga Jual (Rp)", "Target per Bulan")
-    val RECIPE_HEADERS = listOf("Produk", "Komponen", "Biaya (Rp)", "Untuk Berapa Unit")
+    val PRODUCT_HEADERS = listOf("Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)")
+    val SALE_UNIT_HEADERS = listOf("Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)")
+    val RECIPE_HEADERS = listOf("Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)")
     val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum")
     val CATEGORY_HEADERS = listOf("Nama", "Peran", "Sifat Biaya")
     val GUIDE_HEADERS = listOf("Kunci", "Nilai")
@@ -47,18 +52,13 @@ object MankeuTemplate {
     const val PERIOD_SEPARATOR = " s.d. "
     const val ONCE = "Sekali"
 
-    /**
-     * Columns added after a sheet was first published, in order after its required headers. A file
-     * from before (v3) leaves them out and still imports; when present, the header must match.
-     */
-    val OPTIONAL = mapOf(PRODUCTS to listOf("Mulai Dijual (bulan ke-)"))
-
     /** Sheets that must exist with exactly these headers in row 1. [CATEGORIES] is reference only. */
     val REQUIRED = linkedMapOf(
         GUIDE to GUIDE_HEADERS,
         TRANSACTIONS to TRANSACTION_HEADERS,
         BUDGET to BUDGET_HEADERS,
         PRODUCTS to PRODUCT_HEADERS,
+        SALE_UNITS to SALE_UNIT_HEADERS,
         RECIPES to RECIPE_HEADERS,
         STOCK to STOCK_HEADERS,
     )
@@ -82,6 +82,9 @@ data class ImportTransaction(
     val quantityText: String? = null,
     val costNature: CostNature? = null,
     val usefulLifeMonths: Int? = null,
+    /** Sale unit (sales) or purchase unit (material purchases). */
+    val unit: String? = null,
+    val materialName: String? = null,
 )
 
 /** One `Rencana Anggaran` row, for the Proyeksi book. */
@@ -99,17 +102,22 @@ data class ImportBudgetLine(
     val usefulLifeMonths: Int? = null,
 )
 
-data class ImportComponent(val name: String, val amountRupiah: Long, val yieldText: String)
+/** One `Satuan Jual` row: [contentText] base units per [name]. */
+data class ImportSaleUnit(val name: String, val contentText: String, val priceRupiah: Long)
 
-/** One `Produk` row with its `Resep Produk` lines. */
+/** One `Resep Produk` row: a material with a quantity per batch, or a free cost per batch. */
+data class ImportRecipeLine(val source: String, val name: String, val materialName: String?, val quantityText: String?, val amountRupiah: Long?)
+
+/** One `Produk` row with its `Satuan Jual` and `Resep Produk` rows. */
 data class ImportProduct(
     val source: String,
     val name: String,
-    val unit: String,
-    val priceRupiah: Long,
+    val baseUnit: String,
+    val batchYieldText: String,
     val targetPerMonthText: String?,
-    val components: List<ImportComponent>,
     val sellFromMonth: Int = 1,
+    val units: List<ImportSaleUnit>,
+    val recipe: List<ImportRecipeLine>,
 )
 
 /** One `Stok Barang` row. */

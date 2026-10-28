@@ -82,7 +82,7 @@ All amounts are derived at read time. No report total is a writable source of tr
 
 ## Excel contract (DEC-012)
 
-- One format for the blank template and the export: sheets Petunjuk, Transaksi, Rencana Anggaran, Produk, Resep Produk, Stok Barang, Kategori, with the `MANKEU_TEMPLATE` marker. Optional columns (`MankeuTemplate.OPTIONAL`) may be absent; when present they need the exact header.
+- One format for the blank template and the export: sheets Petunjuk, Transaksi, Rencana Anggaran, Produk, Satuan Jual, Resep Produk, Stok Barang, Kategori, with the `MANKEU_TEMPLATE` marker (version 5, DEC-028). Every column is required with the exact header; files of an older version are rejected with the list of differing headers.
 - Import reads only that template. Any other file is rejected with the exact missing or renamed sheets and columns and a way to download the template.
 - Import is bulk entry into the selected unit: preview with new categories, conflicts, and a duplicate warning, then one atomic commit with a notice.
 - Batalkan impor deletes the batch's records (edited ones included), archives its plan lines, removes its products and stock, and clears the plan period it set if unchanged. The batch row stays as history.

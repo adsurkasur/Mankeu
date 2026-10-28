@@ -30,7 +30,8 @@ import com.mankeu.domain.CostNature
 import com.mankeu.domain.Recurrence
 import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.importer.ImportBudgetLine
-import com.mankeu.importer.ImportComponent
+import com.mankeu.importer.ImportRecipeLine
+import com.mankeu.importer.ImportSaleUnit
 import com.mankeu.importer.ImportProduct
 import com.mankeu.importer.ImportStockItem
 import com.mankeu.importer.ImportTransaction
@@ -138,8 +139,16 @@ class HelpScreenshotTest {
                     ImportBudgetLine("R!A6", month, "Setoran Modal Pemilik", "Modal awal", null, null, null, 15_000_000),
                 ),
                 products = listOf(
-                    ImportProduct("P!A2", "Kopi Susu", "cup", 10_000, "700", listOf(ImportComponent("Susu", 18_000, "6"), ImportComponent("Kopi dan cup", 2_000, "1"))),
-                    ImportProduct("P!A3", "Es Teh", "gelas", 5_000, "400", listOf(ImportComponent("Teh, gula, es", 1_500, "1"))),
+                    ImportProduct(
+                        "P!A2", "Kopi Susu", "cup", "6", "700", 1,
+                        units = listOf(ImportSaleUnit("cup", "1", 10_000)),
+                        recipe = listOf(ImportRecipeLine("R!A2", "Susu", null, null, 18_000), ImportRecipeLine("R!A3", "Kopi dan cup", null, null, 12_000)),
+                    ),
+                    ImportProduct(
+                        "P!A3", "Es Teh", "gelas", "1", "400", 1,
+                        units = listOf(ImportSaleUnit("gelas", "1", 5_000)),
+                        recipe = listOf(ImportRecipeLine("R!A4", "Teh, gula, es", null, null, 1_500)),
+                    ),
                 ),
                 stockItems = listOf(
                     ImportStockItem("S!A2", "Susu UHT", "liter", 18_000, "24", "6"),

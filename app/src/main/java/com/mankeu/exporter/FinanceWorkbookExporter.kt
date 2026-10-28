@@ -9,7 +9,6 @@ import com.mankeu.data.FinancialEventEntity
 import com.mankeu.data.ImportBatchEntity
 import com.mankeu.data.ImportNoticeEntity
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.LegacyProductShape
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.ProjectEntity
 import com.mankeu.data.ProvenanceEntity
@@ -43,8 +42,6 @@ data class FinanceExportBundle(
     val provenance: List<ProvenanceEntity>,
     val stockItems: List<StockItemEntity> = emptyList(),
     val products: List<ProductRecord> = emptyList(),
-    /** Material prices the recipe lines are costed at (DEC-028 §2). */
-    val materialPrices: Map<String, Long> = emptyMap(),
     /** The business plan's BEP (DEC-014), computed by the repository from the same rows. */
     val plan: PlanAnalysis? = null,
     val generatedAtEpochMillis: Long = System.currentTimeMillis(),
@@ -66,8 +63,9 @@ class FinanceWorkbookExporter(
             guide(emptyList()),
             WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList(), setOf(3, 4)),
             WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList(), setOf(5, 6)),
-            WorkbookTable(MankeuTemplate.PRODUCTS, PRODUCT_COLUMNS, emptyList(), setOf(2)),
-            WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList(), setOf(2)),
+            WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
+            WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList(), setOf(3)),
+            WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList(), setOf(4)),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList(), setOf(2)),
             categoryTable(categories),
         ),
@@ -77,6 +75,7 @@ class FinanceWorkbookExporter(
         val books = bundle.books.associateBy { BookMode.valueOf(it.book.mode) }
         val categories = bundle.categories.associateBy { it.id }
         val productNames = bundle.products.associate { it.product.id to it.product.name }
+        val stockNames = bundle.stockItems.associate { it.id to it.name }
         return writer.write(
             listOfNotNull(
                 guide(
@@ -90,10 +89,11 @@ class FinanceWorkbookExporter(
                         ),
                     ) + listOfNotNull(planPeriodRow(bundle.project)),
                 ),
-                transactions(books[BookMode.REALIZATION]?.events.orEmpty(), productNames),
+                transactions(books[BookMode.REALIZATION]?.events.orEmpty(), productNames, stockNames),
                 budget(books[BookMode.PROJECTION]?.budgets.orEmpty(), categories),
                 products(bundle.products),
-                recipes(bundle.products, bundle.materialPrices),
+                saleUnits(bundle.products),
+                recipes(bundle.products, stockNames),
                 stock(bundle.stockItems),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
                 reportTable(bundle.books),
@@ -101,8 +101,6 @@ class FinanceWorkbookExporter(
             ),
         )
     }
-
-    private val PRODUCT_COLUMNS = MankeuTemplate.PRODUCT_HEADERS + MankeuTemplate.OPTIONAL.getValue(MankeuTemplate.PRODUCTS)
 
     /** The unit's plan period, so an export re-imports with the same months (one-off costs spread the same). */
     private fun planPeriodRow(project: ProjectEntity): List<Any?>? {
@@ -124,18 +122,18 @@ class FinanceWorkbookExporter(
             listOf("Format", MankeuTemplate.MARKER),
             listOf("Versi format", MankeuTemplate.VERSION),
         ) + context + listOf(
-            listOf("Transaksi", "Satu baris satu transaksi buku Realisasi. Isi Pemasukan ATAU Pengeluaran saja. Tanggal YYYY-MM-DD. Produk & Jumlah opsional untuk penjualan. Sifat Biaya (Tetap/Variabel) opsional, mengganti sifat kategori. Umur Pakai hanya untuk beli aset."),
+            listOf("Transaksi", "Satu baris satu transaksi buku Realisasi. Isi Pemasukan ATAU Pengeluaran saja. Tanggal YYYY-MM-DD. Penjualan: Produk, Jumlah, dan Satuan (satuan jual produk itu). Belanja bahan: Bahan (nama di lembar Stok Barang), Jumlah, dan Satuan beli; harga bahan mengikuti belanja terbaru. Sifat Biaya (Tetap/Variabel) opsional, mengganti sifat kategori. Umur Pakai hanya untuk beli aset."),
             listOf("Kategori", "Tulis nama kategori. Kategori yang belum ada dibuat otomatis saat impor. Lihat daftar di lembar Kategori."),
             listOf("Modal & prive", "Setoran modal: Pemasukan berkategori 'Setoran Modal Pemilik'. Ambil uang pribadi: Pengeluaran berkategori 'Ambil untuk Pribadi (Prive)'. Beli alat: Pengeluaran berkategori 'Beli Peralatan & Aset'."),
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
-            listOf("Produk & Resep", "Produk: harga jual, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode; isi 3 bila baru panen di bulan ketiga). Resep: biaya variabel per produk; 'Untuk Berapa Unit' untuk bahan yang dibeli per kemasan (mis. Rp15.000 untuk 50 cup)."),
+            listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
             listOf("Stok Barang", "Barang yang namanya sudah ada di aplikasi dilewati."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
     )
 
     /** Cash rows: what an owner would write in a cash book. */
-    private fun transactions(events: List<FinancialEventEntity>, productNames: Map<String, String>) = WorkbookTable(
+    private fun transactions(events: List<FinancialEventEntity>, productNames: Map<String, String>, stockNames: Map<String, String>) = WorkbookTable(
         name = MankeuTemplate.TRANSACTIONS,
         headers = MankeuTemplate.TRANSACTION_HEADERS,
         rows = events
@@ -149,9 +147,11 @@ class FinanceWorkbookExporter(
                     event.amountRupiah.takeIf { incoming },
                     event.amountRupiah.takeUnless { incoming },
                     event.productId?.let(productNames::get),
-                    quantity(event.quantityText.takeIf { event.productId != null }),
+                    quantity(event.quantityText.takeIf { event.productId != null || event.stockItemId != null }),
                     MankeuTemplate.natureLabel(PlanAssembly.nature(event.costNature)),
                     event.usefulLifeMonths,
+                    event.unit.takeIf { event.productId != null || event.stockItemId != null },
+                    event.stockItemId?.let(stockNames::get),
                 )
             },
         currencyColumns = setOf(3, 4),
@@ -179,19 +179,30 @@ class FinanceWorkbookExporter(
 
     private fun products(products: List<ProductRecord>) = WorkbookTable(
         name = MankeuTemplate.PRODUCTS,
-        headers = PRODUCT_COLUMNS,
-        rows = products.map { p -> listOf(p.product.name, p.mainUnit?.name ?: p.product.unit, p.mainUnit?.priceRupiah ?: 0, quantity(p.product.targetPerMonthText), p.product.sellFromMonth) },
-        currencyColumns = setOf(2),
+        headers = MankeuTemplate.PRODUCT_HEADERS,
+        rows = products.map { p ->
+            listOf(p.product.name, p.product.unit, quantity(p.product.batchYieldText), quantity(p.product.targetPerMonthText), p.product.sellFromMonth)
+        },
     )
 
-    // Template v4 until Task 4: lossless because no product has the new shape before Task 5.
-    private fun recipes(products: List<ProductRecord>, materialPrices: Map<String, Long>) = WorkbookTable(
+    private fun saleUnits(products: List<ProductRecord>) = WorkbookTable(
+        name = MankeuTemplate.SALE_UNITS,
+        headers = MankeuTemplate.SALE_UNIT_HEADERS,
+        rows = products.flatMap { p ->
+            p.units.sortedBy { it.sortOrder }.map { listOf(p.product.name, it.name, quantity(it.contentText), it.priceRupiah) }
+        },
+        currencyColumns = setOf(3),
+    )
+
+    private fun recipes(products: List<ProductRecord>, stockNames: Map<String, String>) = WorkbookTable(
         name = MankeuTemplate.RECIPES,
         headers = MankeuTemplate.RECIPE_HEADERS,
         rows = products.flatMap { p ->
-            LegacyProductShape.components(p, materialPrices).map { listOf(p.product.name, it.name, it.amountRupiah, quantity(it.yieldText)) }
+            p.recipe.sortedBy { it.sortOrder }.map {
+                listOf(p.product.name, it.name, it.stockItemId?.let(stockNames::get), quantity(it.quantityText), it.amountRupiah)
+            }
         },
-        currencyColumns = setOf(2),
+        currencyColumns = setOf(4),
     )
 
     private fun stock(items: List<StockItemEntity>) = WorkbookTable(

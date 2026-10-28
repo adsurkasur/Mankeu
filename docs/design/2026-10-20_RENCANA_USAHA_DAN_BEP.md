@@ -87,7 +87,7 @@ Semua uang `Long` rupiah; perhitungan antara `BigDecimal`; pembulatan sekali di 
 
 ## 6. Template Excel (perubahan DEC-012)
 
-- `Parameter BEP` diganti dua lembar: **Produk** (Nama · Satuan · Harga Jual (Rp) · Target per Bulan) dan **Resep Produk** (Produk · Komponen · Biaya (Rp) · Untuk Berapa Unit).
+- `Parameter BEP` diganti dua lembar: **Produk** (Nama · Satuan · Harga Jual (Rp) · Target per Bulan) dan **Resep Produk** (Produk · Komponen · Biaya (Rp) · Untuk Berapa Unit). *Sejak template v5 (DEC-028): lembar Produk, Satuan Jual, dan Resep Produk berbentuk lain; lihat `MankeuTemplate` di `ImportModels.kt`.*
 - `Rencana Anggaran` diberi kolom **Sifat** (Tetap/Variabel), **Berulang** (Bulanan/Sekali), **Umur Pakai (bulan)**.
 - `Transaksi` diberi kolom opsional **Produk** dan **Jumlah**.
 - Ekspor dan PDF memuat tabel rincian BEP yang sama dengan layar.

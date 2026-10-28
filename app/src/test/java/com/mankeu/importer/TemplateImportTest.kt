@@ -46,8 +46,8 @@ class TemplateImportTest {
         assertEquals(
             listOf(
                 ImportTransaction("Transaksi!A2", DAY, "Setoran modal awal", "Setoran Modal Pemilik", incoming = true, amountRupiah = 5_000_000),
-                ImportTransaction("Transaksi!A3", DAY, "Beli kopi", "Bahan Baku & Stok", incoming = false, amountRupiah = 1_150_000, costNature = CostNature.FIXED),
-                ImportTransaction("Transaksi!A4", DAY, "Jual kopi", "Penjualan & Jasa", incoming = true, amountRupiah = 4_000_000, productName = "Kopi Susu", quantityText = "400"),
+                ImportTransaction("Transaksi!A3", DAY, "Beli kopi", "Bahan Baku & Stok", incoming = false, amountRupiah = 1_150_000, costNature = CostNature.FIXED, quantityText = "10", unit = "kg", materialName = "Gula"),
+                ImportTransaction("Transaksi!A4", DAY, "Jual kopi", "Penjualan & Jasa", incoming = true, amountRupiah = 4_000_000, productName = "Kopi Susu", quantityText = "40", unit = "pak"),
                 ImportTransaction("Transaksi!A5", DAY, "Mesin espresso", "Pembelian Aset", incoming = false, amountRupiah = 3_600_000, usefulLifeMonths = 24),
             ),
             preview.transactions,
@@ -62,8 +62,12 @@ class TemplateImportTest {
         assertEquals(
             listOf(
                 ImportProduct(
-                    "Produk!A2", "Kopi Susu", "cup", 10_000, "700",
-                    listOf(ImportComponent("Susu", 3_000, "1"), ImportComponent("Cup", 500, "1")),
+                    source = "Produk!A2", name = "Kopi Susu", baseUnit = "cup", batchYieldText = "6", targetPerMonthText = "700", sellFromMonth = 1,
+                    units = listOf(ImportSaleUnit("cup", "1", 10_000), ImportSaleUnit("pak", "10", 95_000)),
+                    recipe = listOf(
+                        ImportRecipeLine("Resep Produk!A2", "Susu", materialName = null, quantityText = null, amountRupiah = 18_000),
+                        ImportRecipeLine("Resep Produk!A3", "Gula", materialName = "Gula", quantityText = "0.5", amountRupiah = null),
+                    ),
                 ),
             ),
             preview.products,
@@ -151,7 +155,7 @@ class TemplateImportTest {
     fun `a recipe line for a product not in the file is rejected`() {
         val bytes = template(
             transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
-            recipes = listOf(listOf("Teh", "Gula", 1_000L, "10")),
+            recipes = listOf(listOf("Teh", "Gula", null, null, 1_000L)),
         )
 
         assertEquals(listOf("Resep Produk!A2: produk \"Teh\" tidak ada di lembar \"Produk\"."), importer.preview("x.xlsx", bytes).errors)
@@ -165,6 +169,7 @@ class TemplateImportTest {
                 WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
             ),
@@ -210,29 +215,11 @@ class TemplateImportTest {
     }
 
     @Test
-    fun `a version 3 file without the selling month column still imports, selling from month 1`() {
-        val bytes = template(
-            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
-            products = listOf(listOf("Cabai", "kg", 20_000L, "300")),
-        )
-
-        val preview = importer.preview("lama.xlsx", bytes)
-
-        assertTrue(preview.errors.joinToString(), preview.errors.isEmpty())
-        assertEquals(1, preview.products.single().sellFromMonth)
-    }
-
-    @Test
-    fun `a bad selling month and a renamed selling month column are named`() {
-        val headers = MankeuTemplate.PRODUCT_HEADERS + MankeuTemplate.OPTIONAL.getValue(MankeuTemplate.PRODUCTS)
+    fun `a bad selling month is named`() {
         val bad = template(
             transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
-            products = listOf(listOf("Cabai", "kg", 20_000L, "300", "0"), listOf("Tomat", "kg", 8_000L, "100", "Maret")),
-            productHeaders = headers,
-        )
-        val renamed = template(
-            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
-            productHeaders = MankeuTemplate.PRODUCT_HEADERS + "Bulan Panen",
+            products = listOf(listOf("Cabai", "kg", "1", "300", "0"), listOf("Tomat", "kg", "1", "100", "Maret")),
+            saleUnits = listOf(listOf("Cabai", "kg", "1", 20_000L), listOf("Tomat", "kg", "1", 8_000L)),
         )
 
         assertEquals(
@@ -242,26 +229,75 @@ class TemplateImportTest {
             ),
             importer.preview("x.xlsx", bad).errors,
         )
-        assertEquals(
-            listOf("Lembar \"Produk\" kolom E1 harus \"Mulai Dijual (bulan ke-)\" atau kosong, tertulis \"Bulan Panen\"."),
-            importer.preview("x.xlsx", renamed).errors,
+    }
+
+    @Test
+    fun `recipe rows need either a material with a quantity or a free cost`() {
+        val bytes = template(
+            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+            products = listOf(listOf("Teh", "gelas", "5", null, null)),
+            saleUnits = listOf(listOf("Teh", "gelas", "1", 5_000L)),
+            recipes = listOf(
+                listOf("Teh", "Gula", "Gula", null, null),
+                listOf("Teh", "Susu", "Susu", "2", 1_000L),
+                listOf("Teh", "Es", null, null, null),
+            ),
         )
+
+        assertEquals(
+            listOf(
+                "Resep Produk!D2: Jumlah per Batch wajib diisi untuk bahan \"Gula\".",
+                "Resep Produk!E3: baris berbahan diisi Jumlah, Biaya dibiarkan kosong.",
+                "Resep Produk!E4: Biaya per Batch wajib diisi untuk komponen tanpa bahan.",
+            ),
+            importer.preview("x.xlsx", bytes).errors,
+        )
+    }
+
+    @Test
+    fun `a product without a sale unit row is named`() {
+        val bytes = template(
+            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+            products = listOf(listOf("Teh", "gelas", "5", null, null)),
+        )
+
+        assertEquals(listOf("Produk!A2: produk \"Teh\" belum punya baris di lembar \"Satuan Jual\"."), importer.preview("x.xlsx", bytes).errors)
+    }
+
+    @Test
+    fun `a version 4 file is rejected with the exact differences`() {
+        val v4 = XlsxWorkbookWriter().write(
+            listOf(
+                WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
+                WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS.dropLast(2), emptyList()),
+                WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.PRODUCTS, listOf("Nama", "Satuan", "Harga Jual (Rp)", "Target per Bulan"), emptyList()),
+                WorkbookTable(MankeuTemplate.RECIPES, listOf("Produk", "Komponen", "Biaya (Rp)", "Untuk Berapa Unit"), emptyList()),
+                WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
+            ),
+        )
+
+        val errors = importer.preview("lama.xlsx", v4).errors
+
+        assertTrue(errors.joinToString(), "Lembar \"Satuan Jual\" tidak ada." in errors)
+        assertTrue(errors.joinToString(), "Lembar \"Produk\" kolom B1 harus \"Satuan Dasar\", tertulis \"Satuan\"." in errors)
     }
 
     // --- fixtures ---------------------------------------------------------------------------
 
-    /** A minimal valid template whose Transaksi sheet is [transactions]; products default to the v3 columns. */
+    /** A minimal valid template whose Transaksi sheet is [transactions]; products and units default to none. */
     private fun template(
         transactions: WorkbookTable,
         recipes: List<List<Any?>> = emptyList(),
         products: List<List<Any?>> = emptyList(),
-        productHeaders: List<String> = MankeuTemplate.PRODUCT_HEADERS,
+        saleUnits: List<List<Any?>> = emptyList(),
     ): ByteArray = XlsxWorkbookWriter().write(
         listOf(
             WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
             transactions,
             WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList()),
-            WorkbookTable(MankeuTemplate.PRODUCTS, productHeaders, products),
+            WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, products),
+            WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, saleUnits),
             WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, recipes),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
         ),
@@ -299,9 +335,9 @@ class TemplateImportTest {
                 events = listOf(
                     event("e1", FinancialEventType.OWNER_CAPITAL, 5_000_000, "Setoran modal awal", "Setoran Modal Pemilik", createdAt = 1),
                     event("e2", FinancialEventType.CASH_EXPENSE, 1_150_000, "Beli kopi", "Bahan Baku & Stok", createdAt = 2)
-                        .copy(costNature = CostNature.FIXED.name),
+                        .copy(costNature = CostNature.FIXED.name, stockItemId = "s", quantityText = "10", unit = "kg", unitPriceRupiah = 115_000),
                     event("e3", FinancialEventType.CASH_INCOME, 4_000_000, "Jual kopi", "Penjualan & Jasa", createdAt = 3)
-                        .copy(productId = "kopi", quantityText = "400"),
+                        .copy(productId = "kopi", quantityText = "40", unit = "pak"),
                     event("e6", FinancialEventType.ASSET_PURCHASE_CASH, 3_600_000, "Mesin espresso", "Pembelian Aset", createdAt = 3)
                         .copy(usefulLifeMonths = 24),
                 ),
@@ -313,12 +349,14 @@ class TemplateImportTest {
         provenance = emptyList(),
         products = listOf(
             ProductRecord(
-                ProductEntity(id = "kopi", projectId = "p", name = "Kopi Susu", unit = "cup", targetPerMonthText = "700", createdAtEpochMillis = 0),
-                listOf(ProductUnitEntity("kopi-u0", "kopi", "cup", "1", 10_000)),
+                ProductEntity(id = "kopi", projectId = "p", name = "Kopi Susu", unit = "cup", batchYieldText = "6", targetPerMonthText = "700", createdAtEpochMillis = 0),
                 listOf(
-                    // Schema 12's "Rp 18.000 covers 6" is Rp 3.000 per cup after migration (DEC-028 §6).
-                    ProductRecipeLineEntity(id = "k1", productId = "kopi", name = "Susu", amountRupiah = 3_000, sortOrder = 0),
-                    ProductRecipeLineEntity(id = "k2", productId = "kopi", name = "Cup", amountRupiah = 500, sortOrder = 1),
+                    ProductUnitEntity(id = "u1", productId = "kopi", name = "cup", contentText = "1", priceRupiah = 10_000, sortOrder = 0),
+                    ProductUnitEntity(id = "u2", productId = "kopi", name = "pak", contentText = "10", priceRupiah = 95_000, sortOrder = 1),
+                ),
+                listOf(
+                    ProductRecipeLineEntity(id = "k1", productId = "kopi", name = "Susu", amountRupiah = 18_000, sortOrder = 0),
+                    ProductRecipeLineEntity(id = "k2", productId = "kopi", name = "Gula", stockItemId = "s", quantityText = "0.5", sortOrder = 1),
                 ),
             ),
         ),

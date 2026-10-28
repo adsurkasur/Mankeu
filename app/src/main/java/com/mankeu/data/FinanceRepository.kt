@@ -214,7 +214,6 @@ class FinanceRepository(private val database: AppDatabase) {
                 provenance = dao.getProvenance(project.id),
                 stockItems = stockDao.getStockItems(business.id, project.id),
                 products = productsOf(project.id),
-                materialPrices = materialPrices(business.id),
                 plan = plan,
             )
         }
@@ -682,7 +681,8 @@ class FinanceRepository(private val database: AppDatabase) {
     private fun MoneyEvent.withPurchasePrice(): MoneyEvent {
         if (stockItemId == null || unitPriceRupiah != null) return this
         val quantity = TransactionCalculation.parseQuantity(quantityText) ?: return this
-        return copy(unitPriceRupiah = TransactionCalculation.computeUnitPriceRupiah(amountRupiah, quantity))
+        // A tiny purchase can round to Rp0; that is no price, and must not zero the material.
+        return copy(unitPriceRupiah = TransactionCalculation.computeUnitPriceRupiah(amountRupiah, quantity).takeIf { it > 0 })
     }
 
     /**
@@ -780,7 +780,7 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun reviewImport(businessId: String, projectId: String, preview: WorkbookImportPreview): ImportReview = database.withTransaction {
         val plan = planCategories(businessId, preview)
         val existingStock = stockDao.getStockItems(businessId, projectId).map { normalize(it.name) }.toSet()
-        val products = importProductPlan(projectId, preview)
+        val products = importProductPlan(businessId, projectId, preview)
         ImportReview(
             newCategories = plan.newCategories.map { it.name to it.role },
             conflicts = plan.conflicts + products.conflicts,
@@ -799,7 +799,7 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun commitImport(businessId: String, projectId: String, preview: WorkbookImportPreview): Int = database.withTransaction {
         require(preview.canCommit) { "Berkas impor belum bisa disimpan." }
         val plan = planCategories(businessId, preview)
-        val productPlan = importProductPlan(projectId, preview)
+        val productPlan = importProductPlan(businessId, projectId, preview)
         (plan.conflicts + productPlan.conflicts).let { conflicts -> require(conflicts.isEmpty()) { conflicts.joinToString("\n") } }
         val books = ensureBookPair(projectId)
         val actual = books.getValue(BookMode.REALIZATION)
@@ -839,6 +839,27 @@ class FinanceRepository(private val database: AppDatabase) {
         val categories = plan.newCategories.associate { draft ->
             draft.normalized to requireNotNull(dao.getCategory(createCategory(businessId, draft.name, draft.role)))
         } + plan.existing
+        val materialIds = productPlan.materials.toMutableMap()
+        addedStock.forEach { item ->
+            val stockId = UUID.randomUUID().toString()
+            materialIds[normalize(item.name)] = stockId
+            stockDao.insertStockItem(
+                StockItemEntity(
+                    id = stockId,
+                    businessId = businessId,
+                    name = item.name.trim(),
+                    unit = item.unit.trim(),
+                    basePriceRupiah = item.priceRupiah,
+                    initialStockText = item.quantityText,
+                    currentStockText = item.quantityText,
+                    minAlertStockText = item.minAlertText,
+                    createdAtEpochMillis = now,
+                    importBatchId = batchId,
+                    // Import is bulk entry into the selected unit (DEC-012), stock included.
+                    projectId = projectId,
+                ),
+            )
+        }
         val productIds = productPlan.existing.toMutableMap()
         productPlan.added.forEachIndexed { index, item ->
             val productId = UUID.randomUUID().toString()
@@ -847,7 +868,8 @@ class FinanceRepository(private val database: AppDatabase) {
                     id = productId,
                     projectId = projectId,
                     name = item.name.trim(),
-                    unit = item.unit.trim(),
+                    unit = item.baseUnit.trim(),
+                    batchYieldText = item.batchYieldText,
                     targetPerMonthText = item.targetPerMonthText,
                     sellFromMonth = item.sellFromMonth,
                     sortOrder = productIds.size + index,
@@ -855,8 +877,24 @@ class FinanceRepository(private val database: AppDatabase) {
                     importBatchId = batchId,
                 ),
             )
-            dao.insertProductUnits(listOf(LegacyProductShape.saleUnit(productId, item.unit.trim(), item.priceRupiah)))
-            dao.insertRecipeLines(item.components.mapIndexed { i, c -> LegacyProductShape.recipeLine(UUID.randomUUID().toString(), productId, c.name, c.amountRupiah, c.yieldText, i) })
+            dao.insertProductUnits(
+                item.units.mapIndexed { i, u ->
+                    ProductUnitEntity(UUID.randomUUID().toString(), productId, u.name.trim(), u.contentText, u.priceRupiah, i)
+                },
+            )
+            dao.insertRecipeLines(
+                item.recipe.mapIndexed { i, line ->
+                    ProductRecipeLineEntity(
+                        id = UUID.randomUUID().toString(),
+                        productId = productId,
+                        name = line.materialName?.trim() ?: line.name.trim(),
+                        stockItemId = line.materialName?.let { materialIds.getValue(normalize(it)) },
+                        quantityText = line.quantityText,
+                        amountRupiah = line.amountRupiah,
+                        sortOrder = i,
+                    )
+                },
+            )
             productIds[normalize(item.name)] = productId
         }
 
@@ -879,7 +917,9 @@ class FinanceRepository(private val database: AppDatabase) {
                     costNature = row.costNature,
                     productId = row.productName?.let { productIds.getValue(normalize(it)) },
                     usefulLifeMonths = row.usefulLifeMonths,
-                ),
+                    unit = row.unit,
+                    stockItemId = row.materialName?.let { materialIds.getValue(normalize(it)) },
+                ).withPurchasePrice(),
             )
         }
         var sortOrder = dao.getBudgetItems(planBook.id).size
@@ -903,24 +943,6 @@ class FinanceRepository(private val database: AppDatabase) {
                     costNature = line.costNature?.name,
                     recurrence = line.recurrence.name,
                     usefulLifeMonths = line.usefulLifeMonths,
-                ),
-            )
-        }
-        addedStock.forEach { item ->
-            stockDao.insertStockItem(
-                StockItemEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = businessId,
-                    name = item.name.trim(),
-                    unit = item.unit.trim(),
-                    basePriceRupiah = item.priceRupiah,
-                    initialStockText = item.quantityText,
-                    currentStockText = item.quantityText,
-                    minAlertStockText = item.minAlertText,
-                    createdAtEpochMillis = now,
-                    importBatchId = batchId,
-                    // Import is bulk entry into the selected unit (DEC-012), stock included.
-                    projectId = projectId,
                 ),
             )
         }
@@ -959,21 +981,46 @@ class FinanceRepository(private val database: AppDatabase) {
     private data class ProductPlan(
         /** Normalized name → id, for products already in the unit. */
         val existing: Map<String, String>,
+        /** Normalized name → id, for materials the unit already sees. */
+        val materials: Map<String, String>,
         val added: List<ImportProduct>,
         val skipped: List<String>,
         val conflicts: List<String>,
     )
 
-    /** Products in the file are added unless the unit already has one of that name; sales may name either. */
-    private suspend fun importProductPlan(projectId: String, preview: WorkbookImportPreview): ProductPlan {
-        val existing = dao.getProducts(projectId).associate { normalize(it.name) to it.id }
+    /**
+     * Products in the file are added unless the unit already has one of that name; sales may name either.
+     * A material named by a recipe or a purchase must be in the file's Stok Barang or already in the
+     * unit; a sale unit must be one of the product's own (an existing product keeps its units).
+     */
+    private suspend fun importProductPlan(businessId: String, projectId: String, preview: WorkbookImportPreview): ProductPlan {
+        val existingProducts = dao.getProducts(projectId)
+        val existing = existingProducts.associate { normalize(it.name) to it.id }
         val seen = existing.keys.toMutableSet()
         val added = preview.products.filter { seen.add(normalize(it.name)) }
         val known = existing.keys + added.map { normalize(it.name) }
-        val conflicts = preview.transactions.filter { it.productName != null && normalize(it.productName) !in known }
-            .map { "${it.source}: produk \"${it.productName}\" tidak ada di unit usaha ini maupun di lembar Produk." }
-        return ProductPlan(existing, added, (preview.products - added.toSet()).map { it.name }, conflicts)
+        val materials = stockDao.getStockItems(businessId, projectId).associate { normalize(it.name) to it.id }
+        val materialNames = materials.keys + preview.stockItems.map { normalize(it.name) }
+        val unitsOf = added.associate { normalize(it.name) to listOf(it.baseUnit) + it.units.map(com.mankeu.importer.ImportSaleUnit::name) } +
+            existingProducts.associate { it.name.let(::normalize) to listOf(it.unit) + dao.getProductUnits(it.id).map { u -> u.name } }
+        val conflicts = buildList {
+            preview.transactions.forEach { row ->
+                if (row.productName != null && normalize(row.productName) !in known) {
+                    add("${row.source}: produk \"${row.productName}\" tidak ada di unit usaha ini maupun di lembar Produk.")
+                } else if (row.productName != null && row.unit != null && unitsOf[normalize(row.productName)].orEmpty().none { normalize(it) == normalize(row.unit) }) {
+                    add("${row.source}: \"${row.unit}\" bukan satuan jual ${row.productName}.")
+                }
+                if (row.materialName != null && normalize(row.materialName) !in materialNames) add(missingMaterial(row.source, row.materialName))
+                if (row.materialName != null && row.incoming) add("${row.source}: kolom Bahan hanya untuk Pengeluaran.")
+                if (row.materialName != null && row.quantityText == null) add("${row.source}: isi Jumlah untuk belanja bahan \"${row.materialName}\".")
+            }
+            added.forEach { p -> p.recipe.forEach { l -> if (l.materialName != null && normalize(l.materialName) !in materialNames) add(missingMaterial(l.source, l.materialName)) } }
+        }
+        return ProductPlan(existing, materials, added, (preview.products - added.toSet()).map { it.name }, conflicts)
     }
+
+    private fun missingMaterial(source: String, name: String) =
+        "$source: bahan \"$name\" tidak ada di lembar Stok Barang maupun di usaha ini."
 
     private data class CategoryDraft(val name: String, val normalized: String, val role: CategoryRole)
     private data class CategoryPlan(

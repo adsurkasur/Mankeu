@@ -39,11 +39,6 @@ class FinanceWorkbookImporter(
                         val found = actual?.cellAt(column)?.display?.trim().orEmpty()
                         if (found != expected) add("Lembar \"$name\" kolom ${columnLetter(column)}1 harus \"$expected\", tertulis \"$found\".")
                     }
-                    MankeuTemplate.OPTIONAL[name].orEmpty().forEachIndexed { offset, expected ->
-                        val column = headers.size + offset
-                        val found = actual?.cellAt(column)?.display?.trim().orEmpty()
-                        if (found.isNotEmpty() && found != expected) add("Lembar \"$name\" kolom ${columnLetter(column)}1 harus \"$expected\" atau kosong, tertulis \"$found\".")
-                    }
                 }
             }
         }
@@ -58,7 +53,7 @@ class FinanceWorkbookImporter(
             sourceSha256 = hash,
             transactions = dataRows(sheets.getValue(MankeuTemplate.TRANSACTIONS)).mapNotNull { readTransaction(it, errors) },
             budgetLines = dataRows(sheets.getValue(MankeuTemplate.BUDGET)).mapNotNull { readBudget(it, errors) },
-            products = readProducts(sheets.getValue(MankeuTemplate.PRODUCTS), sheets.getValue(MankeuTemplate.RECIPES), errors),
+            products = readProducts(sheets.getValue(MankeuTemplate.PRODUCTS), sheets.getValue(MankeuTemplate.SALE_UNITS), sheets.getValue(MankeuTemplate.RECIPES), errors),
             stockItems = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { readStock(it, errors) },
             planPeriod = period,
             errors = errors,
@@ -92,6 +87,8 @@ class FinanceWorkbookImporter(
             quantityText = quantity,
             costNature = row.nature(7, errors),
             usefulLifeMonths = row.months(8, errors),
+            unit = row.text(9),
+            materialName = row.text(10),
         )
     }
 
@@ -122,22 +119,42 @@ class FinanceWorkbookImporter(
         return ImportBudgetLine(row.ref(0), month, category, name, quantity, row.text(4), price, total, recurrence, row.nature(8, errors), row.months(9, errors))
     }
 
-    private fun readProducts(products: WorkbookSheet, recipes: WorkbookSheet, errors: MutableList<String>): List<ImportProduct> {
-        val components = dataRows(recipes).mapNotNull { row ->
+    private fun readProducts(products: WorkbookSheet, saleUnits: WorkbookSheet, recipes: WorkbookSheet, errors: MutableList<String>): List<ImportProduct> {
+        fun Row.positiveQuantity(column: Int, label: String): String? {
+            val raw = text(column) ?: return null.also { errors += "${ref(column)}: $label wajib diisi." }
+            return raw.takeIf { TransactionCalculation.parseQuantity(it) != null }
+                ?: null.also { errors += "${ref(column)}: $label harus angka lebih dari nol, tertulis \"$raw\"." }
+        }
+        val units = dataRows(saleUnits).mapNotNull { row ->
+            val product = row.requiredText(0, "Produk", errors) ?: return@mapNotNull null
+            val name = row.requiredText(1, "Satuan", errors) ?: return@mapNotNull null
+            val content = row.positiveQuantity(2, "Isi") ?: return@mapNotNull null
+            val price = row.money(3, errors) ?: return@mapNotNull null.also { errors += "${row.ref(3)}: Harga Jual wajib diisi." }
+            Triple(row.ref(0), product.trim(), ImportSaleUnit(name, content, price))
+        }
+        val lines = dataRows(recipes).mapNotNull { row ->
             val product = row.requiredText(0, "Produk", errors) ?: return@mapNotNull null
             val name = row.requiredText(1, "Komponen", errors) ?: return@mapNotNull null
-            val amount = row.money(2, errors) ?: return@mapNotNull null.also { errors += "${row.ref(2)}: Biaya wajib diisi." }
-            val yield = row.text(3) ?: "1"
-            if (TransactionCalculation.parseQuantity(yield) == null) {
-                errors += "${row.ref(3)}: \"Untuk Berapa Unit\" harus angka lebih dari nol, tertulis \"$yield\"."
+            val material = row.text(2)
+            val quantity = row.text(3)
+            val amount = row.money(4, errors)
+            if (material != null) {
+                if (quantity == null) { errors += "${row.ref(3)}: Jumlah per Batch wajib diisi untuk bahan \"$material\"."; return@mapNotNull null }
+                if (TransactionCalculation.parseQuantity(quantity) == null) {
+                    errors += "${row.ref(3)}: Jumlah per Batch harus angka lebih dari nol, tertulis \"$quantity\"."
+                    return@mapNotNull null
+                }
+                if (amount != null) { errors += "${row.ref(4)}: baris berbahan diisi Jumlah, Biaya dibiarkan kosong."; return@mapNotNull null }
+            } else if (amount == null) {
+                errors += "${row.ref(4)}: Biaya per Batch wajib diisi untuk komponen tanpa bahan."
                 return@mapNotNull null
             }
-            Triple(row.ref(0), product.trim(), ImportComponent(name, amount, yield))
+            Triple(row.ref(0), product.trim(), ImportRecipeLine(row.ref(0), name, material, quantity.takeIf { material != null }, amount))
         }
         val items = dataRows(products).mapNotNull { row ->
             val name = row.requiredText(0, "Nama", errors) ?: return@mapNotNull null
-            val unit = row.requiredText(1, "Satuan", errors) ?: return@mapNotNull null
-            val price = row.money(2, errors) ?: return@mapNotNull null.also { errors += "${row.ref(2)}: Harga Jual wajib diisi." }
+            val baseUnit = row.requiredText(1, "Satuan Dasar", errors) ?: return@mapNotNull null
+            val yield = row.positiveQuantity(2, "Hasil per Batch") ?: return@mapNotNull null
             val target = row.text(3)
             if (target != null && TransactionCalculation.parseQuantity(target) == null) {
                 errors += "${row.ref(3)}: target harus angka lebih dari nol, tertulis \"$target\"."
@@ -148,11 +165,23 @@ class FinanceWorkbookImporter(
                     errors += "${row.ref(4)}: bulan mulai dijual harus angka bulat 1 atau lebih, tertulis \"$raw\"."
                 }
             } ?: 1
-            ImportProduct(row.ref(0), name, unit, price, target, components.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third }, sellFrom)
+            val own = units.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third }
+            if (own.isEmpty()) {
+                errors += "${row.ref(0)}: produk \"${name.trim()}\" belum punya baris di lembar \"${MankeuTemplate.SALE_UNITS}\"."
+                return@mapNotNull null
+            }
+            ImportProduct(
+                row.ref(0), name, baseUnit, yield, target, sellFrom, own,
+                lines.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third },
+            )
         }
-        val known = items.map { it.name.trim().lowercase() }.toSet()
-        // A recipe belongs to a product row of the same file; the export always writes both sheets.
-        components.filter { it.second.lowercase() !in known }.forEach { (source, product, _) ->
+        // Sale units and recipe lines belong to a product row of the same file; the export always writes all three sheets.
+        // Named rows count even when invalid: their own error is reported once, not again on their units.
+        val known = dataRows(products).mapNotNull { it.text(0)?.lowercase() }.toSet()
+        units.filter { it.second.lowercase() !in known }.forEach { (source, product, _) ->
+            errors += "$source: produk \"$product\" tidak ada di lembar \"${MankeuTemplate.PRODUCTS}\"."
+        }
+        lines.filter { it.second.lowercase() !in known }.forEach { (source, product, _) ->
             errors += "$source: produk \"$product\" tidak ada di lembar \"${MankeuTemplate.PRODUCTS}\"."
         }
         return items

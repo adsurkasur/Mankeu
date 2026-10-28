@@ -7,8 +7,9 @@ import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.importer.ImportBudgetLine
-import com.mankeu.importer.ImportComponent
 import com.mankeu.importer.ImportProduct
+import com.mankeu.importer.ImportRecipeLine
+import com.mankeu.importer.ImportSaleUnit
 import com.mankeu.importer.ImportStockItem
 import com.mankeu.importer.ImportTransaction
 import com.mankeu.importer.WorkbookImportPreview
@@ -77,9 +78,9 @@ class ImportCommitTest {
         val product = dao.getProducts(projectId).single()
         assertEquals("Kopi Susu", product.name)
         assertEquals(listOf("Susu"), dao.getRecipeLines(product.id).map { it.name })
-        // The file's "Rp 18.000 covers 6" lands as Rp 3.000 per cup, the cup its first sale unit (DEC-028 §6).
-        assertEquals(listOf(3_000L), dao.getRecipeLines(product.id).map { it.amountRupiah })
-        assertEquals(listOf(LegacyProductShape.saleUnit(product.id, "cup", 10_000)), dao.getProductUnits(product.id))
+        assertEquals(listOf(18_000L), dao.getRecipeLines(product.id).map { it.amountRupiah })
+        assertEquals("6", product.batchYieldText)
+        assertEquals(listOf(Triple("cup", "1", 10_000L)), dao.getProductUnits(product.id).map { Triple(it.name, it.contentText, it.priceRupiah) })
         val sale = dao.getEventsForBook(books.getValue(BookMode.REALIZATION).id).single { it.description == "Jual kopi" }
         assertEquals(product.id to "450", sale.productId to sale.quantityText)
         // Import is bulk entry into the selected unit, stock included (schema 10).
@@ -212,6 +213,85 @@ class ImportCommitTest {
         assertEquals(WorkspaceSelection(businessId, projectId), repository.currentWorkspace(WorkspaceSelection("hilang", "hilang")))
     }
 
+    /** Template v5 (DEC-028): sale units, a recipe with a material, and a purchase that prices the material (spec #5 #20). */
+    @Test
+    fun aProductWithSaleUnitsAMaterialRecipeAndPurchaseImportsLinkedAndUndoesCleanly() = runBlocking {
+        assertEquals(emptyList<String>(), repository.reviewImport(businessId, projectId, keripik()).conflicts)
+
+        repository.commitImport(businessId, projectId, keripik())
+
+        val product = dao.getProducts(projectId).single()
+        assertEquals(listOf("bungkus" to "1", "dus" to "10"), dao.getProductUnits(product.id).sortedBy { it.sortOrder }.map { it.name to it.contentText })
+        val oil = database.stockDao().getStockItems(businessId, projectId).single { it.name == "Minyak" }
+        val lines = dao.getRecipeLines(product.id).sortedBy { it.sortOrder }
+        assertEquals(listOf("Minyak" to oil.id, "Singkong" to null), lines.map { it.name to it.stockItemId })
+        assertEquals(listOf("2" to null, null to 30_000L), lines.map { it.quantityText to it.amountRupiah })
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val events = dao.getEventsForBook(actual).associateBy { it.description }
+        assertEquals(oil.id, events.getValue("Beli minyak").stockItemId)
+        assertEquals("liter", events.getValue("Beli minyak").unit)
+        assertEquals("dus", events.getValue("Jual keripik").unit)
+        assertEquals(27_500L, repository.materialPrice(oil.id))
+
+        repository.undoImportBatch(dao.getImportBatches(projectId).single().id)
+
+        assertTrue(dao.getProducts(projectId).isEmpty())
+        assertTrue(database.stockDao().getStockItems(businessId, projectId).isEmpty())
+        assertTrue(dao.getEventsForBook(actual).isEmpty())
+    }
+
+    /** A purchase whose amount ÷ quantity rounds to Rp0 must not zero the material's price. */
+    @Test
+    fun aTinyPurchaseDoesNotZeroTheMaterialPrice() = runBlocking {
+        val tiny = keripik().let { p ->
+            p.copy(transactions = p.transactions.map { if (it.materialName != null) it.copy(amountRupiah = 1, quantityText = "3") else it })
+        }
+
+        repository.commitImport(businessId, projectId, tiny)
+
+        val oil = database.stockDao().getStockItems(businessId, projectId).single { it.name == "Minyak" }
+        assertEquals(20_000L, repository.materialPrice(oil.id))
+    }
+
+    @Test
+    fun anUnknownMaterialOrSaleUnitIsAConflict() = runBlocking {
+        val bad = keripik().let { p ->
+            p.copy(
+                stockItems = emptyList(),
+                transactions = p.transactions.map { if (it.productName != null) it.copy(unit = "karung") else it },
+            )
+        }
+
+        assertEquals(
+            listOf(
+                "Transaksi!A2: bahan \"Minyak\" tidak ada di lembar Stok Barang maupun di usaha ini.",
+                "Transaksi!A3: \"karung\" bukan satuan jual Keripik.",
+                "Resep Produk!A2: bahan \"Minyak\" tidak ada di lembar Stok Barang maupun di usaha ini.",
+            ),
+            repository.reviewImport(businessId, projectId, bad).conflicts,
+        )
+    }
+
+    private fun keripik() = WorkbookImportPreview(
+        sourceName = "keripik.xlsx",
+        sourceSha256 = "sha-keripik",
+        transactions = listOf(
+            ImportTransaction("Transaksi!A2", DAY, "Beli minyak", "Bahan Baku & Stok", incoming = false, amountRupiah = 55_000, quantityText = "2", unit = "liter", materialName = "Minyak"),
+            ImportTransaction("Transaksi!A3", DAY, "Jual keripik", "Penjualan & Jasa", incoming = true, amountRupiah = 135_000, productName = "Keripik", quantityText = "3", unit = "dus"),
+        ),
+        products = listOf(
+            ImportProduct(
+                "Produk!A2", "Keripik", "bungkus", "20", null, 1,
+                units = listOf(ImportSaleUnit("bungkus", "1", 5_000), ImportSaleUnit("dus", "10", 45_000)),
+                recipe = listOf(
+                    ImportRecipeLine("Resep Produk!A2", "Minyak", "Minyak", "2", null),
+                    ImportRecipeLine("Resep Produk!A3", "Singkong", null, null, 30_000),
+                ),
+            ),
+        ),
+        stockItems = listOf(ImportStockItem("Stok Barang!A2", "Minyak", "liter", 20_000, "0", "0")),
+    )
+
     private fun preview() = WorkbookImportPreview(
         sourceName = "kedai.xlsx",
         sourceSha256 = "sha-kedai",
@@ -221,7 +301,13 @@ class ImportCommitTest {
             ImportTransaction("Transaksi!A4", DAY, "Sewa gerobak Agustus", "Sewa Gerobak", incoming = false, amountRupiah = 500_000),
         ),
         budgetLines = listOf(ImportBudgetLine("Rencana Anggaran!A2", YearMonth.of(2026, 8), "Bahan Baku & Stok", "Biji kopi", "10", "kg", 120_000, 1_200_000)),
-        products = listOf(ImportProduct("Produk!A2", "Kopi Susu", "cup", 10_000, "700", listOf(ImportComponent("Susu", 18_000, "6")))),
+        products = listOf(
+            ImportProduct(
+                "Produk!A2", "Kopi Susu", "cup", "6", "700", 1,
+                units = listOf(ImportSaleUnit("cup", "1", 10_000)),
+                recipe = listOf(ImportRecipeLine("Resep Produk!A2", "Susu", null, null, 18_000)),
+            ),
+        ),
         planPeriod = YearMonth.of(2026, 11) to YearMonth.of(2027, 10),
         stockItems = listOf(ImportStockItem("Stok Barang!A2", "Gula", "kg", 15_000, "5", "1")),
     )

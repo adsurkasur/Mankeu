@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 05:20] [Claude Code (Opus) — Fase 1 Task 1: HPP dan stok produk]
+- **Goal**: Fase 1 Task 1: hitungan HPP per batch dan stok produk (pure domain, spec #5 #6 #9 #20).
+- **Actions**: Added `ProductCosting` (batch cost from recipe lines, HPP per base unit and per sale unit rounded half up once, incomplete flag for unpriced lines, material price impact, legacy "Rp X for N units" conversion) and `ProductStock` (level from production/sale/count movements, may go negative; split into whole sale units and rest). Brief fix: one test name had a `;`, illegal in JVM method names, replaced with a comma.
+- **Files**: `app/src/main/java/com/mankeu/domain/ProductCosting.kt` (new), `app/src/test/java/com/mankeu/domain/ProductCostingTest.kt` (new), `logs/ACTIVITY_LOG.md`.
+- **Verification**: ProductCostingTest red (unresolved reference ProductSpec), then green 10/10; `:app:testDebugUnitTest` 78 passed, 0 failed.
+
 ### [2026-10-29 05:13] [Claude Code (Opus) — rencana Fase 1]
 - **Goal**: Write the detailed implementation plan for redesign phase 1 (spec #5, #6, #9, #20).
 - **Actions**: Read the current product, stock, plan, import/export, backup and sync code, then wrote `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md`: 7 tasks (domain HPP/stock; schema 13 with migration 12→13, schema-12 backup upgrade and a legacy-shape adapter; stock from sales and material price from latest purchase, both derived on read; template v5 product sheets; Produk tab and full-page editor; sale unit, material picker and HPP warning in the entry form; emulator acceptance and phase close). Nine plan-level rulings (reuse `stock_items` as materials, purchases do not add material stock, HPP snapshot moved to phase 2, etc.) are listed for owner review and become DEC-028 in Task 2. Roadmap row F1 and WORK_IN_PROGRESS point to the plan.

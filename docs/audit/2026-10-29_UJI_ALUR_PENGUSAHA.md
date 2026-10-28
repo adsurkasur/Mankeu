@@ -131,10 +131,11 @@ Dugaan penyebab (inferred, belum diuji perbaikannya), `presentation/components/M
 
 ### Bug: menggeser untuk scroll malah menutup sheet (user-confirmed, verified)
 
-**Status (Fase 0 Task 1): diperbaiki untuk semua sheet, verified.** `MankeuSheet`, form transaksi (`EntryScreen`),
+**Status (Fase 0 Task 1): diperbaiki untuk semua sheet; verified hanya untuk dua di antaranya (lihat catatan).** `MankeuSheet`, form transaksi (`EntryScreen`),
 `HelpSheet` dan `ManageScopeSheet` kini `sheetGesturesEnabled = false` dan tanpa drag handle; sheet hanya tertutup lewat
 tombol, Back, atau scrim. Bukti: tes instrumented `MankeuSheetTest` dan `EntrySheetSwipeTest` (merah sebelum, hijau
-sesudah perbaikan) pada emulator `Medium_Phone`.
+sesudah perbaikan) pada emulator `Medium_Phone`. Catatan: bukti tes hanya untuk `MankeuSheet` dan form transaksi;
+`HelpSheet` dan `ManageScopeSheet` diperbaiki lewat pembacaan kode saja, belum ada tes.
 
 Terulang di emulator pada form "Uang masuk": isi digulir ke bawah, lalu pengguna menggeser ke bawah untuk kembali ke
 atas. Begitu isi sudah di posisi paling atas, gerakan yang sama langsung menyeret sheet turun dan menutupnya.

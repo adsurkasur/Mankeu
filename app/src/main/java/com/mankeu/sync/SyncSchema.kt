@@ -14,14 +14,13 @@ import java.util.UUID
  * outbox grew by about four rows per transaction on every device, synced or not), and are silent
  * while [APPLYING_REMOTE] is set, so applying another device's changes never echoes back.
  *
- * Room does not manage triggers. They are created in [MIGRATION_TRIGGERS_SINCE] onwards by the
- * migration, on fresh installs by [callback], and **any later migration that rebuilds a data table
- * (create-copy-drop-rename) drops that table's triggers and must call [createTriggers] again.**
+ * Room does not manage triggers. They are created by [callback] on fresh installs and after the
+ * destructive fallback from schema 1-11 (DEC-026), and **any later migration that rebuilds a data
+ * table (create-copy-drop-rename) drops that table's triggers and must call [createTriggers] again.**
  * So must a migration that adds a data table: an older migration runs against the schema of its
  * own time, so [createTriggers] covers only the [AppDatabase.DATA_TABLES] that exist yet.
  */
 object SyncSchema {
-    const val MIGRATION_TRIGGERS_SINCE = 8
     const val APPLYING_REMOTE = "applying_remote"
     /** Present while the owner has sync switched on; turning sync on also asks for a full snapshot. */
     const val SYNC_ENABLED = "sync_enabled"
@@ -62,11 +61,26 @@ object SyncSchema {
         )
     }
 
-    /** Fresh installs skip migrations, so the triggers and device id are created here. */
+    private fun setUp(db: SupportSQLiteDatabase) {
+        createTriggers(db)
+        ensureDeviceId(db)
+    }
+
+    /**
+     * Fresh installs skip migrations, so [onCreate] sets up the triggers and device id. Room's
+     * destructive fallback does not call onCreate, and calls [onDestructiveMigration] while the
+     * tables are dropped and not yet recreated, so that case is finished in the [onOpen] that follows.
+     */
     val callback = object : RoomDatabase.Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            createTriggers(db)
-            ensureDeviceId(db)
+        @Volatile private var setUpOnOpen = false
+
+        override fun onCreate(db: SupportSQLiteDatabase) = setUp(db)
+        override fun onDestructiveMigration(db: SupportSQLiteDatabase) { setUpOnOpen = true }
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            if (setUpOnOpen) {
+                setUpOnOpen = false
+                setUp(db)
+            }
         }
     }
 

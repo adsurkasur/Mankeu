@@ -14,7 +14,7 @@ data class AuthUser(
     val photoUrl: String?,
 )
 
-/** The signed-in Google account, read straight from Google Sign-In (DEC-025: no Firebase). */
+/** The signed-in Google account, read straight from Google Sign-In (DEC-026 decision, DEC-027 implementation: no Firebase). */
 class GoogleIdentity(private val context: Context) {
     private val _currentUser = MutableStateFlow(lastAccount())
     val currentUser: StateFlow<AuthUser?> = _currentUser.asStateFlow()
@@ -23,6 +23,12 @@ class GoogleIdentity(private val context: Context) {
 
     fun signOut() {
         GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
+        _currentUser.value = null
+    }
+
+    /** Revokes the app's Google grant (including Drive appdata) and then signs out; used by "erase all data" (DEC-020). */
+    fun revokeAndSignOut() {
+        GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN).revokeAccess()
         _currentUser.value = null
     }
 

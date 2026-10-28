@@ -958,7 +958,7 @@ class AppViewModel(
      * "Hapus semua data" (DEC-020). With [driveAccessToken], Drive goes first: if it fails, nothing
      * on the phone has been touched yet and the owner can retry. Then the
      * database and the recovery copy are erased and, when Drive was included, the Google account is
-     * signed out of the app. [onErased] clears what the UI layer owns (local name, Google grant).
+     * signed out of the app. [onErased] clears what the UI layer owns (local name).
      */
     fun eraseAllData(driveAccessToken: String?, onErased: () -> Unit) = mutating {
         cancelPreparedRestore()
@@ -975,8 +975,8 @@ class AppViewModel(
                 importState.value = ImportUiState.Idle
                 selectedProjectId.value = null
                 selectedBusinessId.value = null
-                // The Google grant itself is revoked by the UI layer; the in-app identity must go too.
-                if (driveAccessToken != null) identity.signOut()
+                // Revoke the Google grant (DEC-020) before the account state is cleared.
+                if (driveAccessToken != null) identity.revokeAndSignOut()
                 onErased()
                 message.value = UiText.of(R.string.msg_erase_ok)
             },

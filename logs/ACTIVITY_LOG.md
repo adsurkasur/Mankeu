@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 02:12] [Claude Code (Sonnet) — Fase 0 fix review akhir]
+- **Goal**: Fix the findings of the final whole-branch review of phase 0.
+- **Actions**: `SyncSchema.callback` now recreates the sync triggers and device id after the destructive fallback (flag in `onDestructiveMigration`, setup in `onOpen`, because Room has not recreated the tables yet at that point); stale KDoc and unused `MIGRATION_TRIGGERS_SINCE` removed; `AppDatabase.create` takes the database name (test seam). `GoogleIdentity.revokeAndSignOut` replaces signOut + separate revokeAccess on erase-with-cloud. DEC references fixed; DEC-027 gets consequences and open stale docs; flow-test, DATABASE_MIGRATIONS, CHANGELOG and redesign-spec wording corrected.
+- **Files**: `SyncSchema.kt`, `AppDatabase.kt`, `AuthModels.kt`, `AppViewModel.kt`, `MankeuApp.kt`, `DestructiveFallbackTest.kt` (new), `logs/*`, `docs/{DATABASE_MIGRATIONS,audit/2026-10-29_UJI_ALUR_PENGUSAHA,superpowers/specs/2026-10-29-redesign-spec}.md`.
+- **Verification**: `DestructiveFallbackTest` red before (triggers missing), green after; `:app:testDebugUnitTest` 68 passed; `lintDebug`, `assembleDebug`, `assembleRelease` (R8) successful; connected DestructiveFallbackTest + SyncEngineTest + ViewModelFlowsTest + LedgerIntegrityTest 17 tests, 0 failed. Not verified: revoke on a real Google account.
+
 ### [2026-10-29 02:03] [Claude Code (Sonnet) — Fase 0 Task 6: tutup fase]
 - **Goal**: Close redesign phase 0 (Task 5 skipped, see below) and record DEC-027.
 - **Actions**: Task 5 not done: `SkeletonMetricGrid` is used by `HomeScreen.kt` (loading state), so it is not dead code and was kept. Task 6: corrected the invented clock times of the two earlier entries to the real commit times (829f986 00:57, 5881cb4 00:38); `docs/DATABASE_MIGRATIONS.md` now states schema 12 is the floor; `dialog_erase_cloud` reworded (no Mankeu account), new `settings_help_desc` shown on the Settings Pusat Bantuan card (ID/EN); DEC-027, CHANGELOG `[Unreleased]`, WORK_IN_PROGRESS updated.

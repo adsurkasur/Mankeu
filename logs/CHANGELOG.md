@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
-- Bottom sheets no longer close when you scroll a long form, and the keyboard no longer makes them bounce.
+- Bottom sheets no longer close when you scroll a long form, and the keyboard should no longer make them bounce (checked on the emulator only).
 
 ### Removed
 - Spotlight tours (the help center and the ? help sheet stay).

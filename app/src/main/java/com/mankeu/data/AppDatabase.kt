@@ -61,12 +61,13 @@ abstract class AppDatabase : RoomDatabase() {
             "product_cost_components",
         )
 
-        fun create(context: Context): AppDatabase = Room.databaseBuilder(
+        fun create(context: Context, name: String = "mankeu.db"): AppDatabase = Room.databaseBuilder(
             context.applicationContext,
             AppDatabase::class.java,
-            "mankeu.db",
+            name,
         )
-            // DEC-025 / spec #1: pre-0.1.0 installs start clean; only schema 12 is carried forward.
+            // DEC-026 / spec #1: pre-0.1.0 installs start clean; only schema 12 is carried forward.
+            // The destructive path runs Callback.onDestructiveMigration, not onCreate (see SyncSchema.callback).
             .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
             .addCallback(SyncSchema.callback)
             .build()

@@ -55,6 +55,6 @@ tidak bisa dicatat, dan alur Rencana/Catatan membingungkan.
 3. `yagni:` tur spotlight (`components/SpotlightTour.kt`, `guide/TourHost.kt`, target di 10 layar) menjelaskan alur yang
    akan dirombak.
 4. `native:` Vico (2 dependensi) untuk satu grafik batang → Compose `Canvas` (Fase 4).
-5. `delete:` `SkeletonMetricGrid` tidak dipakai.
+5. ~~`delete:` `SkeletonMetricGrid` tidak dipakai.~~ Temuan ditarik: `SkeletonMetricGrid` dipakai di `HomeScreen.kt:139` (keadaan memuat).
 6. `yagni:` tiga jalur salinan data → dua (keputusan #8, Fase 5).
 7. `shrink:` `MankeuApp.kt` 1.368 baris, menyusut saat saklar global dihapus (Fase 3).

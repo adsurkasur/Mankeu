@@ -506,6 +506,8 @@
     <string name="msg_plan_save_failed">The business plan could not be saved.</string>
     <string name="msg_plan_removed">Removed from the plan.</string>
     <string name="msg_product_saved">Product %1$s saved.</string>
+    <string name="msg_production_saved">Production recorded.</string>
+    <string name="msg_stock_count_saved">Product stock updated.</string>
     <!-- Business plan and break-even (DEC-014) -->
     <string name="import_ready_products">New products</string>
     <string name="plan_open">Open business plan</string>

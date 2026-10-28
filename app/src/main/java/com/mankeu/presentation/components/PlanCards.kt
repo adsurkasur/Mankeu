@@ -34,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
-import com.mankeu.data.ProductWithComponents
+import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ActualMonthAnalysis
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.presentation.LocalMankeuSemanticColors
@@ -288,7 +288,7 @@ fun PlanBreakdownCard(plan: PlanAnalysis, modifier: Modifier = Modifier) {
 
 /** "Status BEP bulan ini": this month's Realisasi against its own break-even point. */
 @Composable
-fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductWithComponents>, modifier: Modifier = Modifier) {
+fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, modifier: Modifier = Modifier) {
     // No sales yet (a planting or set-up month) is not "not feasible": there is nothing to judge.
     val noSales = actual.revenueRupiah == 0L
     val status = if (noSales) FeasibilityStatus.UNKNOWN else feasibilityStatusOf(actual.revenueCostRatio)

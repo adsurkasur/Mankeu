@@ -247,7 +247,7 @@ class EncryptedBackupManager(
     }
 
     suspend fun prepareRestore(envelope: ByteArray, password: CharArray): PreparedRestore {
-        val snapshot = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(envelope, password))
+        val snapshot = BackupUpgrade.toCurrent(PortableBackupCodec.decode(PasswordBackupCipher.decrypt(envelope, password)))
         validate(snapshot)
         return PreparedRestore(snapshot, snapshot.toPreview())
     }
@@ -369,9 +369,8 @@ class EncryptedBackupManager(
         const val MAX_RECOVERY_BYTES = 160 * 1024 * 1024
 
         /**
-         * Pre-0.1.0 schemas are not carried forward (spec #1), so nothing older than 12 is restorable.
-         * A later migration that adds or reshapes a column must raise this, or transform the snapshot
-         * the way the migration does.
+         * Nothing older than 12 is restorable (spec #1). A later migration that reshapes a table must
+         * teach [BackupUpgrade] the same reshaping.
          */
         const val OLDEST_RESTORABLE_SCHEMA = 12
         val TABLES = AppDatabase.DATA_TABLES

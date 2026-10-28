@@ -508,6 +508,8 @@
     <string name="msg_plan_save_failed">Rencana usaha tidak dapat disimpan.</string>
     <string name="msg_plan_removed">Dihapus dari rencana.</string>
     <string name="msg_product_saved">Produk %1$s tersimpan.</string>
+    <string name="msg_production_saved">Produksi dicatat.</string>
+    <string name="msg_stock_count_saved">Stok produk diperbarui.</string>
     <!-- Business plan and break-even (DEC-014) -->
     <string name="import_ready_products">Produk baru</string>
     <string name="plan_open">Buka Rencana Usaha</string>

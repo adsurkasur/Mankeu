@@ -42,7 +42,8 @@ import com.mankeu.data.BudgetItemEntity
 import com.mankeu.data.CategoryEntity
 import com.mankeu.data.ComponentDraft
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.ProductWithComponents
+import com.mankeu.data.LegacyProductShape
+import com.mankeu.data.ProductRecord
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.Recurrence
@@ -93,7 +94,7 @@ private enum class LineSection(val titleRes: Int, val hintRes: Int, val roles: S
 }
 
 private sealed interface PlanEditor {
-    data class Product(val existing: ProductWithComponents?) : PlanEditor
+    data class Product(val existing: ProductRecord?) : PlanEditor
     data class Line(val section: LineSection, val existing: BudgetItemEntity?) : PlanEditor
     data object Period : PlanEditor
 }
@@ -112,6 +113,7 @@ fun PlanScreen(
     val categories = remember(state.categories) { state.categories.associateBy { it.id } }
     val project = state.projects.firstOrNull { it.id == state.selectedProjectId }
     val months = state.plan?.months ?: PlanAssembly.months(project, state.planItems, LocalDate.now())
+    val materialPrices = state.stockItems.associate { it.id to it.basePriceRupiah }
     val lines = state.planItems.filterNot { it.archived }.groupBy { LineSection.of(it, categories) }
 
     LazyColumn(
@@ -154,11 +156,11 @@ fun PlanScreen(
                 onAdd = { editor = PlanEditor.Product(null) },
             ) {
                 state.products.forEach { row ->
-                    val vc = PlanAssembly.products(listOf(row)).first().variableCostPerUnit.setScale(0, RoundingMode.HALF_UP).toLong()
+                    val vc = PlanAssembly.products(listOf(row), materialPrices).firstOrNull()?.variableCostPerUnit?.setScale(0, RoundingMode.HALF_UP)?.toLong() ?: 0L
                     val economics = stringResource(
                         R.string.plan_product_row,
-                        row.product.priceRupiah.toRupiah(),
-                        row.product.unit,
+                        (row.mainUnit?.priceRupiah ?: 0).toRupiah(),
+                        row.mainUnit?.name ?: row.product.unit,
                         vc.toRupiah(),
                         row.product.targetPerMonthText ?: "-",
                     )
@@ -197,6 +199,7 @@ fun PlanScreen(
         null -> Unit
         is PlanEditor.Product -> ProductSheet(
             existing = current.existing,
+            materialPrices = materialPrices,
             periodMonths = months.size,
             onDismiss = { editor = null },
             onSave = { name, unit, price, target, components, sellFrom ->
@@ -290,7 +293,8 @@ private class ComponentInput(name: String = "", amount: String = "", yieldText: 
 
 @Composable
 private fun ProductSheet(
-    existing: ProductWithComponents?,
+    existing: ProductRecord?,
+    materialPrices: Map<String, Long>,
     periodMonths: Int,
     onDismiss: () -> Unit,
     onSave: (String, String, Long, String?, List<ComponentDraft>, Int) -> Unit,
@@ -298,12 +302,12 @@ private fun ProductSheet(
 ) {
     var name by rememberSaveable { mutableStateOf(existing?.product?.name.orEmpty()) }
     var unit by rememberSaveable { mutableStateOf(existing?.product?.unit.orEmpty()) }
-    var price by rememberSaveable { mutableStateOf(existing?.product?.priceRupiah?.toString().orEmpty()) }
+    var price by rememberSaveable { mutableStateOf(existing?.mainUnit?.priceRupiah?.toString().orEmpty()) }
     var target by rememberSaveable { mutableStateOf(existing?.product?.targetPerMonthText.orEmpty()) }
     var sellFrom by rememberSaveable { mutableStateOf((existing?.product?.sellFromMonth ?: 1).toString()) }
     val components = remember {
         mutableStateListOf<ComponentInput>().apply {
-            existing?.components?.forEach { add(ComponentInput(it.name, it.amountRupiah.toString(), it.yieldText)) }
+            existing?.let { LegacyProductShape.components(it, materialPrices) }?.forEach { add(ComponentInput(it.name, it.amountRupiah.toString(), it.yieldText)) }
             if (isEmpty()) add(ComponentInput())
         }
     }

@@ -123,6 +123,7 @@ data class BudgetItemEntity(
         Index("categoryId"),
         Index("budgetItemId"),
         Index("importBatchId"),
+        Index("stockItemId"),
     ],
 )
 data class FinancialEventEntity(
@@ -150,6 +151,8 @@ data class FinancialEventEntity(
     val productId: String? = null,
     /** Asset purchases: straight-line depreciation period for BEP. */
     val usefulLifeMonths: Int? = null,
+    /** The material an expense bought (spec #20); the latest such purchase sets the material's price. */
+    val stockItemId: String? = null,
 )
 
 @Entity(
@@ -177,7 +180,7 @@ data class PostingEntity(
     val amountRupiah: Long,
 )
 
-/** Something the business sells (DEC-014 B-5), planned per business unit. */
+/** Something the business sells (DEC-014 B-5, spec #5 #6), planned per business unit. */
 @Entity(
     tableName = "products",
     foreignKeys = [ForeignKey(ProjectEntity::class, ["id"], ["projectId"], ForeignKey.CASCADE)],
@@ -187,9 +190,11 @@ data class ProductEntity(
     @PrimaryKey val id: String,
     val projectId: String,
     val name: String,
+    /** The base unit (spec #5): stock, batch yield and HPP are counted in it. */
     val unit: String,
-    val priceRupiah: Long,
-    /** Planned units sold per month; null leaves the sales mix undefined. */
+    /** Base units one batch of the recipe yields (spec #6). */
+    @ColumnInfo(defaultValue = "1") val batchYieldText: String = "1",
+    /** Planned sales per month in the main (first) sale unit; null leaves the sales mix undefined. */
     val targetPerMonthText: String? = null,
     val sortOrder: Int = 0,
     val archived: Boolean = false,
@@ -201,19 +206,62 @@ data class ProductEntity(
     @ColumnInfo(defaultValue = "1") val sellFromMonth: Int = 1,
 )
 
-/** One line of a product's per-unit variable-cost recipe: [amountRupiah] covers [yieldText] units. */
+/** A way a product is sold (spec #5): [contentText] base units per one, at its own price. */
 @Entity(
-    tableName = "product_cost_components",
+    tableName = "product_units",
     foreignKeys = [ForeignKey(ProductEntity::class, ["id"], ["productId"], ForeignKey.CASCADE)],
     indices = [Index("productId")],
 )
-data class ProductCostComponentEntity(
+data class ProductUnitEntity(
     @PrimaryKey val id: String,
     val productId: String,
     val name: String,
-    val amountRupiah: Long,
-    val yieldText: String = "1",
+    val contentText: String,
+    val priceRupiah: Long,
     val sortOrder: Int = 0,
+)
+
+/**
+ * One line of a product's per-batch recipe (spec #6, #20): [quantityText] of material
+ * [stockItemId], priced at its last purchase, or a free [amountRupiah]. No foreign key to
+ * stock_items: a removed material leaves its line, and the HPP shows as incomplete instead of
+ * silently getting cheaper.
+ */
+@Entity(
+    tableName = "product_recipe_lines",
+    foreignKeys = [ForeignKey(ProductEntity::class, ["id"], ["productId"], ForeignKey.CASCADE)],
+    indices = [Index("productId"), Index("stockItemId")],
+)
+data class ProductRecipeLineEntity(
+    @PrimaryKey val id: String,
+    val productId: String,
+    val name: String,
+    val stockItemId: String? = null,
+    val quantityText: String? = null,
+    val amountRupiah: Long? = null,
+    val sortOrder: Int = 0,
+)
+
+/**
+ * Production and stock counts of a product, in base units (spec #9). Sales are not copied here:
+ * the stock reads them from the sales themselves, so editing or deleting a sale is always reflected.
+ */
+@Entity(
+    tableName = "product_movements",
+    foreignKeys = [ForeignKey(ProductEntity::class, ["id"], ["productId"], ForeignKey.CASCADE)],
+    indices = [Index("productId")],
+)
+data class ProductMovementEntity(
+    @PrimaryKey val id: String,
+    val productId: String,
+    /** [com.mankeu.domain.ProductMovementType.PRODUCTION] or `ADJUSTMENT` (a count). */
+    val movementType: String,
+    val quantityText: String,
+    /** Production only: how many batches made [quantityText]. */
+    val batchesText: String? = null,
+    val dateEpochDay: Long,
+    val notes: String = "",
+    val createdAtEpochMillis: Long,
 )
 
 @Entity(

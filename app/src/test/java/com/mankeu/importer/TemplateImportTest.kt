@@ -6,9 +6,10 @@ import com.mankeu.data.BusinessEntity
 import com.mankeu.data.CategoryEntity
 import com.mankeu.data.FinancialEventEntity
 import com.mankeu.data.ProjectEntity
-import com.mankeu.data.ProductCostComponentEntity
 import com.mankeu.data.ProductEntity
-import com.mankeu.data.ProductWithComponents
+import com.mankeu.data.ProductRecipeLineEntity
+import com.mankeu.data.ProductRecord
+import com.mankeu.data.ProductUnitEntity
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
@@ -62,7 +63,7 @@ class TemplateImportTest {
             listOf(
                 ImportProduct(
                     "Produk!A2", "Kopi Susu", "cup", 10_000, "700",
-                    listOf(ImportComponent("Susu", 18_000, "6"), ImportComponent("Cup", 500, "1")),
+                    listOf(ImportComponent("Susu", 3_000, "1"), ImportComponent("Cup", 500, "1")),
                 ),
             ),
             preview.products,
@@ -311,11 +312,13 @@ class TemplateImportTest {
         notices = emptyList(),
         provenance = emptyList(),
         products = listOf(
-            ProductWithComponents(
-                ProductEntity(id = "kopi", projectId = "p", name = "Kopi Susu", unit = "cup", priceRupiah = 10_000, targetPerMonthText = "700", createdAtEpochMillis = 0),
+            ProductRecord(
+                ProductEntity(id = "kopi", projectId = "p", name = "Kopi Susu", unit = "cup", targetPerMonthText = "700", createdAtEpochMillis = 0),
+                listOf(ProductUnitEntity("kopi-u0", "kopi", "cup", "1", 10_000)),
                 listOf(
-                    ProductCostComponentEntity(id = "k1", productId = "kopi", name = "Susu", amountRupiah = 18_000, yieldText = "6", sortOrder = 0),
-                    ProductCostComponentEntity(id = "k2", productId = "kopi", name = "Cup", amountRupiah = 500, yieldText = "1", sortOrder = 1),
+                    // Schema 12's "Rp 18.000 covers 6" is Rp 3.000 per cup after migration (DEC-028 §6).
+                    ProductRecipeLineEntity(id = "k1", productId = "kopi", name = "Susu", amountRupiah = 3_000, sortOrder = 0),
+                    ProductRecipeLineEntity(id = "k2", productId = "kopi", name = "Cup", amountRupiah = 500, sortOrder = 1),
                 ),
             ),
         ),

@@ -59,8 +59,10 @@ is created on the user's behalf since D-015.
 | `Account` | compile-time account role | `LedgerAccount`: CASH, REVENUE, OPERATING_EXPENSE, OWNER_EQUITY, OWNER_DRAWING, EQUIPMENT_ASSET; user labels live in categories. |
 | `Category` | id, business id, name, role, optional cost nature | The role decides the cash type of a record (DEC-011 K-2); cost nature FIXED/VARIABLE feeds break-even. |
 | `BudgetItem` (plan line) | Projection book id, category, amount, recurrence MONTHLY/ONCE, month, cost nature, useful life | Fixed costs, one-off costs and income, assets, planned capital (DEC-014). |
-| `Product` | unit id, name, unit, price, target per month, first selling month | Contribution margin = price minus recipe cost per unit (DEC-014, DEC-017). |
-| `ProductCostComponent` | product id, name, amount, yield | Cost per unit = amount / yield. |
+| `Product` | unit id, name, base unit, batch yield, target per month (in the main sale unit), first selling month | HPP per base unit = batch cost / batch yield, rounded half up once (DEC-028). |
+| `ProductUnit` (sale unit) | product id, name, content (base units), price, order | The first is the main unit used by the plan and the sale form (DEC-028 §8). |
+| `ProductRecipeLine` | product id, name, material (stock item) + quantity per batch, or a free amount per batch | A material line is priced at the material's price; an unpriced or removed material makes the HPP incomplete, never cheaper. |
+| `ProductMovement` | product id, PRODUCTION (with batches) or ADJUSTMENT (a count), quantity in base units, date | Stock = these plus sales in date order; may go negative (spec #9). |
 | `StockItem` / `StockMovement` | business, optional unit, levels; IN/OUT/ADJUSTMENT with quantity | Stock out never exceeds stock on hand; movement and level change in one transaction. |
 | `FinancialEvent` | business/unit/book, type (CASH_INCOME, CASH_EXPENSE, OWNER_CAPITAL, OWNER_DRAWING, ASSET_PURCHASE_CASH), date, amount, description, category, optional reference/quantity/budget/product/import links | User-facing record; must produce a balanced journal. Corrected in place or deleted (DEC-019). |
 | `JournalEntry` | source event id (unique), date, description | Total postings must balance before writing. |
@@ -71,7 +73,7 @@ is created on the user's behalf since D-015.
 
 ## Implemented persistence (schema 12)
 
-Room schema 12 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products and cost components, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
+Room schema 13 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products with sale units, recipe lines and movements, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
 
 - scope consistency across business, unit, book, and category;
 - exact positive rupiah values;

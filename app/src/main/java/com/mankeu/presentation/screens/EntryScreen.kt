@@ -669,12 +669,13 @@ fun EntryScreen(
                             state.products.map { it.product.id to it.product.name },
                         onSelected = { id ->
                             productId = id.ifBlank { null }
-                            state.products.firstOrNull { it.product.id == productId }?.product?.let { product ->
-                                unit = product.unit
-                                unitPrice = product.priceRupiah.toString()
+                            // The main (first) sale unit is the default (DEC-028 §8); Fase 2 lets the sale pick another.
+                            state.products.firstOrNull { it.product.id == productId }?.mainUnit?.let { main ->
+                                unit = main.name
+                                unitPrice = main.priceRupiah.toString()
                                 isUnitPriceAutoDerived = false
                                 TransactionCalculation.parseQuantity(quantity)?.let { q ->
-                                    amount = TransactionCalculation.computeTotalRupiah(q, product.priceRupiah).toString()
+                                    amount = TransactionCalculation.computeTotalRupiah(q, main.priceRupiah).toString()
                                     isAutoCalculated = true
                                 }
                                 advanced = true

@@ -9,7 +9,8 @@ import com.mankeu.data.FinancialEventEntity
 import com.mankeu.data.ImportBatchEntity
 import com.mankeu.data.ImportNoticeEntity
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.ProductWithComponents
+import com.mankeu.data.LegacyProductShape
+import com.mankeu.data.ProductRecord
 import com.mankeu.data.ProjectEntity
 import com.mankeu.data.ProvenanceEntity
 import com.mankeu.domain.BookMode
@@ -41,7 +42,9 @@ data class FinanceExportBundle(
     val notices: List<ImportNoticeEntity>,
     val provenance: List<ProvenanceEntity>,
     val stockItems: List<StockItemEntity> = emptyList(),
-    val products: List<ProductWithComponents> = emptyList(),
+    val products: List<ProductRecord> = emptyList(),
+    /** Material prices the recipe lines are costed at (DEC-028 §2). */
+    val materialPrices: Map<String, Long> = emptyMap(),
     /** The business plan's BEP (DEC-014), computed by the repository from the same rows. */
     val plan: PlanAnalysis? = null,
     val generatedAtEpochMillis: Long = System.currentTimeMillis(),
@@ -90,7 +93,7 @@ class FinanceWorkbookExporter(
                 transactions(books[BookMode.REALIZATION]?.events.orEmpty(), productNames),
                 budget(books[BookMode.PROJECTION]?.budgets.orEmpty(), categories),
                 products(bundle.products),
-                recipes(bundle.products),
+                recipes(bundle.products, bundle.materialPrices),
                 stock(bundle.stockItems),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
                 reportTable(bundle.books),
@@ -174,17 +177,20 @@ class FinanceWorkbookExporter(
         currencyColumns = setOf(5, 6),
     )
 
-    private fun products(products: List<ProductWithComponents>) = WorkbookTable(
+    private fun products(products: List<ProductRecord>) = WorkbookTable(
         name = MankeuTemplate.PRODUCTS,
         headers = PRODUCT_COLUMNS,
-        rows = products.map { (p, _) -> listOf(p.name, p.unit, p.priceRupiah, quantity(p.targetPerMonthText), p.sellFromMonth) },
+        rows = products.map { p -> listOf(p.product.name, p.mainUnit?.name ?: p.product.unit, p.mainUnit?.priceRupiah ?: 0, quantity(p.product.targetPerMonthText), p.product.sellFromMonth) },
         currencyColumns = setOf(2),
     )
 
-    private fun recipes(products: List<ProductWithComponents>) = WorkbookTable(
+    // Template v4 until Task 4: lossless because no product has the new shape before Task 5.
+    private fun recipes(products: List<ProductRecord>, materialPrices: Map<String, Long>) = WorkbookTable(
         name = MankeuTemplate.RECIPES,
         headers = MankeuTemplate.RECIPE_HEADERS,
-        rows = products.flatMap { (p, components) -> components.map { listOf(p.name, it.name, it.amountRupiah, quantity(it.yieldText)) } },
+        rows = products.flatMap { p ->
+            LegacyProductShape.components(p, materialPrices).map { listOf(p.product.name, it.name, it.amountRupiah, quantity(it.yieldText)) }
+        },
         currencyColumns = setOf(2),
     )
 

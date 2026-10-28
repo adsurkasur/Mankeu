@@ -287,20 +287,48 @@ interface FinanceDao {
 
     @Query(
         """
-        SELECT c.* FROM product_cost_components c INNER JOIN products p ON p.id = c.productId
-        WHERE p.projectId = :projectId AND p.archived = 0 ORDER BY c.productId, c.sortOrder
+        SELECT u.* FROM product_units u INNER JOIN products p ON p.id = u.productId
+        WHERE p.projectId = :projectId AND p.archived = 0 ORDER BY u.productId, u.sortOrder
         """,
     )
-    fun observeProductComponents(projectId: String): Flow<List<ProductCostComponentEntity>>
+    fun observeProductUnits(projectId: String): Flow<List<ProductUnitEntity>>
 
-    @Query("SELECT * FROM product_cost_components WHERE productId = :productId ORDER BY sortOrder")
-    suspend fun getProductComponents(productId: String): List<ProductCostComponentEntity>
+    @Query("SELECT * FROM product_units WHERE productId = :productId ORDER BY sortOrder")
+    suspend fun getProductUnits(productId: String): List<ProductUnitEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertProductComponents(components: List<ProductCostComponentEntity>)
+    suspend fun insertProductUnits(units: List<ProductUnitEntity>)
 
-    @Query("DELETE FROM product_cost_components WHERE productId = :productId")
-    suspend fun deleteProductComponents(productId: String)
+    @Query("DELETE FROM product_units WHERE productId = :productId")
+    suspend fun deleteProductUnits(productId: String)
+
+    @Query(
+        """
+        SELECT r.* FROM product_recipe_lines r INNER JOIN products p ON p.id = r.productId
+        WHERE p.projectId = :projectId AND p.archived = 0 ORDER BY r.productId, r.sortOrder
+        """,
+    )
+    fun observeRecipeLines(projectId: String): Flow<List<ProductRecipeLineEntity>>
+
+    @Query("SELECT * FROM product_recipe_lines WHERE productId = :productId ORDER BY sortOrder")
+    suspend fun getRecipeLines(productId: String): List<ProductRecipeLineEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertRecipeLines(lines: List<ProductRecipeLineEntity>)
+
+    @Query("DELETE FROM product_recipe_lines WHERE productId = :productId")
+    suspend fun deleteRecipeLines(productId: String)
+
+    @Query(
+        """
+        SELECT m.* FROM product_movements m INNER JOIN products p ON p.id = m.productId
+        WHERE p.projectId = :projectId AND p.archived = 0 ORDER BY m.dateEpochDay, m.createdAtEpochMillis
+        """,
+    )
+    fun observeProductMovements(projectId: String): Flow<List<ProductMovementEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertProductMovement(movement: ProductMovementEntity)
 
     @Query("UPDATE categories SET costNature = :costNature WHERE id = :id")
     suspend fun setCategoryCostNature(id: String, costNature: String?)

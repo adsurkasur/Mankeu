@@ -24,7 +24,9 @@ import com.mankeu.sync.SyncSchema
         JournalEntryEntity::class,
         PostingEntity::class,
         ProductEntity::class,
-        ProductCostComponentEntity::class,
+        ProductUnitEntity::class,
+        ProductRecipeLineEntity::class,
+        ProductMovementEntity::class,
         ImportBatchEntity::class,
         ImportNoticeEntity::class,
         ProvenanceEntity::class,
@@ -33,7 +35,7 @@ import com.mankeu.sync.SyncSchema
         SyncOutboxEntity::class,
         SyncMetaEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -58,7 +60,9 @@ abstract class AppDatabase : RoomDatabase() {
             "stock_items",
             "stock_movements",
             "products",
-            "product_cost_components",
+            "product_units",
+            "product_recipe_lines",
+            "product_movements",
         )
 
         fun create(context: Context, name: String = "mankeu.db"): AppDatabase = Room.databaseBuilder(
@@ -66,9 +70,10 @@ abstract class AppDatabase : RoomDatabase() {
             AppDatabase::class.java,
             name,
         )
-            // DEC-026 / spec #1: pre-0.1.0 installs start clean; only schema 12 is carried forward.
+            // DEC-026 / spec #1: pre-0.1.0 installs start clean; schema 12 onward is carried forward.
             // The destructive path runs Callback.onDestructiveMigration, not onCreate (see SyncSchema.callback).
             .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+            .addMigrations(Migration12To13)
             .addCallback(SyncSchema.callback)
             .build()
     }

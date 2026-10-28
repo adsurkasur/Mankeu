@@ -8,13 +8,12 @@ import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.PlanInputs
 import com.mankeu.domain.PlanLine
 import com.mankeu.domain.PlanProduct
+import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
-
-data class ProductWithComponents(val product: ProductEntity, val components: List<ProductCostComponentEntity>)
 
 /**
  * Turns stored rows into the pure inputs of [com.mankeu.domain.PlanCalculator] and
@@ -24,17 +23,22 @@ object PlanAssembly {
     /** Assets bought before schema 9 carry no useful life; this is the documented default. */
     const val DEFAULT_ASSET_LIFE_MONTHS = 36
 
-    fun products(rows: List<ProductWithComponents>): List<PlanProduct> = rows.map { (product, components) ->
+    /**
+     * Until Fase 3 rewrites the plan it prices each product by its main sale unit (DEC-028 §8), with
+     * the HPP of that unit as its one variable cost, so the plan and the Produk tab show the same number.
+     */
+    fun products(rows: List<ProductRecord>, materialPrices: Map<String, Long>): List<PlanProduct> = rows.mapNotNull { row ->
+        val spec = row.spec
+        val main = spec.saleUnits.firstOrNull() ?: return@mapNotNull null
+        val hpp = ProductCosting.cost(spec, materialPrices).perSaleUnit.first().hppRupiah
         PlanProduct(
-            id = product.id,
-            name = product.name,
-            unit = product.unit,
-            priceRupiah = product.priceRupiah,
-            targetPerMonth = TransactionCalculation.parseQuantity(product.targetPerMonthText),
-            components = components.map {
-                CostComponent(it.name, it.amountRupiah, TransactionCalculation.parseQuantity(it.yieldText) ?: BigDecimal.ONE)
-            },
-            sellFromMonth = product.sellFromMonth,
+            id = spec.id,
+            name = spec.name,
+            unit = main.name,
+            priceRupiah = main.priceRupiah,
+            targetPerMonth = TransactionCalculation.parseQuantity(row.product.targetPerMonthText),
+            components = if (hpp > 0) listOf(CostComponent("HPP", hpp, BigDecimal.ONE)) else emptyList(),
+            sellFromMonth = row.product.sellFromMonth,
         )
     }
 
@@ -56,15 +60,16 @@ object PlanAssembly {
 
     fun planInputs(
         project: ProjectEntity?,
-        products: List<ProductWithComponents>,
+        products: List<ProductRecord>,
         planItems: List<BudgetItemEntity>,
         categories: List<CategoryEntity>,
         today: LocalDate,
+        materialPrices: Map<String, Long>,
     ): PlanInputs {
         val byId = categories.associateBy { it.id }
         return PlanInputs(
             months = months(project, planItems, today),
-            products = products(products),
+            products = products(products, materialPrices),
             lines = planItems.filterNot { it.archived }.map { item ->
                 val category = byId[item.categoryId]
                 val role = CategoryRole.parse(category?.role)

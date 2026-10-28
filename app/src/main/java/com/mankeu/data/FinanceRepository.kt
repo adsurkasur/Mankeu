@@ -22,6 +22,7 @@ import com.mankeu.domain.Posting
 import com.mankeu.domain.PostedRecord
 import com.mankeu.domain.PostingSide
 import com.mankeu.domain.PostingReportCalculator
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.RecordStockMovementUseCase
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockItemEntity
@@ -83,8 +84,21 @@ data class BudgetItemDraft(
     val usefulLifeMonths: Int? = null,
 )
 
-/** One recipe line as the product sheet edits it. */
-data class ComponentDraft(val name: String, val amountRupiah: Long, val yieldText: String = "1")
+/** One sale unit as the product editor edits it; [id] keeps an existing unit's id. */
+data class SaleUnitDraft(val id: String? = null, val name: String, val contentText: String, val priceRupiah: Long)
+
+/** One recipe line: a material and its quantity per batch, or a free cost per batch. */
+data class RecipeLineDraft(val name: String, val stockItemId: String? = null, val quantityText: String? = null, val amountRupiah: Long? = null)
+
+data class ProductDraft(
+    val name: String,
+    val baseUnit: String,
+    val batchYieldText: String,
+    val units: List<SaleUnitDraft>,
+    val recipe: List<RecipeLineDraft>,
+    val targetPerMonthText: String? = null,
+    val sellFromMonth: Int = 1,
+)
 
 /** See [FinanceRepository.reviewImport]. */
 data class ImportReview(
@@ -116,12 +130,18 @@ class FinanceRepository(private val database: AppDatabase) {
     fun budgetItems(bookId: String): Flow<List<BudgetItemEntity>> = dao.observeBudgetItems(bookId)
     fun costRows(bookId: String): Flow<List<CostRow>> = dao.observeCostRows(bookId)
 
-    /** Products of a business unit with their recipes (DEC-014 B-5). */
-    fun products(projectId: String): Flow<List<ProductWithComponents>> =
-        combine(dao.observeProducts(projectId), dao.observeProductComponents(projectId)) { products, components ->
-            val byProduct = components.groupBy { it.productId }
-            products.map { ProductWithComponents(it, byProduct[it.id].orEmpty()) }
-        }
+    /** Products of a business unit with sale units, recipe and stock movements (spec #5 #6 #9). */
+    fun products(projectId: String): Flow<List<ProductRecord>> = combine(
+        dao.observeProducts(projectId),
+        dao.observeProductUnits(projectId),
+        dao.observeRecipeLines(projectId),
+        dao.observeProductMovements(projectId),
+    ) { products, units, recipe, movements ->
+        val unitsOf = units.groupBy { it.productId }
+        val recipeOf = recipe.groupBy { it.productId }
+        val movementsOf = movements.groupBy { it.productId }
+        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty()) }
+    }
     fun importBatches(projectId: String): Flow<List<ImportBatchEntity>> = dao.observeImportBatches(projectId)
 
     /** Runs [block] as one database transaction, for a caller composing several repository writes. */
@@ -190,6 +210,7 @@ class FinanceRepository(private val database: AppDatabase) {
                 provenance = dao.getProvenance(project.id),
                 stockItems = stockDao.getStockItems(business.id, project.id),
                 products = productsOf(project.id),
+                materialPrices = materialPrices(business.id),
                 plan = plan,
             )
         }
@@ -205,8 +226,12 @@ class FinanceRepository(private val database: AppDatabase) {
         return FinanceWorkbookExporter().template(categories)
     }
 
-    private suspend fun productsOf(projectId: String): List<ProductWithComponents> =
-        dao.getProducts(projectId).map { ProductWithComponents(it, dao.getProductComponents(it.id)) }
+    private suspend fun productsOf(projectId: String): List<ProductRecord> =
+        dao.getProducts(projectId).map { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id)) }
+
+    /** Material prices for HPP. Task 3 derives them from the latest purchase (DEC-028 §2). */
+    private suspend fun materialPrices(businessId: String): Map<String, Long> =
+        stockDao.getAllStockItems(businessId).associate { it.id to it.basePriceRupiah }
 
     /** The business plan of a unit, from the same rows the screens read (DEC-014). */
     /** Null when the unit has no plan yet, exactly as the screens decide (a legacy posted Proyeksi stays). */
@@ -215,62 +240,130 @@ class FinanceRepository(private val database: AppDatabase) {
         val products = productsOf(project.id)
         val lines = dao.getBudgetItems(plan.id).filterNot { it.archived }
         if (products.isEmpty() && lines.isEmpty()) return null
-        return PlanCalculator.analyse(PlanAssembly.planInputs(project, products, lines, categories, LocalDate.now()))
+        return PlanCalculator.analyse(PlanAssembly.planInputs(project, products, lines, categories, LocalDate.now(), materialPrices(project.businessId)))
     }
 
     /**
-     * Creates or replaces a product and its whole recipe in one transaction. Prices and costs are
-     * whole rupiah; the target and each yield must be positive numbers when given.
+     * Creates or replaces a product with its sale units and per-batch recipe in one transaction
+     * (spec #5 #6 #20). Every sale unit needs a positive content and price; the base unit, when sold
+     * as such, holds exactly 1. Material lines must name a material of this business.
      */
-    suspend fun saveProduct(
-        projectId: String,
-        id: String?,
-        name: String,
-        unit: String,
-        priceRupiah: Long,
-        targetPerMonthText: String?,
-        components: List<ComponentDraft>,
-        sellFromMonth: Int = 1,
-    ): String = database.withTransaction {
-        require(sellFromMonth >= 1) { "Bulan mulai dijual minimal bulan ke-1." }
-        val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama produk wajib diisi." } }
-        val cleanUnit = unit.trim().also { require(it.isNotBlank()) { "Satuan produk wajib diisi." } }
-        require(priceRupiah > 0) { "Harga jual harus lebih dari nol." }
-        val target = targetPerMonthText?.trim()?.ifBlank { null }
+    suspend fun saveProduct(projectId: String, id: String?, draft: ProductDraft): String = database.withTransaction {
+        val name = draft.name.trim().also { require(it.isNotBlank()) { "Nama produk wajib diisi." } }
+        val baseUnit = draft.baseUnit.trim().also { require(it.isNotBlank()) { "Satuan dasar wajib diisi." } }
+        val batchYield = requireNotNull(TransactionCalculation.parseQuantity(draft.batchYieldText)) { "Hasil satu batch harus angka lebih dari nol." }
+        require(draft.sellFromMonth >= 1) { "Bulan mulai dijual minimal bulan ke-1." }
+        val target = draft.targetPerMonthText?.trim()?.ifBlank { null }
         require(target == null || TransactionCalculation.parseQuantity(target) != null) { "Target per bulan harus angka lebih dari nol." }
-        val recipe = components.filter { it.name.isNotBlank() }
-        recipe.forEach {
-            require(it.amountRupiah > 0) { "Biaya komponen \"${it.name}\" harus lebih dari nol." }
-            require(TransactionCalculation.parseQuantity(it.yieldText) != null) { "\"Untuk berapa unit\" pada \"${it.name}\" harus angka lebih dari nol." }
+        val units = draft.units.filter { it.name.isNotBlank() }
+        require(units.isNotEmpty()) { "Isi minimal satu satuan jual." }
+        require(units.map { it.name.trim().lowercase() }.distinct().size == units.size) { "Nama satuan jual tidak boleh kembar." }
+        units.forEach { u ->
+            val content = requireNotNull(TransactionCalculation.parseQuantity(u.contentText)) { "Isi satuan \"${u.name.trim()}\" harus angka lebih dari nol." }
+            require(u.priceRupiah > 0) { "Harga jual per ${u.name.trim()} harus lebih dari nol." }
+            require(!u.name.trim().equals(baseUnit, ignoreCase = true) || content.compareTo(BigDecimal.ONE) == 0) {
+                "\"$baseUnit\" adalah satuan dasar, isinya harus 1."
+            }
+        }
+        val project = dao.getProject(projectId) ?: error("Unit usaha tidak ditemukan.")
+        val recipe = draft.recipe.filter { it.stockItemId != null || it.name.isNotBlank() }.map { line ->
+            if (line.stockItemId != null) {
+                val material = stockDao.getStockItem(line.stockItemId)
+                require(material != null && material.businessId == project.businessId) { "Bahan tidak ditemukan di usaha ini." }
+                require(TransactionCalculation.parseQuantity(line.quantityText) != null) { "Jumlah ${material.name} per batch harus angka lebih dari nol." }
+                // The material's name is kept on the line, so a removed material still shows what was used.
+                line.copy(name = material.name, amountRupiah = null)
+            } else {
+                require((line.amountRupiah ?: 0) > 0) { "Biaya \"${line.name.trim()}\" harus lebih dari nol." }
+                line.copy(name = line.name.trim(), quantityText = null)
+            }
         }
         val now = System.currentTimeMillis()
         val existing = id?.let { dao.getProduct(it) }
         val productId = existing?.id ?: UUID.randomUUID().toString()
+        val yieldText = batchYield.stripTrailingZeros().toPlainString()
         if (existing == null) {
             dao.insertProduct(
                 ProductEntity(
                     id = productId,
                     projectId = projectId,
-                    name = cleanName,
-                    unit = cleanUnit,
-                    priceRupiah = priceRupiah,
+                    name = name,
+                    unit = baseUnit,
+                    batchYieldText = yieldText,
                     targetPerMonthText = target,
                     sortOrder = dao.getProducts(projectId).size,
                     createdAtEpochMillis = now,
-                    sellFromMonth = sellFromMonth,
+                    sellFromMonth = draft.sellFromMonth,
                 ),
             )
         } else {
             require(existing.projectId == projectId) { "Produk berasal dari unit usaha lain." }
-            dao.updateProduct(existing.copy(name = cleanName, unit = cleanUnit, priceRupiah = priceRupiah, targetPerMonthText = target, sellFromMonth = sellFromMonth, updatedAtEpochMillis = now))
+            dao.updateProduct(existing.copy(name = name, unit = baseUnit, batchYieldText = yieldText, targetPerMonthText = target, sellFromMonth = draft.sellFromMonth, updatedAtEpochMillis = now))
         }
-        dao.deleteProductComponents(productId)
-        dao.insertProductComponents(
-            recipe.mapIndexed { index, c ->
-                ProductCostComponentEntity(UUID.randomUUID().toString(), productId, c.name.trim(), c.amountRupiah, c.yieldText.trim().replace(',', '.'), index)
+        dao.deleteProductUnits(productId)
+        dao.insertProductUnits(
+            units.mapIndexed { index, u ->
+                ProductUnitEntity(
+                    id = u.id ?: UUID.randomUUID().toString(),
+                    productId = productId,
+                    name = u.name.trim(),
+                    contentText = requireNotNull(TransactionCalculation.parseQuantity(u.contentText)).stripTrailingZeros().toPlainString(),
+                    priceRupiah = u.priceRupiah,
+                    sortOrder = index,
+                )
+            },
+        )
+        dao.deleteRecipeLines(productId)
+        dao.insertRecipeLines(
+            recipe.mapIndexed { index, l ->
+                ProductRecipeLineEntity(
+                    id = UUID.randomUUID().toString(),
+                    productId = productId,
+                    name = l.name,
+                    stockItemId = l.stockItemId,
+                    quantityText = l.quantityText?.let { TransactionCalculation.parseQuantity(it)!!.stripTrailingZeros().toPlainString() },
+                    amountRupiah = l.amountRupiah,
+                    sortOrder = index,
+                )
             },
         )
         productId
+    }
+
+    /** Produksi (spec #9): [batches] batches add batches × yield base units to stock. */
+    suspend fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
+        require(batches.signum() > 0) { "Jumlah batch harus lebih dari nol." }
+        val product = dao.getProduct(productId) ?: error("Produk tidak ditemukan.")
+        val yield = TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE
+        dao.insertProductMovement(
+            ProductMovementEntity(
+                id = UUID.randomUUID().toString(),
+                productId = productId,
+                movementType = ProductMovementType.PRODUCTION.name,
+                quantityText = (batches * yield).stripTrailingZeros().toPlainString(),
+                batchesText = batches.stripTrailingZeros().toPlainString(),
+                dateEpochDay = date.toEpochDay(),
+                notes = notes.trim(),
+                createdAtEpochMillis = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    /** Hitung stok: the counted base units become the stock from [date] on; zero ("habis") is allowed. */
+    suspend fun countProductStock(productId: String, counted: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
+        require(counted.signum() >= 0) { "Jumlah stok tidak boleh negatif." }
+        requireNotNull(dao.getProduct(productId)) { "Produk tidak ditemukan." }
+        dao.insertProductMovement(
+            ProductMovementEntity(
+                id = UUID.randomUUID().toString(),
+                productId = productId,
+                movementType = ProductMovementType.ADJUSTMENT.name,
+                quantityText = counted.stripTrailingZeros().toPlainString(),
+                dateEpochDay = date.toEpochDay(),
+                notes = notes.trim(),
+                createdAtEpochMillis = System.currentTimeMillis(),
+            ),
+        )
     }
 
     suspend fun archiveProduct(id: String) = database.withTransaction { dao.archiveProduct(id, System.currentTimeMillis()) }
@@ -720,7 +813,6 @@ class FinanceRepository(private val database: AppDatabase) {
                     projectId = projectId,
                     name = item.name.trim(),
                     unit = item.unit.trim(),
-                    priceRupiah = item.priceRupiah,
                     targetPerMonthText = item.targetPerMonthText,
                     sellFromMonth = item.sellFromMonth,
                     sortOrder = productIds.size + index,
@@ -728,9 +820,8 @@ class FinanceRepository(private val database: AppDatabase) {
                     importBatchId = batchId,
                 ),
             )
-            dao.insertProductComponents(
-                item.components.mapIndexed { i, c -> ProductCostComponentEntity(UUID.randomUUID().toString(), productId, c.name, c.amountRupiah, c.yieldText, i) },
-            )
+            dao.insertProductUnits(listOf(LegacyProductShape.saleUnit(productId, item.unit.trim(), item.priceRupiah)))
+            dao.insertRecipeLines(item.components.mapIndexed { i, c -> LegacyProductShape.recipeLine(UUID.randomUUID().toString(), productId, c.name, c.amountRupiah, c.yieldText, i) })
             productIds[normalize(item.name)] = productId
         }
 

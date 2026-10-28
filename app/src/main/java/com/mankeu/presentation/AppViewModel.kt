@@ -2,7 +2,8 @@ package com.mankeu.presentation
 
 import com.mankeu.data.ComponentDraft
 import com.mankeu.data.PlanAssembly
-import com.mankeu.data.ProductWithComponents
+import com.mankeu.data.LegacyProductShape
+import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.ActualMonthAnalysis
 import com.mankeu.domain.CostNature
@@ -101,7 +102,7 @@ data class AppUiState(
     /** Distinct months with Realisasi records; the comparison averages over it. */
     val realizationMonths: Int = 1,
     /** The selected unit's products with recipes, its Proyeksi plan lines and their analysis (DEC-014). */
-    val products: List<ProductWithComponents> = emptyList(),
+    val products: List<ProductRecord> = emptyList(),
     val planItems: List<BudgetItemEntity> = emptyList(),
     val plan: PlanAnalysis? = null,
     /** "Status BEP bulan ini" from the Realisasi book; null until there is anything to say. */
@@ -261,16 +262,22 @@ class AppViewModel(
         items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id?.let(repository::costRows) ?: flowOf(emptyList())
     }.stateIn(viewModelScope, KeepWarm, emptyList())
 
+    /** Products with the material prices their HPP is costed at (Task 3 derives prices from purchases). */
+    private val pricedProducts = combine(products, stockItems) { productRows, items ->
+        productRows to items.associate { it.id to it.basePriceRupiah }
+    }
+
     /** The unit's business plan and this month's actual BEP, recomputed whenever any input changes. */
-    private val planContent = combine(projects, selectedProjectId, products, planItems, categories) { projectRows, projectId, productRows, lines, categoryRows ->
+    private val planContent = combine(projects, selectedProjectId, pricedProducts, planItems, categories) { projectRows, projectId, (productRows, prices), lines, categoryRows ->
         val project = projectRows.firstOrNull { it.id == projectId }
         val plan = if (productRows.isEmpty() && lines.isEmpty()) null
-        else PlanCalculator.analyse(PlanAssembly.planInputs(project, productRows, lines, categoryRows, LocalDate.now()))
-        Triple(productRows, lines, plan)
+        else PlanCalculator.analyse(PlanAssembly.planInputs(project, productRows, lines, categoryRows, LocalDate.now(), prices))
+        Triple(productRows to prices, lines, plan)
     }
-    private val planAndActual = combine(planContent, actualCostRows) { (productRows, lines, plan), rows ->
+    private val planAndActual = combine(planContent, actualCostRows) { (priced, lines, plan), rows ->
+        val (productRows, prices) = priced
         val actual = if (rows.isEmpty()) null
-        else ActualBepCalculator.analyse(PlanAssembly.products(productRows), PlanAssembly.actualMonth(YearMonth.now(), rows))
+        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), rows))
         PlanContent(productRows, lines, plan, actual)
     }.stateIn(viewModelScope, KeepWarm, PlanContent(emptyList(), emptyList(), null, null))
     private val importBatches = selectedProjectId.flatMapLatest { id ->
@@ -668,8 +675,20 @@ class AppViewModel(
 
     fun saveProduct(id: String?, name: String, unit: String, priceRupiah: Long, targetPerMonthText: String?, components: List<ComponentDraft>, sellFromMonth: Int = 1) = mutating {
         val projectId = selectedProjectId.value ?: return@mutating
-        runCatching { repository.saveProduct(projectId, id, name, unit, priceRupiah, targetPerMonthText, components, sellFromMonth) }
+        runCatching { repository.saveProduct(projectId, id, LegacyProductShape.draft(name, unit, priceRupiah, targetPerMonthText, components, sellFromMonth)) }
             .onSuccess { message.value = UiText.of(R.string.msg_product_saved, name.trim()) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
+    }
+
+    fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate) = mutating {
+        runCatching { repository.recordProduction(productId, batches, date, "") }
+            .onSuccess { message.value = UiText.of(R.string.msg_production_saved) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
+    }
+
+    fun countProductStock(productId: String, counted: BigDecimal, date: LocalDate) = mutating {
+        runCatching { repository.countProductStock(productId, counted, date, "") }
+            .onSuccess { message.value = UiText.of(R.string.msg_stock_count_saved) }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
     }
 
@@ -1081,7 +1100,7 @@ class AppViewModel(
     )
 
     private data class PlanContent(
-        val products: List<ProductWithComponents>,
+        val products: List<ProductRecord>,
         val planItems: List<BudgetItemEntity>,
         val plan: PlanAnalysis?,
         val actualMonth: ActualMonthAnalysis?,

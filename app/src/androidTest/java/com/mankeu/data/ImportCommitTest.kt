@@ -75,8 +75,11 @@ class ImportCommitTest {
         val unit = dao.getProject(projectId)!!
         assertEquals(LocalDate.of(2026, 11, 1) to LocalDate.of(2027, 10, 31), LocalDate.ofEpochDay(unit.startDateEpochDay!!) to LocalDate.ofEpochDay(unit.endDateEpochDay!!))
         val product = dao.getProducts(projectId).single()
-        assertEquals("Kopi Susu" to 10_000L, product.name to product.priceRupiah)
-        assertEquals(listOf("Susu"), dao.getProductComponents(product.id).map { it.name })
+        assertEquals("Kopi Susu", product.name)
+        assertEquals(listOf("Susu"), dao.getRecipeLines(product.id).map { it.name })
+        // The file's "Rp 18.000 covers 6" lands as Rp 3.000 per cup, the cup its first sale unit (DEC-028 §6).
+        assertEquals(listOf(3_000L), dao.getRecipeLines(product.id).map { it.amountRupiah })
+        assertEquals(listOf(LegacyProductShape.saleUnit(product.id, "cup", 10_000)), dao.getProductUnits(product.id))
         val sale = dao.getEventsForBook(books.getValue(BookMode.REALIZATION).id).single { it.description == "Jual kopi" }
         assertEquals(product.id to "450", sale.productId to sale.quantityText)
         // Import is bulk entry into the selected unit, stock included (schema 10).

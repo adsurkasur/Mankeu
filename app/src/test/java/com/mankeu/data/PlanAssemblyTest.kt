@@ -12,12 +12,14 @@ import java.time.YearMonth
 /** Stored rows → plan/actual inputs → the lecturer's benchmark, end to end without a database. */
 class PlanAssemblyTest {
     private val today = LocalDate.of(2026, 11, 15)
-    private val kopi = ProductWithComponents(
-        ProductEntity("kopi", "p", "Kopi susu", "cup", 10_000, "700", createdAtEpochMillis = 0),
+    private val kopi = ProductRecord(
+        ProductEntity("kopi", "p", "Kopi susu", "cup", targetPerMonthText = "700", createdAtEpochMillis = 0),
+        listOf(ProductUnitEntity("kopi-u0", "kopi", "cup", "1", 10_000)),
         listOf(
-            ProductCostComponentEntity("c1", "kopi", "Bubuk kopi/teh + susu", 3_500),
-            ProductCostComponentEntity("c2", "kopi", "Cup + sedotan + tutup", 1_000),
-            ProductCostComponentEntity("c3", "kopi", "Kantong plastik", 25_000, yieldText = "50"),
+            ProductRecipeLineEntity("c1", "kopi", "Bubuk kopi/teh + susu", amountRupiah = 3_500, sortOrder = 0),
+            ProductRecipeLineEntity("c2", "kopi", "Cup + sedotan + tutup", amountRupiah = 1_000, sortOrder = 1),
+            // Schema 12 said "Rp 25.000 covers 50"; migrated it is Rp 500 per cup (DEC-028 §6).
+            ProductRecipeLineEntity("c3", "kopi", "Kantong plastik", amountRupiah = 500, sortOrder = 2),
         ),
     )
     private val categories = listOf(
@@ -45,6 +47,7 @@ class PlanAssemblyTest {
             ),
             categories = categories,
             today = today,
+            materialPrices = emptyMap(),
         )
 
         val plan = PlanCalculator.analyse(inputs)
@@ -56,12 +59,33 @@ class PlanAssemblyTest {
         assertEquals(BigDecimal("1.27"), plan.revenueCostRatio)
     }
 
+    /** DEC-028 §8: the plan prices a product by its main (first) sale unit, its HPP the one variable cost. */
+    @Test
+    fun `plan product uses the main sale unit and the HPP of a batch recipe`() {
+        val keripik = ProductRecord(
+            ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "40", targetPerMonthText = "10", createdAtEpochMillis = 0),
+            listOf(ProductUnitEntity("k-dus", "k", "dus", "40", 200_000, sortOrder = 0), ProductUnitEntity("k-bks", "k", "bungkus", "1", 6_000, sortOrder = 1)),
+            listOf(
+                ProductRecipeLineEntity("r1", "k", "Tepung", stockItemId = "tepung", quantityText = "2", sortOrder = 0),
+                ProductRecipeLineEntity("r2", "k", "Gas", amountRupiah = 6_000, sortOrder = 1),
+            ),
+        )
+        val noUnit = ProductRecord(ProductEntity("x", "p", "Tanpa satuan", "pcs", createdAtEpochMillis = 0), emptyList(), emptyList())
+
+        val plan = PlanAssembly.products(listOf(keripik, noUnit), mapOf("tepung" to 12_000L)).single()
+
+        assertEquals("dus", plan.unit)
+        assertEquals(200_000L, plan.priceRupiah)
+        // Batch = 2 × 12.000 + 6.000 = 30.000 for 40 bungkus; one dus holds all 40.
+        assertEquals(listOf(com.mankeu.domain.CostComponent("HPP", 30_000, BigDecimal.ONE)), plan.components)
+    }
+
     @Test
     fun `a line override beats its category and an asset without life uses the default`() {
         val inputs = PlanAssembly.planInputs(
             null, emptyList(),
             listOf(line("Upah borongan", "sewa", 300_000, nature = "VARIABLE"), line("Etalase", "alat", 3_600_000)),
-            categories, today,
+            categories, today, emptyMap(),
         )
         assertEquals(com.mankeu.domain.CostNature.VARIABLE, inputs.lines[0].nature)
         assertEquals(36, inputs.lines[1].usefulLifeMonths)
@@ -90,7 +114,7 @@ class PlanAssemblyTest {
         )
 
         val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), rows)
-        val result = ActualBepCalculator.analyse(PlanAssembly.products(listOf(kopi)), actual)
+        val result = ActualBepCalculator.analyse(PlanAssembly.products(listOf(kopi), emptyMap()), actual)
 
         assertEquals(7_000_000L, actual.revenueRupiah)
         assertEquals(2_000_000L, actual.unattributedRevenueRupiah)

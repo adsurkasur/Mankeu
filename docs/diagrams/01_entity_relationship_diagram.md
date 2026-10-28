@@ -15,7 +15,11 @@ erDiagram
     financial_events ||--|| journal_entries : "CASCADE"
     journal_entries ||--|{ postings : "CASCADE"
     projects ||--o{ products : "CASCADE"
-    products ||--o{ product_cost_components : "CASCADE"
+    products ||--o{ product_units : "CASCADE"
+    products ||--o{ product_recipe_lines : "CASCADE"
+    products ||--o{ product_movements : "CASCADE"
+    stock_items ||..o{ product_recipe_lines : "stockItemId logis"
+    stock_items ||..o{ financial_events : "stockItemId logis (bahan dibeli)"
     businesses ||--o{ stock_items : "CASCADE"
     stock_items ||--o{ stock_movements : "CASCADE"
     import_batches ||--o{ import_notices : "CASCADE"
@@ -116,6 +120,7 @@ erDiagram
         string productId "logis"
         string costNature
         int usefulLifeMonths
+        string stockItemId "logis, bahan yang dibeli"
         string importBatchId "logis"
         string cashFlowRole "OPERATING INVESTING FINANCING"
         long createdAtEpochMillis "tetap saat Ubah"
@@ -140,9 +145,9 @@ erDiagram
         string id PK
         string projectId FK
         string name
-        string unit
-        long priceRupiah
-        string targetPerMonthText
+        string unit "satuan dasar"
+        string batchYieldText "hasil satu batch, default 1"
+        string targetPerMonthText "dalam satuan jual utama"
         int sellFromMonth "1 = bulan pertama rencana"
         int sortOrder
         boolean archived
@@ -151,13 +156,34 @@ erDiagram
         long updatedAtEpochMillis
     }
 
-    product_cost_components {
+    product_units {
+        string id PK "produk lama: <productId>-u0"
+        string productId FK
+        string name
+        string contentText "isi dalam satuan dasar"
+        long priceRupiah
+        int sortOrder "0 = satuan utama"
+    }
+
+    product_recipe_lines {
         string id PK
         string productId FK
         string name
-        long amountRupiah
-        string yieldText "hasil per biaya"
+        string stockItemId "logis, bahan"
+        string quantityText "per batch"
+        long amountRupiah "biaya bebas per batch"
         int sortOrder
+    }
+
+    product_movements {
+        string id PK
+        string productId FK
+        string movementType "PRODUCTION / ADJUSTMENT"
+        string quantityText "satuan dasar"
+        string batchesText
+        long dateEpochDay
+        string notes
+        long createdAtEpochMillis
     }
 
     stock_items {

@@ -277,7 +277,7 @@ class AppViewModel(
     private val planAndActual = combine(planContent, actualCostRows) { (priced, lines, plan), rows ->
         val (productRows, prices) = priced
         val actual = if (rows.isEmpty()) null
-        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), rows))
+        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), rows, productRows))
         PlanContent(productRows, lines, plan, actual)
     }.stateIn(viewModelScope, KeepWarm, PlanContent(emptyList(), emptyList(), null, null))
     private val importBatches = selectedProjectId.flatMapLatest { id ->

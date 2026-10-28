@@ -12,6 +12,7 @@ import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import java.math.BigDecimal
+import java.math.MathContext
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -91,7 +92,8 @@ object PlanAssembly {
      * variable spend by effective cost nature, and depreciation of every asset bought on or before
      * the month that is still within its life. Capital and drawings are neither cost nor revenue.
      */
-    fun actualMonth(month: YearMonth, rows: List<CostRow>): ActualMonthInputs {
+    fun actualMonth(month: YearMonth, rows: List<CostRow>, products: List<ProductRecord>): ActualMonthInputs {
+        val byId = products.associateBy { it.product.id }
         val inMonth = rows.filter { YearMonth.from(LocalDate.ofEpochDay(it.dateEpochDay)) == month }
         val sales = inMonth.filter { it.type == FinancialEventType.CASH_INCOME.name }
         val named = sales.filter { it.productId != null && TransactionCalculation.parseQuantity(it.quantityText) != null }
@@ -104,7 +106,14 @@ object PlanAssembly {
         return ActualMonthInputs(
             month = month,
             unitsSold = named.groupBy { it.productId!! }
-                .mapValues { (_, list) -> list.fold(BigDecimal.ZERO) { s, r -> s + TransactionCalculation.parseQuantity(r.quantityText)!! } },
+                .mapValues { (productId, list) ->
+                    val record = byId[productId]
+                    val main = record?.contentOf(null) ?: BigDecimal.ONE
+                    list.fold(BigDecimal.ZERO) { sum, r ->
+                        val content = record?.contentOf(r.unit) ?: BigDecimal.ONE
+                        sum + TransactionCalculation.parseQuantity(r.quantityText)!! * content.divide(main, MathContext.DECIMAL64)
+                    }
+                },
             revenueRupiah = sales.sumOf { it.amountRupiah },
             unattributedRevenueRupiah = (sales - named.toSet()).sumOf { it.amountRupiah },
             fixedCostRupiah = expenses.filter { nature(it.costNature) != CostNature.VARIABLE }.sumOf { it.amountRupiah },

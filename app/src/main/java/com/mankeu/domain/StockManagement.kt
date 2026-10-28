@@ -32,7 +32,7 @@ data class StockItem(
     val businessId: String,
     val name: String,
     val unit: String,
-    val basePriceRupiah: Long, // HPP Satuan / Harga Beli Dasar (exact integer rupiah)
+    val basePriceRupiah: Long, // Current price: newest purchase, else the price entered with the item (exact integer rupiah)
     val currentStock: BigDecimal,
     val minAlertStock: BigDecimal,
     /** Shared by every unit of the business rather than held by one branch. */

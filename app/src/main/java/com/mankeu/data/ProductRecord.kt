@@ -15,6 +15,7 @@ data class ProductRecord(
     val units: List<ProductUnitEntity>,
     val recipe: List<ProductRecipeLineEntity>,
     val movements: List<ProductMovementEntity> = emptyList(),
+    val sales: List<ProductSaleRow> = emptyList(),
 ) {
     val spec: ProductSpec
         get() = ProductSpec(
@@ -33,12 +34,30 @@ data class ProductRecord(
     /** The first sale unit (DEC-028 §8): the plan's unit and the sale form's default. */
     val mainUnit: ProductUnitEntity? get() = units.minByOrNull { it.sortOrder }
 
-    /** Base units on hand. Task 3 adds the sales. */
+    /**
+     * Base units in one [unitName]. Null (sales from before sale units, or from a template without
+     * the column) means the main unit; a name that no longer exists, e.g. a unit renamed since, also
+     * falls back to the main unit rather than dropping the sale from the stock.
+     */
+    fun contentOf(unitName: String?): BigDecimal {
+        val main = spec.saleUnits.firstOrNull()?.content ?: BigDecimal.ONE
+        val name = unitName?.trim()?.ifBlank { null } ?: return main
+        if (name.equals(product.unit, ignoreCase = true)) return BigDecimal.ONE
+        return spec.saleUnits.firstOrNull { it.name.equals(name, ignoreCase = true) }?.content ?: main
+    }
+
+    /** Base units on hand: production and counts as stored, sales read from the sale events. */
     val stock: BigDecimal
-        get() = ProductStock.level(
-            movements.sortedWith(compareBy({ it.dateEpochDay }, { it.createdAtEpochMillis })).map {
-                // parseQuantity returns null for "0", which a count may legitimately be.
-                ProductMovement(ProductMovementType.valueOf(it.movementType), TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO)
-            },
-        )
+        get() {
+            // parseQuantity returns null for "0", which a count may legitimately be.
+            val stored = movements.map {
+                Triple(it.dateEpochDay, it.createdAtEpochMillis, ProductMovement(ProductMovementType.valueOf(it.movementType), TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO))
+            }
+            val sold = sales.mapNotNull { s ->
+                TransactionCalculation.parseQuantity(s.quantityText)?.let { q ->
+                    Triple(s.dateEpochDay, s.createdAtEpochMillis, ProductMovement(ProductMovementType.SALE, q * contentOf(s.unit)))
+                }
+            }
+            return ProductStock.level((stored + sold).sortedWith(compareBy({ it.first }, { it.second })).map { it.third })
+        }
 }

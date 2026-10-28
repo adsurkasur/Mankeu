@@ -75,6 +75,7 @@ data class MoneyEvent(
     val costNature: CostNature? = null,
     val productId: String? = null,
     val usefulLifeMonths: Int? = null,
+    val stockItemId: String? = null,
 ) {
     init {
         require(amountRupiah > 0) { "Amount must be a positive integer rupiah value." }

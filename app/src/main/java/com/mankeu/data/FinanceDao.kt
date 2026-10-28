@@ -38,8 +38,22 @@ data class CostRow(
     val costNature: String?,
     val productId: String?,
     val quantityText: String?,
+    val unit: String?,
     val usefulLifeMonths: Int?,
 )
+
+/** A sale of a product as the stock count reads it; see [FinanceDao.observeProductSales]. */
+data class ProductSaleRow(
+    val id: String,
+    val productId: String,
+    val quantityText: String?,
+    val unit: String?,
+    val dateEpochDay: Long,
+    val createdAtEpochMillis: Long,
+)
+
+/** A purchase that names a material; the newest one prices it (DEC-028 §2). */
+data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Long)
 
 /** Posting total per (cash-flow role, account, side); see [FinanceDao.observePostingTotals]. */
 data class PostingTotalRow(val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
@@ -341,7 +355,7 @@ interface FinanceDao {
         """
         SELECT e.id, e.type, e.dateEpochDay, e.amountRupiah,
                COALESCE(e.costNature, c.costNature) AS costNature,
-               e.productId, e.quantityText, e.usefulLifeMonths
+               e.productId, e.quantityText, e.unit, e.usefulLifeMonths
         FROM financial_events e
         LEFT JOIN categories c ON c.id = e.categoryId
         WHERE e.bookId = :bookId
@@ -349,6 +363,35 @@ interface FinanceDao {
         """,
     )
     fun observeCostRows(bookId: String): Flow<List<CostRow>>
+
+    /** Realisasi sales that name a product: product stock subtracts these (DEC-028 §4). */
+    @Query(
+        """
+        SELECT e.id, e.productId, e.quantityText, e.unit, e.dateEpochDay, e.createdAtEpochMillis
+        FROM financial_events e INNER JOIN books b ON b.id = e.bookId
+        WHERE e.projectId = :projectId AND e.productId IS NOT NULL AND e.type = :saleType AND b.mode = :mode
+        """,
+    )
+    fun observeProductSales(projectId: String, saleType: String, mode: String): Flow<List<ProductSaleRow>>
+
+    /** Oldest first, so the last row per material is its current price. */
+    @Query(
+        """
+        SELECT stockItemId, unitPriceRupiah FROM financial_events
+        WHERE businessId = :businessId AND stockItemId IS NOT NULL AND unitPriceRupiah IS NOT NULL
+        ORDER BY dateEpochDay, createdAtEpochMillis
+        """,
+    )
+    fun observeMaterialPurchases(businessId: String): Flow<List<MaterialPurchaseRow>>
+
+    @Query(
+        """
+        SELECT unitPriceRupiah FROM financial_events
+        WHERE stockItemId = :stockItemId AND unitPriceRupiah IS NOT NULL
+        ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC LIMIT 1
+        """,
+    )
+    suspend fun latestPurchasePrice(stockItemId: String): Long?
 
     @Query("SELECT * FROM import_batches WHERE projectId = :projectId ORDER BY committedAtEpochMillis")
     suspend fun getImportBatches(projectId: String): List<ImportBatchEntity>

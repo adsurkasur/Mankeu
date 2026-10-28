@@ -2,6 +2,7 @@ package com.mankeu.data
 
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.PlanCalculator
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -105,15 +106,15 @@ class PlanAssemblyTest {
     fun `actual month splits sales, fixed and variable spend and depreciates assets`() {
         val day = LocalDate.of(2026, 11, 3).toEpochDay()
         val rows = listOf(
-            CostRow("s1", "CASH_INCOME", day, 5_000_000, null, "kopi", "500", null),
-            CostRow("s2", "CASH_INCOME", day, 2_000_000, null, null, null, null),
-            CostRow("e1", "CASH_EXPENSE", day, 2_000_000, "FIXED", null, null, null),
-            CostRow("e2", "CASH_EXPENSE", day, 3_500_000, "VARIABLE", null, null, null),
-            CostRow("m1", "OWNER_CAPITAL", day, 9_000_000, null, null, null, null),
-            CostRow("a1", "ASSET_PURCHASE_CASH", LocalDate.of(2026, 10, 1).toEpochDay(), 12_000_000, null, null, null, 24),
+            CostRow("s1", "CASH_INCOME", day, 5_000_000, null, "kopi", "500", null, null),
+            CostRow("s2", "CASH_INCOME", day, 2_000_000, null, null, null, null, null),
+            CostRow("e1", "CASH_EXPENSE", day, 2_000_000, "FIXED", null, null, null, null),
+            CostRow("e2", "CASH_EXPENSE", day, 3_500_000, "VARIABLE", null, null, null, null),
+            CostRow("m1", "OWNER_CAPITAL", day, 9_000_000, null, null, null, null, null),
+            CostRow("a1", "ASSET_PURCHASE_CASH", LocalDate.of(2026, 10, 1).toEpochDay(), 12_000_000, null, null, null, null, 24),
         )
 
-        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), rows)
+        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), rows, emptyList())
         val result = ActualBepCalculator.analyse(PlanAssembly.products(listOf(kopi), emptyMap()), actual)
 
         assertEquals(7_000_000L, actual.revenueRupiah)
@@ -124,5 +125,20 @@ class PlanAssemblyTest {
         assertEquals(BigDecimal("700.000"), result.unitsSold["kopi"])
         assertEquals(0L, result.variableVarianceRupiah)
         assertEquals(2_500_000L, result.fixedCostRupiah)
+    }
+
+    @Test fun `units sold are counted in the main sale unit`() {
+        val record = ProductRecord(
+            ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),
+            listOf(ProductUnitEntity("dus", "k", "dus", "40", 300_000, 0), ProductUnitEntity("bks", "k", "bungkus", "1", 8_000, 1)),
+            emptyList(),
+        )
+        val day = LocalDate.of(2026, 10, 5).toEpochDay()
+        val rows = listOf(
+            CostRow("1", FinancialEventType.CASH_INCOME.name, day, 600_000, null, "k", "2", "dus", null),
+            CostRow("2", FinancialEventType.CASH_INCOME.name, day, 320_000, null, "k", "40", "bungkus", null),
+        )
+        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 10), rows, listOf(record))
+        assertEquals(0, BigDecimal(3).compareTo(actual.unitsSold.getValue("k")))
     }
 }

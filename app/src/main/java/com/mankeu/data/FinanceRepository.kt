@@ -67,6 +67,8 @@ data class EventDraft(
     val productId: String? = null,
     /** Asset purchases only (DEC-014 B-4). */
     val usefulLifeMonths: Int? = null,
+    /** The material an expense bought (spec #20). */
+    val stockItemId: String? = null,
 )
 
 data class BudgetItemDraft(
@@ -136,11 +138,13 @@ class FinanceRepository(private val database: AppDatabase) {
         dao.observeProductUnits(projectId),
         dao.observeRecipeLines(projectId),
         dao.observeProductMovements(projectId),
-    ) { products, units, recipe, movements ->
+        dao.observeProductSales(projectId, FinancialEventType.CASH_INCOME.name, BookMode.REALIZATION.name),
+    ) { products, units, recipe, movements, sales ->
         val unitsOf = units.groupBy { it.productId }
         val recipeOf = recipe.groupBy { it.productId }
         val movementsOf = movements.groupBy { it.productId }
-        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty()) }
+        val salesOf = sales.groupBy { it.productId }
+        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty(), salesOf[it.id].orEmpty()) }
     }
     fun importBatches(projectId: String): Flow<List<ImportBatchEntity>> = dao.observeImportBatches(projectId)
 
@@ -229,9 +233,9 @@ class FinanceRepository(private val database: AppDatabase) {
     private suspend fun productsOf(projectId: String): List<ProductRecord> =
         dao.getProducts(projectId).map { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id)) }
 
-    /** Material prices for HPP. Task 3 derives them from the latest purchase (DEC-028 §2). */
+    /** Material prices for HPP: the newest purchase's unit price, else the price entered with the item (DEC-028 §2). */
     private suspend fun materialPrices(businessId: String): Map<String, Long> =
-        stockDao.getAllStockItems(businessId).associate { it.id to it.basePriceRupiah }
+        stockDao.getAllStockItems(businessId).associate { it.id to (dao.latestPurchasePrice(it.id) ?: it.basePriceRupiah) }
 
     /** The business plan of a unit, from the same rows the screens read (DEC-014). */
     /** Null when the unit has no plan yet, exactly as the screens decide (a legacy posted Proyeksi stays). */
@@ -629,7 +633,7 @@ class FinanceRepository(private val database: AppDatabase) {
 
     suspend fun recordEvent(draft: EventDraft): String = database.withTransaction {
         requireValid(draft)
-        val event = draft.toEvent()
+        val event = draft.toEvent().withPurchasePrice()
         insertEventWithJournal(event)
         event.id
     }
@@ -642,7 +646,7 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun updateEvent(eventId: String, draft: EventDraft) = database.withTransaction {
         val old = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
         requireValid(draft)
-        val event = draft.copy(importBatchId = old.importBatchId).toEvent().copy(id = old.id)
+        val event = draft.copy(importBatchId = old.importBatchId).toEvent().withPurchasePrice().copy(id = old.id)
         dao.deleteEvent(old.id)
         insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis = old.createdAtEpochMillis)
     }
@@ -658,10 +662,41 @@ class FinanceRepository(private val database: AppDatabase) {
             val category = dao.getCategory(draft.categoryId) ?: error("Kategori tidak ditemukan.")
             require(category.businessId == draft.businessId) { "Kategori berasal dari usaha yang berbeda." }
         }
+        if (draft.stockItemId != null) {
+            require(draft.type == FinancialEventType.CASH_EXPENSE) { "Bahan hanya bisa dipilih untuk belanja (uang keluar)." }
+            val material = stockDao.getStockItem(draft.stockItemId)
+            require(material != null && material.businessId == draft.businessId) { "Bahan tidak ditemukan di usaha ini." }
+            require(TransactionCalculation.parseQuantity(draft.quantityText) != null) { "Isi jumlah ${material.name} yang dibeli." }
+        }
+        val soldUnit = draft.unit?.trim()?.ifBlank { null }
+        if (draft.productId != null && soldUnit != null) {
+            val product = dao.getProduct(draft.productId) ?: error("Produk tidak ditemukan.")
+            val known = listOf(product.unit) + dao.getProductUnits(product.id).map { it.name }
+            require(known.any { it.equals(soldUnit, ignoreCase = true) }) {
+                "\"$soldUnit\" bukan satuan jual ${product.name}. Pilih: ${known.distinct().joinToString()}."
+            }
+        }
     }
 
+    /** A material purchase without a unit price takes amount ÷ quantity, so it can price the material (spec #20). */
+    private fun MoneyEvent.withPurchasePrice(): MoneyEvent {
+        if (stockItemId == null || unitPriceRupiah != null) return this
+        val quantity = TransactionCalculation.parseQuantity(quantityText) ?: return this
+        return copy(unitPriceRupiah = TransactionCalculation.computeUnitPriceRupiah(amountRupiah, quantity))
+    }
+
+    /**
+     * Materials and goods of a unit. [StockItem.basePriceRupiah] is the newest purchase's unit price
+     * (spec #20, DEC-028 §2), else the price entered with the item; deleting that purchase restores it.
+     */
     fun stockItems(businessId: String, projectId: String?): Flow<List<StockItem>> =
-        stockDao.observeStockItems(businessId, projectId).map { rows -> rows.map { it.toDomain() } }
+        combine(stockDao.observeStockItems(businessId, projectId), dao.observeMaterialPurchases(businessId)) { items, purchases ->
+            val latest = purchases.associate { it.stockItemId to it.unitPriceRupiah }
+            items.map { item -> item.toDomain().let { it.copy(basePriceRupiah = latest[it.id] ?: it.basePriceRupiah) } }
+        }
+
+    suspend fun materialPrice(stockItemId: String): Long? =
+        dao.latestPurchasePrice(stockItemId) ?: stockDao.getStockItem(stockItemId)?.basePriceRupiah
 
     /**
      * A new item belongs to [projectId] (a branch keeps its own stock) unless [shared], in which
@@ -733,7 +768,7 @@ class FinanceRepository(private val database: AppDatabase) {
     /**
      * Hard deletes a transaction (D-042, DEC-019). Journal and postings follow by CASCADE.
      */
-    suspend fun deleteEvent(eventId: String) {
+    suspend fun deleteEvent(eventId: String) = database.withTransaction {
         dao.deleteEvent(eventId)
     }
 
@@ -1126,6 +1161,7 @@ class FinanceRepository(private val database: AppDatabase) {
         costNature = costNature,
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
+        stockItemId = stockItemId,
     )
 
     private fun FinancialEventEntity.toDomain() = MoneyEvent(
@@ -1149,6 +1185,7 @@ class FinanceRepository(private val database: AppDatabase) {
         costNature = PlanAssembly.nature(costNature),
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
+        stockItemId = stockItemId,
     )
 
     private fun MoneyEvent.toEntity(createdAtEpochMillis: Long = System.currentTimeMillis()) = FinancialEventEntity(
@@ -1173,6 +1210,7 @@ class FinanceRepository(private val database: AppDatabase) {
         costNature = costNature?.name,
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
+        stockItemId = stockItemId,
     )
 
     private fun calculateFormulaTotal(quantityText: String?, unitPriceRupiah: Long?): Long? {

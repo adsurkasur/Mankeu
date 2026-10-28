@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 05:55] [Claude Code (Opus) — Fase 1 Task 3: stok produk dari penjualan, harga bahan dari belanja terakhir]
+- **Goal**: Fase 1 Task 3: product stock subtracts sales and a material's price is its newest purchase, both derived on read (spec #9 #20, DEC-028 §2 §4).
+- **Actions**: `ProductSaleRow`/`MaterialPurchaseRow` and three queries in the DAO; `CostRow.unit`; `ProductRecord.sales`, `contentOf`, `stock` now includes sales converted to base units; `EventDraft`/`MoneyEvent.stockItemId` (validation: expense only, material of the business, quantity required; sold unit must be a unit of the product); `withPurchasePrice` fills the unit price from amount / quantity; `stockItems` and `materialPrices` carry the derived price, `materialPrice(id)`; `deleteEvent` in a transaction; `actualMonth(month, rows, products)` counts units sold in the main sale unit.
+- **Files**: `data/{FinanceDao,ProductRecord,FinanceRepository,PlanAssembly}.kt`, `domain/{FinanceModels,StockManagement}.kt`, `presentation/AppViewModel.kt`, `test/.../PlanAssemblyTest.kt`, `androidTest/.../ProductStockFlowTest.kt` (new), `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: `ProductStockFlowTest` red (no `stockItemId`/`materialPrice`), then green on emulator-5554; `:app:testDebugUnitTest` 84 passed, 0 failed; full `connectedDebugAndroidTest` 44 tests, 0 failed, 2 skipped (screenshot tests).
+
 ### [2026-10-29 05:44] [Claude Code (Opus) — Fase 1 Task 2 review fix]
 - **Goal**: Fix the Important finding of the Task 2 review.
 - **Actions**: `docs/DATABASE_MIGRATIONS.md` sync-between-versions bullet now matches the code and DEC-028 §7 (a schema-12 phone refuses schema-13 change sets; a schema-13 phone accepts schema-12 ones and drops their old product columns/table). Same wrong direction corrected in the phase 1 plan's ruling §7.

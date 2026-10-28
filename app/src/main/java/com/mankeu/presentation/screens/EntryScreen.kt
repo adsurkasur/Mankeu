@@ -147,7 +147,7 @@ fun EntryScreen(
     state: AppUiState,
     onRecord: (
         FinancialEventType, Long, String, String?, String, LocalDate, String?, String?, String?, Long?, String?,
-        CostNature?, String?, Int?, String?,
+        CostNature?, String?, String?, Int?, String?,
     ) -> Unit,
     onDelete: (String) -> Unit,
     onManageScope: () -> Unit,
@@ -171,6 +171,8 @@ fun EntryScreen(
     var budgetItemId by rememberSaveable { mutableStateOf<String?>(null) }
     // DEC-014: the product a sale was for, a per-entry cost-nature override, an asset's life.
     var productId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The material (bahan) a purchase buys; its unit price feeds product costs (spec #20).
+    var stockItemId by rememberSaveable { mutableStateOf<String?>(null) }
     var costNature by rememberSaveable { mutableStateOf<String?>(null) }
     var usefulLife by rememberSaveable { mutableStateOf(PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS.toString()) }
     var advanced by rememberSaveable { mutableStateOf(false) }
@@ -192,6 +194,19 @@ fun EntryScreen(
     // The record being corrected with Ubah; null when the form records a new one.
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
 
+    /** Sets the unit and, when known, its price, and re-derives the amount from a typed quantity. */
+    fun applySaleUnit(name: String, priceRupiah: Long?) {
+        unit = name
+        unitPrice = priceRupiah?.toString().orEmpty()
+        isUnitPriceAutoDerived = false
+        if (priceRupiah != null) {
+            TransactionCalculation.parseQuantity(quantity)?.let { q ->
+                amount = TransactionCalculation.computeTotalRupiah(q, priceRupiah).toString()
+                isAutoCalculated = true
+            }
+        }
+    }
+
     /** Opens the form on [event], filled in, so saving corrects it in place (DEC-019). */
     fun startEdit(event: MoneyEvent) {
         editingId = event.id
@@ -206,6 +221,7 @@ fun EntryScreen(
         unitPrice = event.unitPriceRupiah?.toString().orEmpty()
         budgetItemId = event.budgetItemId
         productId = event.productId
+        stockItemId = event.stockItemId
         costNature = event.costNature?.name
         usefulLife = (event.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS).toString()
         advanced = quantity.isNotBlank() || unit.isNotBlank() || unitPrice.isNotBlank() || reference.isNotBlank()
@@ -669,19 +685,47 @@ fun EntryScreen(
                             state.products.map { it.product.id to it.product.name },
                         onSelected = { id ->
                             productId = id.ifBlank { null }
-                            // The main (first) sale unit is the default (DEC-028 §8); Fase 2 lets the sale pick another.
-                            state.products.firstOrNull { it.product.id == productId }?.mainUnit?.let { main ->
-                                unit = main.name
-                                unitPrice = main.priceRupiah.toString()
-                                isUnitPriceAutoDerived = false
-                                TransactionCalculation.parseQuantity(quantity)?.let { q ->
-                                    amount = TransactionCalculation.computeTotalRupiah(q, main.priceRupiah).toString()
-                                    isAutoCalculated = true
-                                }
+                            state.products.firstOrNull { it.product.id == productId }?.let { record ->
+                                // The main (first) sale unit is the default (DEC-028 §8). A product with none
+                                // (synced from an old phone) falls back to its base unit and no price, never
+                                // the previous product's values.
+                                val main = record.mainUnit
+                                applySaleUnit(main?.name ?: record.product.unit, main?.priceRupiah)
                                 advanced = true
                             }
                         },
                     )
+                    state.products.firstOrNull { it.product.id == productId }?.takeIf { it.units.size > 1 }?.let { record ->
+                        ChoiceMenu(
+                            fieldLabel = stringResource(R.string.entry_sale_unit),
+                            label = unit,
+                            options = record.units.sortedBy { it.sortOrder }.map { it.name to it.name },
+                            onSelected = { name ->
+                                record.units.firstOrNull { it.name == name }?.let { applySaleUnit(it.name, it.priceRupiah) }
+                            },
+                        )
+                    }
+                }
+                if (!incoming && selectedRole == CategoryRole.EXPENSE && state.stockItems.isNotEmpty()) {
+                    // Optional. Picking a material fills its unit and current price; saving a new price warns
+                    // what it does to product costs (spec #20).
+                    ChoiceMenu(
+                        fieldLabel = stringResource(R.string.entry_material),
+                        label = state.stockItems.firstOrNull { it.id == stockItemId }?.name
+                            ?: stringResource(R.string.entry_material_none),
+                        options = listOf("" to stringResource(R.string.entry_material_none)) +
+                            state.stockItems.map { it.id to it.name },
+                        onSelected = { id ->
+                            stockItemId = id.ifBlank { null }
+                            state.stockItems.firstOrNull { it.id == stockItemId }?.let { material ->
+                                applySaleUnit(material.unit, material.basePriceRupiah.takeIf { it > 0 })
+                                advanced = true
+                            }
+                        },
+                    )
+                    if (stockItemId != null) {
+                        Text(stringResource(R.string.entry_material_hint), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 if (selectedRole == CategoryRole.ASSET) {
                     OutlinedTextField(
@@ -753,6 +797,7 @@ fun EntryScreen(
                         OutlinedTextField(
                             value = unit,
                             onValueChange = { unit = it },
+                            readOnly = stockItemId != null,
                             label = { Text(stringResource(R.string.entry_unit)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -871,6 +916,7 @@ fun EntryScreen(
                                 budgetItemId,
                                 CostNature.entries.firstOrNull { it.name == costNature }.takeIf { selectedRole == CategoryRole.EXPENSE },
                                 productId.takeIf { incoming && selectedRole == CategoryRole.REVENUE },
+                                stockItemId.takeIf { !incoming && selectedRole == CategoryRole.EXPENSE },
                                 usefulLife.toIntOrNull().takeIf { selectedRole == CategoryRole.ASSET },
                                 editingId,
                             )
@@ -883,6 +929,7 @@ fun EntryScreen(
                             unitPrice = ""
                             budgetItemId = null
                             productId = null
+                            stockItemId = null
                             costNature = null
                             usefulLife = PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS.toString()
                             isAutoCalculated = false

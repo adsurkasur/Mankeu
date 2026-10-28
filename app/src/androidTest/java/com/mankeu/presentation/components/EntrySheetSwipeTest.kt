@@ -22,7 +22,7 @@ class EntrySheetSwipeTest {
         rule.setContent {
             EntryScreen(
                 state = AppUiState(),
-                onRecord = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
+                onRecord = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
                 onDelete = {},
                 onManageScope = {},
                 requestedKind = FinancialEventType.CASH_INCOME,

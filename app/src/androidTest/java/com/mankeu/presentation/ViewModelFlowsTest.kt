@@ -11,6 +11,11 @@ import com.mankeu.backup.EncryptedBackupManager
 import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
 import com.mankeu.data.FinanceRepository
+import com.mankeu.data.ProductDraft
+import com.mankeu.data.RecipeLineDraft
+import com.mankeu.data.SaleUnitDraft
+import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.FinancialEventType
 import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.sync.RemoteChangeSet
 import com.mankeu.sync.SyncController
@@ -18,6 +23,9 @@ import com.mankeu.sync.SyncEngine
 import com.mankeu.sync.SyncPassphraseStore
 import com.mankeu.sync.SyncSchema
 import com.mankeu.sync.SyncTransport
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -26,6 +34,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.Collections
 
 /**
@@ -109,6 +119,59 @@ class ViewModelFlowsTest {
         Thread.sleep(8_000)
 
         assertEquals(ImportUiState.Idle, viewModel.importState.value)
+    }
+
+    @Test
+    fun aPurchaseThatChangesAMaterialPriceWarnsAboutProductCost() {
+        val (businessId, projectId) = runBlocking { repository.createBusinessWithUnit("Keripik Bu Ani", "Utama") }
+        val viewModel = viewModel(null)
+        // uiState is shared WhileSubscribed: without a collector its value stays the placeholder.
+        val collector = CoroutineScope(Dispatchers.Main).launch { viewModel.uiState.collect {} }
+        waitFor("unit selected") { viewModel.uiState.value.selectedBookId != null && viewModel.uiState.value.categories.isNotEmpty() }
+        val (minyak, singkong) = runBlocking {
+            repository.createStockItem(businessId, projectId, false, "Minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO) to
+                repository.createStockItem(businessId, projectId, false, "Singkong", "kg", 30_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        }
+        runBlocking {
+            repository.saveProduct(
+                projectId, null,
+                ProductDraft(
+                    name = "Keripik singkong", baseUnit = "bungkus", batchYieldText = "400",
+                    units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8_000), SaleUnitDraft(name = "dus", contentText = "40", priceRupiah = 300_000)),
+                    recipe = listOf(
+                        RecipeLineDraft("Singkong", stockItemId = singkong, quantityText = "50"),
+                        RecipeLineDraft("Minyak", stockItemId = minyak, quantityText = "20"),
+                        RecipeLineDraft("Bumbu & kemasan", amountRupiah = 300_000),
+                        RecipeLineDraft("Gas", amountRupiah = 100_000),
+                    ),
+                ),
+            )
+        }
+        waitFor("stock and product visible") { viewModel.uiState.value.stockItems.size == 2 && viewModel.uiState.value.products.size == 1 }
+        val expense = viewModel.uiState.value.categories.first { CategoryRole.parse(it.role) == CategoryRole.EXPENSE }
+
+        fun buy(amount: Long, price: Long) = mainThread {
+            viewModel.record(
+                FinancialEventType.CASH_EXPENSE, amount, "Beli minyak", expense.id, expense.name, LocalDate.now(),
+                quantityText = "20", unit = "liter", unitPriceRupiah = price, stockItemId = minyak,
+            )
+        }
+        buy(550_000, 27_500)
+        waitFor("price alert") { viewModel.uiState.value.priceAlert != null }
+
+        val alert = viewModel.uiState.value.priceAlert!!
+        assertEquals(25_000L, alert.oldPriceRupiah)
+        assertEquals(27_500L, alert.newPriceRupiah)
+        assertEquals(listOf(6_125L, 245_000L), alert.changes.single().after.perSaleUnit.map { it.hppRupiah })
+
+        mainThread { viewModel.dismissPriceAlert() }
+        waitFor("alert dismissed") { viewModel.uiState.value.priceAlert == null }
+        waitFor("price now 27.500") { viewModel.uiState.value.stockItems.first { it.id == minyak }.basePriceRupiah == 27_500L }
+        buy(550_000, 27_500)
+        waitFor("second purchase saved") { viewModel.uiState.value.events.size == 2 }
+        Thread.sleep(500)
+        assertEquals(null, viewModel.uiState.value.priceAlert)
+        collector.cancel()
     }
 
     private fun viewModel(sync: SyncController?): AppViewModel {

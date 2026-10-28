@@ -748,4 +748,12 @@
     <string name="help_faq_profit_body">Setoran modal menambah kas tetapi bukan laba. Ambil pribadi dan beli alat mengurangi kas tetapi bukan biaya. Penyusutan alat mengurangi laba tetapi bukan uang keluar.</string>
     <string name="help_faq_profit_steps">Buka Laporan, tab Laba Rugi dan Arus Kas.\nBandingkan Arus Kas Operasi dengan Investasi dan Pembiayaan.\nSelisih kas dan laba dijelaskan oleh dua bagian terakhir.</string>
     <!-- GUIDE:END -->
+    <string name="entry_sale_unit">Satuan</string>
+    <string name="entry_material">Bahan (opsional)</string>
+    <string name="entry_material_none">Bukan bahan resep</string>
+    <string name="entry_material_hint">Harga satuannya menjadi harga bahan untuk HPP.</string>
+    <string name="price_alert_title">Harga %1$s berubah</string>
+    <string name="price_alert_body">%1$s → %2$s per %3$s. Dampaknya:</string>
+    <string name="price_alert_row">%1$s: HPP %2$s → %3$s per %4$s, untung %5$s → %6$s</string>
+    <string name="price_alert_open_products">Lihat produk</string>
 </resources>

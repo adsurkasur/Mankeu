@@ -6,6 +6,8 @@ import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.ActualMonthAnalysis
 import com.mankeu.domain.CostNature
+import com.mankeu.domain.HppChange
+import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.PlanCalculator
 import com.mankeu.domain.Recurrence
@@ -114,10 +116,21 @@ data class AppUiState(
      * but empty state (which would read as "you have no records" during a cold start).
      */
     val isLoading: Boolean = true,
+    /** Set after a purchase changed a material's price: what that does to each product's HPP (spec #20). */
+    val priceAlert: PriceAlert? = null,
 ) {
     /** True when the unit has a business plan worth showing instead of posted projection rows. */
     val hasPlan: Boolean get() = products.isNotEmpty() || planItems.isNotEmpty()
 }
+
+/** A material's price moved from [oldPriceRupiah] to [newPriceRupiah] per [unit]; [changes] are the products it touches. */
+data class PriceAlert(
+    val materialName: String,
+    val unit: String,
+    val oldPriceRupiah: Long,
+    val newPriceRupiah: Long,
+    val changes: List<HppChange>,
+)
 
 sealed interface ImportUiState {
     data object Idle : ImportUiState
@@ -169,6 +182,8 @@ class AppViewModel(
     val restoreState = MutableStateFlow<RestoreUiState>(RestoreUiState.Idle)
     val recoveryAvailable = MutableStateFlow(backupManager.hasLatestRecovery())
     val message = MutableStateFlow<UiText?>(null)
+    private val priceAlert = MutableStateFlow<PriceAlert?>(null)
+    fun dismissPriceAlert() { priceAlert.value = null }
     /**
      * True while a record-changing operation is in flight.
      *
@@ -358,7 +373,8 @@ class AppViewModel(
             // Any emission from this combine means the underlying flows have produced real data.
             isLoading = false,
         )
-    }.stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
+    }.combine(priceAlert) { state, alert -> state.copy(priceAlert = alert) }
+        .stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
 
     init {
         syncController?.let { sync -> viewModelScope.launch { sync.refresh(); scheduleSync(delayMillis = 0) } }
@@ -579,6 +595,8 @@ class AppViewModel(
         budgetItemId: String? = null,
         costNature: CostNature? = null,
         productId: String? = null,
+        /** The material (bahan) a purchase buys; its new unit price may move product costs. */
+        stockItemId: String? = null,
         usefulLifeMonths: Int? = null,
         /** Set when the form was opened with Ubah: the record is corrected in place (DEC-019). */
         editingEventId: String? = null,
@@ -591,6 +609,8 @@ class AppViewModel(
             message.value = UiText.of(R.string.entry_err_no_project)
             return@mutating
         }
+        val material = stockItemId?.let { id -> stockItems.value.firstOrNull { it.id == id } }
+        val oldPrices = stockItems.value.associate { it.id to it.basePriceRupiah }
         runCatching {
             val reconciled = TransactionCalculation.reconcile(
                 amountRupiah = amountRupiah,
@@ -615,10 +635,18 @@ class AppViewModel(
                     budgetItemId = budgetItemId,
                     costNature = costNature,
                     productId = productId,
+                    stockItemId = stockItemId,
                     usefulLifeMonths = usefulLifeMonths,
                 )
             if (editingEventId != null) repository.updateEvent(editingEventId, draft) else repository.recordEvent(draft)
         }.onSuccess {
+            material?.let { m ->
+                val newPrice = repository.materialPrice(m.id) ?: return@let
+                val changes = ProductCosting.priceImpact(products.value.map { it.spec }, oldPrices, m.id, newPrice)
+                if (newPrice != m.basePriceRupiah && changes.isNotEmpty()) {
+                    priceAlert.value = PriceAlert(m.name, m.unit, m.basePriceRupiah, newPrice, changes)
+                }
+            }
             message.value = UiText.of(if (editingEventId != null) R.string.msg_event_updated else R.string.msg_event_saved)
         }.onFailure {
             message.value = UiText.fromError(it, R.string.msg_event_save_failed)

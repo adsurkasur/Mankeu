@@ -69,6 +69,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,6 +94,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -644,6 +646,45 @@ fun MankeuApp(
                         onDismiss = { helpSheet = false },
                         onOpenArticle = openHelp,
                         onOpenCenter = { helpSheet = false; helpArticle = null; overlay = Overlay.HELP },
+                    )
+                }
+
+                state.priceAlert?.let { alert ->
+                    // A short confirmation, not a form (#13): what the new price does to each product (spec #20).
+                    AlertDialog(
+                        onDismissRequest = viewModel::dismissPriceAlert,
+                        title = { Text(stringResource(R.string.price_alert_title, alert.materialName)) },
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(stringResource(R.string.price_alert_body, alert.oldPriceRupiah.toRupiah(), alert.newPriceRupiah.toRupiah(), alert.unit))
+                                alert.changes.forEach { change ->
+                                    change.before.perSaleUnit.zip(change.after.perSaleUnit).forEach { (before, after) ->
+                                        Text(
+                                            stringResource(
+                                                R.string.price_alert_row,
+                                                change.product.name,
+                                                before.hppRupiah.toRupiah(),
+                                                after.hppRupiah.toRupiah(),
+                                                after.unit.name,
+                                                before.profitRupiah.toRupiah(),
+                                                after.profitRupiah.toRupiah(),
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                viewModel.dismissPriceAlert()
+                                overlay = Overlay.NONE
+                                manageScope = false
+                                destination = Destination.PRODUCTS
+                            }) { Text(stringResource(R.string.price_alert_open_products)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = viewModel::dismissPriceAlert) { Text(stringResource(R.string.action_close)) }
+                        },
                     )
                 }
 

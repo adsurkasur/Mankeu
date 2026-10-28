@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Catat penjualan per satuan jual (bungkus, dus); belanja bisa menautkan bahan dan memperingatkan dampak harga baru ke HPP dan untung (spec #20).
 - Product stock is automatic: production adds, sales subtract (spec #9).
 - A material's price follows its latest purchase (spec #20).
 - Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.

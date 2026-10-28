@@ -746,4 +746,12 @@
     <string name="help_faq_profit_body">Capital adds cash but is not profit. Personal withdrawals and equipment reduce cash but are not costs. Equipment depreciation reduces profit but is not money going out.</string>
     <string name="help_faq_profit_steps">Open Reports, the Profit, Loss and Cash Flow tab.\nCompare operating cash flow with investing and financing.\nThe difference between cash and profit is explained by the last two.</string>
     <!-- GUIDE:END -->
+    <string name="entry_sale_unit">Unit</string>
+    <string name="entry_material">Material (optional)</string>
+    <string name="entry_material_none">Not a recipe material</string>
+    <string name="entry_material_hint">Its unit price becomes the material price for cost.</string>
+    <string name="price_alert_title">%1$s price changed</string>
+    <string name="price_alert_body">%1$s → %2$s per %3$s. Effect:</string>
+    <string name="price_alert_row">%1$s: cost %2$s → %3$s per %4$s, profit %5$s → %6$s</string>
+    <string name="price_alert_open_products">View products</string>
 </resources>

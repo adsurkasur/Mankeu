@@ -105,6 +105,8 @@ Masalah:
 
 ### Bug: bottom sheet "balapan" dengan keyboard (user-confirmed, sebagian verified)
 
+**Status: diperbaiki, verified** (lihat catatan Fase 0 Task 1 di bawah bagian geser-untuk-scroll).
+
 Laporan pemilik: sheet naik-turun dan keyboard berkedip saat mengisi form.
 
 Terlihat di emulator (verified):
@@ -122,6 +124,14 @@ Dugaan penyebab (inferred, belum diuji perbaikannya), `presentation/components/M
   Dokumentasi dan kode tidak sesuai.
 - Keyboard emulator adalah input suara Google, jadi kedipan keyboard sungguhan (Gboard) belum bisa diamati di sini.
   Perlu diuji di HP nyata setelah perbaikan.
+
+**Status: diperbaiki, verified (Fase 0 Task 1).** `MankeuSheet` kini `sheetGesturesEnabled = false`, tanpa drag handle,
+dan kolom isi tanpa `animateContentSize`. Bukti: tes instrumented `MankeuSheetTest` (merah sebelum perbaikan dengan pesan
+"sheet ditutup oleh geser isi", hijau sesudahnya) dan emulator `Medium_Phone`: sheet "Tambah usaha" dengan keyboard terbuka
+tetap terbuka dan tidak bergeser setelah dua kali geser turun. Belum diuji: dropdown pada form biaya tetap (data uji
+terhapus oleh tes instrumented, perlu dibuat ulang) dan kedipan Gboard asli (**perlu HP nyata**; keyboard emulator adalah
+input suara Google). Sheet lain yang memakai `ModalBottomSheet` langsung (HelpUi, EntryScreen, ManageScopeScreen) belum
+tersentuh dan masih bisa diseret tutup.
 
 ### Bug: menggeser untuk scroll malah menutup sheet (user-confirmed, verified)
 

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 01:15] [Claude Code (Sonnet) — Fase 0 Task 1: bottom sheet]
+- **Goal**: Long forms must not be dismissed by scrolling content back to the top, and the sheet must not bounce with the keyboard.
+- **Actions**: Added `MankeuSheetTest` (instrumented, red first). In `MankeuSheet` set `sheetGesturesEnabled = false`, removed the drag handle (top padding 20dp instead), removed `animateContentSize` from the content column and unused imports, rewrote the stale KDoc (it claimed snap points). Marked both sheet bugs fixed in the audit doc.
+- **Files**: `app/src/main/java/com/mankeu/presentation/components/MankeuSheet.kt`, `app/src/androidTest/java/com/mankeu/presentation/components/MankeuSheetTest.kt`, `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: connectedDebugAndroidTest MankeuSheetTest red then green; `:app:testDebugUnitTest :app:assembleDebug` pass; emulator: sheet with keyboard up stays open after swipes. Not verified: fixed-cost dropdown, real Gboard flicker (needs a real phone). HelpUi, EntryScreen, ManageScopeScreen still use raw `ModalBottomSheet`.
+
 ### [2026-10-29 14:00] [Claude Code (Opus 5.5) — Audit, grill, dan rencana redesign]
 - **Goal**: Owner asked to audit, grill (via question tool) and plan before any code change.
 - **Actions**: Whole-repo ponytail audit (legacy migrations and cleanups, Firebase Auth, spotlight tours, Vico, dead skeleton, three data-copy paths). Grilled the owner in five rounds plus two follow-ups (plan period explained and removed; raw-material price changes added as decision 20). Wrote the redesign spec (20 decisions + audit), a phase roadmap (F0–F7 with acceptance per phase) and a bite-sized plan for phase 0. Recorded DEC-026.

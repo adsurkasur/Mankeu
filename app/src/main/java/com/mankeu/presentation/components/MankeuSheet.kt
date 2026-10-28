@@ -1,8 +1,5 @@
 ﻿package com.mankeu.presentation.components
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -28,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
-import com.mankeu.presentation.LocalMotion
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
 
@@ -44,14 +40,15 @@ import com.mankeu.presentation.LocalFeedback
  *
  * - **The actions never scroll away.** The content column takes the space that is left over
  *   (`weight(1f, fill = false)`, so a short sheet still wraps its content) and scrolls inside it,
- *   while the action row sits below it. Save and Batal are therefore on screen at every snap
- *   point, including half-expanded and with the keyboard up.
- * - **The sheet has snap points.** `skipPartiallyExpanded = false` gives a tall sheet a
- *   half-expanded stop the user can drag between, instead of one all-or-nothing height. Content
- *   shorter than half the screen simply wraps and never shows a partial state.
- * - **The keyboard pushes, it does not cover.** `imePadding()` on the whole column shrinks the
- *   sheet by the keyboard's height; because the content is scrollable, Compose's own
- *   bring-into-view then scrolls the focused field into what is left.
+ *   while the action row sits below it. Save and Batal are therefore always on screen,
+ *   including with the keyboard up.
+ * - **Only the buttons, back and the scrim close it.** Dragging is off (sheetGesturesEnabled = false),
+ *   so scrolling a long form back to the top never drags the sheet away; there is no drag handle
+ *   to suggest otherwise.
+ * - **The keyboard pushes, it does not cover.** imePadding() shrinks the sheet by the keyboard's
+ *   height and the scrollable content brings the focused field into view. The content column is
+ *   not animateContentSize'd: that animation chased every frame of the keyboard's own animation
+ *   and made the sheet bounce.
  *
  * [confirmLabel] `null` renders a single dismiss action, for sheets that only present information.
  */
@@ -65,21 +62,22 @@ fun MankeuSheet(
     confirmEnabled: Boolean = true,
     destructive: Boolean = false,
     dismissLabel: String = stringResource(R.string.action_cancel),
-    // Multi-step sheets need the dismiss button to step back while a swipe-down still closes.
+    // Multi-step sheets need the dismiss button to step back while the scrim and back still close it.
     onDismissClick: () -> Unit = onDismiss,
     onConfirm: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val motion = LocalMotion.current
     // Kept internal: `rememberModalBottomSheetState` is experimental, and as a default parameter it
     // is evaluated at every call site, which would force @OptIn on every caller.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val feedback = LocalFeedback.current
     ModalBottomSheet(
-        // Swipe-down, scrim tap and back all land here; the buttons below call their own handlers.
+        // Scrim tap and back all land here; the buttons below call their own handlers.
         onDismissRequest = { feedback(FeedbackEvent.TAP); onDismiss() },
         sheetState = sheetState,
         modifier = modifier,
+        sheetGesturesEnabled = false,
+        dragHandle = null,
         // Material 3's own bottom-sheet container tone. Stated rather than left to the default so
         // the sheet keeps a visible step above the page in both themes without a drop shadow,
         // which is a light-mode device and turns into a hard rim on a dark surface.
@@ -93,15 +91,12 @@ fun MankeuSheet(
                 .imePadding()
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 12.dp),
+                .padding(top = 20.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Column(
                 Modifier
-                    // Sub-sections inside a sheet (an "advanced fields" block, a growing list)
-                    // otherwise resize in one frame and the sheet snaps to its new height.
-                    .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing))
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

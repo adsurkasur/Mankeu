@@ -158,7 +158,8 @@ fun PlanScreen(
                     val parts = listOfNotNull(
                         economics,
                         stringResource(R.string.plan_product_sell_from_value, row.product.sellFromMonth).takeIf { row.product.sellFromMonth > 1 },
-                        hppLines(cost).single().takeIf { !cost.complete },
+                        // hppLines has one line per sale unit when complete, so only ask for the single warning line when it is one.
+                        hppLines(cost).first().takeIf { !cost.complete },
                     )
                     PlanRow(title = row.product.name, subtitle = parts.joinToString(" · "), onClick = { onOpenProduct(row.product.id) })
                 }

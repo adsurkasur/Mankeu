@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 07:10] [Claude Code (Opus) — Fase 1 Task 7 fix: Rencana Usaha crash with 2+ sale units]
+- **Goal**: Emulator checkpoint CP7 found that opening Rencana Usaha crashed the app (`IllegalArgumentException: List has more than one element` at `PlanScreen.kt:161`) for any product with two or more sale units.
+- **Actions**: Root cause: `hppLines(cost).single().takeIf { !cost.complete }` evaluated `single()` eagerly; a complete HPP returns one line per sale unit. Now `first()`, which is only used when the cost is incomplete (then the list holds the single warning line). New `PlanProductsTest` renders `PlanScreen` with a two-unit product.
+- **Files**: `presentation/screens/PlanScreen.kt`, `androidTest/.../PlanProductsTest.kt`, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: crash reproduced on emulator-5554 before the fix (logcat); after the fix Rencana Usaha shows "Keripik - Rp8.000 per bungkus - HPP Rp6.000" and tapping it opens the product editor. `PlanProductsTest` compiles; it runs in the final connected suite (red-before was the live crash, the test itself was not run against the unfixed code because a connected run wipes the walk's data).
+
 ### [2026-10-29 06:58] [Claude Code (Opus) — Fase 1 Task 6 controller fix]
 - **Goal**: Close a gap in the Task 6 review fix.
 - **Actions**: The effect that clears the material when the form stops being a purchase now waits until categories are loaded, so editing a recorded purchase cannot lose its material while the category role is still unknown.

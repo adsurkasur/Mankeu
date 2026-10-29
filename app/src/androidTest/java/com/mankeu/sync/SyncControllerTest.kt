@@ -3,6 +3,8 @@ package com.mankeu.sync
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.mankeu.backup.PasswordBackupCipher
+import com.mankeu.backup.PortableBackupCodec
 import com.mankeu.data.AppDatabase
 import com.mankeu.data.EventDraft
 import com.mankeu.data.FinanceRepository
@@ -200,6 +202,33 @@ class SyncControllerTest {
 
         assertTrue(b.database.financeDao().observeNotices().first().any { it.title == "Hasil sinkronisasi perlu dicek" })
         assertTrue(b.database.syncDao().pending().none { it.tableName == "import_notices" })
+    }
+
+    /**
+     * DEC-029 fix round 2: a change set a phone pushed before updating to schema 14 is skipped, not a
+     * wall: later change sets still apply, the round succeeds, and the owner is told once.
+     */
+    @Test
+    fun aChangeSetFromAPhoneNotYetUpdatedIsSkippedOnceAndLaterOnesApply() = runBlocking {
+        a.repository.createBusiness("Lama")
+        a.controller.enable(secret.toCharArray(), null)
+        a.controller.syncNow(null)
+        val (id, entry) = store.files.entries.single().toPair()
+        val old = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(entry.second, secret.toCharArray())).copy(schemaVersion = 13)
+        store.files[id] = entry.first to PasswordBackupCipher.encrypt(PortableBackupCodec.encode(old), secret.toCharArray())
+        a.repository.createBusiness("Baru")
+        a.controller.syncNow(null)
+
+        b.controller.enable(secret.toCharArray(), null)
+        val report = b.controller.syncNow(null)!!
+
+        assertEquals(1, report.skippedOutdated)
+        assertEquals(listOf("Baru"), b.database.financeDao().getBusinesses().map { it.name })
+        assertTrue(b.controller.state.value is SyncController.State.Ready)
+        val notices = b.database.financeDao().observeNotices().first().filter { it.title == "Hasil sinkronisasi perlu dicek" }
+        assertEquals(1, notices.size)
+        assertTrue(notices.single().explanation.contains("belum diperbarui dilewati"))
+        assertEquals(0, b.controller.syncNow(null)!!.skippedOutdated)
     }
 
     private suspend fun Phone.record(business: String, unit: String, amount: Long) {

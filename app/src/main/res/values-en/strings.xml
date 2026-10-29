@@ -170,6 +170,7 @@
     <string name="kind_capital_out">Take out for personal use</string>
     <string name="kind_tool_cash">Buy tool with cash</string>
     <string name="kind_credit_purchase">Unpaid purchase</string>
+    <string name="msg_sync_outdated_skipped">Changes from a phone that has not been updated were skipped; its full data arrives once that phone is updated.</string>
 
     <!-- Account and settings -->
     <string name="settings_title">Settings</string>

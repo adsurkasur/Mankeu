@@ -101,6 +101,7 @@ class SyncController(
             if (report.merged > 0) add("• ${report.merged} kategori, barang, atau produk dengan nama sama dari HP lain digabung dengan yang ada di HP ini.")
             if (report.skippedOlder > 0) add("• ${report.skippedOlder} perubahan dari HP lain tidak dipakai karena di HP ini ada perubahan yang lebih baru pada catatan yang sama.")
             if (report.rejected > 0) add("• ${report.rejected} perubahan dari HP lain tidak bisa diterapkan.")
+            if (report.skippedOutdated > 0) add("• Perubahan dari HP yang belum diperbarui dilewati; data lengkapnya akan datang setelah HP itu diperbarui.")
         }
         if (lines.isEmpty()) return
         database.withTransaction {

@@ -108,6 +108,8 @@ class Migration13To14Test {
                 assertTrue("missing sync trigger on $table", "sync_${table}_ins" in triggers)
             }
             db.query("SELECT COUNT(*) FROM sync_outbox").use { c -> c.moveToFirst(); assertEquals(0, c.getInt(0)) }
+            // The upgraded phone republishes everything, converted (fix round 2): it covers what skipped old change sets carried.
+            db.query("SELECT COUNT(*) FROM sync_meta WHERE `key` = ?", arrayOf<Any>(SyncSchema.REQUIRES_FULL_SNAPSHOT)).use { c -> c.moveToFirst(); assertEquals(1, c.getInt(0)) }
         }
     }
 

@@ -116,9 +116,7 @@ class SyncEngine(private val database: AppDatabase) {
         require(changeSet.schemaVersion <= schemaVersion(db)) {
             "Perubahan dari perangkat lain memakai versi data lebih baru. Perbarui aplikasi dulu."
         }
-        require(changeSet.schemaVersion >= MIN_SYNC_SCHEMA) {
-            "Perubahan dari perangkat lain memakai versi aplikasi lama. Perbarui aplikasi di semua HP, lalu sinkronkan lagi."
-        }
+        if (changeSet.schemaVersion < MIN_SYNC_SCHEMA) throw OutdatedChangeSet()
         val localPending = dao.pending().groupBy { it.tableName to it.rowId }.mapValues { (_, e) -> e.maxOf { it.changedAtEpochMillis } }
         val byTable = changeSet.tables.filter { it.name in AppDatabase.DATA_TABLES }.associateBy { it.name }
         var applied = 0

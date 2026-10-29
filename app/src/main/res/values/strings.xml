@@ -172,6 +172,7 @@
     <string name="kind_capital_out">Ambil untuk pribadi</string>
     <string name="kind_tool_cash">Beli alat tunai</string>
     <string name="kind_credit_purchase">Belanja belum dibayar</string>
+    <string name="msg_sync_outdated_skipped">Perubahan dari HP yang belum diperbarui dilewati; data lengkapnya akan datang setelah HP itu diperbarui.</string>
 
     <!-- Akun dan pengaturan -->
     <string name="settings_title">Pengaturan</string>

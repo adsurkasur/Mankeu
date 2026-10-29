@@ -30,7 +30,7 @@ class SyncCoordinator(
     private val engine: SyncEngine,
     private val transport: SyncTransport,
 ) {
-    data class Report(val pulledSets: Int, val applied: Int, val skippedOlder: Int, val rejected: Int, val pushed: Boolean, val merged: Int = 0)
+    data class Report(val pulledSets: Int, val applied: Int, val skippedOlder: Int, val rejected: Int, val pushed: Boolean, val merged: Int = 0, val skippedOutdated: Int = 0)
 
     suspend fun syncOnce(passphrase: CharArray): Report {
         val me = engine.deviceId()
@@ -39,6 +39,7 @@ class SyncCoordinator(
         var older = 0
         var rejected = 0
         var merged = 0
+        var outdated = 0
         transport.list()
             .filter { it.deviceId != me }
             .filter { it.pushNumber > engine.remoteCursor(it.deviceId) }
@@ -52,9 +53,19 @@ class SyncCoordinator(
                 require(header.deviceId == remote.deviceId && header.pushNumber == remote.pushNumber) {
                     "Isi perubahan tidak cocok dengan namanya; berkas dilewati demi keamanan."
                 }
-                val result = engine.applyRemote(changeSet)
+                // An old phone's change set is consumed unapplied (DEC-029): stopping on it would block this
+                // phone for good, and the sender republishes all its data, converted, after updating.
+                val result = try {
+                    engine.applyRemote(changeSet)
+                } catch (old: OutdatedChangeSet) {
+                    null
+                }
                 engine.setRemoteCursor(remote.deviceId, remote.pushNumber)
                 pulled++
+                if (result == null) {
+                    outdated++
+                    return@forEach
+                }
                 applied += result.applied
                 older += result.skippedOlder
                 rejected += result.rejected
@@ -73,6 +84,6 @@ class SyncCoordinator(
                 engine.acknowledge(local)
             }
         }
-        return Report(pulled, applied, older, rejected, pushed = local != null, merged = merged)
+        return Report(pulled, applied, older, rejected, pushed = local != null, merged = merged, skippedOutdated = outdated)
     }
 }

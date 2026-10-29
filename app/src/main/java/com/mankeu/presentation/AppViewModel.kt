@@ -461,7 +461,9 @@ class AppViewModel(
     fun syncNow() = viewModelScope.launch {
         val sync = syncController ?: return@launch
         runCatching { sync.syncNow(authUser.value?.email) }
-            .onSuccess { report -> report?.let { message.value = UiText.of(R.string.msg_sync_done, it.applied) } }
+            .onSuccess { report ->
+                report?.let { message.value = if (it.skippedOutdated > 0) UiText.of(R.string.msg_sync_outdated_skipped) else UiText.of(R.string.msg_sync_done, it.applied) }
+            }
             .onFailure { message.value = syncFailure(it) }
     }
 

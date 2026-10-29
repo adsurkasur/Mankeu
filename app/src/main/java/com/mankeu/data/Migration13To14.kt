@@ -45,6 +45,10 @@ object Migration13To14 : Migration(13, 14) {
 
         SyncSchema.quietly(db) { convertSales(db) }
         SyncSchema.createTriggers(db)
+        // The next sync publishes this phone's whole data, converted, so a phone that skipped this
+        // phone's schema-13 change sets (SyncEngine.MIN_SYNC_SCHEMA) still gets it. Harmless while
+        // sync is off: switching it on sets the same flag.
+        db.execSQL("INSERT OR REPLACE INTO sync_meta(`key`, value) VALUES ('${SyncSchema.REQUIRES_FULL_SNAPSHOT}', '1')")
     }
 
     private fun convertSales(db: SupportSQLiteDatabase) {

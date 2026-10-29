@@ -286,6 +286,35 @@ fun PlanBreakdownCard(plan: PlanAnalysis, modifier: Modifier = Modifier) {
     }
 }
 
+/** True when the Realisasi summary has anything for [ProfitDetailRows] to show. */
+fun com.mankeu.domain.FinancialSummary.hasProfitDetail() =
+    hppRupiah != 0L || productionSpendRupiah != 0L || receivableRupiah != 0L || payableRupiah != 0L
+
+/**
+ * HPP, production spend and its variance with one plain sentence (F2-1, #19), then what customers and
+ * suppliers are still owed. Minimal until F4 redesigns the reports.
+ */
+@Composable
+fun ProfitDetailRows(summary: com.mankeu.domain.FinancialSummary) {
+    if (summary.hppRupiah != 0L || summary.productionSpendRupiah != 0L) {
+        ReportRow(stringResource(R.string.profit_hpp_sold), summary.hppRupiah, highlightNegative = false)
+        ReportRow(stringResource(R.string.profit_production_spend), summary.productionSpendRupiah, highlightNegative = false)
+        ReportRow(stringResource(R.string.profit_variance), summary.productionVarianceRupiah, highlightNegative = false)
+        val variance = summary.productionVarianceRupiah
+        if (variance != 0L) {
+            Text(
+                stringResource(if (variance > 0) R.string.profit_variance_over else R.string.profit_variance_under, kotlin.math.abs(variance).toRupiah()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    if (summary.receivableRupiah != 0L || summary.payableRupiah != 0L) {
+        ReportRow(stringResource(R.string.profit_receivable), summary.receivableRupiah, highlightNegative = false)
+        ReportRow(stringResource(R.string.profit_payable), summary.payableRupiah, highlightNegative = false)
+    }
+}
+
 /** "Status BEP bulan ini": this month's Realisasi against its own break-even point. */
 @Composable
 fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, modifier: Modifier = Modifier) {
@@ -323,9 +352,10 @@ fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, 
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            val names = products.associate { it.product.id to it.product }
+            val records = products.associateBy { it.product.id }
+            // Units are counted in the main sale unit (PlanAssembly.actualMonth), so name that unit.
             actual.unitsSold.forEach { (id, units) ->
-                names[id]?.let { ReportRow(stringResource(R.string.actual_units_sold, it.name), "${units.toDisplayQuantity()} ${it.unit}") }
+                records[id]?.let { ReportRow(stringResource(R.string.actual_units_sold, it.product.name), "${units.toDisplayQuantity()} ${it.mainUnit?.name ?: it.product.unit}") }
             }
             ReportRow(stringResource(R.string.actual_fixed_cost), actual.fixedCostRupiah, highlightNegative = false)
             ReportRow(stringResource(R.string.plan_total_cost), actual.totalCostRupiah, highlightNegative = false)

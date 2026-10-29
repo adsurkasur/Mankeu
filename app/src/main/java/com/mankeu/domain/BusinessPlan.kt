@@ -297,8 +297,11 @@ data class ActualMonthInputs(
     /** Revenue from sales entries that named no product; split by the planned mix. */
     val unattributedRevenueRupiah: Long,
     val fixedCostRupiah: Long,
+    /** Variable spend, cash or on credit; compared with the recipe, not counted as cost (F2-1). */
     val variableSpendRupiah: Long,
     val depreciationRupiah: Long,
+    /** HPP of what was sold this month: the variable cost profit counts (profit when sold). */
+    val hppRupiah: Long = 0,
 )
 
 data class ActualMonthAnalysis(
@@ -341,7 +344,7 @@ object ActualBepCalculator {
             BigDecimal.valueOf(fc).multiply(unitRevenue).divide(unitCm, 0, RoundingMode.HALF_UP).toLong()
         } else null
 
-        val totalCost = fc + actual.variableSpendRupiah
+        val totalCost = fc + actual.hppRupiah
         val profit = actual.revenueRupiah - totalCost
         return ActualMonthAnalysis(
             month = actual.month,

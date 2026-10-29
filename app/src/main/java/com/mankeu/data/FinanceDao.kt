@@ -29,18 +29,11 @@ data class CashFlowRow(
 /** One slice of the cost-composition chart, summed by the database rather than in memory. */
 data class CategoryTotalRow(val category: String, val totalRupiah: Long)
 
-/** See [FinanceDao.observeCostRows]. */
-data class CostRow(
-    val id: String,
-    val type: String,
-    val dateEpochDay: Long,
-    val amountRupiah: Long,
-    val costNature: String?,
-    val productId: String?,
-    val quantityText: String?,
-    val unit: String?,
-    val usefulLifeMonths: Int?,
-)
+/** Notes of one month summed; see [FinanceDao.getSaleMonths]. */
+data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
+
+/** Income, spend and assets that make profit (DEC-029 §4); see [FinanceDao.getProfitEventRows]. */
+data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val variable: Boolean, val usefulLifeMonths: Int?)
 
 /** A note line of a product as the stock count reads it; see [FinanceDao.observeProductSaleLines]. */
 data class ProductSaleRow(
@@ -66,7 +59,7 @@ data class ConsignmentSoldLine(
 /** A purchase that names a material; the newest one prices it (DEC-028 §2). */
 data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Long)
 
-/** Posting total per (cash-flow role, account, side); see [FinanceDao.observePostingTotals]. */
+/** Posting total per (cash-flow role, account, side); see [FinanceDao.getPostingTotals]. */
 data class PostingTotalRow(val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
 
 data class PostingWithEventRow(
@@ -219,14 +212,16 @@ interface FinanceDao {
     fun observeCashFlowRows(bookId: String): Flow<List<CashFlowRow>>
 
     /**
-     * Expense totals per category. Grouping in SQL keeps the chart correct on a book of any size without loading it.
+     * Expense totals per category: cash and credit purchases at purchase date; paying a supplier is
+     * not a cost again (DEC-029 §4). Grouping in SQL keeps the chart correct on a book of any size without loading it.
      */
     @Query(
         """
         SELECT category, SUM(amountRupiah) AS totalRupiah
         FROM financial_events
         WHERE bookId = :bookId
-          AND type = 'CASH_EXPENSE'
+          AND type IN ('CASH_EXPENSE', 'CREDIT_PURCHASE')
+          AND settlesEventId IS NULL
         GROUP BY category
         HAVING SUM(amountRupiah) > 0
         ORDER BY totalRupiah DESC
@@ -273,7 +268,42 @@ interface FinanceDao {
         GROUP BY e.cashFlowRole, p.account, p.side
         """,
     )
-    fun observePostingTotals(bookId: String): Flow<List<PostingTotalRow>>
+    suspend fun getPostingTotals(bookId: String): List<PostingTotalRow>
+
+    /** Notes of a unit summed per month: revenue after discount, HPP snapshots (DEC-029 §4). */
+    @Query(
+        """
+        SELECT MIN(s.dateEpochDay) AS dateEpochDay, SUM(t.subtotal - s.discountRupiah) AS revenueRupiah,
+               SUM(t.hpp) AS hppRupiah, MAX(s.hppEstimated) AS hppEstimated
+        FROM sales s
+        INNER JOIN (SELECT saleId, SUM(totalRupiah) AS subtotal, SUM(hppRupiah) AS hpp FROM sale_lines GROUP BY saleId) t ON t.saleId = s.id
+        WHERE s.projectId = :projectId
+        GROUP BY strftime('%Y-%m', s.dateEpochDay * 86400, 'unixepoch')
+        """,
+    )
+    suspend fun getSaleMonths(projectId: String): List<SaleMonthRow>
+
+    /**
+     * Profit rows of a book summed per month, type and effective cost nature: income without a note,
+     * cash spend that pays no supplier, credit purchases at purchase date, and every asset on its own
+     * (depreciation divides each asset, so assets are not summed). Note and supplier payments are absent.
+     */
+    @Query(
+        """
+        SELECT e.type, MIN(e.dateEpochDay) AS dateEpochDay, SUM(e.amountRupiah) AS amountRupiah,
+               COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) AS variable,
+               MAX(e.usefulLifeMonths) AS usefulLifeMonths
+        FROM financial_events e
+        LEFT JOIN categories c ON c.id = e.categoryId
+        WHERE e.bookId = :bookId
+          AND ((e.type = 'CASH_INCOME' AND e.saleId IS NULL)
+            OR (e.type = 'CASH_EXPENSE' AND e.settlesEventId IS NULL)
+            OR e.type IN ('CREDIT_PURCHASE', 'ASSET_PURCHASE_CASH'))
+        GROUP BY strftime('%Y-%m', e.dateEpochDay * 86400, 'unixepoch'), e.type, variable,
+                 CASE WHEN e.type = 'ASSET_PURCHASE_CASH' THEN e.id END
+        """,
+    )
+    suspend fun getProfitEventRows(bookId: String): List<ProfitEventRow>
 
     @Query(
         """
@@ -398,23 +428,6 @@ interface FinanceDao {
 
     @Query("UPDATE categories SET costNature = :costNature WHERE id = :id")
     suspend fun setCategoryCostNature(id: String, costNature: String?)
-
-    /**
-     * Cash rows of a book with what BEP needs: the effective cost nature (line override, else
-     * category), product and units, and asset life.
-     */
-    @Query(
-        """
-        SELECT e.id, e.type, e.dateEpochDay, e.amountRupiah,
-               COALESCE(e.costNature, c.costNature) AS costNature,
-               e.productId, e.quantityText, e.unit, e.usefulLifeMonths
-        FROM financial_events e
-        LEFT JOIN categories c ON c.id = e.categoryId
-        WHERE e.bookId = :bookId
-        ORDER BY e.dateEpochDay
-        """,
-    )
-    fun observeCostRows(bookId: String): Flow<List<CostRow>>
 
     /** Note lines of a unit's products: product stock subtracts these unless sold through a consignment (DEC-029 §8). */
     @Query(

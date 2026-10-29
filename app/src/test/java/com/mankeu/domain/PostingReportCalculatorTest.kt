@@ -32,6 +32,21 @@ class PostingReportCalculatorTest {
         assertEquals(1_800_000, summary.cashBalanceRupiah)
     }
 
+    @Test
+    fun `receivable and payable balances come from their accounts`() {
+        fun r(account: LedgerAccount, side: PostingSide, amount: Long) = PostedRecord("", CashFlowRole.OPERATING, account, side, amount)
+        val summary = PostingReportCalculator.calculate(
+            listOf(
+                r(LedgerAccount.CASH, PostingSide.DEBIT, 2_000_000), r(LedgerAccount.RECEIVABLE, PostingSide.CREDIT, 2_000_000), // note payment
+                r(LedgerAccount.OPERATING_EXPENSE, PostingSide.DEBIT, 500_000), r(LedgerAccount.PAYABLE, PostingSide.CREDIT, 500_000), // credit purchase
+                r(LedgerAccount.PAYABLE, PostingSide.DEBIT, 200_000), r(LedgerAccount.CASH, PostingSide.CREDIT, 200_000), // paid in part
+            ),
+        )
+        // Notes post no revenue, so the receivable here is minus what was paid; the repository adds note totals.
+        assertEquals(-2_000_000L, summary.receivableRupiah)
+        assertEquals(300_000L, summary.payableRupiah)
+    }
+
     private fun event(id: String, type: FinancialEventType, amount: Long) = MoneyEvent(
         id = id,
         businessId = "business",

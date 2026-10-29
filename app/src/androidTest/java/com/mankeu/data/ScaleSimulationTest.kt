@@ -69,12 +69,12 @@ class ScaleSimulationTest {
 
             assertEquals("$name rows", sim.getInt("rows"), dao.getEventsForBook(book).size)
             assertEquals("$name closing cash", sim.getLong("closing_cash"), summary.cashBalanceRupiah)
-            // Interim until Task 4 (DEC-029): imported product sales are paid notes whose payments post
-            // Kas / Piutang, so the posting summary misses exactly the notes' totals.
-            val noteRevenue = repository.sales(projectId).first().sumOf { it.total }
-            assertEquals("$name revenue", sim.getLong("revenue"), summary.operatingIncomeRupiah + noteRevenue)
-            assertEquals("$name operating cost", sim.getLong("operating_cost"), summary.operatingExpenseRupiah)
-            assertEquals("$name cash profit", sim.getLong("cash_profit"), summary.profitRupiah + noteRevenue)
+            assertEquals("$name revenue", sim.getLong("revenue"), summary.operatingIncomeRupiah)
+            // The file's cash profit counts all spend when paid; profit when sold (DEC-029 §4) swaps the
+            // variable spend for the HPP of what was sold and adds depreciation. No credit in these files.
+            assertEquals("$name cash profit", sim.getLong("cash_profit"), summary.profitRupiah + summary.hppRupiah + summary.depreciationRupiah - summary.productionSpendRupiah)
+            assertEquals("$name operating cost", sim.getLong("operating_cost"), summary.operatingExpenseRupiah - summary.hppRupiah - summary.depreciationRupiah + summary.productionSpendRupiah)
+            assertEquals("$name profit", summary.operatingIncomeRupiah - summary.operatingExpenseRupiah, summary.profitRupiah)
             // Budget on a mid-range phone, generous for an emulator: a year of a medium unit (~9k
             // rows) must import within a minute and every screen query must answer within 2 s.
             assertTrue("$name import took ${parseMs + commitMs} ms", parseMs + commitMs < 60_000)

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Beranda and Laporan show HPP of goods sold, production spend, the difference between them with one plain sentence, what customers still owe and what is still owed to suppliers. PDF and Excel summaries carry the same figures.
 - Data layer for phase 2 (screens follow): contacts; sale notes with several products, a discount, HPP per line and pay now, later or in part; supplier purchases paid later with their payments; consignment (send, report sold as a note, settle, take back). Product stock now reads note lines and shows consigned goods apart. A product sale from the old income form becomes a paid note, and deleting it there removes the note.
 - Riwayat stok per product: production, stock counts and sales with the stock after each; a wrong production or count can be deleted (then recorded again).
 - Catat penjualan per satuan jual (bungkus, dus); belanja bisa menautkan bahan dan memperingatkan dampak harga baru ke HPP dan untung (spec #20).
@@ -13,12 +14,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.
 
 ### Changed
+- Profit is counted when goods are sold: income is sale notes after discount plus other money in; costs are the HPP of what was sold, fixed costs and depreciation. Spend on materials reaches profit through HPP, a supplier payment is not a cost again, and a purchase on credit counts on its purchase date. Cash flow still counts only cash.
 - Database schema 14 (DEC-029): contacts, sale notes with HPP per line, consignments, credit purchases from suppliers. On update, each earlier sale that named a product becomes a paid note with one line; its HPP is today's recipe cost and is marked as an estimate. Schema-12 and schema-13 backups are converted the same way on restore.
 - Tab Stok menjadi Produk; bahan ada di bagian Bahan & barang.
 - Template Excel v5: lembar Produk, Satuan Jual, Resep per batch; kolom Satuan dan Bahan di Transaksi. File template lama ditolak dengan daftar kolom yang berbeda.
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 
 ### Fixed
+- A note's date can no longer be moved to after one of its payments.
+- "Status BEP bulan ini" names the main sale unit for units sold.
 - Sync: the same product created on two phones keeps one set of sale units and recipe lines, and later edits arrive whole.
 - Undoing an import keeps an imported product or material that you used afterwards (production, a sale, a purchase) and says which; only what the file added is removed.
 - Excel export writes a material's current price (its latest purchase, possibly by another unit) as Harga Beli. A copy imported elsewhere keeps that price when the exported unit never bought the material; otherwise the unit's own latest purchase sets it.

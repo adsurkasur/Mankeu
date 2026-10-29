@@ -283,6 +283,11 @@ class SalesFlowTest {
         val edit = EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_INCOME, 100_000, day, "Bayar", "Penjualan")
         assertEquals("Ini pembayaran nota; buku dan unitnya tetap.", failure { repo.updateEvent(payment, edit.copy(bookId = plan)) })
         assertEquals("Tanggal bayar tidak boleh sebelum tanggal nota.", failure { repo.updateEvent(payment, edit.copy(date = day.minusDays(1))) })
+        // Task 4: nor can the note itself move to after a payment it already has.
+        val noteDraft = SaleDraft(toko, day.plusDays(1), null, 0, "", listOf(SaleLineDraft(keripik, "dus", "1", 300_000)), 0)
+        assertEquals("Tanggal bayar tidak boleh sebelum tanggal nota. Ubah atau hapus pembayarannya dulu.", failure { repo.saveSale(projectId, id, noteDraft) })
+        assertEquals(day.toEpochDay(), note(id).sale.dateEpochDay)
+        repo.saveSale(projectId, id, noteDraft.copy(date = day)) // the payment's own day is fine
 
         val bahan = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
         val tempo = repo.recordEvent(EventDraft(businessId, projectId, bookId, FinancialEventType.CREDIT_PURCHASE, 300_000, day, "Kemasan", bahan.name, categoryId = bahan.id, contactId = toko))
@@ -291,5 +296,68 @@ class SalesFlowTest {
         val payEdit = EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_EXPENSE, 100_000, day, "Bayar utang", bahan.name, categoryId = bahan.id)
         assertEquals("Ini pembayaran utang; buku dan unitnya tetap.", failure { repo.updateEvent(paid, payEdit.copy(bookId = plan)) })
         assertEquals("Tanggal bayar tidak boleh sebelum tanggal belanja.", failure { repo.updateEvent(paid, payEdit.copy(date = day.minusDays(1))) })
+    }
+
+    /**
+     * Task 4 golden (Task 1 numbers, DEC-029 §4): profit when sold through the repository. October:
+     * note A 3.800.000 − 100.000 discount (HPP 3.000.000), consignment sell-through 1.680.000 (HPP
+     * 1.440.000), other income 50.000, variable spend 4.900.000 cash + 300.000 on credit, fixed
+     * 1.200.000, and a Rp3,6 jt asset bought in September (36 months).
+     */
+    @Test fun goldenProfitWhenSoldSummary() = runBlocking {
+        val dao = db.financeDao()
+        val categories = dao.getCategories(businessId)
+        fun role(role: com.mankeu.domain.CategoryRole) = categories.first { it.role == role.name }
+        val expense = role(com.mankeu.domain.CategoryRole.EXPENSE)
+        suspend fun event(type: FinancialEventType, amount: Long, date: LocalDate, category: CategoryEntity, nature: com.mankeu.domain.CostNature? = null, life: Int? = null, contact: String? = null) =
+            repo.recordEvent(EventDraft(businessId, projectId, bookId, type, amount, date, category.name, category.name, categoryId = category.id, costNature = nature, usefulLifeMonths = life, contactId = contact))
+        val toko = repo.saveContact(businessId, null, ContactDraft("Toko B"))
+        val pemasok = repo.saveContact(businessId, null, ContactDraft("Pemasok", isCustomer = false, isSupplier = true))
+
+        event(FinancialEventType.OWNER_CAPITAL, 10_000_000, LocalDate.of(2026, 9, 1), role(com.mankeu.domain.CategoryRole.CAPITAL_IN))
+        event(FinancialEventType.ASSET_PURCHASE_CASH, 3_600_000, LocalDate.of(2026, 9, 10), role(com.mankeu.domain.CategoryRole.ASSET), life = 36)
+        // Keripik HPP is Rp6.000 a bungkus (Rp2,4 jt / 400): 500 bungkus = HPP 3.000.000.
+        val notaA = repo.saveSale(projectId, null, SaleDraft(toko, day, null, 100_000, "", listOf(SaleLineDraft(keripik, "bungkus", "500", 7_600)), 0))
+        repo.recordSalePayment(notaA, 2_000_000, day.plusDays(1))
+        val titip = repo.sendConsignment(projectId, toko, day, listOf(ConsignmentLineDraft(keripik, "dus", "6", 280_000)))
+        val line = repo.consignments(projectId).first().single().lines.single().line.id
+        repo.reportConsignmentSold(titip, listOf(line to "6"), LocalDate.of(2026, 10, 12), 0)
+        event(FinancialEventType.CASH_INCOME, 50_000, LocalDate.of(2026, 10, 8), role(com.mankeu.domain.CategoryRole.REVENUE))
+        event(FinancialEventType.CASH_EXPENSE, 4_900_000, LocalDate.of(2026, 10, 3), expense, com.mankeu.domain.CostNature.VARIABLE)
+        val tempo = event(FinancialEventType.CREDIT_PURCHASE, 300_000, LocalDate.of(2026, 10, 4), expense, com.mankeu.domain.CostNature.VARIABLE, contact = pemasok)
+        repo.recordSupplierPayment(tempo, 100_000, LocalDate.of(2026, 10, 20))
+        event(FinancialEventType.CASH_EXPENSE, 1_000_000, LocalDate.of(2026, 10, 2), expense, com.mankeu.domain.CostNature.FIXED)
+        event(FinancialEventType.CASH_EXPENSE, 200_000, LocalDate.of(2026, 10, 2), expense, com.mankeu.domain.CostNature.FIXED)
+
+        // October, as Beranda's and Laporan's "this month" card reads it.
+        val inputs = repo.profitInputs(bookId).first()
+        val october = inputs.months().single { it.month == java.time.YearMonth.of(2026, 10) }
+        assertEquals(-310_000L, october.profitRupiah)
+        assertEquals(listOf(5_380_000L, 50_000L, 4_440_000L, 1_200_000L, 100_000L, 5_200_000L, 760_000L),
+            october.let { listOf(it.salesRupiah, it.otherIncomeRupiah, it.hppRupiah, it.fixedCostRupiah, it.depreciationRupiah, it.productionSpendRupiah, it.productionVarianceRupiah) })
+        val card = com.mankeu.domain.ActualBepCalculator.analyse(PlanAssembly.products(repo.products(projectId).first(), emptyMap()), PlanAssembly.actualMonth(java.time.YearMonth.of(2026, 10), inputs, repo.products(projectId).first()))
+        assertEquals(-310_000L, card.profitRupiah)
+        assertQty(740, card.unitsSold.getValue(keripik).multiply(BigDecimal(40))) // 500 bungkus + 6 dus, in dus
+
+        // The whole book: September adds one month of depreciation and nothing else.
+        val s = repo.accountingSummary(bookId).first()
+        assertEquals(5_430_000L, s.operatingIncomeRupiah)
+        assertEquals(4_440_000L + 1_200_000L + 200_000L, s.operatingExpenseRupiah)
+        assertEquals(-410_000L, s.profitRupiah)
+        assertEquals(4_440_000L, s.hppRupiah)
+        assertEquals(5_200_000L, s.productionSpendRupiah)
+        assertEquals(760_000L, s.productionVarianceRupiah)
+        assertEquals(200_000L, s.depreciationRupiah)
+        assertEquals(5_380_000L - 2_000_000L, s.receivableRupiah)
+        assertEquals(200_000L, s.payableRupiah)
+        // Cash counts only cash: note payment 2 jt + other income − cash spend − supplier payment.
+        assertEquals(2_000_000L + 50_000L - 4_900_000L - 1_200_000L - 100_000L, s.operatingCashFlowRupiah)
+        assertEquals(-3_600_000L, s.investingCashFlowRupiah)
+        assertEquals(10_000_000L, s.financingCashFlowRupiah)
+        assertEquals(10_000_000L - 3_600_000L - 4_150_000L, s.cashBalanceRupiah)
+        // The cost chart: credit purchase at purchase date, the supplier payment not again.
+        assertEquals(4_900_000L + 300_000L + 1_200_000L, repo.categoryTotals(bookId).first().sumOf { it.totalRupiah })
+        // PDF and xlsx read the same summary.
+        assertEquals(s, repo.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }.summary)
     }
 }

@@ -78,6 +78,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 private val EMPTY_SUMMARY = PostingReportCalculator.calculate(emptyList())
+private val NO_PROFIT_INPUTS = com.mankeu.domain.ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList())
 
 data class AppUiState(
     val businesses: List<BusinessEntity> = emptyList(),
@@ -272,9 +273,9 @@ class AppViewModel(
     private val planItems = books.flatMapLatest { items ->
         items.firstOrNull { it.mode == BookMode.PROJECTION.name }?.id?.let(repository::budgetItems) ?: flowOf(emptyList())
     }.stateIn(viewModelScope, KeepWarm, emptyList())
-    private val actualCostRows = books.flatMapLatest { items ->
-        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id?.let(repository::costRows) ?: flowOf(emptyList())
-    }.stateIn(viewModelScope, KeepWarm, emptyList())
+    private val actualProfitInputs = books.flatMapLatest { items ->
+        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id?.let(repository::profitInputs) ?: flowOf(NO_PROFIT_INPUTS)
+    }.stateIn(viewModelScope, KeepWarm, NO_PROFIT_INPUTS)
 
     /** Products with the material prices their HPP is costed at (Task 3 derives prices from purchases). */
     private val pricedProducts = combine(products, stockItems) { productRows, items ->
@@ -288,10 +289,10 @@ class AppViewModel(
         else PlanCalculator.analyse(PlanAssembly.planInputs(project, productRows, lines, categoryRows, LocalDate.now(), prices))
         Triple(productRows to prices, lines, plan)
     }
-    private val planAndActual = combine(planContent, actualCostRows) { (priced, lines, plan), rows ->
+    private val planAndActual = combine(planContent, actualProfitInputs) { (priced, lines, plan), inputs ->
         val (productRows, prices) = priced
-        val actual = if (rows.isEmpty()) null
-        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), rows, productRows))
+        val actual = if (inputs == NO_PROFIT_INPUTS) null
+        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), inputs, productRows))
         PlanContent(productRows, lines, plan, actual)
     }.stateIn(viewModelScope, KeepWarm, PlanContent(emptyList(), emptyList(), null, null))
     private val importBatches = selectedProjectId.flatMapLatest { id ->
@@ -306,9 +307,7 @@ class AppViewModel(
         items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id
             ?.let(repository::accountingSummary) ?: flowOf(EMPTY_SUMMARY)
     }.stateIn(viewModelScope, KeepWarm, EMPTY_SUMMARY)
-    private val realizationMonths = actualCostRows.map { rows ->
-        rows.map { YearMonth.from(LocalDate.ofEpochDay(it.dateEpochDay)) }.distinct().size.coerceAtLeast(1)
-    }
+    private val realizationMonths = actualProfitInputs.map { it.months().size.coerceAtLeast(1) }
 
     private val scopeContent = combine(businesses, projects, books, categories) {
             businessItems, projectItems, bookItems, categoryItems ->

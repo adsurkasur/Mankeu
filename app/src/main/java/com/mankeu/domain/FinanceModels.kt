@@ -145,4 +145,16 @@ data class FinancialSummary(
     val financingCashFlowRupiah: Long,
     val cashBalanceRupiah: Long,
     val investingCashFlowRupiah: Long = 0,
+    // Fase 2 (DEC-029 §4, F2-1): filled for the Realisasi book by ProfitCalculator.summary.
+    /** HPP of what was sold (note line snapshots). */
+    val hppRupiah: Long = 0,
+    /** Variable spend, cash or on credit: reaches profit through HPP, not directly. */
+    val productionSpendRupiah: Long = 0,
+    /** Production spend minus HPP; positive means more bought than sold at HPP. */
+    val productionVarianceRupiah: Long = 0,
+    val depreciationRupiah: Long = 0,
+    /** What customers still owe on notes. */
+    val receivableRupiah: Long = 0,
+    /** What is still owed to suppliers for credit purchases. */
+    val payableRupiah: Long = 0,
 )

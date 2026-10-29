@@ -4,16 +4,15 @@ import com.mankeu.domain.ActualMonthInputs
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostComponent
 import com.mankeu.domain.CostNature
-import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.PlanInputs
 import com.mankeu.domain.PlanLine
 import com.mankeu.domain.PlanProduct
 import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.ProfitCalculator
+import com.mankeu.domain.ProfitInputs
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import java.math.BigDecimal
-import java.math.MathContext
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -89,38 +88,22 @@ object PlanAssembly {
     }
 
     /**
-     * One month of the Realisasi book: sales (with units when a product was named), fixed and
-     * variable spend by effective cost nature, and depreciation of every asset bought on or before
-     * the month that is still within its life. Capital and drawings are neither cost nor revenue.
+     * One month of the Realisasi book from the same [ProfitInputs] as the summary (DEC-029 §4):
+     * note revenue and HPP, other income, fixed and variable spend (cash or on credit) by effective
+     * cost nature, and depreciation by [ProfitCalculator.depreciation]. Units sold come from note
+     * lines, counted in each product's main sale unit; a consignment sell-through is a sale too.
      */
-    fun actualMonth(month: YearMonth, rows: List<CostRow>, products: List<ProductRecord>): ActualMonthInputs {
-        val byId = products.associateBy { it.product.id }
-        val inMonth = rows.filter { YearMonth.from(LocalDate.ofEpochDay(it.dateEpochDay)) == month }
-        val sales = inMonth.filter { it.type == FinancialEventType.CASH_INCOME.name }
-        val named = sales.filter { it.productId != null && TransactionCalculation.parseQuantity(it.quantityText) != null }
-        val expenses = inMonth.filter { it.type == FinancialEventType.CASH_EXPENSE.name }
-        val depreciation = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }.sumOf { asset ->
-            ProfitCalculator.depreciation(
-                month, YearMonth.from(LocalDate.ofEpochDay(asset.dateEpochDay)), asset.amountRupiah,
-                asset.usefulLifeMonths ?: DEFAULT_ASSET_LIFE_MONTHS,
-            )
-        }
+    fun actualMonth(month: YearMonth, inputs: ProfitInputs, products: List<ProductRecord>): ActualMonthInputs {
+        val m = ProfitCalculator.month(month, inputs.sales, inputs.otherIncome, inputs.expenses, inputs.assets)
         return ActualMonthInputs(
             month = month,
-            unitsSold = named.groupBy { it.productId!! }
-                .mapValues { (productId, list) ->
-                    val record = byId[productId]
-                    val main = record?.contentOf(null) ?: BigDecimal.ONE
-                    list.fold(BigDecimal.ZERO) { sum, r ->
-                        val content = record?.contentOf(r.unit) ?: BigDecimal.ONE
-                        sum + TransactionCalculation.parseQuantity(r.quantityText)!! * content.divide(main, MathContext.DECIMAL64)
-                    }
-                },
-            revenueRupiah = sales.sumOf { it.amountRupiah },
-            unattributedRevenueRupiah = (sales - named.toSet()).sumOf { it.amountRupiah },
-            fixedCostRupiah = expenses.filter { nature(it.costNature) != CostNature.VARIABLE }.sumOf { it.amountRupiah },
-            variableSpendRupiah = expenses.filter { nature(it.costNature) == CostNature.VARIABLE }.sumOf { it.amountRupiah },
-            depreciationRupiah = depreciation,
+            unitsSold = products.associate { it.product.id to it.unitsSoldIn(month) }.filterValues { it.signum() > 0 },
+            revenueRupiah = m.salesRupiah + m.otherIncomeRupiah,
+            unattributedRevenueRupiah = m.otherIncomeRupiah,
+            fixedCostRupiah = m.fixedCostRupiah,
+            variableSpendRupiah = m.productionSpendRupiah,
+            depreciationRupiah = m.depreciationRupiah,
+            hppRupiah = m.hppRupiah,
         )
     }
 

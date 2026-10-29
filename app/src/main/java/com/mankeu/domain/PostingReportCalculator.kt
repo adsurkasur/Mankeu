@@ -26,6 +26,10 @@ object PostingReportCalculator {
             financingCashFlowRupiah = cashFlow(CashFlowRole.FINANCING),
             investingCashFlowRupiah = cashFlow(CashFlowRole.INVESTING),
             cashBalanceRupiah = cashBalance,
+            // Notes post no revenue (DEC-029 §2), so this is minus what was paid on notes until the
+            // repository adds the note totals; the payable is complete here.
+            receivableRupiah = debitBalance(records, LedgerAccount.RECEIVABLE),
+            payableRupiah = creditBalance(records, LedgerAccount.PAYABLE),
         )
     }
 

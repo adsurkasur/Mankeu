@@ -83,6 +83,8 @@ import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.MetricTone
 import com.mankeu.presentation.components.ReportCard
 import com.mankeu.presentation.components.ActualMonthCard
+import com.mankeu.presentation.components.ProfitDetailRows
+import com.mankeu.presentation.components.hasProfitDetail
 import com.mankeu.presentation.components.PlanBreakdownCard
 import com.mankeu.presentation.components.PlanFeasibilityCard
 import com.mankeu.presentation.components.ReportRow
@@ -236,6 +238,10 @@ private fun FinancialsSection(
         ReportRow(stringResource(R.string.reports_operating_expense), -summary.operatingExpenseRupiah)
         HorizontalDivider()
         ReportRow(stringResource(R.string.reports_net_profit), summary.profitRupiah, emphasized = true)
+        if (summary.hasProfitDetail()) {
+            HorizontalDivider()
+            ProfitDetailRows(summary)
+        }
         Text(
             stringResource(R.string.reports_income_note),
             style = MaterialTheme.typography.bodySmall,
@@ -337,7 +343,7 @@ private fun FeasibilitySection(
 /**
  * Plan against actual as averages per month. The plan covers its own period (often 12 months)
  * and Realisasi only the months recorded so far, so comparing totals produced a "shortfall" of
- * eleven months of sales. Both sides are cash figures, before depreciation.
+ * eleven months of sales. Realisasi profit counts HPP of goods sold, fixed costs and depreciation (DEC-029 §4).
  */
 @Composable
 private fun ComparisonSection(state: AppUiState) {

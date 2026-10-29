@@ -94,6 +94,15 @@ data class ProductRecord(
             return sent - sold - returned
         }
 
+    /** Main sale units sold in [month] by note lines, sell-through included (ActualBep, DEC-029 §4). */
+    fun unitsSoldIn(month: java.time.YearMonth): BigDecimal {
+        val main = contentOf(null)
+        return sales.filter { java.time.YearMonth.from(java.time.LocalDate.ofEpochDay(it.dateEpochDay)) == month }
+            .fold(BigDecimal.ZERO) { sum, row ->
+                sum + (TransactionCalculation.parseQuantity(row.quantityText) ?: BigDecimal.ZERO) * row.content().divide(main, java.math.MathContext.DECIMAL64)
+            }
+    }
+
     /** A note line's content snapshot; rows without one (tests, old shapes) read the product's unit. */
     private fun ProductSaleRow.content(): BigDecimal = TransactionCalculation.parseQuantity(contentText) ?: contentOf(unit)
 }

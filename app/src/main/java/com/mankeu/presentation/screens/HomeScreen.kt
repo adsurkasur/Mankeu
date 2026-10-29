@@ -87,6 +87,9 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.isDarkScheme
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.ActualMonthCard
+import com.mankeu.presentation.components.ProfitDetailRows
+import com.mankeu.presentation.components.ReportCard
+import com.mankeu.presentation.components.hasProfitDetail
 import com.mankeu.presentation.components.PlanFeasibilityCard
 import com.mankeu.presentation.components.MetricTone
 import com.mankeu.presentation.components.NoticeCard
@@ -226,6 +229,9 @@ fun HomeScreen(
                     )
                 }
             }
+        }
+        if (state.selectedBookMode == BookMode.REALIZATION && summary.hasProfitDetail()) {
+            item { ReportCard(stringResource(R.string.profit_detail_title)) { ProfitDetailRows(summary) } }
         }
         item {
             ExpenseDistributionCard(

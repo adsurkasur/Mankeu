@@ -250,6 +250,7 @@ class FinanceWorkbookExporter(
         rows = books.flatMap { book ->
             val mode = BookMode.valueOf(book.book.mode).label()
             with(book.summary) {
+                val realization = book.book.mode == BookMode.REALIZATION.name
                 listOf(
                     listOf(mode, "Pendapatan", operatingIncomeRupiah),
                     listOf(mode, "Biaya operasional", operatingExpenseRupiah),
@@ -258,7 +259,17 @@ class FinanceWorkbookExporter(
                     listOf(mode, "Arus kas investasi", investingCashFlowRupiah),
                     listOf(mode, "Arus kas pembiayaan (modal/prive)", financingCashFlowRupiah),
                     listOf(mode, "Saldo kas", cashBalanceRupiah),
-                )
+                ) + if (realization) {
+                    // Profit when sold (DEC-029 §4): the same figures as Beranda and Laporan.
+                    listOf(
+                        listOf(mode, "HPP (harga pokok penjualan)", hppRupiah),
+                        listOf(mode, "Penyusutan", depreciationRupiah),
+                        listOf(mode, "Belanja produksi (variabel, lewat HPP)", productionSpendRupiah),
+                        listOf(mode, "Selisih belanja produksi vs HPP", productionVarianceRupiah),
+                        listOf(mode, "Piutang usaha", receivableRupiah),
+                        listOf(mode, "Utang usaha", payableRupiah),
+                    )
+                } else emptyList()
             }
         },
         currencyColumns = setOf(2),

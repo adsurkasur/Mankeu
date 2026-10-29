@@ -93,9 +93,11 @@ class ImportCommitTest {
         val note = dao.getSale(LegacySaleShape.saleId(sale.id))!!
         assertEquals(dao.getImportBatches(projectId).single().id to sale.id.let(LegacySaleShape::saleId), note.importBatchId to sale.saleId)
         val summary = repository.accountingSummary(books.getValue(BookMode.REALIZATION).id).first()
-        // Interim until Task 4 (DEC-029): profit still reads postings, where a note payment is Kas / Piutang,
-        // so only the 0.5 jt rent shows; the 5 jt capital moves cash, not profit.
-        assertEquals(-500_000L, summary.profitRupiah)
+        // Profit when sold (DEC-029 §4): the note's 450 cups × Rp10.000, minus their HPP (Rp18.000 of milk
+        // per 6 cups = Rp3.000 a cup) and the 0.5 jt rent; the 5 jt capital moves cash, not profit.
+        assertEquals(4_500_000L, summary.operatingIncomeRupiah)
+        assertEquals(1_350_000L, summary.hppRupiah)
+        assertEquals(4_500_000L - 1_350_000L - 500_000L, summary.profitRupiah)
         assertEquals(9_000_000L, summary.cashBalanceRupiah)
 
         repository.undoImportBatch(dao.getImportBatches(projectId).single().id)

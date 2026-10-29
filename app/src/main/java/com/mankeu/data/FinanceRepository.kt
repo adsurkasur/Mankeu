@@ -14,6 +14,12 @@ import com.mankeu.domain.CashFlowRecord
 import com.mankeu.domain.CashFlowRole
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
+import com.mankeu.domain.FinancialSummary
+import com.mankeu.domain.ProfitAsset
+import com.mankeu.domain.ProfitCalculator
+import com.mankeu.domain.ProfitExpense
+import com.mankeu.domain.ProfitInputs
+import com.mankeu.domain.ProfitSale
 import com.mankeu.domain.JournalEntry
 import com.mankeu.domain.LedgerAccount
 import com.mankeu.domain.LedgerPolicy
@@ -137,7 +143,6 @@ class FinanceRepository(private val database: AppDatabase) {
     fun books(projectId: String): Flow<List<BookEntity>> = dao.observeBooks(projectId)
     fun categories(businessId: String): Flow<List<CategoryEntity>> = dao.observeCategories(businessId)
     fun budgetItems(bookId: String): Flow<List<BudgetItemEntity>> = dao.observeBudgetItems(bookId)
-    fun costRows(bookId: String): Flow<List<CostRow>> = dao.observeCostRows(bookId)
 
     /** Products of a business unit with sale units, recipe and stock movements (spec #5 #6 #9). */
     fun products(projectId: String): Flow<List<ProductRecord>> = combine(
@@ -183,7 +188,38 @@ class FinanceRepository(private val database: AppDatabase) {
 
     fun categoryTotals(bookId: String): Flow<List<CategoryTotalRow>> = dao.observeCategoryTotals(bookId)
 
-    fun accountingSummary(bookId: String) = dao.observePostingTotals(bookId).map { it.summary() }
+    /**
+     * The book's summary. Cash flow, cash balance and payable come from postings; for Realisasi the
+     * profit lines come from [ProfitCalculator] over notes, other income, spend and assets (DEC-029 §4).
+     */
+    fun accountingSummary(bookId: String): Flow<FinancialSummary> = onDataChange().map { summaryOf(bookId) }
+
+    /** What profit is computed from, for the Realisasi book [bookId]; empty for Proyeksi. */
+    fun profitInputs(bookId: String): Flow<ProfitInputs> = onDataChange().map { database.withTransaction { profitInputsOf(bookId) } }
+
+    private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books")
+
+    private suspend fun summaryOf(bookId: String): FinancialSummary = database.withTransaction {
+        val posted = dao.getPostingTotals(bookId).summary()
+        val inputs = profitInputsOf(bookId)
+        if (dao.getBookById(bookId)?.mode != BookMode.REALIZATION.name) posted
+        else ProfitCalculator.summary(posted, inputs.months(), noteTotalRupiah = inputs.sales.sumOf { it.revenueRupiah })
+    }
+
+    private suspend fun profitInputsOf(bookId: String): ProfitInputs {
+        val book = dao.getBookById(bookId)
+        if (book?.mode != BookMode.REALIZATION.name) return ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList())
+        val rows = dao.getProfitEventRows(bookId)
+        fun date(row: ProfitEventRow) = LocalDate.ofEpochDay(row.dateEpochDay)
+        return ProfitInputs(
+            sales = dao.getSaleMonths(book.projectId).map { ProfitSale(LocalDate.ofEpochDay(it.dateEpochDay), it.revenueRupiah, it.hppRupiah, it.hppEstimated) },
+            otherIncome = rows.filter { it.type == FinancialEventType.CASH_INCOME.name }.map { date(it) to it.amountRupiah },
+            expenses = rows.filter { it.type == FinancialEventType.CASH_EXPENSE.name || it.type == FinancialEventType.CREDIT_PURCHASE.name }
+                .map { ProfitExpense(date(it), it.amountRupiah, it.variable) },
+            assets = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }
+                .map { ProfitAsset(date(it), it.amountRupiah, it.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS) },
+        )
+    }
 
     private fun List<PostingTotalRow>.summary() = PostingReportCalculator.calculate(
         map {
@@ -205,7 +241,7 @@ class FinanceRepository(private val database: AppDatabase) {
             val products = productsOf(project.id)
             val exportBooks = ensureBookPair(project.id).values.map { book ->
                 // Proyeksi reports from the business plan when there is one, as on every screen.
-                val summary = plan?.summary?.takeIf { book.mode == BookMode.PROJECTION.name } ?: dao.getPostingRows(book.id).map { PostingTotalRow(it.cashFlowRole, it.account, it.side, it.amountRupiah) }.summary()
+                val summary = plan?.summary?.takeIf { book.mode == BookMode.PROJECTION.name } ?: summaryOf(book.id)
                 FinanceExportBook(
                     book = book,
                     budgets = dao.getBudgetItems(book.id),
@@ -947,6 +983,10 @@ class FinanceRepository(private val database: AppDatabase) {
         val existing = id?.let { dao.getSale(it) ?: error("Nota tidak ditemukan.") }
         require(existing == null || existing.projectId == projectId) { "Nota berasal dari unit usaha lain." }
         require(draft.lines.isNotEmpty()) { "Isi minimal satu baris produk." }
+        existing?.let { sale ->
+            val firstPaid = dao.getSalePayments(sale.id).minOfOrNull { it.dateEpochDay }
+            require(firstPaid == null || draft.date.toEpochDay() <= firstPaid) { "Tanggal bayar tidak boleh sebelum tanggal nota. Ubah atau hapus pembayarannya dulu." }
+        }
         val consignment = existing?.consignmentId?.let { dao.getConsignment(it) }
         val lines = if (consignment == null) {
             draft.lines.map { noteLine(project, it) }

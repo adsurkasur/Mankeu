@@ -2,8 +2,11 @@ package com.mankeu.data
 
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.CategoryRole
-import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.PlanCalculator
+import com.mankeu.domain.ProfitAsset
+import com.mankeu.domain.ProfitExpense
+import com.mankeu.domain.ProfitInputs
+import com.mankeu.domain.ProfitSale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.math.BigDecimal
@@ -103,42 +106,45 @@ class PlanAssemblyTest {
     }
 
     @Test
-    fun `actual month splits sales, fixed and variable spend and depreciates assets`() {
-        val day = LocalDate.of(2026, 11, 3).toEpochDay()
-        val rows = listOf(
-            CostRow("s1", "CASH_INCOME", day, 5_000_000, null, "kopi", "500", null, null),
-            CostRow("s2", "CASH_INCOME", day, 2_000_000, null, null, null, null, null),
-            CostRow("e1", "CASH_EXPENSE", day, 2_000_000, "FIXED", null, null, null, null),
-            CostRow("e2", "CASH_EXPENSE", day, 3_500_000, "VARIABLE", null, null, null, null),
-            CostRow("m1", "OWNER_CAPITAL", day, 9_000_000, null, null, null, null, null),
-            CostRow("a1", "ASSET_PURCHASE_CASH", LocalDate.of(2026, 10, 1).toEpochDay(), 12_000_000, null, null, null, null, 24),
+    fun `actual month reads note revenue and HPP, fixed and variable spend and depreciates assets`() {
+        val day = LocalDate.of(2026, 11, 3)
+        val record = kopi.copy(sales = listOf(ProductSaleRow("l1", "kopi", "500", "cup", day.toEpochDay(), 0, "1")))
+        val inputs = ProfitInputs(
+            sales = listOf(ProfitSale(day, 5_000_000, 2_500_000, false)),
+            otherIncome = listOf(day to 2_000_000L),
+            expenses = listOf(ProfitExpense(day, 2_000_000, variable = false), ProfitExpense(day, 3_500_000, variable = true)),
+            assets = listOf(ProfitAsset(LocalDate.of(2026, 10, 1), 12_000_000, 24)),
         )
 
-        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), rows, emptyList())
+        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), inputs, listOf(record))
         val result = ActualBepCalculator.analyse(PlanAssembly.products(listOf(kopi), emptyMap()), actual)
 
         assertEquals(7_000_000L, actual.revenueRupiah)
         assertEquals(2_000_000L, actual.unattributedRevenueRupiah)
+        assertEquals(2_500_000L, actual.hppRupiah)
+        assertEquals(3_500_000L, actual.variableSpendRupiah)
         assertEquals(BigDecimal("500"), actual.unitsSold["kopi"])
         assertEquals(500_000L, actual.depreciationRupiah)
         // 500 named + 200 inferred from Rp2 jt at the planned mix = 700 cups.
         assertEquals(BigDecimal("700.000"), result.unitsSold["kopi"])
-        assertEquals(0L, result.variableVarianceRupiah)
         assertEquals(2_500_000L, result.fixedCostRupiah)
+        assertEquals(7_000_000L - 2_500_000L - 2_500_000L, result.profitRupiah)
     }
 
-    @Test fun `units sold are counted in the main sale unit`() {
+    @Test fun `units sold are counted in the main sale unit from note lines`() {
+        val day = LocalDate.of(2026, 10, 5).toEpochDay()
         val record = ProductRecord(
             ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),
             listOf(ProductUnitEntity("dus", "k", "dus", "40", 300_000, 0), ProductUnitEntity("bks", "k", "bungkus", "1", 8_000, 1)),
             emptyList(),
+            sales = listOf(
+                ProductSaleRow("1", "k", "2", "dus", day, 0, "40"),
+                // Sold through a consignment: still a sale this month.
+                ProductSaleRow("2", "k", "40", "bungkus", day, 0, "1", consignmentId = "c"),
+                ProductSaleRow("3", "k", "99", "dus", LocalDate.of(2026, 9, 30).toEpochDay(), 0, "40"),
+            ),
         )
-        val day = LocalDate.of(2026, 10, 5).toEpochDay()
-        val rows = listOf(
-            CostRow("1", FinancialEventType.CASH_INCOME.name, day, 600_000, null, "k", "2", "dus", null),
-            CostRow("2", FinancialEventType.CASH_INCOME.name, day, 320_000, null, "k", "40", "bungkus", null),
-        )
-        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 10), rows, listOf(record))
+        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 10), ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()), listOf(record))
         assertEquals(0, BigDecimal(3).compareTo(actual.unitsSold.getValue("k")))
     }
 }

@@ -45,7 +45,7 @@ class BusinessPlanTest {
     fun `actual month at 700 cups gives the same ratios and no variance when spend matches the recipe`() {
         val actual = ActualBepCalculator.analyse(
             listOf(kopi),
-            ActualMonthInputs(month, mapOf("kopi" to BigDecimal("700")), 7_000_000, 0, 2_000_000, 3_500_000, 0),
+            ActualMonthInputs(month, mapOf("kopi" to BigDecimal("700")), 7_000_000, 0, 2_000_000, 3_500_000, 0, hppRupiah = 3_500_000),
         )
 
         assertEquals(4_000_000L, actual.breakEvenRupiah)
@@ -59,9 +59,11 @@ class BusinessPlanTest {
     fun `overspending on variable costs shows as a positive variance`() {
         val actual = ActualBepCalculator.analyse(
             listOf(kopi),
-            ActualMonthInputs(month, mapOf("kopi" to BigDecimal("700")), 7_000_000, 0, 2_000_000, 3_800_000, 0),
+            ActualMonthInputs(month, mapOf("kopi" to BigDecimal("700")), 7_000_000, 0, 2_000_000, 3_800_000, 0, hppRupiah = 3_500_000),
         )
         assertEquals(300_000L, actual.variableVarianceRupiah)
+        // Profit when sold (F2-1): the overspend is a variance, not this month's cost.
+        assertEquals(1_500_000L, actual.profitRupiah)
     }
 
     @Test

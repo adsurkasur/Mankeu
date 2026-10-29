@@ -42,13 +42,13 @@ class ProductEditorTest {
     private val oil = StockItem("minyak", "b", "Minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO)
 
     /** Indonesian resources whatever the emulator's language, as the screen text is what is asserted. */
-    private fun editor(): @Composable () -> Unit = {
+    private fun editor(materials: List<StockItem> = listOf(oil)): @Composable () -> Unit = {
         val host = LocalContext.current
         val indonesian = Configuration(LocalConfiguration.current).apply { setLocale(Locale.forLanguageTag("id")) }
         val localized = remember(host) { host.createConfigurationContext(indonesian) }
         val wrapped = remember(host) { object : ContextWrapper(host) { override fun getResources(): Resources = localized.resources } }
         CompositionLocalProvider(LocalContext provides wrapped, LocalConfiguration provides indonesian) {
-            MankeuTheme { ProductEditorScreen(existing = null, materials = listOf(oil), onSave = { saved = it }, onDelete = null) }
+            MankeuTheme { ProductEditorScreen(existing = null, materials = materials, onSave = { saved = it }, onDelete = null) }
         }
     }
 
@@ -110,6 +110,23 @@ class ProductEditorTest {
         compose.onNodeWithText("Simpan").performClick()
         assertEquals(listOf("bungkus", "dus"), saved!!.units.map { it.name })
         assertEquals("minyak", saved!!.recipe.first().stockItemId)
+    }
+
+    /** Final review M-6: a new material line starts on a material the recipe does not use yet. */
+    @Test fun aNewMaterialLineStartsOnAnUnusedMaterial() {
+        val cassava = StockItem("singkong", "b", "Singkong", "kg", 30_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        compose.setContent(editor(listOf(oil, cassava)))
+        node("Nama produk").performTextInput("Keripik")
+        node("Satuan terkecil").performTextInput("bungkus")
+        node("Satu batch menghasilkan berapa bungkus?").performTextInput("400")
+        node("Tambah bahan").performClick()
+        node("Jumlah (liter)").performTextInput("20")
+        node("Tambah bahan").performClick()
+        node("Jumlah (kg)").performTextInput("50")
+        node("Harga jual").performTextInput("8000")
+        compose.onNodeWithText("Simpan").performClick()
+
+        assertEquals(listOf("minyak", "singkong"), saved!!.recipe.map { it.stockItemId })
     }
 
     private fun androidx.compose.ui.test.SemanticsNodeInteractionCollection.assertCountEquals0() =

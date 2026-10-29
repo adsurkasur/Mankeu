@@ -49,9 +49,12 @@ data class ProductRecord(
     /** Base units on hand: production and counts as stored, sales read from the sale events. */
     val stock: BigDecimal
         get() {
-            // parseQuantity returns null for "0", which a count may legitimately be.
-            val stored = movements.map {
-                Triple(it.dateEpochDay, it.createdAtEpochMillis, ProductMovement(ProductMovementType.valueOf(it.movementType), TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO))
+            // parseQuantity returns null for "0", which a count may legitimately be. A type this
+            // version does not know (from a newer phone or backup) is skipped rather than crashing.
+            val stored = movements.mapNotNull { m ->
+                ProductMovementType.entries.firstOrNull { it.name == m.movementType }?.let { type ->
+                    Triple(m.dateEpochDay, m.createdAtEpochMillis, ProductMovement(type, TransactionCalculation.parseQuantity(m.quantityText) ?: BigDecimal.ZERO))
+                }
             }
             val sold = sales.mapNotNull { s ->
                 TransactionCalculation.parseQuantity(s.quantityText)?.let { q ->

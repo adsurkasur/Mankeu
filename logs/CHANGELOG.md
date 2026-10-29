@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 
 ### Fixed
+- A stock entry of an unknown kind (from a newer phone or backup) no longer crashes the Produk tab.
+- Tambah bahan in the product editor starts on a material the recipe does not use yet.
+- Excel export keeps Jumlah, Satuan and Harga Satuan of ordinary expenses and incomes, so they come back on re-import.
 - A recipe cost with an amount but no name is refused on save instead of being dropped, so the saved HPP matches the preview.
 - Renaming a sale unit (dus to karton) keeps past sales on that unit, so stock does not jump; removing a unit that sales still use is refused with the reason.
 - Sync: a purchase of a material created with the same name on both phones now prices the local material.

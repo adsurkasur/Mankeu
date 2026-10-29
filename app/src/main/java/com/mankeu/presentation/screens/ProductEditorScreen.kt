@@ -218,8 +218,10 @@ fun ProductEditorScreen(
             }
             item {
                 Row {
-                    if (materials.isNotEmpty()) {
-                        TextButton(onClick = { lines.add(LineInput(materials.first().id, materials.first().name)) }) {
+                    // A new material line starts on the first material the recipe does not use yet; none left, no button.
+                    val unused = materials.firstOrNull { m -> lines.none { it.materialId == m.id } }
+                    if (unused != null) {
+                        TextButton(onClick = { lines.add(LineInput(unused.id, unused.name)) }) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Text(stringResource(R.string.editor_add_material))
                         }

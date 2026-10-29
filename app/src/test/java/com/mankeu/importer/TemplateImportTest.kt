@@ -320,6 +320,22 @@ class TemplateImportTest {
         assertEquals(15_555L, row.unitPriceRupiah)
     }
 
+    /** Final review M-3: a plain expense keeps Jumlah, Satuan and Harga Satuan through export and import. */
+    @Test
+    fun `a plain expense keeps quantity, unit and unit price through the round trip`() {
+        val b = bundle()
+        val plain = b.copy(
+            books = b.books.map { book ->
+                if (book.book.mode != BookMode.REALIZATION.name) book
+                else book.copy(events = book.events + event("e10", FinancialEventType.CASH_EXPENSE, 150_000, "Beli pupuk", "Bahan Baku & Stok", createdAt = 10).copy(quantityText = "3", unit = "sak", unitPriceRupiah = 50_000))
+            },
+        )
+
+        val row = importer.preview("ekspor.xlsx", FinanceWorkbookExporter().export(plain)).transactions.single { it.description == "Beli pupuk" }
+
+        assertEquals(Triple("3", "sak", 50_000L), Triple(row.quantityText, row.unit, row.unitPriceRupiah))
+    }
+
     // --- fixtures ---------------------------------------------------------------------------
 
     /** A minimal valid template whose Transaksi sheet is [transactions]; products and units default to none. */

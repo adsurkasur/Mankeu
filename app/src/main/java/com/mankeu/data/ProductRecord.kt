@@ -15,7 +15,10 @@ data class ProductRecord(
     val units: List<ProductUnitEntity>,
     val recipe: List<ProductRecipeLineEntity>,
     val movements: List<ProductMovementEntity> = emptyList(),
+    /** Sale-note lines of this product (DEC-029 §8); lines of a consignment sell-through note carry its id. */
     val sales: List<ProductSaleRow> = emptyList(),
+    /** Lines of consignments that sent this product out (CONSIGN_OUT, DEC-029 §8). */
+    val consignmentSends: List<ConsignmentSendRow> = emptyList(),
 ) {
     val spec: ProductSpec
         get() = ProductSpec(
@@ -46,7 +49,7 @@ data class ProductRecord(
         return spec.saleUnits.firstOrNull { it.name.equals(name, ignoreCase = true) }?.content ?: main
     }
 
-    /** Base units on hand: production and counts as stored, sales read from the sale events. */
+    /** Base units on hand ("di gudang"): production, counts and returns as stored, sales read from note lines, sends from consignments. */
     val stock: BigDecimal get() = history.lastOrNull()?.stockAfter ?: BigDecimal.ZERO
 
     /**
@@ -63,23 +66,53 @@ data class ProductRecord(
                 }
             }
             val mainName = mainUnit?.name ?: product.unit
-            val sold = sales.mapNotNull { s ->
+            // A consignment sell-through left the stock when it was sent, so it does not count again.
+            val sold = sales.filter { it.consignmentId == null }.mapNotNull { s ->
                 TransactionCalculation.parseQuantity(s.quantityText)?.let { q ->
                     val soldText = "${q.stripTrailingZeros().toPlainString().replace('.', ',')} ${s.unit?.trim()?.ifBlank { null } ?: mainName}"
-                    Triple(s.dateEpochDay, s.createdAtEpochMillis, StockHistoryEntry(s.id, ProductMovementType.SALE, s.dateEpochDay, q * contentOf(s.unit), BigDecimal.ZERO, soldText = soldText))
+                    Triple(s.dateEpochDay, s.createdAtEpochMillis, StockHistoryEntry(s.id, ProductMovementType.SALE, s.dateEpochDay, q * s.content(), BigDecimal.ZERO, soldText = soldText))
+                }
+            }
+            val sent = consignmentSends.mapNotNull { c ->
+                TransactionCalculation.parseQuantity(c.quantityText)?.let { q ->
+                    Triple(c.dateEpochDay, c.createdAtEpochMillis, StockHistoryEntry(c.id, ProductMovementType.CONSIGN_OUT, c.dateEpochDay, q * c.content, BigDecimal.ZERO))
                 }
             }
             var level = BigDecimal.ZERO
-            return (stored + sold).sortedWith(compareBy({ it.first }, { it.second })).map { (_, _, entry) ->
+            return (stored + sold + sent).sortedWith(compareBy({ it.first }, { it.second })).map { (_, _, entry) ->
                 level = ProductStock.level(level, ProductMovement(entry.type, entry.quantity))
                 entry.copy(stockAfter = level)
             }
         }
+
+    /** Base units at stores on consignment: sent − sold through notes − returned (DEC-029 §8). */
+    val consigned: BigDecimal
+        get() {
+            val sent = consignmentSends.sumOf { (TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO) * it.content }
+            val sold = sales.filter { it.consignmentId != null }.sumOf { (TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO) * it.content() }
+            val returned = movements.filter { it.movementType == ProductMovementType.CONSIGN_RETURN.name }.sumOf { TransactionCalculation.parseQuantity(it.quantityText) ?: BigDecimal.ZERO }
+            return sent - sold - returned
+        }
+
+    /** A note line's content snapshot; rows without one (tests, old shapes) read the product's unit. */
+    private fun ProductSaleRow.content(): BigDecimal = TransactionCalculation.parseQuantity(contentText) ?: contentOf(unit)
+}
+
+/** One consignment line as the stock reads it: [quantityText] of a unit holding [contentText] base units. */
+data class ConsignmentSendRow(
+    val id: String,
+    val productId: String,
+    val quantityText: String,
+    val contentText: String,
+    val dateEpochDay: Long,
+    val createdAtEpochMillis: Long,
+) {
+    val content: BigDecimal get() = TransactionCalculation.parseQuantity(contentText) ?: BigDecimal.ONE
 }
 
 /**
- * One line of a product's stock history: [id] is the production/count row, or the sale event for a
- * [ProductMovementType.SALE] (changed in Catatan, not here). [quantity] and [stockAfter] are base units;
+ * One line of a product's stock history: [id] is the production/count/return row, the note line of a
+ * [ProductMovementType.SALE] or the consignment line of a CONSIGN_OUT (both changed elsewhere, not here). [quantity] and [stockAfter] are base units;
  * [soldText] is the sale as recorded ("2 dus").
  */
 data class StockHistoryEntry(

@@ -42,14 +42,25 @@ data class CostRow(
     val usefulLifeMonths: Int?,
 )
 
-/** A sale of a product as the stock count reads it; see [FinanceDao.observeProductSales]. */
+/** A note line of a product as the stock count reads it; see [FinanceDao.observeProductSaleLines]. */
 data class ProductSaleRow(
+    /** The note line. */
     val id: String,
     val productId: String,
     val quantityText: String?,
     val unit: String?,
     val dateEpochDay: Long,
     val createdAtEpochMillis: Long,
+    /** The line's content snapshot; null reads the product's unit. */
+    val contentText: String? = null,
+    /** Set on a consignment sell-through: already out of stock since it was sent (DEC-029 §8). */
+    val consignmentId: String? = null,
+)
+
+/** A note line sold through a consignment, with that consignment; see [FinanceDao.observeConsignmentSoldLines]. */
+data class ConsignmentSoldLine(
+    @androidx.room.Embedded val line: SaleLineEntity,
+    val consignmentId: String,
 )
 
 /** A purchase that names a material; the newest one prices it (DEC-028 §2). */
@@ -299,8 +310,9 @@ interface FinanceDao {
     @Query("DELETE FROM products WHERE importBatchId = :batchId")
     suspend fun deleteImportedProducts(batchId: String): Int
 
-    @Query("DELETE FROM product_movements WHERE id = :id")
-    suspend fun deleteProductMovement(id: String): Int
+    /** Only production and counts are deleted from Riwayat stok; consignment returns belong to their consignment. */
+    @Query("DELETE FROM product_movements WHERE id = :id AND movementType IN ('PRODUCTION', 'ADJUSTMENT')")
+    suspend fun deleteProductionOrCount(id: String): Int
 
     /** Rows an import added, by their id prefix (`<batchId>:`), so undo removes them and nothing recorded later. */
     @Query("DELETE FROM product_movements WHERE substr(id, 1, length(:batchId) + 1) = :batchId || ':'")
@@ -310,12 +322,14 @@ interface FinanceDao {
     @Query("DELETE FROM sales WHERE importBatchId = :batchId")
     suspend fun deleteSalesForImportBatch(batchId: String): Int
 
-    /** Imported products a sale or a production/count outside the batch still uses (cleanup P3). */
+    /** Imported products a sale, note line, consignment or production/count outside the batch still uses (cleanup P3). */
     @Query(
         """
         SELECT * FROM products WHERE importBatchId = :batchId AND (
             EXISTS (SELECT 1 FROM financial_events e WHERE e.productId = products.id AND (e.importBatchId IS NULL OR e.importBatchId != :batchId))
             OR EXISTS (SELECT 1 FROM product_movements m WHERE m.productId = products.id AND substr(m.id, 1, length(:batchId) + 1) != :batchId || ':')
+            OR EXISTS (SELECT 1 FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE l.productId = products.id AND (s.importBatchId IS NULL OR s.importBatchId != :batchId))
+            OR EXISTS (SELECT 1 FROM consignment_lines l INNER JOIN consignments c ON c.id = l.consignmentId WHERE l.productId = products.id AND (c.importBatchId IS NULL OR c.importBatchId != :batchId))
         ) ORDER BY name COLLATE NOCASE
         """,
     )
@@ -398,15 +412,136 @@ interface FinanceDao {
     )
     fun observeCostRows(bookId: String): Flow<List<CostRow>>
 
-    /** Realisasi sales that name a product: product stock subtracts these (DEC-028 §4). */
+    /** Note lines of a unit's products: product stock subtracts these unless sold through a consignment (DEC-029 §8). */
     @Query(
         """
-        SELECT e.id, e.productId, e.quantityText, e.unit, e.dateEpochDay, e.createdAtEpochMillis
-        FROM financial_events e INNER JOIN books b ON b.id = e.bookId
-        WHERE e.projectId = :projectId AND e.productId IS NOT NULL AND e.type = :saleType AND b.mode = :mode
+        SELECT l.id, l.productId, l.quantityText, l.unitName AS unit, s.dateEpochDay, s.createdAtEpochMillis, l.contentText, s.consignmentId
+        FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId
+        WHERE s.projectId = :projectId
         """,
     )
-    fun observeProductSales(projectId: String, saleType: String, mode: String): Flow<List<ProductSaleRow>>
+    fun observeProductSaleLines(projectId: String): Flow<List<ProductSaleRow>>
+
+    @Query(
+        """
+        SELECT l.id, l.productId, l.quantityText, l.contentText, c.dateEpochDay, c.createdAtEpochMillis
+        FROM consignment_lines l INNER JOIN consignments c ON c.id = l.consignmentId
+        WHERE c.projectId = :projectId
+        """,
+    )
+    fun observeConsignmentSends(projectId: String): Flow<List<ConsignmentSendRow>>
+
+    // ---- Contacts, notes, consignments, supplier credit (DEC-029) ------------------------------
+
+    @Query("SELECT * FROM contacts WHERE businessId = :businessId AND archived = 0 ORDER BY name COLLATE NOCASE")
+    fun observeContacts(businessId: String): Flow<List<ContactEntity>>
+
+    /** Archived included: an old note or purchase still names its contact. */
+    @Query("SELECT * FROM contacts WHERE businessId = :businessId")
+    fun observeAllContacts(businessId: String): Flow<List<ContactEntity>>
+
+    @Query("SELECT * FROM contacts WHERE businessId IN (SELECT businessId FROM projects WHERE id = :projectId)")
+    fun observeAllContactsOfProject(projectId: String): Flow<List<ContactEntity>>
+
+    @Query("SELECT * FROM contacts WHERE id = :id")
+    suspend fun getContact(id: String): ContactEntity?
+
+    /** Archived rows included: they still hold the (business, name) unique key. */
+    @Query("SELECT * FROM contacts WHERE businessId = :businessId AND normalizedName = :normalizedName LIMIT 1")
+    suspend fun findContact(businessId: String, normalizedName: String): ContactEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertContact(contact: ContactEntity)
+
+    @Update
+    suspend fun updateContact(contact: ContactEntity)
+
+    @Query("UPDATE contacts SET archived = 1, updatedAtEpochMillis = :updatedAt WHERE id = :id")
+    suspend fun archiveContact(id: String, updatedAt: Long): Int
+
+    @Query("SELECT * FROM sales WHERE id = :id")
+    suspend fun getSale(id: String): SaleEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSale(sale: SaleEntity)
+
+    @Update
+    suspend fun updateSale(sale: SaleEntity)
+
+    /** Lines cascade; payments have no FK and are deleted by the caller. */
+    @Query("DELETE FROM sales WHERE id = :id")
+    suspend fun deleteSale(id: String): Int
+
+    @Query("SELECT * FROM sales WHERE projectId = :projectId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
+    fun observeSales(projectId: String): Flow<List<SaleEntity>>
+
+    @Query("SELECT l.* FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.projectId = :projectId ORDER BY l.saleId, l.sortOrder")
+    fun observeSaleLinesOfProject(projectId: String): Flow<List<SaleLineEntity>>
+
+    @Query("SELECT * FROM financial_events WHERE projectId = :projectId AND saleId IS NOT NULL ORDER BY dateEpochDay, createdAtEpochMillis")
+    fun observeSalePayments(projectId: String): Flow<List<FinancialEventEntity>>
+
+    @Query("SELECT * FROM sale_lines WHERE saleId = :saleId ORDER BY sortOrder")
+    suspend fun getSaleLines(saleId: String): List<SaleLineEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSaleLines(lines: List<SaleLineEntity>)
+
+    @Query("DELETE FROM sale_lines WHERE saleId = :saleId")
+    suspend fun deleteSaleLines(saleId: String)
+
+    @Query("SELECT * FROM financial_events WHERE saleId = :saleId ORDER BY dateEpochDay, createdAtEpochMillis")
+    suspend fun getSalePayments(saleId: String): List<FinancialEventEntity>
+
+    /** A note edited in the note form: its payments stop carrying one product and quantity (DEC-029 M4). */
+    @Query("UPDATE financial_events SET productId = NULL, quantityText = NULL, unit = NULL, unitPriceRupiah = NULL WHERE saleId = :saleId")
+    suspend fun clearSaleFieldsOfPayments(saleId: String)
+
+    @Query("SELECT COUNT(*) FROM sales WHERE projectId = :projectId")
+    suspend fun countSalesForProject(projectId: String): Int
+
+    @Query("SELECT COUNT(*) FROM consignments WHERE projectId = :projectId")
+    suspend fun countConsignmentsForProject(projectId: String): Int
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertConsignment(consignment: ConsignmentEntity)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertConsignmentLines(lines: List<ConsignmentLineEntity>)
+
+    @Query("SELECT * FROM consignments WHERE id = :id")
+    suspend fun getConsignment(id: String): ConsignmentEntity?
+
+    @Query("SELECT * FROM consignment_lines WHERE consignmentId = :consignmentId ORDER BY sortOrder")
+    suspend fun getConsignmentLines(consignmentId: String): List<ConsignmentLineEntity>
+
+    /** Lines of the notes that sold through [consignmentId], the note [exceptSaleId] (being edited) left out. */
+    @Query("SELECT l.* FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.consignmentId = :consignmentId AND s.id != :exceptSaleId")
+    suspend fun getConsignmentSoldLines(consignmentId: String, exceptSaleId: String): List<SaleLineEntity>
+
+    @Query("SELECT * FROM product_movements WHERE consignmentId = :consignmentId")
+    suspend fun getConsignmentReturns(consignmentId: String): List<ProductMovementEntity>
+
+    @Query("SELECT * FROM consignments WHERE projectId = :projectId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
+    fun observeConsignments(projectId: String): Flow<List<ConsignmentEntity>>
+
+    @Query("SELECT l.* FROM consignment_lines l INNER JOIN consignments c ON c.id = l.consignmentId WHERE c.projectId = :projectId ORDER BY l.consignmentId, l.sortOrder")
+    fun observeConsignmentLinesOfProject(projectId: String): Flow<List<ConsignmentLineEntity>>
+
+    @Query("SELECT l.*, s.consignmentId AS consignmentId FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.projectId = :projectId AND s.consignmentId IS NOT NULL")
+    fun observeConsignmentSoldLines(projectId: String): Flow<List<ConsignmentSoldLine>>
+
+    @Query("SELECT m.* FROM product_movements m INNER JOIN consignments c ON c.id = m.consignmentId WHERE c.projectId = :projectId")
+    fun observeConsignmentReturns(projectId: String): Flow<List<ProductMovementEntity>>
+
+    @Query("SELECT * FROM financial_events WHERE businessId = :businessId AND type = 'CREDIT_PURCHASE' ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
+    fun observeCreditPurchases(businessId: String): Flow<List<FinancialEventEntity>>
+
+    @Query("SELECT * FROM financial_events WHERE businessId = :businessId AND settlesEventId IS NOT NULL ORDER BY dateEpochDay, createdAtEpochMillis")
+    fun observeSupplierPayments(businessId: String): Flow<List<FinancialEventEntity>>
+
+    @Query("SELECT * FROM financial_events WHERE settlesEventId = :purchaseId")
+    suspend fun getSupplierPayments(purchaseId: String): List<FinancialEventEntity>
 
     /**
      * Oldest first, so the last row per material is its current price. Same order as

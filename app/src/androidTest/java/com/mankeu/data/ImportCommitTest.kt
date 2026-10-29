@@ -89,9 +89,13 @@ class ImportCommitTest {
         assertEquals(product.id to "450", sale.productId to sale.quantityText)
         // Import is bulk entry into the selected unit, stock included (schema 10).
         assertEquals(listOf("Gula" to projectId), database.stockDao().getStockItems(businessId, projectId).map { it.name to it.projectId })
+        // The product sale is a paid note with the row as its payment (DEC-029 M4), in the batch.
+        val note = dao.getSale(LegacySaleShape.saleId(sale.id))!!
+        assertEquals(dao.getImportBatches(projectId).single().id to sale.id.let(LegacySaleShape::saleId), note.importBatchId to sale.saleId)
         val summary = repository.accountingSummary(books.getValue(BookMode.REALIZATION).id).first()
-        // Sale 4.5 jt minus rent 0.5 jt; the 5 jt capital moves cash, not profit.
-        assertEquals(4_000_000L, summary.profitRupiah)
+        // Interim until Task 4 (DEC-029): profit still reads postings, where a note payment is Kas / Piutang,
+        // so only the 0.5 jt rent shows; the 5 jt capital moves cash, not profit.
+        assertEquals(-500_000L, summary.profitRupiah)
         assertEquals(9_000_000L, summary.cashBalanceRupiah)
 
         repository.undoImportBatch(dao.getImportBatches(projectId).single().id)
@@ -245,32 +249,23 @@ class ImportCommitTest {
     }
 
     /**
-     * Review I-1: an import made before schema 14 whose product sale the migration turned into a note
-     * (the note carries the event's batch id). Undo removes the note and its line with the sale.
+     * Review I-1 / DEC-029 M4: an imported product sale becomes a note carrying the batch id, as a
+     * migrated one does. Undo removes the note and its line with the sale.
      */
     @Test
-    fun undoRemovesTheNotesMigratedFromTheImportsSales() = runBlocking {
+    fun undoRemovesTheNotesMadeFromTheImportsSales() = runBlocking {
         repository.commitImport(businessId, projectId, keripik())
         val batch = dao.getImportBatches(projectId).single().id
-        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
-        val sale = dao.getEventsForBook(actual).single { it.description == "Jual keripik" }
         val db = database.openHelper.writableDatabase
-        // What Migration13To14 writes for that sale.
-        db.execSQL(
-            "INSERT INTO sales (id, businessId, projectId, dateEpochDay, discountRupiah, notes, hppEstimated, importBatchId, createdAtEpochMillis, updatedAtEpochMillis) VALUES (?, ?, ?, ?, 0, '', 1, ?, 0, 0)",
-            arrayOf<Any>(LegacySaleShape.saleId(sale.id), businessId, projectId, sale.dateEpochDay, batch),
-        )
-        db.execSQL(
-            "INSERT INTO sale_lines (id, saleId, productId, unitName, contentText, quantityText, unitPriceRupiah, totalRupiah, hppRupiah, sortOrder) VALUES (?, ?, ?, 'dus', '10', '3', 45000, 135000, 0, 0)",
-            arrayOf<Any>(LegacySaleShape.lineId(sale.id), LegacySaleShape.saleId(sale.id), sale.productId!!),
-        )
+        fun counts() = db.query("SELECT (SELECT COUNT(*) FROM sales WHERE importBatchId = '$batch'), (SELECT COUNT(*) FROM sale_lines)").use { c ->
+            assertTrue(c.moveToFirst())
+            c.getInt(0) to c.getInt(1)
+        }
+        assertEquals(1 to 1, counts())
 
         repository.undoImportBatch(batch)
 
-        db.query("SELECT (SELECT COUNT(*) FROM sales), (SELECT COUNT(*) FROM sale_lines)").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals(0 to 0, c.getInt(0) to c.getInt(1))
-        }
+        assertEquals(0 to 0, counts())
         assertTrue(dao.getProducts(projectId).isEmpty())
     }
 

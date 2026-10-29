@@ -23,7 +23,10 @@ import com.mankeu.domain.PostedRecord
 import com.mankeu.domain.PostingSide
 import com.mankeu.domain.PostingReportCalculator
 import com.mankeu.domain.ProductMovementType
+import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.RecordStockMovementUseCase
+import com.mankeu.domain.SaleLineInput
+import com.mankeu.domain.SalesMath
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockItemEntity
 import com.mankeu.domain.StockMovementType
@@ -69,6 +72,10 @@ data class EventDraft(
     val usefulLifeMonths: Int? = null,
     /** The material an expense bought (spec #20). */
     val stockItemId: String? = null,
+    /** Supplier of a CREDIT_PURCHASE (required there, F2-5), or the contact of any event. */
+    val contactId: String? = null,
+    /** CREDIT_PURCHASE only: when the supplier expects payment. */
+    val dueDate: LocalDate? = null,
 )
 
 data class BudgetItemDraft(
@@ -134,17 +141,18 @@ class FinanceRepository(private val database: AppDatabase) {
 
     /** Products of a business unit with sale units, recipe and stock movements (spec #5 #6 #9). */
     fun products(projectId: String): Flow<List<ProductRecord>> = combine(
-        dao.observeProducts(projectId),
-        dao.observeProductUnits(projectId),
-        dao.observeRecipeLines(projectId),
+        combine(dao.observeProducts(projectId), dao.observeProductUnits(projectId), dao.observeRecipeLines(projectId), ::Triple),
         dao.observeProductMovements(projectId),
-        dao.observeProductSales(projectId, FinancialEventType.CASH_INCOME.name, BookMode.REALIZATION.name),
-    ) { products, units, recipe, movements, sales ->
+        // Sales come from note lines (DEC-029 §8), consignment sends from consignment lines.
+        dao.observeProductSaleLines(projectId),
+        dao.observeConsignmentSends(projectId),
+    ) { (products, units, recipe), movements, sales, sends ->
         val unitsOf = units.groupBy { it.productId }
         val recipeOf = recipe.groupBy { it.productId }
         val movementsOf = movements.groupBy { it.productId }
         val salesOf = sales.groupBy { it.productId }
-        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty(), salesOf[it.id].orEmpty()) }
+        val sendsOf = sends.groupBy { it.productId }
+        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty(), salesOf[it.id].orEmpty(), sendsOf[it.id].orEmpty()) }
     }
     fun importBatches(projectId: String): Flow<List<ImportBatchEntity>> = dao.observeImportBatches(projectId)
 
@@ -406,10 +414,11 @@ class FinanceRepository(private val database: AppDatabase) {
 
     /**
      * Deletes one production or stock count from a product's Riwayat stok (cleanup P1); the stock is
-     * derived, so it follows at once. Correcting one is delete, then record again. Sales are changed in Catatan.
+     * derived, so it follows at once. Correcting one is delete, then record again. Sales are changed in Catatan,
+     * consignment sends and returns in the consignment (they also move what is at the store).
      */
     suspend fun deleteProductMovement(id: String) = database.withTransaction {
-        require(dao.deleteProductMovement(id) == 1) { "Catatan produksi atau hitung stok tidak ditemukan." }
+        require(dao.deleteProductionOrCount(id) == 1) { "Catatan produksi atau hitung stok tidak ditemukan." }
     }
 
     suspend fun archiveProduct(id: String) = database.withTransaction { dao.archiveProduct(id, System.currentTimeMillis()) }
@@ -559,7 +568,8 @@ class FinanceRepository(private val database: AppDatabase) {
 
     private suspend fun projectIsEmpty(projectId: String): Boolean =
         dao.countEventsForProject(projectId) == 0 && dao.countBudgetItemsForProject(projectId) == 0 &&
-            stockDao.countStockItemsOfProject(projectId) == 0
+            stockDao.countStockItemsOfProject(projectId) == 0 && dao.countSalesForProject(projectId) == 0 &&
+            dao.countConsignmentsForProject(projectId) == 0
 
     suspend fun createCategory(
         businessId: String,
@@ -673,10 +683,15 @@ class FinanceRepository(private val database: AppDatabase) {
         dao.archiveBudgetItem(id, System.currentTimeMillis())
     }
 
+    /**
+     * Records a transaction. Until Task 5 removes the product picker from the income form, a Realisasi
+     * sale naming a product becomes a paid one-line note with this event as its payment (DEC-029 M4),
+     * so no product sale bypasses notes.
+     */
     suspend fun recordEvent(draft: EventDraft): String = database.withTransaction {
         requireValid(draft)
         val event = draft.toEvent().withPurchasePrice()
-        insertEventWithJournal(event)
+        insertEventWithAutoNote(event)
         event.id
     }
 
@@ -688,17 +703,53 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun updateEvent(eventId: String, draft: EventDraft) = database.withTransaction {
         val old = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
         requireValid(draft)
-        // The form does not carry the phase-2 links (DEC-029); an edit keeps them, so a note payment
+        // The old form does not carry the phase-2 links (DEC-029); an edit keeps them, so a note payment
         // stays a payment (Kas / Piutang) instead of becoming revenue a second time.
-        val event = draft.copy(importBatchId = old.importBatchId).toEvent().withPurchasePrice().copy(
+        var event = draft.copy(importBatchId = old.importBatchId).toEvent().withPurchasePrice().copy(
             id = old.id,
             saleId = old.saleId,
-            contactId = old.contactId,
-            dueDate = old.dueDateEpochDay?.let(LocalDate::ofEpochDay),
+            contactId = draft.contactId ?: old.contactId,
+            dueDate = if (draft.type == FinancialEventType.CREDIT_PURCHASE) draft.dueDate else old.dueDateEpochDay?.let(LocalDate::ofEpochDay),
             settlesEventId = old.settlesEventId,
         )
+        if (old.type == FinancialEventType.CREDIT_PURCHASE.name) {
+            val paid = dao.getSupplierPayments(old.id).sumOf { it.amountRupiah }
+            require(paid == 0L || event.type == FinancialEventType.CREDIT_PURCHASE) { "Belanja tempo ini sudah ada pembayarannya. Hapus pembayarannya dulu untuk mengubah jenisnya." }
+            require(event.amountRupiah >= paid) { "Total belanja tidak boleh lebih kecil dari yang sudah dibayar ${rupiah(paid)}." }
+        }
+        old.settlesEventId?.let { purchaseId ->
+            require(event.type == FinancialEventType.CASH_EXPENSE) { "Ini pembayaran utang; jenisnya tetap uang keluar." }
+            val purchase = dao.getEvent(purchaseId)
+            if (purchase != null) {
+                val left = purchase.amountRupiah - dao.getSupplierPayments(purchaseId).filter { it.id != old.id }.sumOf { it.amountRupiah }
+                require(event.amountRupiah <= left) { "Pembayaran ${rupiah(event.amountRupiah)} melebihi sisa utang ${rupiah(left)}." }
+            }
+        }
+        val sale = old.saleId?.let { dao.getSale(it) }
+        val autoNote = sale?.takeIf { isAutoPayment(old, it) }
+        if (sale != null && autoNote == null) {
+            // DEC-029 M3: a payment of a note stays a payment of that note, within what is owed.
+            require(event.type == FinancialEventType.CASH_INCOME) { "Ini pembayaran nota; jenisnya tetap uang masuk." }
+            require(sameSaleFields(old, event)) { "Ini pembayaran nota. Ubah produk dan jumlahnya lewat notanya." }
+            val left = saleTotal(sale) - dao.getSalePayments(sale.id).filter { it.id != old.id }.sumOf { it.amountRupiah }
+            require(event.amountRupiah <= left) { "Pembayaran ${rupiah(event.amountRupiah)} melebihi sisa tagihan nota ${rupiah(left)}." }
+        }
         dao.deleteEvent(old.id)
-        insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis = old.createdAtEpochMillis)
+        if (autoNote != null) {
+            // M4: the note follows its payment; it is rebuilt below if this is still a product sale.
+            dao.deleteSale(autoNote.id)
+            event = event.copy(saleId = null)
+        }
+        insertEventWithAutoNote(event, createdAtEpochMillis = old.createdAtEpochMillis)
+    }
+
+    /** Whether an edit leaves a note payment's product, quantity and unit as they were (M3). */
+    private fun sameSaleFields(old: FinancialEventEntity, event: MoneyEvent): Boolean {
+        val oldQuantity = TransactionCalculation.parseQuantity(old.quantityText)
+        val newQuantity = TransactionCalculation.parseQuantity(event.quantityText)
+        return old.productId == event.productId &&
+            (oldQuantity == null && newQuantity == null || oldQuantity != null && newQuantity != null && oldQuantity.compareTo(newQuantity) == 0) &&
+            old.unit.orEmpty().trim().equals(event.unit.orEmpty().trim(), ignoreCase = true)
     }
 
     private suspend fun requireValid(draft: EventDraft) {
@@ -712,8 +763,23 @@ class FinanceRepository(private val database: AppDatabase) {
             val category = dao.getCategory(draft.categoryId) ?: error("Kategori tidak ditemukan.")
             require(category.businessId == draft.businessId) { "Kategori berasal dari usaha yang berbeda." }
         }
+        if (draft.contactId != null) {
+            val contact = dao.getContact(draft.contactId)
+            require(contact != null && contact.businessId == draft.businessId) { "Kontak tidak ditemukan di usaha ini." }
+        }
+        require(draft.dueDate == null || draft.type == FinancialEventType.CREDIT_PURCHASE) { "Jatuh tempo hanya untuk belanja yang dibayar nanti." }
+        if (draft.type == FinancialEventType.CREDIT_PURCHASE) {
+            // F2-5 / DEC-029 §3: a credit purchase is a cost owed to a supplier, in the Realisasi book.
+            require(book.mode == BookMode.REALIZATION.name) { "Belanja dibayar nanti hanya dicatat di Realisasi." }
+            require(draft.contactId != null) { "Pilih pemasok untuk belanja yang dibayar nanti." }
+            draft.categoryId?.let { dao.getCategory(it) }?.let { category ->
+                require(CategoryRole.parse(category.role) == CategoryRole.EXPENSE) { "Belanja dibayar nanti hanya untuk kategori biaya." }
+            }
+            require(draft.dueDate == null || !draft.dueDate.isBefore(draft.date)) { "Jatuh tempo tidak boleh sebelum tanggal belanja." }
+        }
         if (draft.stockItemId != null) {
-            require(draft.type == FinancialEventType.CASH_EXPENSE) { "Bahan hanya bisa dipilih untuk belanja (uang keluar)." }
+            // A credit purchase prices its material too (DEC-029 §3, spec #20).
+            require(draft.type == FinancialEventType.CASH_EXPENSE || draft.type == FinancialEventType.CREDIT_PURCHASE) { "Bahan hanya bisa dipilih untuk belanja (uang keluar)." }
             val material = stockDao.getStockItem(draft.stockItemId)
             require(material != null && material.businessId == draft.businessId) { "Bahan tidak ditemukan di usaha ini." }
             require(TransactionCalculation.parseQuantity(draft.quantityText) != null) { "Isi jumlah ${material.name} yang dibeli." }
@@ -800,6 +866,450 @@ class FinanceRepository(private val database: AppDatabase) {
         RecordStockMovementUseCase(stockDao).execute(stockItemId, type, quantity, date, notes).getOrThrow()
     }
 
+    // ---- Contacts (F2-2, DEC-029 §9) ----------------------------------------------------------
+
+    /** Active contacts of a business, by name. */
+    fun contacts(businessId: String): Flow<List<ContactEntity>> = dao.observeContacts(businessId)
+
+    /**
+     * Creates or edits a contact. Names are unique per business whatever their case; at least one role.
+     * A new contact with the name of an archived one brings that one back, since it holds the name.
+     */
+    suspend fun saveContact(businessId: String, id: String?, draft: ContactDraft): String = database.withTransaction {
+        val name = draft.name.trim().also { require(it.isNotBlank()) { "Nama kontak wajib diisi." } }
+        require(draft.isCustomer || draft.isSupplier) { "Pilih minimal satu peran: pelanggan atau pemasok." }
+        requireNotNull(dao.getBusiness(businessId)) { "Usaha tidak ditemukan." }
+        val key = normalize(name).ifBlank { name.lowercase(Locale.forLanguageTag("id-ID")) }
+        val existing = id?.let { dao.getContact(it) ?: error("Kontak tidak ditemukan.") }
+        require(existing == null || existing.businessId == businessId) { "Kontak berasal dari usaha lain." }
+        val twin = dao.findContact(businessId, key)
+        val now = System.currentTimeMillis()
+        fun ContactEntity.filled() = copy(
+            name = name,
+            normalizedName = key,
+            phone = draft.phone.trim().ifBlank { null },
+            address = draft.address.trim().ifBlank { null },
+            notes = draft.notes.trim().ifBlank { null },
+            isCustomer = draft.isCustomer,
+            isSupplier = draft.isSupplier,
+            archived = false,
+            updatedAtEpochMillis = now,
+        )
+        when {
+            existing != null -> {
+                require(twin == null || twin.id == existing.id) { "Kontak \"$name\" sudah ada." }
+                dao.updateContact(existing.filled())
+                existing.id
+            }
+            twin != null -> {
+                require(twin.archived) { "Kontak \"$name\" sudah ada." }
+                dao.updateContact(twin.filled())
+                twin.id
+            }
+            else -> UUID.randomUUID().toString().also { newId ->
+                dao.insertContact(ContactEntity(id = newId, businessId = businessId, name = name, normalizedName = key, createdAtEpochMillis = now).filled())
+            }
+        }
+    }
+
+    /** Contacts are archived, never deleted: notes and purchases keep naming them (DEC-029 §9). */
+    suspend fun archiveContact(id: String) = database.withTransaction {
+        require(dao.archiveContact(id, System.currentTimeMillis()) == 1) { "Kontak tidak ditemukan." }
+    }
+
+    // ---- Sale notes (spec #17, F2-3, F2-7, DEC-029 §2 §6 §7) ----------------------------------
+
+    /** Notes of a unit, newest first, with lines, payments and customer. */
+    fun sales(projectId: String): Flow<List<SaleRecord>> = combine(
+        dao.observeSales(projectId),
+        dao.observeSaleLinesOfProject(projectId),
+        dao.observeSalePayments(projectId),
+        dao.observeAllContactsOfProject(projectId),
+    ) { sales, lines, payments, contacts ->
+        val linesOf = lines.groupBy { it.saleId }
+        val paymentsOf = payments.groupBy { it.saleId }
+        val contactOf = contacts.associateBy { it.id }
+        sales.map { s -> SaleRecord(s, linesOf[s.id].orEmpty(), paymentsOf[s.id].orEmpty().map { it.toDomain() }, s.contactId?.let(contactOf::get)) }
+    }
+
+    /**
+     * Creates ([id] null) or edits a note in one transaction. Lines, content and HPP are snapshots; an
+     * edit replaces the lines and recomputes HPP at today's cost (§7) and keeps the payments, so
+     * [SaleDraft.paidNowRupiah] only applies when creating. A consignment note keeps its store, and
+     * its lines stay within what is left at the store.
+     */
+    suspend fun saveSale(projectId: String, id: String?, draft: SaleDraft): String = database.withTransaction {
+        val project = dao.getProject(projectId) ?: error("Unit usaha tidak ditemukan.")
+        val existing = id?.let { dao.getSale(it) ?: error("Nota tidak ditemukan.") }
+        require(existing == null || existing.projectId == projectId) { "Nota berasal dari unit usaha lain." }
+        require(draft.lines.isNotEmpty()) { "Isi minimal satu baris produk." }
+        val consignment = existing?.consignmentId?.let { dao.getConsignment(it) }
+        val lines = if (consignment == null) {
+            draft.lines.map { noteLine(project, it) }
+        } else {
+            require(draft.contactId == consignment.contactId) { "Nota titip tetap atas nama toko yang dititipi." }
+            val byProduct = dao.getConsignmentLines(consignment.id).associateBy { it.productId }
+            draft.lines.map { l ->
+                val sent = byProduct[l.productId] ?: error("Produk ini tidak ada di titipan toko tersebut.")
+                require(l.unitName.trim().equals(sent.unitName, ignoreCase = true)) { "Nota titip memakai satuan titipan: ${sent.unitName}." }
+                val quantity = requireNotNull(TransactionCalculation.parseQuantity(l.quantityText)) { "Jumlah ${productName(l.productId)} harus angka lebih dari nol." }
+                require(l.unitPriceRupiah > 0) { "Harga ${productName(l.productId)} per ${sent.unitName} harus lebih dari nol." }
+                NoteLine(l.productId, sent.unitName, contentOf(sent.contentText), quantity, l.unitPriceRupiah)
+            }.also { requireWithinConsignment(consignment, it, exceptSaleId = existing.id) }
+        }
+        writeSale(project, existing, draft, consignment?.id, lines)
+    }
+
+    /** A payment of a note: refused above what is still owed. */
+    suspend fun recordSalePayment(saleId: String, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
+        val sale = dao.getSale(saleId) ?: error("Nota tidak ditemukan.")
+        require(amountRupiah > 0) { "Nominal pembayaran harus lebih dari nol." }
+        val outstanding = SalesMath.outstanding(saleTotal(sale), dao.getSalePayments(saleId).sumOf { it.amountRupiah })
+        require(outstanding > 0) { "Nota ini sudah lunas." }
+        require(amountRupiah <= outstanding) { "Pembayaran ${rupiah(amountRupiah)} melebihi sisa tagihan ${rupiah(outstanding)}." }
+        insertSalePayment(sale, amountRupiah, date)
+    }
+
+    /** Deletes a note with its payments; returns how many payments went with it (the UI names them before). */
+    suspend fun deleteSale(id: String): Int = database.withTransaction {
+        val payments = dao.getSalePayments(id)
+        payments.forEach { dao.deleteEvent(it.id) }
+        require(dao.deleteSale(id) == 1) { "Nota tidak ditemukan." }
+        payments.size
+    }
+
+    private data class NoteLine(val productId: String, val unitName: String, val content: BigDecimal, val quantity: BigDecimal, val unitPriceRupiah: Long)
+
+    private suspend fun productName(productId: String) = dao.getProduct(productId)?.name ?: "produk"
+
+    private fun contentOf(text: String) = TransactionCalculation.parseQuantity(text) ?: BigDecimal.ONE
+
+    /** A line of a regular note: a product of this unit, sold by its base unit or one of its sale units. */
+    private suspend fun noteLine(project: ProjectEntity, line: SaleLineDraft): NoteLine {
+        val record = productRecord(line.productId)
+        require(record != null && record.product.projectId == project.id) { "Produk tidak ditemukan di unit usaha ini." }
+        val product = record.product
+        val known = (listOf(product.unit) + record.units.sortedBy { it.sortOrder }.map { it.name }).distinct()
+        val unit = known.firstOrNull { it.equals(line.unitName.trim(), ignoreCase = true) }
+            ?: throw IllegalArgumentException("\"${line.unitName.trim()}\" bukan satuan jual ${product.name}. Pilih: ${known.joinToString()}.")
+        val quantity = requireNotNull(TransactionCalculation.parseQuantity(line.quantityText)) { "Jumlah ${product.name} harus angka lebih dari nol." }
+        require(line.unitPriceRupiah > 0) { "Harga ${product.name} per $unit harus lebih dari nol." }
+        return NoteLine(product.id, unit, record.contentOf(unit), quantity, line.unitPriceRupiah)
+    }
+
+    private suspend fun productRecord(productId: String): ProductRecord? =
+        dao.getProduct(productId)?.let { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id)) }
+
+    /** Writes a validated note: totals through [SalesMath], HPP per line at today's cost (spec #6), a payment when created paid. */
+    private suspend fun writeSale(project: ProjectEntity, existing: SaleEntity?, draft: SaleDraft, consignmentId: String?, lines: List<NoteLine>): String {
+        val inputs = lines.map { SaleLineInput(it.productId, it.quantity, it.unitPriceRupiah, 0) }
+        val subtotal = SalesMath.subtotal(inputs)
+        require(draft.discountRupiah in 0..subtotal) { "Diskon harus antara Rp0 dan subtotal ${rupiah(subtotal)}." }
+        val total = SalesMath.total(inputs, draft.discountRupiah)
+        val alreadyPaid = existing?.let { s -> dao.getSalePayments(s.id).sumOf { it.amountRupiah } }
+        if (alreadyPaid == null) {
+            require(draft.paidNowRupiah in 0..total) { "Dibayar sekarang harus antara Rp0 dan total ${rupiah(total)}." }
+        } else {
+            require(total >= alreadyPaid) { "Total nota ${rupiah(total)} lebih kecil dari yang sudah dibayar ${rupiah(alreadyPaid)}. Hapus pembayarannya dulu." }
+        }
+        val paid = alreadyPaid ?: draft.paidNowRupiah
+        val contact = draft.contactId?.let { dao.getContact(it) }
+        require(draft.contactId == null || contact?.businessId == project.businessId) { "Pelanggan tidak ditemukan di usaha ini." }
+        // F2-3: a note that is not fully paid needs a customer; a paid one may be "Umum".
+        require(paid >= total || contact != null) { "Pilih pelanggan untuk nota yang belum lunas." }
+        require(draft.dueDate == null || !draft.dueDate.isBefore(draft.date)) { "Jatuh tempo tidak boleh sebelum tanggal nota." }
+
+        val prices = materialPrices(project.businessId)
+        val now = System.currentTimeMillis()
+        val saleId = existing?.id ?: UUID.randomUUID().toString()
+        val sale = SaleEntity(
+            id = saleId,
+            businessId = project.businessId,
+            projectId = project.id,
+            contactId = contact?.id,
+            dateEpochDay = draft.date.toEpochDay(),
+            dueDateEpochDay = draft.dueDate?.toEpochDay(),
+            discountRupiah = draft.discountRupiah,
+            notes = draft.notes.trim(),
+            consignmentId = consignmentId,
+            // An edit recomputes HPP at today's cost, so it is no longer the migration's estimate (§7).
+            hppEstimated = false,
+            importBatchId = existing?.importBatchId,
+            createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
+            updatedAtEpochMillis = now,
+        )
+        val costs = mutableMapOf<String, Pair<Long, BigDecimal>>()
+        val entities = lines.mapIndexed { index, l ->
+            val (batchCost, batchYield) = costs.getOrPut(l.productId) {
+                val spec = requireNotNull(productRecord(l.productId)).spec
+                ProductCosting.cost(spec, prices).batchCostRupiah to spec.batchYield
+            }
+            SaleLineEntity(
+                id = UUID.randomUUID().toString(),
+                saleId = saleId,
+                productId = l.productId,
+                unitName = l.unitName,
+                contentText = l.content.stripTrailingZeros().toPlainString(),
+                quantityText = l.quantity.stripTrailingZeros().toPlainString(),
+                unitPriceRupiah = l.unitPriceRupiah,
+                totalRupiah = SalesMath.lineTotal(l.quantity, l.unitPriceRupiah),
+                hppRupiah = ProductCosting.hpp(batchCost, batchYield, l.content * l.quantity),
+                sortOrder = index,
+            )
+        }
+        if (existing == null) {
+            dao.insertSale(sale)
+        } else {
+            dao.updateSale(sale)
+            dao.deleteSaleLines(saleId)
+            // Edited here, its payments are plain payments: an old-form product sale (DEC-029 M4) stops
+            // following its payment, and the payment no longer claims one product and quantity.
+            dao.clearSaleFieldsOfPayments(saleId)
+        }
+        dao.insertSaleLines(entities)
+        if (existing == null && draft.paidNowRupiah > 0) insertSalePayment(sale, draft.paidNowRupiah, draft.date)
+        return saleId
+    }
+
+    private suspend fun saleTotal(sale: SaleEntity) = dao.getSaleLines(sale.id).sumOf { it.totalRupiah } - sale.discountRupiah
+
+    /** A note payment: uang masuk with the note's id, Kas / Piutang (DEC-029 §2), in the unit's Realisasi book. */
+    private suspend fun insertSalePayment(sale: SaleEntity, amountRupiah: Long, date: LocalDate): String {
+        val customer = sale.contactId?.let { dao.getContact(it)?.name } ?: "Umum"
+        val event = MoneyEvent(
+            id = UUID.randomUUID().toString(),
+            businessId = sale.businessId,
+            projectId = sale.projectId,
+            bookId = ensureBookPair(sale.projectId).getValue(BookMode.REALIZATION).id,
+            type = FinancialEventType.CASH_INCOME,
+            amountRupiah = amountRupiah,
+            date = date,
+            description = "Bayar nota $customer",
+            category = SALE_PAYMENT_CATEGORY,
+            saleId = sale.id,
+            contactId = sale.contactId,
+        )
+        insertEventWithJournal(event)
+        return event.id
+    }
+
+    /**
+     * DEC-029 M4: the paid one-line note an old-form product sale becomes (same shape as F2-4, with the
+     * HPP at today's cost, not estimated). [event] already carries `saleId = <eventId>-s`.
+     */
+    private suspend fun insertAutoNote(event: MoneyEvent, createdAtEpochMillis: Long) {
+        val (sale, line) = LegacySaleShape.convert(
+            LegacySaleShape.OldSale(
+                eventId = event.id,
+                businessId = event.businessId,
+                projectId = event.projectId,
+                productId = requireNotNull(event.productId),
+                dateEpochDay = event.date.toEpochDay(),
+                createdAtEpochMillis = createdAtEpochMillis,
+                amountRupiah = event.amountRupiah,
+                quantityText = event.quantityText,
+                unit = event.unit,
+                unitPriceRupiah = event.unitPriceRupiah,
+                importBatchId = event.importBatchId,
+            ),
+            productRecord(event.productId),
+            materialPrices(event.businessId),
+        )
+        dao.insertSale(sale.copy(hppEstimated = false))
+        dao.insertSaleLines(listOf(line))
+    }
+
+    /** An old-form product sale in a Realisasi book (DEC-029 M4); Proyeksi rows never were stock. */
+    private suspend fun isProductSale(event: MoneyEvent): Boolean =
+        event.type == FinancialEventType.CASH_INCOME && event.productId != null &&
+            dao.getBookById(event.bookId)?.mode == BookMode.REALIZATION.name
+
+    /** The payment an M4 note was made for, so the old form's Ubah/Hapus act on the whole sale. */
+    private fun isAutoPayment(event: FinancialEventEntity, sale: SaleEntity) =
+        sale.id == LegacySaleShape.saleId(event.id) && !sale.hppEstimated && event.productId != null
+
+    /** Inserts [event]; an old-form product sale also gets its note (DEC-029 M4). */
+    private suspend fun insertEventWithAutoNote(event: MoneyEvent, createdAtEpochMillis: Long = System.currentTimeMillis()) {
+        if (event.saleId == null && isProductSale(event)) {
+            val linked = event.copy(saleId = LegacySaleShape.saleId(event.id))
+            insertEventAndJournal(linked, LedgerPolicy.journalFor(linked), createdAtEpochMillis)
+            insertAutoNote(linked, createdAtEpochMillis)
+        } else {
+            insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis)
+        }
+    }
+
+    // ---- Supplier credit (F2-5, DEC-029 §3) ---------------------------------------------------
+
+    /** Credit purchases of a business with their payments and supplier, newest first. */
+    fun payables(businessId: String): Flow<List<PayableRecord>> = combine(
+        dao.observeCreditPurchases(businessId),
+        dao.observeSupplierPayments(businessId),
+        dao.observeAllContacts(businessId),
+    ) { purchases, payments, contacts ->
+        val paymentsOf = payments.groupBy { it.settlesEventId }
+        val contactOf = contacts.associateBy { it.id }
+        purchases.map { p -> PayableRecord(p.toDomain(), paymentsOf[p.id].orEmpty().map { it.toDomain() }, p.contactId?.let(contactOf::get)) }
+    }
+
+    /** Pays a credit purchase: uang keluar in the purchase's category, Utang / Kas; refused above what is owed. */
+    suspend fun recordSupplierPayment(purchaseEventId: String, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
+        val purchase = dao.getEvent(purchaseEventId)?.takeIf { it.type == FinancialEventType.CREDIT_PURCHASE.name } ?: error("Belanja tempo tidak ditemukan.")
+        require(amountRupiah > 0) { "Nominal pembayaran harus lebih dari nol." }
+        val outstanding = SalesMath.outstanding(purchase.amountRupiah, dao.getSupplierPayments(purchase.id).sumOf { it.amountRupiah })
+        require(outstanding > 0) { "Belanja tempo ini sudah lunas." }
+        require(amountRupiah <= outstanding) { "Pembayaran ${rupiah(amountRupiah)} melebihi sisa utang ${rupiah(outstanding)}." }
+        val supplier = purchase.contactId?.let { dao.getContact(it)?.name }
+        val event = MoneyEvent(
+            id = UUID.randomUUID().toString(),
+            businessId = purchase.businessId,
+            projectId = purchase.projectId,
+            bookId = purchase.bookId,
+            type = FinancialEventType.CASH_EXPENSE,
+            amountRupiah = amountRupiah,
+            date = date,
+            description = listOfNotNull("Bayar utang", supplier).joinToString(" "),
+            category = purchase.category,
+            categoryId = purchase.categoryId,
+            contactId = purchase.contactId,
+            settlesEventId = purchase.id,
+        )
+        insertEventWithJournal(event)
+        event.id
+    }
+
+    // ---- Consignment (spec #7, F2-6, DEC-029 §8) ----------------------------------------------
+
+    /** Consignments of a unit with what is left at each store per line; [balances] sums them per store and product. */
+    fun consignments(projectId: String): Flow<List<ConsignmentRecord>> = combine(
+        dao.observeConsignments(projectId),
+        dao.observeConsignmentLinesOfProject(projectId),
+        dao.observeConsignmentSoldLines(projectId),
+        dao.observeConsignmentReturns(projectId),
+        dao.observeAllContactsOfProject(projectId),
+    ) { consignments, lines, sold, returns, contacts ->
+        val linesOf = lines.groupBy { it.consignmentId }
+        val soldOf = sold.groupBy { it.consignmentId to it.line.productId }
+        val returnedOf = returns.groupBy { it.consignmentId to it.productId }
+        val contactOf = contacts.associateBy { it.id }
+        consignments.map { c ->
+            ConsignmentRecord(
+                consignment = c,
+                contact = contactOf[c.contactId],
+                lines = linesOf[c.id].orEmpty().map { l ->
+                    ConsignmentLineState(
+                        line = l,
+                        sentBase = base(l.quantityText, l.contentText),
+                        soldBase = soldOf[c.id to l.productId].orEmpty().fold(BigDecimal.ZERO) { sum, s -> sum + base(s.line.quantityText, s.line.contentText) },
+                        returnedBase = returnedOf[c.id to l.productId].orEmpty().fold(BigDecimal.ZERO) { sum, m -> sum + (TransactionCalculation.parseQuantity(m.quantityText) ?: BigDecimal.ZERO) },
+                    )
+                },
+            )
+        }
+    }
+
+    private fun base(quantityText: String, contentText: String) =
+        (TransactionCalculation.parseQuantity(quantityText) ?: BigDecimal.ZERO) * contentOf(contentText)
+
+    /** Sends products to a store: they leave the warehouse stock and count as consigned (DEC-029 §8). */
+    suspend fun sendConsignment(projectId: String, contactId: String, date: LocalDate, lines: List<ConsignmentLineDraft>): String = database.withTransaction {
+        val project = dao.getProject(projectId) ?: error("Unit usaha tidak ditemukan.")
+        val store = dao.getContact(contactId)
+        require(store != null && store.businessId == project.businessId) { "Toko tidak ditemukan di usaha ini." }
+        require(lines.isNotEmpty()) { "Isi minimal satu produk yang dititipkan." }
+        require(lines.map { it.productId }.distinct().size == lines.size) { "Satu produk cukup satu baris dalam satu titipan." }
+        val checked = lines.map { l ->
+            require(l.priceRupiah > 0) { "Harga setor ${productName(l.productId)} per ${l.unitName.trim()} harus lebih dari nol." }
+            noteLine(project, SaleLineDraft(l.productId, l.unitName, l.quantityText, l.priceRupiah))
+        }
+        val now = System.currentTimeMillis()
+        val id = UUID.randomUUID().toString()
+        dao.insertConsignment(ConsignmentEntity(id = id, businessId = project.businessId, projectId = projectId, contactId = store.id, dateEpochDay = date.toEpochDay(), createdAtEpochMillis = now))
+        dao.insertConsignmentLines(
+            checked.mapIndexed { index, l ->
+                ConsignmentLineEntity(
+                    id = UUID.randomUUID().toString(),
+                    consignmentId = id,
+                    productId = l.productId,
+                    unitName = l.unitName,
+                    contentText = l.content.stripTrailingZeros().toPlainString(),
+                    quantityText = l.quantity.stripTrailingZeros().toPlainString(),
+                    priceRupiah = lines[index].priceRupiah,
+                    sortOrder = index,
+                )
+            },
+        )
+        id
+    }
+
+    /**
+     * The store reports sold goods: a note to the store with the consignment's prices and today's HPP
+     * (F2-6). Its lines do not take stock again. Refused above what is left at the store.
+     */
+    suspend fun reportConsignmentSold(consignmentId: String, soldLines: List<Pair<String, String>>, date: LocalDate, paidNowRupiah: Long): String = database.withTransaction {
+        val consignment = dao.getConsignment(consignmentId) ?: error("Titipan tidak ditemukan.")
+        val project = dao.getProject(consignment.projectId) ?: error("Unit usaha tidak ditemukan.")
+        val sent = dao.getConsignmentLines(consignmentId).associateBy { it.id }
+        val wanted = soldLines.filter { it.second.isNotBlank() }
+        require(wanted.isNotEmpty()) { "Isi jumlah yang laku." }
+        val lines = wanted.map { (lineId, quantityText) ->
+            val line = sent[lineId] ?: error("Baris titipan tidak ditemukan.")
+            val quantity = requireNotNull(TransactionCalculation.parseQuantity(quantityText)) { "Jumlah laku ${productName(line.productId)} harus angka lebih dari nol." }
+            NoteLine(line.productId, line.unitName, contentOf(line.contentText), quantity, line.priceRupiah)
+        }
+        requireWithinConsignment(consignment, lines, exceptSaleId = "")
+        val draft = SaleDraft(consignment.contactId, date, null, 0, "", emptyList(), paidNowRupiah)
+        writeSale(project, null, draft, consignment.id, lines)
+    }
+
+    /** Goods taken back from the store return to the warehouse stock (CONSIGN_RETURN). */
+    suspend fun returnConsignment(consignmentId: String, lineId: String, quantityText: String, date: LocalDate): String = database.withTransaction {
+        val consignment = dao.getConsignment(consignmentId) ?: error("Titipan tidak ditemukan.")
+        val line = dao.getConsignmentLines(consignmentId).firstOrNull { it.id == lineId } ?: error("Baris titipan tidak ditemukan.")
+        val quantity = requireNotNull(TransactionCalculation.parseQuantity(quantityText)) { "Jumlah tarik ${productName(line.productId)} harus angka lebih dari nol." }
+        val back = quantity * contentOf(line.contentText)
+        val left = consignmentLeft(consignment, exceptSaleId = "").getValue(line.productId)
+        require(back <= left) { "Tarik ${quantity.toPlainText()} ${line.unitName} ${productName(line.productId)} melebihi sisa titipan ${left.divide(contentOf(line.contentText), 4, RoundingMode.DOWN).toPlainText()} ${line.unitName}." }
+        val id = UUID.randomUUID().toString()
+        dao.insertProductMovement(
+            ProductMovementEntity(
+                id = id,
+                productId = line.productId,
+                movementType = ProductMovementType.CONSIGN_RETURN.name,
+                quantityText = back.stripTrailingZeros().toPlainString(),
+                dateEpochDay = date.toEpochDay(),
+                notes = dao.getContact(consignment.contactId)?.name?.let { "Tarik dari $it" }.orEmpty(),
+                createdAtEpochMillis = System.currentTimeMillis(),
+                consignmentId = consignment.id,
+            ),
+        )
+        id
+    }
+
+    /** Base units still at the store per product of [consignment]: sent − sold − returned; [exceptSaleId] is not counted as sold. */
+    private suspend fun consignmentLeft(consignment: ConsignmentEntity, exceptSaleId: String): Map<String, BigDecimal> {
+        val left = dao.getConsignmentLines(consignment.id).associate { it.productId to base(it.quantityText, it.contentText) }.toMutableMap()
+        dao.getConsignmentSoldLines(consignment.id, exceptSaleId).forEach { left[it.productId] = left.getOrDefault(it.productId, BigDecimal.ZERO) - base(it.quantityText, it.contentText) }
+        dao.getConsignmentReturns(consignment.id).forEach { m -> left[m.productId] = left.getOrDefault(m.productId, BigDecimal.ZERO) - (TransactionCalculation.parseQuantity(m.quantityText) ?: BigDecimal.ZERO) }
+        return left
+    }
+
+    private suspend fun requireWithinConsignment(consignment: ConsignmentEntity, lines: List<NoteLine>, exceptSaleId: String) {
+        val left = consignmentLeft(consignment, exceptSaleId)
+        lines.groupBy { it.productId }.forEach { (productId, own) ->
+            val wanted = own.fold(BigDecimal.ZERO) { sum, l -> sum + l.quantity * l.content }
+            val available = left[productId] ?: BigDecimal.ZERO
+            val unit = own.first()
+            require(wanted <= available) {
+                "Laku ${(wanted.divide(unit.content, 4, RoundingMode.DOWN)).toPlainText()} ${unit.unitName} ${productName(productId)} melebihi sisa titipan ${available.divide(unit.content, 4, RoundingMode.DOWN).toPlainText()} ${unit.unitName}."
+            }
+        }
+    }
+
+    private fun BigDecimal.toPlainText() = stripTrailingZeros().toPlainString().replace('.', ',')
+
+    private fun rupiah(amount: Long) = "Rp" + java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag("id-ID")).format(amount)
+
     /**
      * "Hapus semua data" (DEC-020): every user table emptied in one transaction, children first.
      * Change capture is off while deleting, then the outbox and sync state are cleared and the
@@ -819,7 +1329,15 @@ class FinanceRepository(private val database: AppDatabase) {
      * Hard deletes a transaction (D-042, DEC-019). Journal and postings follow by CASCADE.
      */
     suspend fun deleteEvent(eventId: String) = database.withTransaction {
-        dao.deleteEvent(eventId)
+        val event = dao.getEvent(eventId) ?: return@withTransaction
+        if (event.type == FinancialEventType.CREDIT_PURCHASE.name) {
+            val payments = dao.getSupplierPayments(event.id).size
+            require(payments == 0) { "Belanja tempo ini punya $payments pembayaran. Hapus pembayarannya dulu." }
+        }
+        // DEC-029 M3/M4: deleting a note payment leaves the note (now unpaid or partly paid), except the
+        // payment an old-form product sale made its note for, which takes the note with it.
+        val autoNote = event.saleId?.let { dao.getSale(it) }?.takeIf { isAutoPayment(event, it) }
+        if (autoNote != null) deleteSale(autoNote.id) else dao.deleteEvent(eventId)
     }
 
     /**
@@ -951,7 +1469,8 @@ class FinanceRepository(private val database: AppDatabase) {
 
         preview.transactions.forEach { row ->
             val category = categories.getValue(normalize(row.categoryName))
-            insertEventWithJournal(
+            // A sale naming a product becomes a paid note in the batch, so undo removes it (DEC-029 M4).
+            insertEventWithAutoNote(
                 MoneyEvent(
                     id = UUID.randomUUID().toString(),
                     businessId = businessId,
@@ -1289,6 +1808,8 @@ class FinanceRepository(private val database: AppDatabase) {
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
         stockItemId = stockItemId,
+        contactId = contactId,
+        dueDate = dueDate,
     )
 
     private fun FinancialEventEntity.toDomain() = MoneyEvent(
@@ -1377,6 +1898,9 @@ class FinanceRepository(private val database: AppDatabase) {
         const val RECENT_EVENT_LIMIT = 200
 
         private val NON_OPERATING_ROLES = setOf(CategoryRole.CAPITAL_IN, CategoryRole.DRAWING, CategoryRole.ASSET)
+
+        /** Category text of a note payment (brief: "kategori Penjualan"); not a category row, payments are not revenue. */
+        const val SALE_PAYMENT_CATEGORY = "Penjualan"
     }
 }
 

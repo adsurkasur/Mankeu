@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Data layer for phase 2 (screens follow): contacts; sale notes with several products, a discount, HPP per line and pay now, later or in part; supplier purchases paid later with their payments; consignment (send, report sold as a note, settle, take back). Product stock now reads note lines and shows consigned goods apart. A product sale from the old income form becomes a paid note, and deleting it there removes the note.
 - Riwayat stok per product: production, stock counts and sales with the stock after each; a wrong production or count can be deleted (then recorded again).
 - Catat penjualan per satuan jual (bungkus, dus); belanja bisa menautkan bahan dan memperingatkan dampak harga baru ke HPP dan untung (spec #20).
 - Product stock is automatic: production adds, sales subtract (spec #9).

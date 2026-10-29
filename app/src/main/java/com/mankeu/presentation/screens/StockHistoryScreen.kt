@@ -78,7 +78,7 @@ fun StockHistoryScreen(record: ProductRecord, onDelete: (String) -> Unit, modifi
             }
         }
         items(history, key = { it.type.name + it.id }) { entry ->
-            HistoryRow(entry, unit, onDelete = { confirmId = entry.id }.takeIf { entry.type != ProductMovementType.SALE })
+            HistoryRow(entry, unit, onDelete = { confirmId = entry.id }.takeIf { entry.type == ProductMovementType.PRODUCTION || entry.type == ProductMovementType.ADJUSTMENT })
         }
     }
 }
@@ -118,7 +118,7 @@ private fun HistoryRow(entry: StockHistoryEntry, unit: String, onDelete: (() -> 
                     color = if (entry.type == ProductMovementType.SALE) semantic.danger else MaterialTheme.colorScheme.onSurface,
                 )
                 Text(stringResource(R.string.stock_history_after, entry.stockAfter.toQuantityText(), unit), style = MaterialTheme.typography.bodySmall)
-                if (onDelete == null) {
+                if (entry.type == ProductMovementType.SALE) {
                     Text(stringResource(R.string.stock_history_sale_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

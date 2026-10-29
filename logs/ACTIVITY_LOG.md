@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 15:19] [Claude Code (Opus) — perapihan Fase 1: P6 correction]
+- **Goal**: Prove or drop the P6 change (`SheetBackHandler`, commit `24f64db`), which failed in the full connected suite.
+- **Actions**: Found that the emulator periodically stops delivering key events to the app (after an instrumented run ended in `keyDispatchingTimedOut`); a reboot clears it. On a freshly rebooted emulator with `SheetBackHandler` disabled, `SheetBackTest` passed 2/0 and, by hand in the app, Back closed "Tambah usaha" and then "Usaha dan Cabang / Unit". So the P6 finding does not reproduce and the change was unnecessary: `MankeuSheet.kt` and `ManageScopeScreen.kt` restored to their pre-P6 state, the P6 CHANGELOG line removed, `SheetBackTest` kept as a regression guard (doc updated). Also tried and dropped: a variant registering a callback on the sheet window's dispatcher. DEC-028 addendum.
+- **Files**: `presentation/components/MankeuSheet.kt`, `presentation/screens/ManageScopeScreen.kt` (reverted), `androidTest/.../presentation/SheetBackTest.kt`, `logs/DECISION_LOG.md`, `logs/CHANGELOG.md`, plan Status, `logs/ACTIVITY_LOG.md`.
+- **Verification**: SheetBackTest 2/0 on the reverted (baseline) code after reboot; manual emulator check as above.
+
 ### [2026-10-29 12:23] [Claude Code (Opus) — perapihan Fase 1: P8]
 - **Goal**: Cleanup plan P8: the simulation generators still wrote template v4.
 - **Actions**: `docs/evidence/2026-10-22_simulasi_skala_umkm/make_sims.py` writes v5 natively: Transaksi with Satuan/Bahan/Harga Satuan, Produk with base unit and batch yield, Satuan Jual, Resep Produk per batch (free costs), empty Produksi & Stok, Stok Barang with Diarsipkan. Ran it with `python -I`; every cell of every sheet equals the previous androidTest assets (compared with openpyxl), `expected.json` differs only in `file_bytes`. The assets and `expected.json` are now copies of the generator output. The two 2026-10-21 generators are left as v3/v4 historical evidence with a docstring note. DEC-028 addendum.

@@ -15,12 +15,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.activity.OnBackPressedDispatcherOwner
-import android.content.ContextWrapper
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,22 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
-
-/**
- * The system Back closes the sheet (cleanup P6). On the emulator the sheet window does not take key
- * focus, so Back reaches the Activity's dispatcher, where nothing closed the sheet. This registers there,
- * after the app's own handler, so it runs first; and on the sheet window's dispatcher, for when the
- * sheet does hold focus.
- */
-@Composable
-fun SheetBackHandler(onBack: () -> Unit) {
-    BackHandler(onBack = onBack)
-    var context = LocalContext.current
-    while (context !is OnBackPressedDispatcherOwner && context is ContextWrapper) context = context.baseContext
-    (context as? OnBackPressedDispatcherOwner)?.let { activity ->
-        CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides activity) { BackHandler(onBack = onBack) }
-    }
-}
 
 /**
  * The app's one modal surface.
@@ -107,7 +85,6 @@ fun MankeuSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
     ) {
-        SheetBackHandler { feedback(FeedbackEvent.TAP); onDismiss() }
         Column(
             Modifier
                 .fillMaxWidth()

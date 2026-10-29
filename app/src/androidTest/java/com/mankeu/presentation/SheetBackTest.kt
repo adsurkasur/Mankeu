@@ -12,13 +12,20 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Cleanup P6: the system Back closes an open sheet before anything else (DEC-027 turned off sheet gestures). */
+/**
+ * Cleanup P6: the system Back closes an open sheet (Material 3's own handling, also with sheet gestures
+ * off, DEC-027). Kept as a regression guard: the reported failure did not reproduce on a healthy
+ * emulator; it came from an emulator state that delivered no key events to the app.
+ */
 @RunWith(AndroidJUnit4::class)
 class SheetBackTest {
     @get:Rule
     val compose = createComposeRule()
 
     private var dismissed = false
+
+    /** The system Back, delivered to whichever window holds key focus. */
+    private fun back() = Espresso.pressBackUnconditionally()
 
     @Test
     fun backClosesTheBusinessAndUnitSheet() {
@@ -35,7 +42,7 @@ class SheetBackTest {
         }
         compose.waitForIdle()
 
-        Espresso.pressBackUnconditionally()
+        back()
         compose.waitForIdle()
 
         assertTrue(dismissed)
@@ -46,7 +53,7 @@ class SheetBackTest {
         compose.setContent { MankeuTheme { MankeuSheet(title = "Produksi", onDismiss = { dismissed = true }) { Text("isi") } } }
         compose.waitForIdle()
 
-        Espresso.pressBackUnconditionally()
+        back()
         compose.waitForIdle()
 
         assertTrue(dismissed)

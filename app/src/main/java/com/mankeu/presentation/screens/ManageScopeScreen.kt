@@ -26,7 +26,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import com.mankeu.presentation.components.SheetBackHandler
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -88,8 +87,6 @@ fun ManageScopeSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
     ) {
-        // Back closes the sheet first, as in MankeuSheet (cleanup P6).
-        SheetBackHandler(onBack = onDismiss)
         Box(Modifier.fillMaxWidth()) {
             ManageScopeScreen(
                 state = state,

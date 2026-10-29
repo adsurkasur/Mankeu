@@ -269,6 +269,37 @@ class ImportCommitTest {
         assertTrue(dao.getProducts(projectId).isEmpty())
     }
 
+    /** Review m3: undo also removes a payment recorded later on one of the batch's notes. */
+    @Test
+    fun undoRemovesLaterPaymentsOfTheBatchsNotes() = runBlocking {
+        repository.commitImport(businessId, projectId, keripik())
+        val batch = dao.getImportBatches(projectId).single().id
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val noteId = dao.getEventsForBook(actual).single { it.description == "Jual keripik" }.saleId!!
+        val product = dao.getProducts(projectId).single().id
+        val toko = repository.saveContact(businessId, null, ContactDraft("Toko A"))
+        repository.saveSale(projectId, noteId, SaleDraft(toko, DAY, null, 0, "", listOf(SaleLineDraft(product, "dus", "4", 45_000)), 0))
+        repository.recordSalePayment(noteId, 45_000, DAY)
+
+        repository.undoImportBatch(batch)
+
+        assertTrue(dao.getEventsForBook(actual).isEmpty())
+        assertEquals(0L, repository.accountingSummary(actual).first().cashBalanceRupiah)
+    }
+
+    /** Review m1: one cost basis per import, so an imported note's HPP does not depend on row order. */
+    @Test
+    fun anImportedNotesHppDoesNotDependOnRowOrder() = runBlocking {
+        repository.commitImport(businessId, projectId, keripik())
+        val reversed = keripik().let { it.copy(sourceSha256 = "sha-reversed", transactions = it.transactions.reversed()) }
+        val branch = repository.createProject(businessId, "Cabang 2")
+        repository.commitImport(businessId, branch, reversed)
+
+        // Batch cost 2 liter × 27.500 + 30.000 = 85.000 for 20 bungkus; 3 dus = 30 bungkus.
+        assertEquals(listOf(127_500L), repository.sales(projectId).first().map { it.hpp })
+        assertEquals(listOf(127_500L), repository.sales(branch).first().map { it.hpp })
+    }
+
     /** A purchase whose amount ÷ quantity rounds to Rp0 must not zero the material's price. */
     @Test
     fun aTinyPurchaseDoesNotZeroTheMaterialPrice() = runBlocking {

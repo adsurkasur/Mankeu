@@ -719,8 +719,10 @@ class FinanceRepository(private val database: AppDatabase) {
         }
         old.settlesEventId?.let { purchaseId ->
             require(event.type == FinancialEventType.CASH_EXPENSE) { "Ini pembayaran utang; jenisnya tetap uang keluar." }
+            require(event.bookId == old.bookId && event.projectId == old.projectId) { "Ini pembayaran utang; buku dan unitnya tetap." }
             val purchase = dao.getEvent(purchaseId)
             if (purchase != null) {
+                require(event.date.toEpochDay() >= purchase.dateEpochDay) { "Tanggal bayar tidak boleh sebelum tanggal belanja." }
                 val left = purchase.amountRupiah - dao.getSupplierPayments(purchaseId).filter { it.id != old.id }.sumOf { it.amountRupiah }
                 require(event.amountRupiah <= left) { "Pembayaran ${rupiah(event.amountRupiah)} melebihi sisa utang ${rupiah(left)}." }
             }
@@ -730,6 +732,8 @@ class FinanceRepository(private val database: AppDatabase) {
         if (sale != null && autoNote == null) {
             // DEC-029 M3: a payment of a note stays a payment of that note, within what is owed.
             require(event.type == FinancialEventType.CASH_INCOME) { "Ini pembayaran nota; jenisnya tetap uang masuk." }
+            require(event.bookId == old.bookId && event.projectId == old.projectId) { "Ini pembayaran nota; buku dan unitnya tetap." }
+            require(event.date.toEpochDay() >= sale.dateEpochDay) { "Tanggal bayar tidak boleh sebelum tanggal nota." }
             require(sameSaleFields(old, event)) { "Ini pembayaran nota. Ubah produk dan jumlahnya lewat notanya." }
             val left = saleTotal(sale) - dao.getSalePayments(sale.id).filter { it.id != old.id }.sumOf { it.amountRupiah }
             require(event.amountRupiah <= left) { "Pembayaran ${rupiah(event.amountRupiah)} melebihi sisa tagihan nota ${rupiah(left)}." }
@@ -964,6 +968,7 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun recordSalePayment(saleId: String, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
         val sale = dao.getSale(saleId) ?: error("Nota tidak ditemukan.")
         require(amountRupiah > 0) { "Nominal pembayaran harus lebih dari nol." }
+        require(date.toEpochDay() >= sale.dateEpochDay) { "Tanggal bayar tidak boleh sebelum tanggal nota." }
         val outstanding = SalesMath.outstanding(saleTotal(sale), dao.getSalePayments(saleId).sumOf { it.amountRupiah })
         require(outstanding > 0) { "Nota ini sudah lunas." }
         require(amountRupiah <= outstanding) { "Pembayaran ${rupiah(amountRupiah)} melebihi sisa tagihan ${rupiah(outstanding)}." }
@@ -1097,7 +1102,7 @@ class FinanceRepository(private val database: AppDatabase) {
      * DEC-029 M4: the paid one-line note an old-form product sale becomes (same shape as F2-4, with the
      * HPP at today's cost, not estimated). [event] already carries `saleId = <eventId>-s`.
      */
-    private suspend fun insertAutoNote(event: MoneyEvent, createdAtEpochMillis: Long) {
+    private suspend fun insertAutoNote(event: MoneyEvent, createdAtEpochMillis: Long, record: ProductRecord?, materialPrices: Map<String, Long>) {
         val (sale, line) = LegacySaleShape.convert(
             LegacySaleShape.OldSale(
                 eventId = event.id,
@@ -1112,8 +1117,8 @@ class FinanceRepository(private val database: AppDatabase) {
                 unitPriceRupiah = event.unitPriceRupiah,
                 importBatchId = event.importBatchId,
             ),
-            productRecord(event.productId),
-            materialPrices(event.businessId),
+            record,
+            materialPrices,
         )
         dao.insertSale(sale.copy(hppEstimated = false))
         dao.insertSaleLines(listOf(line))
@@ -1130,13 +1135,17 @@ class FinanceRepository(private val database: AppDatabase) {
 
     /** Inserts [event]; an old-form product sale also gets its note (DEC-029 M4). */
     private suspend fun insertEventWithAutoNote(event: MoneyEvent, createdAtEpochMillis: Long = System.currentTimeMillis()) {
-        if (event.saleId == null && isProductSale(event)) {
-            val linked = event.copy(saleId = LegacySaleShape.saleId(event.id))
-            insertEventAndJournal(linked, LedgerPolicy.journalFor(linked), createdAtEpochMillis)
-            insertAutoNote(linked, createdAtEpochMillis)
-        } else {
-            insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis)
+        insertEventLinkingNote(event, createdAtEpochMillis)?.let { linked ->
+            insertAutoNote(linked, createdAtEpochMillis, productRecord(requireNotNull(linked.productId)), materialPrices(linked.businessId))
         }
+    }
+
+    /** Inserts [event]; returns it linked to its note-to-be when it is an old-form product sale (M4), else null. */
+    private suspend fun insertEventLinkingNote(event: MoneyEvent, createdAtEpochMillis: Long): MoneyEvent? {
+        val linked = event.takeIf { it.saleId == null && isProductSale(it) }?.copy(saleId = LegacySaleShape.saleId(event.id))
+        val written = linked ?: event
+        insertEventAndJournal(written, LedgerPolicy.journalFor(written), createdAtEpochMillis)
+        return linked
     }
 
     // ---- Supplier credit (F2-5, DEC-029 §3) ---------------------------------------------------
@@ -1156,6 +1165,7 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun recordSupplierPayment(purchaseEventId: String, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
         val purchase = dao.getEvent(purchaseEventId)?.takeIf { it.type == FinancialEventType.CREDIT_PURCHASE.name } ?: error("Belanja tempo tidak ditemukan.")
         require(amountRupiah > 0) { "Nominal pembayaran harus lebih dari nol." }
+        require(date.toEpochDay() >= purchase.dateEpochDay) { "Tanggal bayar tidak boleh sebelum tanggal belanja." }
         val outstanding = SalesMath.outstanding(purchase.amountRupiah, dao.getSupplierPayments(purchase.id).sumOf { it.amountRupiah })
         require(outstanding > 0) { "Belanja tempo ini sudah lunas." }
         require(amountRupiah <= outstanding) { "Pembayaran ${rupiah(amountRupiah)} melebihi sisa utang ${rupiah(outstanding)}." }
@@ -1467,10 +1477,14 @@ class FinanceRepository(private val database: AppDatabase) {
             productIds[normalize(item.name)] = productId
         }
 
+        // A sale naming a product becomes a paid note in the batch, so undo removes it (DEC-029 M4). The notes
+        // are written after every row, with one cost basis for the whole file, so their HPP does not depend
+        // on row order and the prices are read once (review m1).
+        val sales = mutableListOf<Pair<MoneyEvent, Long>>()
         preview.transactions.forEach { row ->
             val category = categories.getValue(normalize(row.categoryName))
-            // A sale naming a product becomes a paid note in the batch, so undo removes it (DEC-029 M4).
-            insertEventWithAutoNote(
+            val createdAt = System.currentTimeMillis()
+            insertEventLinkingNote(
                 MoneyEvent(
                     id = UUID.randomUUID().toString(),
                     businessId = businessId,
@@ -1491,7 +1505,16 @@ class FinanceRepository(private val database: AppDatabase) {
                     stockItemId = row.materialName?.let { materialIds.getValue(normalize(it)) },
                     unitPriceRupiah = row.unitPriceRupiah,
                 ).withPurchasePrice(),
-            )
+                createdAt,
+            )?.let { sales += it to createdAt }
+        }
+        if (sales.isNotEmpty()) {
+            val prices = materialPrices(businessId)
+            val records = mutableMapOf<String, ProductRecord?>()
+            sales.forEach { (sale, createdAt) ->
+                val productId = requireNotNull(sale.productId)
+                insertAutoNote(sale, createdAt, records.getOrPut(productId) { productRecord(productId) }, prices)
+            }
         }
         // Production and counts of the added products, after the transactions: on one date a row from
         // Produksi & Stok counts after that day's sales, in file order (DEC-028 §9). Undo removes them
@@ -1656,6 +1679,8 @@ class FinanceRepository(private val database: AppDatabase) {
      */
     suspend fun undoImportBatch(batchId: String): ImportUndo = database.withTransaction {
         val deletedEvents = dao.deleteEventsForImportBatch(batchId)
+        // Payments recorded later on the batch's notes go with their notes (review m3).
+        val deletedPayments = dao.deletePaymentsOfImportedNotes(batchId)
         val deletedSales = dao.deleteSalesForImportBatch(batchId)
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
@@ -1676,7 +1701,7 @@ class FinanceRepository(private val database: AppDatabase) {
         check(dao.markImportBatchUndone(batchId, now) == 1) {
             "Impor ini sudah dibatalkan."
         }
-        ImportUndo(deletedEvents + deletedSales + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
+        ImportUndo(deletedEvents + deletedPayments + deletedSales + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
     }
 
     private suspend fun createProjectInternal(businessId: String, name: String, isGeneral: Boolean): ProjectEntity {

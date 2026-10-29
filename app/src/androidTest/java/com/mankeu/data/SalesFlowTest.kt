@@ -272,4 +272,24 @@ class SalesFlowTest {
             assertFalse(it.overdue(day.plusDays(7)))
         }
     }
+
+    /** Review m2/m4: a payment keeps its note's or purchase's book and unit, and is not dated before it. */
+    @Test fun paymentsKeepTheirBookAndAreNotDatedBeforeTheirNoteOrPurchase() = runBlocking {
+        val toko = repo.saveContact(businessId, null, ContactDraft("Toko A", isSupplier = true))
+        val plan = repo.books(projectId).first().single { it.mode == BookMode.PROJECTION.name }.id
+        val id = repo.saveSale(projectId, null, SaleDraft(toko, day, null, 0, "", listOf(SaleLineDraft(keripik, "dus", "1", 300_000)), 0))
+        assertEquals("Tanggal bayar tidak boleh sebelum tanggal nota.", failure { repo.recordSalePayment(id, 100_000, day.minusDays(1)) })
+        val payment = repo.recordSalePayment(id, 100_000, day)
+        val edit = EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_INCOME, 100_000, day, "Bayar", "Penjualan")
+        assertEquals("Ini pembayaran nota; buku dan unitnya tetap.", failure { repo.updateEvent(payment, edit.copy(bookId = plan)) })
+        assertEquals("Tanggal bayar tidak boleh sebelum tanggal nota.", failure { repo.updateEvent(payment, edit.copy(date = day.minusDays(1))) })
+
+        val bahan = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
+        val tempo = repo.recordEvent(EventDraft(businessId, projectId, bookId, FinancialEventType.CREDIT_PURCHASE, 300_000, day, "Kemasan", bahan.name, categoryId = bahan.id, contactId = toko))
+        assertEquals("Tanggal bayar tidak boleh sebelum tanggal belanja.", failure { repo.recordSupplierPayment(tempo, 100_000, day.minusDays(1)) })
+        val paid = repo.recordSupplierPayment(tempo, 100_000, day)
+        val payEdit = EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_EXPENSE, 100_000, day, "Bayar utang", bahan.name, categoryId = bahan.id)
+        assertEquals("Ini pembayaran utang; buku dan unitnya tetap.", failure { repo.updateEvent(paid, payEdit.copy(bookId = plan)) })
+        assertEquals("Tanggal bayar tidak boleh sebelum tanggal belanja.", failure { repo.updateEvent(paid, payEdit.copy(date = day.minusDays(1))) })
+    }
 }

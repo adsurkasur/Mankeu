@@ -374,12 +374,16 @@ interface FinanceDao {
     )
     fun observeProductSales(projectId: String, saleType: String, mode: String): Flow<List<ProductSaleRow>>
 
-    /** Oldest first, so the last row per material is its current price. */
+    /**
+     * Oldest first, so the last row per material is its current price. Same order as
+     * [latestPurchasePrice], reversed, with rowid breaking ties (an import inserts many rows in one
+     * millisecond); a Rp0 price never prices a material.
+     */
     @Query(
         """
         SELECT stockItemId, unitPriceRupiah FROM financial_events
-        WHERE businessId = :businessId AND stockItemId IS NOT NULL AND unitPriceRupiah IS NOT NULL
-        ORDER BY dateEpochDay, createdAtEpochMillis
+        WHERE businessId = :businessId AND stockItemId IS NOT NULL AND unitPriceRupiah > 0
+        ORDER BY dateEpochDay, createdAtEpochMillis, rowid
         """,
     )
     fun observeMaterialPurchases(businessId: String): Flow<List<MaterialPurchaseRow>>
@@ -387,8 +391,8 @@ interface FinanceDao {
     @Query(
         """
         SELECT unitPriceRupiah FROM financial_events
-        WHERE stockItemId = :stockItemId AND unitPriceRupiah IS NOT NULL
-        ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC LIMIT 1
+        WHERE stockItemId = :stockItemId AND unitPriceRupiah > 0
+        ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC, rowid DESC LIMIT 1
         """,
     )
     suspend fun latestPurchasePrice(stockItemId: String): Long?

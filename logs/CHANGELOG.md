@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 
 ### Fixed
+- Sync: a purchase of a material created with the same name on both phones now prices the local material.
+- A material's price is the same on the Produk tab, in the export and in the price dialog when two purchases share date and time; a Rp0 purchase no longer prices a material.
 - Rencana Usaha no longer crashes when a product has two or more sale units (bungkus and dus).
 - Bottom sheets no longer close when you scroll a long form, and the keyboard should no longer make them bounce (checked on the emulator only).
 

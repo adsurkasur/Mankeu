@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
@@ -147,6 +148,31 @@ class SyncEngineTest {
             assertEquals(own, dao.getEvent(spentOnB)!!.categoryId)
             assertEquals(-65_000L, device.cash(projectId))
         }
+    }
+
+    /**
+     * Final review I-5: both phones add "Minyak" offline and A buys some. On B, A's purchase must
+     * point at B's own Minyak, so it prices B's material; that needs stock_items applied before
+     * financial_events in one change set.
+     */
+    @Test
+    fun aPurchaseOfATwinMaterialPointsAtTheLocalMaterialAfterSync() = runBlocking {
+        val (businessId, projectId) = a.repository.run { createBusiness("Keripik").let { it to createProject(it, "Utama") } }
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        val onA = a.repository.createStockItem(businessId, projectId, false, "Minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        val onB = b.repository.createStockItem(businessId, projectId, false, "minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        val bookId = a.database.financeDao().getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val purchase = a.repository.recordEvent(
+            EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_EXPENSE, 550_000, LocalDate.of(2026, 10, 20), "Minyak", "", quantityText = "20", unit = "liter", stockItemId = onA),
+        )
+
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val atB = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+
+        assertEquals(1, atB.merged)
+        assertEquals(onB, b.database.financeDao().getEvent(purchase)!!.stockItemId)
+        assertEquals(27_500L, b.repository.materialPrice(onB))
     }
 
     @Test

@@ -71,4 +71,24 @@ class ProductStockFlowTest {
         val bad = runCatching { repo.recordEvent(sale("1", "karung")) }
         assertTrue(bad.exceptionOrNull()?.message.orEmpty().contains("karung"))
     }
+
+    /** Final review I-4 / M-5: both price reads pick the same purchase on a tie, and a Rp0 price never wins. */
+    @Test fun bothPriceReadsAgreeOnTiesAndIgnoreZeroPrices() = runBlocking {
+        val (businessId, projectId) = repo.createBusinessWithUnit("Keripik Bu Sri", "Umum")
+        val book = repo.books(projectId).first().single { it.mode == BookMode.REALIZATION.name }
+        val minyak = repo.createStockItem(businessId, projectId, false, "Minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        fun buy(amount: Long) = EventDraft(businessId, projectId, book.id, FinancialEventType.CASH_EXPENSE, amount, LocalDate.of(2026, 10, 3), "Minyak", "Bahan baku", quantityText = "1", unit = "liter", stockItemId = minyak)
+        repo.recordEvent(buy(20_000))
+        val second = repo.recordEvent(buy(30_000))
+        // An import inserts rows within one millisecond: same date, same createdAt.
+        db.openHelper.writableDatabase.execSQL("UPDATE financial_events SET createdAtEpochMillis = 1000 WHERE stockItemId = ?", arrayOf(minyak))
+        suspend fun flowPrice() = repo.stockItems(businessId, projectId).first().single { it.id == minyak }.basePriceRupiah
+
+        assertEquals(30_000L, flowPrice())
+        assertEquals(30_000L, repo.materialPrice(minyak))
+
+        db.openHelper.writableDatabase.execSQL("UPDATE financial_events SET unitPriceRupiah = 0 WHERE id = ?", arrayOf(second))
+        assertEquals(20_000L, flowPrice())
+        assertEquals(20_000L, repo.materialPrice(minyak))
+    }
 }

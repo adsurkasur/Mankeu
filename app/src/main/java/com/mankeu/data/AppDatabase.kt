@@ -44,25 +44,34 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun syncDao(): SyncDao
 
     companion object {
-        /** Every table holding user data, parents before children. Backup and sync both walk it. */
+        /**
+         * Every table holding user data, parents before children. Backup restore and sync apply walk
+         * it forwards, erase and sync deletes walk it backwards.
+         *
+         * Stock items and products (with their children) come before `financial_events` although no
+         * foreign key asks for it: sync merges twin rows (same name created on two phones) by
+         * recording an alias when the twin is upserted, and rewrites `categoryId`, `productId` and
+         * `stockItemId` of rows applied *after* that. An event applied before its material's alias
+         * exists keeps the other phone's id and never prices the local material (final review I-5).
+         */
         val DATA_TABLES = listOf(
             "businesses",
             "projects",
             "books",
             "categories",
             "import_batches",
+            "stock_items",
+            "products",
+            "product_units",
+            "product_recipe_lines",
+            "product_movements",
             "budget_items",
             "financial_events",
             "journal_entries",
             "postings",
             "import_notices",
             "provenance_records",
-            "stock_items",
             "stock_movements",
-            "products",
-            "product_units",
-            "product_recipe_lines",
-            "product_movements",
         )
 
         fun create(context: Context, name: String = "mankeu.db"): AppDatabase = Room.databaseBuilder(

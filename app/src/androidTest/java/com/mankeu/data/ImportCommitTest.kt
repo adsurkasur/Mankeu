@@ -6,6 +6,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
+import com.mankeu.domain.ProductCosting
+import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.importer.ImportBudgetLine
 import com.mankeu.importer.ImportProduct
 import com.mankeu.importer.ImportRecipeLine
@@ -270,6 +272,48 @@ class ImportCommitTest {
             ),
             repository.reviewImport(businessId, projectId, bad).conflicts,
         )
+    }
+
+    /**
+     * Final review I-1 (DEC-012): production and stock counts survive export then import. The
+     * database-level check the workbook-only round trip missed: same stock and HPP in the new unit,
+     * and undo takes the movements away with the product.
+     */
+    @Test
+    fun productionAndStockCountsSurviveExportAndImportIntoANewUnit() = runBlocking {
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val keripik = repository.saveProduct(projectId, null, ProductDraft(
+            name = "Keripik", baseUnit = "bungkus", batchYieldText = "400",
+            units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8_000), SaleUnitDraft(name = "dus", contentText = "40", priceRupiah = 300_000)),
+            recipe = listOf(RecipeLineDraft("Bumbu", amountRupiah = 2_400_000)),
+        ))
+        repository.recordProduction(keripik, BigDecimal.ONE, LocalDate.of(2026, 10, 1), "batch pertama")
+        fun sale(day: Int, qty: String, unit: String) = EventDraft(businessId, projectId, actual, FinancialEventType.CASH_INCOME, 600_000, LocalDate.of(2026, 10, day), "Jual", "Penjualan & Jasa", quantityText = qty, unit = unit, productId = keripik)
+        repository.recordEvent(sale(2, "2", "dus"))
+        // Counted at the end of the same day, after that sale.
+        Thread.sleep(5) // a later createdAt than the sale, as on a real phone
+        repository.countProductStock(keripik, BigDecimal(300), LocalDate.of(2026, 10, 2), "")
+        repository.recordEvent(sale(3, "10", "bungkus"))
+        suspend fun stockIn(unit: String) = repository.products(unit).first().single().stock
+        assertEquals(0, BigDecimal(290).compareTo(stockIn(projectId)))
+
+        val preview = FinanceWorkbookImporter().preview("ekspor.xlsx", repository.exportProjectWorkbook(projectId))
+        assertEquals(emptyList<String>(), preview.errors)
+        val branch = repository.createProject(businessId, "Cabang 2")
+        repository.commitImport(businessId, branch, preview)
+
+        assertEquals(0, BigDecimal(290).compareTo(stockIn(branch)))
+        val copy = repository.products(branch).first().single()
+        assertEquals(listOf("batch pertama" to "1", "" to null), copy.movements.map { it.notes to it.batchesText })
+        assertEquals(
+            ProductCosting.cost(repository.products(projectId).first().single().spec, emptyMap()).perSaleUnit.map { it.hppRupiah },
+            ProductCosting.cost(copy.spec, emptyMap()).perSaleUnit.map { it.hppRupiah },
+        )
+
+        repository.undoImportBatch(dao.getImportBatches(branch).single().id)
+
+        val left = database.openHelper.writableDatabase.query("SELECT COUNT(*) FROM product_movements").use { it.moveToFirst(); it.getInt(0) }
+        assertEquals(2, left)
     }
 
     private fun keripik() = WorkbookImportPreview(

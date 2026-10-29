@@ -17,6 +17,7 @@ import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.StockItemEntity
@@ -66,6 +67,7 @@ class FinanceWorkbookExporter(
             WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
             WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList(), setOf(3)),
             WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList(), setOf(4)),
+            WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList(), setOf(2)),
             categoryTable(categories),
         ),
@@ -96,6 +98,7 @@ class FinanceWorkbookExporter(
                 products(bundle.products),
                 saleUnits(bundle.products),
                 recipes(bundle.products, stockNames),
+                movements(bundle.products),
                 stock(bundle.stockItems, referencedStock),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
                 reportTable(bundle.books),
@@ -129,6 +132,7 @@ class FinanceWorkbookExporter(
             listOf("Modal & prive", "Setoran modal: Pemasukan berkategori 'Setoran Modal Pemilik'. Ambil uang pribadi: Pengeluaran berkategori 'Ambil untuk Pribadi (Prive)'. Beli alat: Pengeluaran berkategori 'Beli Peralatan & Aset'."),
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
             listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
+            listOf("Produksi & Stok", "Riwayat stok produk. Jenis: Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong). Hanya untuk produk di lembar Produk berkas ini. Pada tanggal yang sama, baris ini dihitung sesudah penjualan hari itu, berurutan seperti di lembar."),
             listOf("Stok Barang", "Barang yang namanya sudah ada di aplikasi dilewati."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
@@ -206,6 +210,22 @@ class FinanceWorkbookExporter(
             }
         },
         currencyColumns = setOf(4),
+    )
+
+    /** Production and counts per product, oldest first (DEC-028 §9); the importer adds them back to the same product. */
+    private fun movements(products: List<ProductRecord>) = WorkbookTable(
+        name = MankeuTemplate.MOVEMENTS,
+        headers = MankeuTemplate.MOVEMENT_HEADERS,
+        rows = products.flatMap { p ->
+            p.movements.sortedWith(compareBy({ it.dateEpochDay }, { it.createdAtEpochMillis })).mapNotNull { m ->
+                val kind = when (m.movementType) {
+                    ProductMovementType.PRODUCTION.name -> MankeuTemplate.PRODUCTION
+                    ProductMovementType.ADJUSTMENT.name -> MankeuTemplate.STOCK_COUNT
+                    else -> return@mapNotNull null
+                }
+                listOf(LocalDate.ofEpochDay(m.dateEpochDay).toString(), p.product.name, kind, quantity(m.quantityText), quantity(m.batchesText), m.notes.ifBlank { null })
+            }
+        },
     )
 
     /** Archived items are written only when something still names them, so the re-import resolves every Bahan. */

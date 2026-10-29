@@ -1,6 +1,7 @@
 package com.mankeu.importer
 
 import com.mankeu.domain.CostNature
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.Recurrence
 import java.time.LocalDate
 import java.time.YearMonth
@@ -14,6 +15,7 @@ import java.time.YearMonth
  * transactions carry cost nature, recurrence, asset life, product and quantity.
  * Version 5 (DEC-028): products have a base unit and batch yield, sale units and recipe lines
  * (material or free cost per batch) have their own sheets, and Transaksi carries unit and material.
+ * Production and stock counts have their own sheet ([MOVEMENTS]) so product stock survives a round trip.
  * Older files are rejected by their headers.
  */
 object MankeuTemplate {
@@ -26,6 +28,7 @@ object MankeuTemplate {
     const val PRODUCTS = "Produk"
     const val SALE_UNITS = "Satuan Jual"
     const val RECIPES = "Resep Produk"
+    const val MOVEMENTS = "Produksi & Stok"
     const val STOCK = "Stok Barang"
     const val CATEGORIES = "Kategori"
 
@@ -40,6 +43,7 @@ object MankeuTemplate {
     val PRODUCT_HEADERS = listOf("Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)")
     val SALE_UNIT_HEADERS = listOf("Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)")
     val RECIPE_HEADERS = listOf("Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)")
+    val MOVEMENT_HEADERS = listOf("Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan")
     val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum")
     val CATEGORY_HEADERS = listOf("Nama", "Peran", "Sifat Biaya")
     val GUIDE_HEADERS = listOf("Kunci", "Nilai")
@@ -51,6 +55,8 @@ object MankeuTemplate {
     const val PLAN_PERIOD = "Periode rencana"
     const val PERIOD_SEPARATOR = " s.d. "
     const val ONCE = "Sekali"
+    const val PRODUCTION = "Produksi"
+    const val STOCK_COUNT = "Hitung stok"
 
     /** Sheets that must exist with exactly these headers in row 1. [CATEGORIES] is reference only. */
     val REQUIRED = linkedMapOf(
@@ -60,6 +66,7 @@ object MankeuTemplate {
         PRODUCTS to PRODUCT_HEADERS,
         SALE_UNITS to SALE_UNIT_HEADERS,
         RECIPES to RECIPE_HEADERS,
+        MOVEMENTS to MOVEMENT_HEADERS,
         STOCK to STOCK_HEADERS,
     )
 
@@ -110,7 +117,20 @@ data class ImportSaleUnit(val name: String, val contentText: String, val priceRu
 /** One `Resep Produk` row: a material with a quantity per batch, or a free cost per batch. */
 data class ImportRecipeLine(val source: String, val name: String, val materialName: String?, val quantityText: String?, val amountRupiah: Long?)
 
-/** One `Produk` row with its `Satuan Jual` and `Resep Produk` rows. */
+/**
+ * One `Produksi & Stok` row: production adds [quantityText] base units ([batchesText] batches, if
+ * known); a count (`ADJUSTMENT`) sets the stock to [quantityText], zero allowed.
+ */
+data class ImportProductMovement(
+    val source: String,
+    val date: LocalDate,
+    val type: ProductMovementType,
+    val quantityText: String,
+    val batchesText: String? = null,
+    val notes: String = "",
+)
+
+/** One `Produk` row with its `Satuan Jual`, `Resep Produk` and `Produksi & Stok` rows. */
 data class ImportProduct(
     val source: String,
     val name: String,
@@ -120,6 +140,7 @@ data class ImportProduct(
     val sellFromMonth: Int = 1,
     val units: List<ImportSaleUnit>,
     val recipe: List<ImportRecipeLine>,
+    val movements: List<ImportProductMovement> = emptyList(),
 )
 
 /** One `Stok Barang` row. */

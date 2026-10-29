@@ -7,6 +7,7 @@ import com.mankeu.data.CategoryEntity
 import com.mankeu.data.FinancialEventEntity
 import com.mankeu.data.ProjectEntity
 import com.mankeu.data.ProductEntity
+import com.mankeu.data.ProductMovementEntity
 import com.mankeu.data.ProductRecipeLineEntity
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.ProductUnitEntity
@@ -16,6 +17,7 @@ import com.mankeu.domain.CostNature
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.StockItemEntity
 import com.mankeu.exporter.FinanceExportBook
 import com.mankeu.exporter.FinanceExportBundle
@@ -67,6 +69,10 @@ class TemplateImportTest {
                     recipe = listOf(
                         ImportRecipeLine("Resep Produk!A2", "Susu", materialName = null, quantityText = null, amountRupiah = 18_000),
                         ImportRecipeLine("Resep Produk!A3", "Gula", materialName = "Gula", quantityText = "0.5", amountRupiah = null),
+                    ),
+                    movements = listOf(
+                        ImportProductMovement("Produksi & Stok!A2", DAY.minusDays(1), ProductMovementType.PRODUCTION, "60", "10", "pagi"),
+                        ImportProductMovement("Produksi & Stok!A3", DAY, ProductMovementType.ADJUSTMENT, "0"),
                     ),
                 ),
             ),
@@ -171,6 +177,7 @@ class TemplateImportTest {
                 WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
             ),
         )
@@ -280,6 +287,7 @@ class TemplateImportTest {
         val errors = importer.preview("lama.xlsx", v4).errors
 
         assertTrue(errors.joinToString(), "Lembar \"Satuan Jual\" tidak ada." in errors)
+        assertTrue(errors.joinToString(), "Lembar \"Produksi & Stok\" tidak ada." in errors)
         assertTrue(errors.joinToString(), "Lembar \"Produk\" kolom B1 harus \"Satuan Dasar\", tertulis \"Satuan\"." in errors)
     }
 
@@ -336,6 +344,47 @@ class TemplateImportTest {
         assertEquals(Triple("3", "sak", 50_000L), Triple(row.quantityText, row.unit, row.unitPriceRupiah))
     }
 
+    /** I-1: the Produksi & Stok sheet is checked cell by cell, and only for products of the same file. */
+    @Test
+    fun `production and stock count rows are validated`() {
+        val bytes = template(
+            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+            products = listOf(listOf("Teh", "gelas", "5", null, null)),
+            saleUnits = listOf(listOf("Teh", "gelas", "1", 5_000L)),
+            movements = listOf(
+                listOf("2026-08-01", "Teh", "Produksi", "10", "2", "pagi"),
+                listOf("2026-08-02", "Teh", "Hitung stok", "0", null, null),
+                listOf("2026-08-03", "Teh", "Produksi", "0", null, null),
+                listOf("2026-08-03", "Teh", "Hitung stok", "-1", null, null),
+                listOf("2026-08-03", "Teh", "Hitung stok", "4", "1", null),
+                listOf("2026-08-03", "Teh", "Jual", "4", null, null),
+                listOf("2026-08-03", "Kopi", "Produksi", "4", null, null),
+                listOf(null, "Teh", "Produksi", "4", null, null),
+            ),
+        )
+
+        val preview = importer.preview("x.xlsx", bytes)
+
+        assertEquals(
+            listOf(
+                "Produksi & Stok!D4: Jumlah produksi harus angka lebih dari nol, tertulis \"0\".",
+                "Produksi & Stok!D5: Jumlah hitung stok harus angka nol atau lebih, tertulis \"-1\".",
+                "Produksi & Stok!E6: Batch hanya diisi untuk Produksi.",
+                "Produksi & Stok!C7: Jenis harus \"Produksi\" atau \"Hitung stok\", tertulis \"Jual\".",
+                "Produksi & Stok!A9: Tanggal wajib diisi.",
+                "Produksi & Stok!A8: produk \"Kopi\" tidak ada di lembar \"Produk\" berkas ini; produksi dan hitung stok hanya diimpor bersama produknya.",
+            ),
+            preview.errors,
+        )
+        assertEquals(
+            listOf(
+                ImportProductMovement("Produksi & Stok!A2", LocalDate.of(2026, 8, 1), ProductMovementType.PRODUCTION, "10", "2", "pagi"),
+                ImportProductMovement("Produksi & Stok!A3", LocalDate.of(2026, 8, 2), ProductMovementType.ADJUSTMENT, "0"),
+            ),
+            preview.products.single().movements,
+        )
+    }
+
     // --- fixtures ---------------------------------------------------------------------------
 
     /** A minimal valid template whose Transaksi sheet is [transactions]; products and units default to none. */
@@ -344,6 +393,7 @@ class TemplateImportTest {
         recipes: List<List<Any?>> = emptyList(),
         products: List<List<Any?>> = emptyList(),
         saleUnits: List<List<Any?>> = emptyList(),
+        movements: List<List<Any?>> = emptyList(),
     ): ByteArray = XlsxWorkbookWriter().write(
         listOf(
             WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
@@ -352,6 +402,7 @@ class TemplateImportTest {
             WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, products),
             WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, saleUnits),
             WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, recipes),
+            WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, movements),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
         ),
     )
@@ -410,6 +461,11 @@ class TemplateImportTest {
                 listOf(
                     ProductRecipeLineEntity(id = "k1", productId = "kopi", name = "Susu", amountRupiah = 18_000, sortOrder = 0),
                     ProductRecipeLineEntity(id = "k2", productId = "kopi", name = "Gula", stockItemId = "s", quantityText = "0.5", sortOrder = 1),
+                ),
+                // Out of order on purpose: the export writes them oldest first.
+                listOf(
+                    ProductMovementEntity("m2", "kopi", ProductMovementType.ADJUSTMENT.name, "0", dateEpochDay = DAY.toEpochDay(), createdAtEpochMillis = 5),
+                    ProductMovementEntity("m1", "kopi", ProductMovementType.PRODUCTION.name, "60", "10", DAY.minusDays(1).toEpochDay(), "pagi", createdAtEpochMillis = 9),
                 ),
             ),
         ),

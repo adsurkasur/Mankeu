@@ -239,7 +239,7 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 
     private suspend fun productsOf(projectId: String): List<ProductRecord> =
-        dao.getProducts(projectId).map { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id)) }
+        dao.getProducts(projectId).map { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id), dao.getProductMovements(it.id)) }
 
     /** Material prices for HPP: the newest purchase's unit price, else the price entered with the item (DEC-028 §2). */
     private suspend fun materialPrices(businessId: String): Map<String, Long> =
@@ -953,6 +953,25 @@ class FinanceRepository(private val database: AppDatabase) {
                 ).withPurchasePrice(),
             )
         }
+        // Production and counts of the added products, after the transactions: on one date a row from
+        // Produksi & Stok counts after that day's sales, in file order (DEC-028 §9). Undo removes them
+        // with their product (cascade); rows of a product skipped by name are not imported.
+        val movementsFrom = System.currentTimeMillis() + 1
+        val addedMovements = productPlan.added.flatMap { p -> p.movements.map { productIds.getValue(normalize(p.name)) to it } }
+        addedMovements.forEachIndexed { index, (productId, m) ->
+            dao.insertProductMovement(
+                ProductMovementEntity(
+                    id = UUID.randomUUID().toString(),
+                    productId = productId,
+                    movementType = m.type.name,
+                    quantityText = m.quantityText,
+                    batchesText = m.batchesText,
+                    dateEpochDay = m.date.toEpochDay(),
+                    notes = m.notes,
+                    createdAtEpochMillis = movementsFrom + index,
+                ),
+            )
+        }
         var sortOrder = dao.getBudgetItems(planBook.id).size
         preview.budgetLines.forEach { line ->
             val category = categories.getValue(normalize(line.categoryName))
@@ -984,8 +1003,8 @@ class FinanceRepository(private val database: AppDatabase) {
                 severity = "IMPORT",
                 title = "Impor ${preview.sourceName} tersimpan",
                 explanation = buildList {
-                    add("${preview.transactions.size} transaksi, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedStock.size} barang stok.")
-                    if (productPlan.skipped.isNotEmpty()) add("Produk dilewati karena namanya sudah ada: ${productPlan.skipped.joinToString()}.")
+                    add("${preview.transactions.size} transaksi, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedMovements.size} catatan produksi & hitung stok, ${addedStock.size} barang stok.")
+                    if (productPlan.skipped.isNotEmpty()) add("Produk dilewati karena namanya sudah ada, beserta produksi dan hitung stoknya: ${productPlan.skipped.joinToString()}.")
                     preview.planPeriod?.let { (start, end) ->
                         add(
                             if (periodApplied != null) "Periode rencana diatur $start s.d. $end."

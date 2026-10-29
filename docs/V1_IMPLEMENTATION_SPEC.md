@@ -54,7 +54,7 @@ A record speed dial (Uang Masuk, Uang Keluar) is available on Beranda and Catata
 See `docs/DOMAIN_MODEL.md` for fields and invariants, and `docs/diagrams/01_entity_relationship_diagram.md` for the schema.
 
 - Scope: `Business`, `Project` (unit), exactly one `PROJECTION` and one `REALIZATION` book per unit.
-- Planning: `Category` (role and optional cost nature), `BudgetItem` (plan line), `Product`, `ProductCostComponent`.
+- Planning: `Category` (role and optional cost nature), `BudgetItem` (plan line), `Product` with `ProductUnit` (sale units), `ProductRecipeLine` (per-batch recipe) and `ProductMovement` (production and counts), DEC-028.
 - Accounting: `FinancialEvent` (five cash types) with one balanced `JournalEntry` and its `Posting` rows. A record is corrected in place or deleted (DEC-019).
 - Stock: `StockItem` (business, optional unit) and `StockMovement`.
 - Import: `ImportBatch`, `ImportNotice`; `ProvenanceRecord` is kept for history.
@@ -82,11 +82,11 @@ All amounts are derived at read time. No report total is a writable source of tr
 
 ## Excel contract (DEC-012)
 
-- One format for the blank template and the export: sheets Petunjuk, Transaksi, Rencana Anggaran, Produk, Satuan Jual, Resep Produk, Stok Barang, Kategori, with the `MANKEU_TEMPLATE` marker (version 5, DEC-028). Every column is required with the exact header; files of an older version are rejected with the list of differing headers.
+- One format for the blank template and the export: sheets Petunjuk, Transaksi, Rencana Anggaran, Produk, Satuan Jual, Resep Produk, Produksi & Stok, Stok Barang, Kategori, with the `MANKEU_TEMPLATE` marker (version 5, DEC-028). Every column is required with the exact header; files of an older version are rejected with the list of differing headers.
 - Import reads only that template. Any other file is rejected with the exact missing or renamed sheets and columns and a way to download the template.
 - Import is bulk entry into the selected unit: preview with new categories, conflicts, and a duplicate warning, then one atomic commit with a notice.
 - Batalkan impor deletes the batch's records (edited ones included), archives its plan lines, removes its products and stock, and clears the plan period it set if unchanged. The batch row stays as history.
-- Round trip: an export imports back without loss (`TemplateImportTest`).
+- Round trip: an export imports back without loss (`TemplateImportTest` for the workbook; `ImportCommitTest.productionAndStockCountsSurviveExportAndImportIntoANewUnit` for product stock in the database). Produksi & Stok rows go only with a product the import adds; on one date they count after that day's sales (DEC-028 §9).
 
 ## Backup contract
 

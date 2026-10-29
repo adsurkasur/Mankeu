@@ -350,6 +350,9 @@ interface FinanceDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProductMovement(movement: ProductMovementEntity)
 
+    @Query("SELECT * FROM product_movements WHERE productId = :productId ORDER BY dateEpochDay, createdAtEpochMillis")
+    suspend fun getProductMovements(productId: String): List<ProductMovementEntity>
+
     @Query("UPDATE categories SET costNature = :costNature WHERE id = :id")
     suspend fun setCategoryCostNature(id: String, costNature: String?)
 

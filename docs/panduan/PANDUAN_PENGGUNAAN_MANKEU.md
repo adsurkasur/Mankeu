@@ -100,7 +100,7 @@ pinjaman, atau cicilan. Bila pembeli belum membayar, catat penjualannya saat uan
 3. **Ikon map** membuka Berkas dan Data: impor, ekspor, dan cadangan.
 4. **Ikon orang** membuka Pengaturan.
 5. **Rencana / Realisasi** untuk berpindah buku. Tombol ini baru muncul setelah usaha dibuat.
-6. **Bilah bawah**: Beranda, Catatan, Stok, Laporan.
+6. **Bilah bawah**: Beranda, Catatan, Produk, Laporan.
 
 ---
 
@@ -386,7 +386,7 @@ Catatan yang sama sekali tidak perlu, misalnya tercatat dua kali, dihapus dengan
 
 ## 7. Mengelola Stok Barang
 
-Buka **Stok** di bilah bawah. Stok mencatat barang yang disimpan beserta nilainya.
+Buka **Produk** di bilah bawah, lalu bagian **Bahan & barang**. Di sana tercatat barang yang disimpan beserta nilainya.
 
 ![Stok masih kosong](gambar/24_stok_kosong.jpg)
 
@@ -513,7 +513,8 @@ komputer.
 
 1. Unduh **Template Excel** seperti pada bagian 9.1.
 2. Isi template di Excel. Jangan ubah nama lembar atau judul kolom. Tulis tanggal dengan format
-   `YYYY-MM-DD`, misalnya `2026-10-21`.
+   `YYYY-MM-DD`, misalnya `2026-10-21`. Lembar **Produksi & Stok** berisi produksi dan hitung stok
+   produk; isi hanya untuk produk yang ada di lembar Produk berkas yang sama.
 3. Kembali ke Berkas dan Data, pastikan unit tujuan sudah terpilih, lalu ketuk **Pilih file .xlsx**.
 4. Periksa **pratinjau**: jumlah transaksi, item rencana, produk, barang, periode rencana, total uang
    masuk dan keluar, kategori baru, serta barang yang dilewati karena namanya sudah ada. Baris
@@ -804,7 +805,7 @@ gula sendiri, sedangkan kantong plastik diambil dari gudang yang sama.
 
 1. Buat usaha *Toko Sembako Berkah* dengan unit *Pusat*, lalu tambahkan unit *Cabang 2*
    ([bagian 3](#3-memulai-usaha-dan-unit)).
-2. Pilih unit **Pusat**. Di **Stok**, tambahkan *Gula* dengan pilihan **Unit Pusat**.
+2. Pilih unit **Pusat**. Di **Produk**, bagian **Bahan & barang**, tambahkan *Gula* dengan pilihan **Unit Pusat**.
 3. Tambahkan *Kantong plastik* dengan pilihan **Semua unit**.
 
 ![Form barang yang dipakai semua unit](gambar/B1_form_barang_bersama.jpg)

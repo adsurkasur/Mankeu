@@ -67,7 +67,7 @@ Beranda dan **Laporan → Kelayakan & BEP** harus menampilkan BEP unit dan rupia
 
 ## 6. Stok
 
-1. Buka **Stok**, tambah barang dengan stok awal 10 dan batas minimum 3.
+1. Buka **Produk** > **Bahan & barang**, tambah barang dengan stok awal 10 dan batas minimum 3.
 2. Catat **Keluar** 8: stok menjadi 2 dan barang ditandai menipis.
 3. Catat **Keluar** 5: ditolak karena stok tidak mencukupi.
 4. Catat **Opname** 0: diterima.

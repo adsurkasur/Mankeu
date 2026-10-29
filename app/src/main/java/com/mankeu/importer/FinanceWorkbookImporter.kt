@@ -1,6 +1,7 @@
 package com.mankeu.importer
 
 import com.mankeu.domain.CostNature
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.domain.sha256Hex
@@ -53,7 +54,10 @@ class FinanceWorkbookImporter(
             sourceSha256 = hash,
             transactions = dataRows(sheets.getValue(MankeuTemplate.TRANSACTIONS)).mapNotNull { readTransaction(it, errors) },
             budgetLines = dataRows(sheets.getValue(MankeuTemplate.BUDGET)).mapNotNull { readBudget(it, errors) },
-            products = readProducts(sheets.getValue(MankeuTemplate.PRODUCTS), sheets.getValue(MankeuTemplate.SALE_UNITS), sheets.getValue(MankeuTemplate.RECIPES), errors),
+            products = readProducts(
+                sheets.getValue(MankeuTemplate.PRODUCTS), sheets.getValue(MankeuTemplate.SALE_UNITS),
+                sheets.getValue(MankeuTemplate.RECIPES), sheets.getValue(MankeuTemplate.MOVEMENTS), errors,
+            ),
             stockItems = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { readStock(it, errors) },
             planPeriod = period,
             errors = errors,
@@ -120,7 +124,13 @@ class FinanceWorkbookImporter(
         return ImportBudgetLine(row.ref(0), month, category, name, quantity, row.text(4), price, total, recurrence, row.nature(8, errors), row.months(9, errors))
     }
 
-    private fun readProducts(products: WorkbookSheet, saleUnits: WorkbookSheet, recipes: WorkbookSheet, errors: MutableList<String>): List<ImportProduct> {
+    private fun readProducts(
+        products: WorkbookSheet,
+        saleUnits: WorkbookSheet,
+        recipes: WorkbookSheet,
+        movementSheet: WorkbookSheet,
+        errors: MutableList<String>,
+    ): List<ImportProduct> {
         fun Row.positiveQuantity(column: Int, label: String): String? {
             val raw = text(column) ?: return null.also { errors += "${ref(column)}: $label wajib diisi." }
             return raw.takeIf { TransactionCalculation.parseQuantity(it) != null }
@@ -152,6 +162,7 @@ class FinanceWorkbookImporter(
             }
             Triple(row.ref(0), product.trim(), ImportRecipeLine(row.ref(0), name, material, quantity.takeIf { material != null }, amount))
         }
+        val movements = dataRows(movementSheet).mapNotNull { row -> readMovement(row, errors) }
         val items = dataRows(products).mapNotNull { row ->
             val name = row.requiredText(0, "Nama", errors) ?: return@mapNotNull null
             val baseUnit = row.requiredText(1, "Satuan Dasar", errors) ?: return@mapNotNull null
@@ -174,6 +185,7 @@ class FinanceWorkbookImporter(
             ImportProduct(
                 row.ref(0), name, baseUnit, yield, target, sellFrom, own,
                 lines.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third },
+                movements.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third },
             )
         }
         // Sale units and recipe lines belong to a product row of the same file; the export always writes all three sheets.
@@ -185,7 +197,47 @@ class FinanceWorkbookImporter(
         lines.filter { it.second.lowercase() !in known }.forEach { (source, product, _) ->
             errors += "$source: produk \"$product\" tidak ada di lembar \"${MankeuTemplate.PRODUCTS}\"."
         }
+        // Production and counts are imported only with their product, so undoing the import removes them too.
+        movements.filter { it.second.lowercase() !in known }.forEach { (source, product, _) ->
+            errors += "$source: produk \"$product\" tidak ada di lembar \"${MankeuTemplate.PRODUCTS}\" berkas ini; " +
+                "produksi dan hitung stok hanya diimpor bersama produknya."
+        }
         return items
+    }
+
+    /** One `Produksi & Stok` row, paired with the product name it belongs to. */
+    private fun readMovement(row: Row, errors: MutableList<String>): Triple<String, String, ImportProductMovement>? {
+        val date = row.date(0, errors) ?: return null
+        val product = row.requiredText(1, "Produk", errors) ?: return null
+        val type = when (val raw = row.text(2)) {
+            MankeuTemplate.PRODUCTION -> ProductMovementType.PRODUCTION
+            MankeuTemplate.STOCK_COUNT -> ProductMovementType.ADJUSTMENT
+            else -> return null.also {
+                errors += "${row.ref(2)}: Jenis harus \"${MankeuTemplate.PRODUCTION}\" atau \"${MankeuTemplate.STOCK_COUNT}\", tertulis \"${raw.orEmpty()}\"."
+            }
+        }
+        val raw = row.text(3) ?: return null.also { errors += "${row.ref(3)}: Jumlah wajib diisi." }
+        val value = raw.replace(',', '.').toBigDecimalOrNull()
+        val production = type == ProductMovementType.PRODUCTION
+        if (value == null || value.signum() < 0 || (production && value.signum() == 0)) {
+            errors += "${row.ref(3)}: Jumlah ${if (production) "produksi harus angka lebih dari nol" else "hitung stok harus angka nol atau lebih"}, tertulis \"$raw\"."
+            return null
+        }
+        val batches = row.text(4)
+        if (batches != null && !production) { errors += "${row.ref(4)}: Batch hanya diisi untuk Produksi."; return null }
+        if (batches != null && TransactionCalculation.parseQuantity(batches) == null) {
+            errors += "${row.ref(4)}: Batch harus angka lebih dari nol, tertulis \"$batches\"."
+            return null
+        }
+        val movement = ImportProductMovement(
+            source = row.ref(0),
+            date = date,
+            type = type,
+            quantityText = value.stripTrailingZeros().toPlainString(),
+            batchesText = batches?.let { TransactionCalculation.parseQuantity(it)!!.stripTrailingZeros().toPlainString() },
+            notes = row.text(5).orEmpty(),
+        )
+        return Triple(row.ref(0), product.trim(), movement)
     }
 
     private fun readPeriod(row: Row, errors: MutableList<String>): Pair<YearMonth, YearMonth>? {

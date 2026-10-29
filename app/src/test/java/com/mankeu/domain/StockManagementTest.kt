@@ -113,5 +113,7 @@ class StockManagementTest {
         override suspend fun getMovements(stockItemId: String) = movements.toList()
         override suspend fun archiveStockItem(id: String, updatedAt: Long) = Unit
         override suspend fun deleteImportedItems(batchId: String) = 0
+        override suspend fun getUsedImportedItems(batchId: String) = emptyList<StockItemEntity>()
+        override suspend fun releaseFromImport(ids: List<String>) = Unit
     }
 }

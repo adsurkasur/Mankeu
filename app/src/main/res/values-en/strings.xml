@@ -509,6 +509,23 @@
     <string name="product_stock_negative_hint">Stock below zero: record production or count stock.</string>
     <string name="product_produce">Produce</string>
     <string name="product_count_stock">Count stock</string>
+    <string name="product_stock_history">Stock history</string>
+    <string name="stock_history_title">Stock history %1$s</string>
+    <string name="stock_history_empty">No production, stock counts or sales yet.</string>
+    <string name="stock_history_fix_hint">Recorded production or a count by mistake? Delete the line, then record it again.</string>
+    <string name="stock_history_production">Production</string>
+    <string name="stock_history_production_batches">Production %1$s batch</string>
+    <string name="stock_history_count">Stock count</string>
+    <string name="stock_history_sold">Sold %1$s</string>
+    <string name="stock_history_added">+%1$s %2$s</string>
+    <string name="stock_history_removed">-%1$s %2$s</string>
+    <string name="stock_history_counted">Counted %1$s %2$s</string>
+    <string name="stock_history_after">Stock now %1$s %2$s</string>
+    <string name="stock_history_sale_hint">Change or delete sales in Records.</string>
+    <string name="stock_history_delete">Delete stock entry</string>
+    <string name="stock_history_delete_title">Delete %1$s of %2$s?</string>
+    <string name="stock_history_delete_body">Stock is worked out again without this line.</string>
+    <string name="msg_stock_entry_deleted">Stock entry deleted.</string>
     <string name="production_title">Produce %1$s</string>
     <string name="production_batches">How many batches?</string>
     <string name="production_result">= %1$s %2$s into stock</string>

@@ -404,6 +404,14 @@ class FinanceRepository(private val database: AppDatabase) {
         )
     }
 
+    /**
+     * Deletes one production or stock count from a product's Riwayat stok (cleanup P1); the stock is
+     * derived, so it follows at once. Correcting one is delete, then record again. Sales are changed in Catatan.
+     */
+    suspend fun deleteProductMovement(id: String) = database.withTransaction {
+        require(dao.deleteProductMovement(id) == 1) { "Catatan produksi atau hitung stok tidak ditemukan." }
+    }
+
     suspend fun archiveProduct(id: String) = database.withTransaction { dao.archiveProduct(id, System.currentTimeMillis()) }
 
     /** Sets an expense category's default cost nature (DEC-014 B-1). */

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Riwayat stok per product: production, stock counts and sales with the stock after each; a wrong production or count can be deleted (then recorded again).
 - Catat penjualan per satuan jual (bungkus, dus); belanja bisa menautkan bahan dan memperingatkan dampak harga baru ke HPP dan untung (spec #20).
 - Product stock is automatic: production adds, sales subtract (spec #9).
 - A material's price follows its latest purchase (spec #20).

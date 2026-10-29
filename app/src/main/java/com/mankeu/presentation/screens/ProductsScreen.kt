@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +63,7 @@ fun ProductsScreen(
     unitName: String?,
     onManageScope: () -> Unit,
     onOpenProduct: (String?) -> Unit,
+    onOpenHistory: (String) -> Unit,
     onProduce: (String, BigDecimal, LocalDate) -> Unit,
     onCountStock: (String, BigDecimal, LocalDate) -> Unit,
     onCreateStockItem: (String, String, Long, BigDecimal, BigDecimal, Boolean) -> Unit,
@@ -128,6 +130,7 @@ fun ProductsScreen(
                 onOpen = { onOpenProduct(record.product.id) },
                 onProduce = { produceId = record.product.id },
                 onCount = { countId = record.product.id },
+                onHistory = { onOpenHistory(record.product.id) },
             )
         }
         materialItems(materials, onAddItem = { addingMaterial = true }, onOpenItem = { materialId = it })
@@ -143,7 +146,7 @@ internal fun hppLines(cost: ProductCost): List<String> = when {
 }
 
 @Composable
-private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> Unit, onProduce: () -> Unit, onCount: () -> Unit) {
+private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> Unit, onProduce: () -> Unit, onCount: () -> Unit, onHistory: () -> Unit) {
     val semantic = LocalMankeuSemanticColors.current
     val spec = record.spec
     val stock = record.stock
@@ -173,6 +176,7 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
                 FilledTonalButton(onClick = onProduce, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_produce)) }
                 FilledTonalButton(onClick = onCount, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_count_stock)) }
             }
+            TextButton(onClick = onHistory) { Text(stringResource(R.string.product_stock_history)) }
         }
     }
 }

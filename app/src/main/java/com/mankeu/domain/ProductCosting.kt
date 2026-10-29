@@ -98,12 +98,13 @@ object ProductStock {
      * [movements] oldest first. Unlike material stock this may go negative: sales recorded before
      * any production are real sales, and hiding them at zero would make the count lie.
      */
-    fun level(movements: List<ProductMovement>): BigDecimal = movements.fold(BigDecimal.ZERO) { level, m ->
-        when (m.type) {
-            ProductMovementType.PRODUCTION -> level + m.quantity
-            ProductMovementType.SALE -> level - m.quantity
-            ProductMovementType.ADJUSTMENT -> m.quantity
-        }
+    fun level(movements: List<ProductMovement>): BigDecimal = movements.fold(BigDecimal.ZERO, ::level)
+
+    /** The stock after one [movement] applied to [level]. */
+    fun level(level: BigDecimal, movement: ProductMovement): BigDecimal = when (movement.type) {
+        ProductMovementType.PRODUCTION -> level + movement.quantity
+        ProductMovementType.SALE -> level - movement.quantity
+        ProductMovementType.ADJUSTMENT -> movement.quantity
     }
 
     /** 410 bungkus with dus = 40 → (10 dus, 10 bungkus left). */

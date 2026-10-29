@@ -299,6 +299,9 @@ interface FinanceDao {
     @Query("DELETE FROM products WHERE importBatchId = :batchId")
     suspend fun deleteImportedProducts(batchId: String): Int
 
+    @Query("DELETE FROM product_movements WHERE id = :id")
+    suspend fun deleteProductMovement(id: String): Int
+
     /** Rows an import added, by their id prefix (`<batchId>:`), so undo removes them and nothing recorded later. */
     @Query("DELETE FROM product_movements WHERE substr(id, 1, length(:batchId) + 1) = :batchId || ':'")
     suspend fun deleteImportedProductMovements(batchId: String): Int

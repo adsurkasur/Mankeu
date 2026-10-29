@@ -511,6 +511,23 @@
     <string name="product_stock_negative_hint">Stok minus: catat produksi atau hitung stok.</string>
     <string name="product_produce">Produksi</string>
     <string name="product_count_stock">Hitung stok</string>
+    <string name="product_stock_history">Riwayat stok</string>
+    <string name="stock_history_title">Riwayat stok %1$s</string>
+    <string name="stock_history_empty">Belum ada produksi, hitung stok, atau penjualan.</string>
+    <string name="stock_history_fix_hint">Salah catat produksi atau hitung stok? Hapus barisnya, lalu catat ulang.</string>
+    <string name="stock_history_production">Produksi</string>
+    <string name="stock_history_production_batches">Produksi %1$s batch</string>
+    <string name="stock_history_count">Hitung stok</string>
+    <string name="stock_history_sold">Terjual %1$s</string>
+    <string name="stock_history_added">+%1$s %2$s</string>
+    <string name="stock_history_removed">-%1$s %2$s</string>
+    <string name="stock_history_counted">Dihitung %1$s %2$s</string>
+    <string name="stock_history_after">Stok jadi %1$s %2$s</string>
+    <string name="stock_history_sale_hint">Ubah atau hapus penjualan di Catatan.</string>
+    <string name="stock_history_delete">Hapus catatan stok</string>
+    <string name="stock_history_delete_title">Hapus %1$s tanggal %2$s?</string>
+    <string name="stock_history_delete_body">Stok dihitung ulang tanpa baris ini.</string>
+    <string name="msg_stock_entry_deleted">Catatan stok dihapus.</string>
     <string name="production_title">Produksi %1$s</string>
     <string name="production_batches">Berapa batch?</string>
     <string name="production_result">= %1$s %2$s masuk stok</string>

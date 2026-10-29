@@ -131,6 +131,7 @@ import com.mankeu.presentation.screens.ManageScopeSheet
 import com.mankeu.presentation.screens.PlanScreen
 import com.mankeu.presentation.screens.ReportsScreen
 import com.mankeu.presentation.screens.ProductEditorScreen
+import com.mankeu.presentation.screens.StockHistoryScreen
 import com.mankeu.presentation.screens.ProductsScreen
 import com.mankeu.presentation.screens.RestorePreviewDialog
 import com.mankeu.presentation.screens.SettingsScreen
@@ -154,7 +155,7 @@ enum class Destination(val labelRes: Int, val icon: ImageVector) {
 /** Cash is recorded from these; elsewhere the speed dial would sit over Laporan and Produk content. */
 private val RECORDING_DESTINATIONS = setOf(Destination.HOME, Destination.ENTRY)
 
-enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT }
+enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY }
 
 @Composable
 fun MankeuApp(
@@ -201,6 +202,9 @@ fun MankeuApp(
     // The product the full-page editor (Overlay.PRODUCT) is open on; null = a new product.
     var productEditorId by rememberSaveable { mutableStateOf<String?>(null) }
     val openProduct: (String?) -> Unit = { id -> productEditorId = id; overlay = Overlay.PRODUCT }
+    // The product whose Riwayat stok (Overlay.STOCK_HISTORY) is open.
+    var stockHistoryId by rememberSaveable { mutableStateOf<String?>(null) }
+    val openStockHistory: (String) -> Unit = { id -> stockHistoryId = id; overlay = Overlay.STOCK_HISTORY }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
     // recreate() is not instantaneous — resources reload and the whole tree recomposes — and
     // without this the screen simply froze on the old language for a beat and then snapped.
@@ -533,6 +537,17 @@ fun MankeuApp(
                                     }
                                 }
 
+                                Overlay.STOCK_HISTORY -> {
+                                    val record = state.products.firstOrNull { it.product.id == stockHistoryId }
+                                    OverlayScaffold(
+                                        title = stringResource(R.string.stock_history_title, record?.product?.name.orEmpty()),
+                                        onBack = { overlay = Overlay.NONE },
+                                        snackbarHost = snackbarHost,
+                                    ) {
+                                        record?.let { StockHistoryScreen(record = it, onDelete = viewModel::deleteProductMovement) }
+                                    }
+                                }
+
                                 Overlay.NONE -> BoxWithConstraints(Modifier.fillMaxSize()) {
                                     val expanded = maxWidth >= 840.dp
                                     if (expanded) {
@@ -568,6 +583,7 @@ fun MankeuApp(
                                                     onManageScope = { manageScope = true },
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                     onOpenProduct = openProduct,
+                                                    onOpenStockHistory = openStockHistory,
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,
@@ -601,6 +617,7 @@ fun MankeuApp(
                                                 onManageScope = { manageScope = true },
                                                 onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                 onOpenProduct = openProduct,
+                                                    onOpenStockHistory = openStockHistory,
                                                 requestedKind = requestedEntryKind,
                                                 onRequestedKindConsumed = { requestedEntryKind = null },
                                                 expanded = false,
@@ -1183,6 +1200,7 @@ private fun ScreenContent(
     onManageScope: () -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
     onOpenProduct: (String?) -> Unit,
+    onOpenStockHistory: (String) -> Unit,
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
@@ -1232,6 +1250,7 @@ private fun ScreenContent(
                     unitName = state.projects.firstOrNull { it.id == state.selectedProjectId }?.name,
                     onManageScope = onManageScope,
                     onOpenProduct = onOpenProduct,
+                    onOpenHistory = onOpenStockHistory,
                     onProduce = viewModel::recordProduction,
                     onCountStock = viewModel::countProductStock,
                     onCreateStockItem = viewModel::createStockItem,

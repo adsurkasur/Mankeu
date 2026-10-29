@@ -72,6 +72,30 @@ class ProductStockFlowTest {
         assertTrue(bad.exceptionOrNull()?.message.orEmpty().contains("karung"))
     }
 
+    /** Cleanup P1: a wrong production or count is deleted from the stock history and the stock follows; a sale is not deleted here. */
+    @Test fun aWrongProductionOrCountIsDeletedAndTheStockFollows() = runBlocking {
+        val (businessId, projectId) = repo.createBusinessWithUnit("Keripik Bu Sri", "Umum")
+        val book = repo.books(projectId).first().single { it.mode == BookMode.REALIZATION.name }
+        val productId = repo.saveProduct(projectId, null, ProductDraft(
+            name = "Keripik", baseUnit = "bungkus", batchYieldText = "400",
+            units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8_000)), recipe = emptyList(),
+        ))
+        suspend fun keripik() = repo.products(projectId).first().single()
+        repo.recordProduction(productId, BigDecimal.ONE, LocalDate.of(2026, 10, 1), "")
+        repo.recordProduction(productId, BigDecimal(2), LocalDate.of(2026, 10, 2), "salah ketik")
+        val sale = repo.recordEvent(EventDraft(businessId, projectId, book.id, FinancialEventType.CASH_INCOME, 80_000, LocalDate.of(2026, 10, 3), "Jual", "Penjualan", quantityText = "10", unit = "bungkus", productId = productId))
+        repo.countProductStock(productId, BigDecimal(5), LocalDate.of(2026, 10, 4), "")
+        assertEquals(0, BigDecimal(5).compareTo(keripik().stock))
+
+        repo.deleteProductMovement(keripik().history.last().id)
+        assertEquals(0, BigDecimal(1_190).compareTo(keripik().stock))
+        repo.deleteProductMovement(keripik().history.single { it.notes == "salah ketik" }.id)
+        assertEquals(0, BigDecimal(390).compareTo(keripik().stock))
+
+        assertTrue(runCatching { repo.deleteProductMovement(sale) }.isFailure)
+        assertEquals(listOf("PRODUCTION", "SALE"), keripik().history.map { it.type.name })
+    }
+
     /** Final review I-4 / M-5: both price reads pick the same purchase on a tie, and a Rp0 price never wins. */
     @Test fun bothPriceReadsAgreeOnTiesAndIgnoreZeroPrices() = runBlocking {
         val (businessId, projectId) = repo.createBusinessWithUnit("Keripik Bu Sri", "Umum")

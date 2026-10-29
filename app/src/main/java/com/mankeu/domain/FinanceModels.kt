@@ -4,13 +4,18 @@ import java.time.LocalDate
 
 enum class BookMode { PROJECTION, REALIZATION }
 
-/** Strict cash (DEC-006, DEC-011): money that actually moved, nothing owed. */
+/**
+ * Money that actually moved (DEC-006, DEC-011), plus one non-cash type since DEC-029: a purchase on
+ * credit from a supplier. Customer and supplier debts only; no loans, interest or instalments (#2).
+ */
 enum class FinancialEventType {
     CASH_INCOME,
     CASH_EXPENSE,
     OWNER_CAPITAL,
     OWNER_DRAWING,
     ASSET_PURCHASE_CASH,
+    /** Bought now, paid later (F2-5, DEC-029 §3): Beban / Utang, no cash. Paid by a CASH_EXPENSE with settlesEventId. */
+    CREDIT_PURCHASE,
 }
 
 enum class PostingSide { DEBIT, CREDIT }
@@ -22,6 +27,10 @@ enum class LedgerAccount {
     OWNER_EQUITY,
     OWNER_DRAWING,
     EQUIPMENT_ASSET,
+    /** What customers still owe on sale notes (DEC-029 §2). */
+    RECEIVABLE,
+    /** What the business still owes suppliers for credit purchases (DEC-029 §3). */
+    PAYABLE,
 }
 
 enum class CashFlowRole { OPERATING, INVESTING, FINANCING }
@@ -76,6 +85,12 @@ data class MoneyEvent(
     val productId: String? = null,
     val usefulLifeMonths: Int? = null,
     val stockItemId: String? = null,
+    /** Payment of a sale note (DEC-029 §2). */
+    val saleId: String? = null,
+    val contactId: String? = null,
+    val dueDate: LocalDate? = null,
+    /** The credit purchase this expense pays (DEC-029 §3). */
+    val settlesEventId: String? = null,
 ) {
     init {
         require(amountRupiah > 0) { "Amount must be a positive integer rupiah value." }
@@ -91,8 +106,10 @@ data class MoneyEvent(
             -> CashFlowRole.FINANCING
 
             FinancialEventType.ASSET_PURCHASE_CASH -> CashFlowRole.INVESTING
+            // A credit purchase posts no cash, so its role never reaches a cash-flow figure (DEC-029 §3).
             FinancialEventType.CASH_INCOME,
             FinancialEventType.CASH_EXPENSE,
+            FinancialEventType.CREDIT_PURCHASE,
             -> CashFlowRole.OPERATING
         }
     }

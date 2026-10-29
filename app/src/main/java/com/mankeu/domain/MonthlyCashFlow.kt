@@ -62,5 +62,7 @@ object MonthlyCashFlowCalculator {
     private fun cashMovement(event: CashFlowRecord): Long = when (event.type) {
         FinancialEventType.CASH_INCOME, FinancialEventType.OWNER_CAPITAL -> event.amountRupiah
         FinancialEventType.CASH_EXPENSE, FinancialEventType.OWNER_DRAWING, FinancialEventType.ASSET_PURCHASE_CASH -> -event.amountRupiah
+        // Paid later by a CASH_EXPENSE; buying on credit moves no cash (DEC-029 §3).
+        FinancialEventType.CREDIT_PURCHASE -> 0
     }
 }

@@ -248,6 +248,7 @@ class SyncEngine(private val database: AppDatabase) {
         /** What makes two rows "the same thing" for the owner, per table that can be created offline twice. */
         private val NATURAL_KEYS = mapOf(
             "categories" to listOf("businessId", "role", "normalizedName"),
+            "contacts" to listOf("businessId", "normalizedName"),
             "stock_items" to listOf("businessId", "projectId", "name"),
             "products" to listOf("projectId", "name"),
             // Only for a merged twin product, see isMergedProduct (cleanup P4).
@@ -257,6 +258,12 @@ class SyncEngine(private val database: AppDatabase) {
         private val PRODUCT_CHILDREN = listOf("product_units", "product_recipe_lines")
 
         /** Reference columns and the table they point into, rewritten through aliases. */
-        private val REFERENCES = mapOf("categoryId" to "categories", "productId" to "products", "stockItemId" to "stock_items")
+        private val REFERENCES = mapOf(
+            "categoryId" to "categories",
+            "productId" to "products",
+            "stockItemId" to "stock_items",
+            "contactId" to "contacts",
+            "saleId" to "sales",
+        )
     }
 }

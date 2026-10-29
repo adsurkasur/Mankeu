@@ -124,6 +124,10 @@ data class BudgetItemEntity(
         Index("budgetItemId"),
         Index("importBatchId"),
         Index("stockItemId"),
+        Index("saleId"),
+        Index("contactId"),
+        Index("dueDateEpochDay"),
+        Index("settlesEventId"),
     ],
 )
 data class FinancialEventEntity(
@@ -153,6 +157,14 @@ data class FinancialEventEntity(
     val usefulLifeMonths: Int? = null,
     /** The material an expense bought (spec #20); the latest such purchase sets the material's price. */
     val stockItemId: String? = null,
+    /** A payment of this sale note (DEC-029 §2): Kas / Piutang, not revenue. */
+    val saleId: String? = null,
+    /** Supplier of a credit purchase (DEC-029 §3). */
+    val contactId: String? = null,
+    /** When a credit purchase is due; null = no due date. */
+    val dueDateEpochDay: Long? = null,
+    /** The credit purchase this cash expense pays (DEC-029 §3): Utang / Kas. */
+    val settlesEventId: String? = null,
 )
 
 @Entity(
@@ -254,7 +266,7 @@ data class ProductRecipeLineEntity(
 data class ProductMovementEntity(
     @PrimaryKey val id: String,
     val productId: String,
-    /** [com.mankeu.domain.ProductMovementType.PRODUCTION] or `ADJUSTMENT` (a count). */
+    /** [com.mankeu.domain.ProductMovementType.PRODUCTION], `ADJUSTMENT` (a count) or `CONSIGN_RETURN` (DEC-029 §8). */
     val movementType: String,
     val quantityText: String,
     /** Production only: how many batches made [quantityText]. */
@@ -262,6 +274,107 @@ data class ProductMovementEntity(
     val dateEpochDay: Long,
     val notes: String = "",
     val createdAtEpochMillis: Long,
+    /** `CONSIGN_RETURN` only: the consignment the goods came back from, so the store's balance drops (DEC-029 §8). */
+    val consignmentId: String? = null,
+)
+
+/** A customer and/or supplier of a business (F2-2, DEC-029 §9); archived, not deleted, once used. */
+@Entity(
+    tableName = "contacts",
+    foreignKeys = [ForeignKey(BusinessEntity::class, ["id"], ["businessId"], ForeignKey.CASCADE)],
+    indices = [Index("businessId"), Index(value = ["businessId", "normalizedName"], unique = true)],
+)
+data class ContactEntity(
+    @PrimaryKey val id: String,
+    val businessId: String,
+    val name: String,
+    val normalizedName: String,
+    val phone: String? = null,
+    val address: String? = null,
+    val notes: String? = null,
+    val isCustomer: Boolean = true,
+    val isSupplier: Boolean = false,
+    val archived: Boolean = false,
+    val createdAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long = createdAtEpochMillis,
+    val importBatchId: String? = null,
+)
+
+/** A sale note (DEC-029): revenue is recognised here; payments are `CASH_INCOME` events with [id] as saleId. */
+@Entity(
+    tableName = "sales",
+    foreignKeys = [ForeignKey(ProjectEntity::class, ["id"], ["projectId"], ForeignKey.CASCADE)],
+    indices = [Index("projectId"), Index("contactId"), Index("consignmentId"), Index("importBatchId")],
+)
+data class SaleEntity(
+    @PrimaryKey val id: String,
+    val businessId: String,
+    val projectId: String,
+    val contactId: String? = null,
+    val dateEpochDay: Long,
+    val dueDateEpochDay: Long? = null,
+    val discountRupiah: Long = 0,
+    val notes: String = "",
+    /** Set when the sale is a consignment sell-through (F2-6); such lines do not take stock again (DEC-029 §8). */
+    val consignmentId: String? = null,
+    /** Migrated from a schema-13 cash sale (F2-4): the HPP is the recipe cost at migration time. */
+    val hppEstimated: Boolean = false,
+    val importBatchId: String? = null,
+    val createdAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long = createdAtEpochMillis,
+)
+
+@Entity(
+    tableName = "sale_lines",
+    foreignKeys = [ForeignKey(SaleEntity::class, ["id"], ["saleId"], ForeignKey.CASCADE)],
+    indices = [Index("saleId"), Index("productId")],
+)
+data class SaleLineEntity(
+    @PrimaryKey val id: String,
+    val saleId: String,
+    val productId: String,
+    val unitName: String,
+    val contentText: String,
+    val quantityText: String,
+    val unitPriceRupiah: Long,
+    val totalRupiah: Long,
+    /** HPP of this line when sold (spec #6). */
+    val hppRupiah: Long,
+    val sortOrder: Int = 0,
+)
+
+@Entity(
+    tableName = "consignments",
+    foreignKeys = [ForeignKey(ProjectEntity::class, ["id"], ["projectId"], ForeignKey.CASCADE)],
+    indices = [Index("projectId"), Index("contactId")],
+)
+data class ConsignmentEntity(
+    @PrimaryKey val id: String,
+    val businessId: String,
+    val projectId: String,
+    val contactId: String,
+    val dateEpochDay: Long,
+    val notes: String = "",
+    val importBatchId: String? = null,
+    val createdAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long = createdAtEpochMillis,
+)
+
+/** One product sent on consignment, priced per sale unit at sending (F2-6). */
+@Entity(
+    tableName = "consignment_lines",
+    foreignKeys = [ForeignKey(ConsignmentEntity::class, ["id"], ["consignmentId"], ForeignKey.CASCADE)],
+    indices = [Index("consignmentId"), Index("productId")],
+)
+data class ConsignmentLineEntity(
+    @PrimaryKey val id: String,
+    val consignmentId: String,
+    val productId: String,
+    val unitName: String,
+    val contentText: String,
+    val quantityText: String,
+    val priceRupiah: Long,
+    val sortOrder: Int = 0,
 )
 
 @Entity(

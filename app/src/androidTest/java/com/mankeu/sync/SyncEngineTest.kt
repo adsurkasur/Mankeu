@@ -213,6 +213,34 @@ class SyncEngineTest {
         assertEquals(listOf(Triple("keripik", listOf("bungkus", "dus"), listOf("Bumbu" to 2_500_000L))), b.shape())
     }
 
+    /** DEC-029 §9: contacts merge by (business, name); a note naming A's twin points at B's own contact. */
+    @Test
+    fun theSameContactCreatedOnTwoPhonesIsMergedAndANoteFollows() = runBlocking {
+        val (businessId, projectId) = a.repository.run { createBusiness("Keripik").let { it to createProject(it, "Utama") } }
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        fun Device.contact(id: String, name: String) = database.openHelper.writableDatabase.execSQL(
+            "INSERT INTO contacts (id, businessId, name, normalizedName, isCustomer, isSupplier, archived, createdAtEpochMillis, updatedAtEpochMillis) VALUES (?, ?, ?, 'toko a', 1, 0, 0, 0, 0)",
+            arrayOf<Any>(id, businessId, name),
+        )
+        a.contact("ca", "Toko A")
+        b.contact("cb", "toko a")
+        a.database.openHelper.writableDatabase.execSQL(
+            "INSERT INTO sales (id, businessId, projectId, contactId, dateEpochDay, discountRupiah, notes, hppEstimated, createdAtEpochMillis, updatedAtEpochMillis) VALUES ('nota', ?, ?, 'ca', 20000, 0, '', 0, 0, 0)",
+            arrayOf<Any>(businessId, projectId),
+        )
+
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val atB = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+
+        assertEquals(1, atB.merged)
+        b.database.openHelper.writableDatabase.query("SELECT (SELECT COUNT(*) FROM contacts), (SELECT contactId FROM sales WHERE id = 'nota')").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(1, c.getInt(0))
+            assertEquals("cb", c.getString(1))
+        }
+    }
+
     @Test
     fun nothingIsCapturedWhileSyncIsOff() = runBlocking {
         a.engine.disable()

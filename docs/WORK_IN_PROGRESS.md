@@ -25,7 +25,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di
 `docs/superpowers/plans/2026-10-29-fase2-nota-piutang.md` (8 tugas, schema 14; 12 keputusan penulis rencana menunggu
-tinjauan pemilik, masuk DEC-029). Berikutnya: eksekusi Fase 2 mulai Task 1 (setelah pemilik meninjau keputusan rencana).
+tinjauan pemilik, masuk DEC-029). Eksekusi di branch `fase2-nota-piutang`: Task 1 (matematika domain) selesai dan
+direview; Task 2 (schema 14, migrasi F2-4, jurnal piutang/utang, BackupUpgrade 13→14, DEC-029) selesai, belum direview.
+Berikutnya: review Task 2, lalu Task 3 (repository nota, kontak, tempo, titip; pembaca stok pindah ke `sale_lines`).
 
 **Uji alur sebagai pengusaha baru (2026-10-29)**, dicatat per checkpoint di
 `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`. Semua checkpoint (CP1–CP7) selesai.

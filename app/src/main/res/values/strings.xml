@@ -171,6 +171,7 @@
     <string name="kind_capital_in">Tambah modal sendiri</string>
     <string name="kind_capital_out">Ambil untuk pribadi</string>
     <string name="kind_tool_cash">Beli alat tunai</string>
+    <string name="kind_credit_purchase">Belanja belum dibayar</string>
 
     <!-- Akun dan pengaturan -->
     <string name="settings_title">Pengaturan</string>
@@ -518,6 +519,8 @@
     <string name="stock_history_production">Produksi</string>
     <string name="stock_history_production_batches">Produksi %1$s batch</string>
     <string name="stock_history_count">Hitung stok</string>
+    <string name="stock_history_consign_out">Dititipkan</string>
+    <string name="stock_history_consign_return">Titipan ditarik</string>
     <string name="stock_history_sold">Terjual %1$s</string>
     <string name="stock_history_added">+%1$s %2$s</string>
     <string name="stock_history_removed">-%1$s %2$s</string>

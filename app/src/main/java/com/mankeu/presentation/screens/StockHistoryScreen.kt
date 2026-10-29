@@ -89,6 +89,8 @@ private fun headline(entry: StockHistoryEntry): String = when (entry.type) {
         ?: stringResource(R.string.stock_history_production)
     ProductMovementType.ADJUSTMENT -> stringResource(R.string.stock_history_count)
     ProductMovementType.SALE -> stringResource(R.string.stock_history_sold, entry.soldText.orEmpty())
+    ProductMovementType.CONSIGN_OUT -> stringResource(R.string.stock_history_consign_out)
+    ProductMovementType.CONSIGN_RETURN -> stringResource(R.string.stock_history_consign_return)
 }
 
 @Composable
@@ -109,8 +111,8 @@ private fun HistoryRow(entry: StockHistoryEntry, unit: String, onDelete: (() -> 
                 )
                 Text(
                     when (entry.type) {
-                        ProductMovementType.PRODUCTION -> stringResource(R.string.stock_history_added, amount, unit)
-                        ProductMovementType.SALE -> stringResource(R.string.stock_history_removed, amount, unit)
+                        ProductMovementType.PRODUCTION, ProductMovementType.CONSIGN_RETURN -> stringResource(R.string.stock_history_added, amount, unit)
+                        ProductMovementType.SALE, ProductMovementType.CONSIGN_OUT -> stringResource(R.string.stock_history_removed, amount, unit)
                         ProductMovementType.ADJUSTMENT -> stringResource(R.string.stock_history_counted, amount, unit)
                     },
                     color = if (entry.type == ProductMovementType.SALE) semantic.danger else MaterialTheme.colorScheme.onSurface,

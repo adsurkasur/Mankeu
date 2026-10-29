@@ -169,6 +169,7 @@
     <string name="kind_capital_in">Add own money</string>
     <string name="kind_capital_out">Take out for personal use</string>
     <string name="kind_tool_cash">Buy tool with cash</string>
+    <string name="kind_credit_purchase">Unpaid purchase</string>
 
     <!-- Account and settings -->
     <string name="settings_title">Settings</string>
@@ -516,6 +517,8 @@
     <string name="stock_history_production">Production</string>
     <string name="stock_history_production_batches">Production (batches: %1$s)</string>
     <string name="stock_history_count">Stock count</string>
+    <string name="stock_history_consign_out">Consigned</string>
+    <string name="stock_history_consign_return">Consignment taken back</string>
     <string name="stock_history_sold">Sold %1$s</string>
     <string name="stock_history_added">+%1$s %2$s</string>
     <string name="stock_history_removed">-%1$s %2$s</string>

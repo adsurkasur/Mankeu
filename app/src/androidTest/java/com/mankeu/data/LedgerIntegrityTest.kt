@@ -76,6 +76,21 @@ class LedgerIntegrityTest {
         assertEquals(-250_000, summary().profitRupiah)
     }
 
+    /** DEC-029: the old form does not carry saleId; editing a note payment keeps it a payment (Kas / Piutang). */
+    @Test
+    fun editingANotePaymentKeepsItsSaleLinkAndJournal() = runBlocking {
+        val payment = record(CASH_INCOME, 100_000)
+        database.openHelper.writableDatabase.execSQL("UPDATE financial_events SET saleId = 'nota-1' WHERE id = ?", arrayOf<Any>(payment))
+
+        repository.updateEvent(payment, draft(CASH_INCOME, 120_000))
+
+        assertEquals("nota-1", dao.getEvent(payment)!!.saleId)
+        val postings = dao.getPostings(dao.getJournalForEvent(payment)!!.id).map { it.account to it.amountRupiah }
+        assertEquals(listOf(LedgerAccount.CASH.name to 120_000L, LedgerAccount.RECEIVABLE.name to 120_000L), postings)
+        assertEquals(120_000, summary().cashBalanceRupiah)
+        assertEquals(0, summary().operatingIncomeRupiah)
+    }
+
     /** DEC-022: a blank description takes the category name, on record and on edit. */
     @Test
     fun aBlankDescriptionBecomesTheCategoryName() = runBlocking {

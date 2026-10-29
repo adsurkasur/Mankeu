@@ -27,6 +27,11 @@ import com.mankeu.sync.SyncSchema
         ProductUnitEntity::class,
         ProductRecipeLineEntity::class,
         ProductMovementEntity::class,
+        ContactEntity::class,
+        SaleEntity::class,
+        SaleLineEntity::class,
+        ConsignmentEntity::class,
+        ConsignmentLineEntity::class,
         ImportBatchEntity::class,
         ImportNoticeEntity::class,
         ProvenanceEntity::class,
@@ -35,7 +40,7 @@ import com.mankeu.sync.SyncSchema
         SyncOutboxEntity::class,
         SyncMetaEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -53,9 +58,12 @@ abstract class AppDatabase : RoomDatabase() {
          * recording an alias when the twin is upserted, and rewrites `categoryId`, `productId` and
          * `stockItemId` of rows applied *after* that. An event applied before its material's alias
          * exists keeps the other phone's id and never prices the local material (final review I-5).
+         * Contacts follow businesses for the same reason (`contactId` is rewritten through aliases);
+         * notes and consignments come after products and before `financial_events`, parents first.
          */
         val DATA_TABLES = listOf(
             "businesses",
+            "contacts",
             "projects",
             "books",
             "categories",
@@ -65,6 +73,10 @@ abstract class AppDatabase : RoomDatabase() {
             "product_units",
             "product_recipe_lines",
             "product_movements",
+            "consignments",
+            "consignment_lines",
+            "sales",
+            "sale_lines",
             "budget_items",
             "financial_events",
             "journal_entries",
@@ -82,7 +94,7 @@ abstract class AppDatabase : RoomDatabase() {
             // DEC-026 / spec #1: pre-0.1.0 installs start clean; schema 12 onward is carried forward.
             // The destructive path runs Callback.onDestructiveMigration, not onCreate (see SyncSchema.callback).
             .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
-            .addMigrations(Migration12To13)
+            .addMigrations(Migration12To13, Migration13To14)
             .addCallback(SyncSchema.callback)
             .build()
     }

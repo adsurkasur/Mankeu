@@ -688,7 +688,15 @@ class FinanceRepository(private val database: AppDatabase) {
     suspend fun updateEvent(eventId: String, draft: EventDraft) = database.withTransaction {
         val old = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
         requireValid(draft)
-        val event = draft.copy(importBatchId = old.importBatchId).toEvent().withPurchasePrice().copy(id = old.id)
+        // The form does not carry the phase-2 links (DEC-029); an edit keeps them, so a note payment
+        // stays a payment (Kas / Piutang) instead of becoming revenue a second time.
+        val event = draft.copy(importBatchId = old.importBatchId).toEvent().withPurchasePrice().copy(
+            id = old.id,
+            saleId = old.saleId,
+            contactId = old.contactId,
+            dueDate = old.dueDateEpochDay?.let(LocalDate::ofEpochDay),
+            settlesEventId = old.settlesEventId,
+        )
         dao.deleteEvent(old.id)
         insertEventAndJournal(event, LedgerPolicy.journalFor(event), createdAtEpochMillis = old.createdAtEpochMillis)
     }
@@ -1304,6 +1312,10 @@ class FinanceRepository(private val database: AppDatabase) {
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
         stockItemId = stockItemId,
+        saleId = saleId,
+        contactId = contactId,
+        dueDate = dueDateEpochDay?.let(LocalDate::ofEpochDay),
+        settlesEventId = settlesEventId,
     )
 
     private fun MoneyEvent.toEntity(createdAtEpochMillis: Long = System.currentTimeMillis()) = FinancialEventEntity(
@@ -1329,6 +1341,10 @@ class FinanceRepository(private val database: AppDatabase) {
         productId = productId,
         usefulLifeMonths = usefulLifeMonths,
         stockItemId = stockItemId,
+        saleId = saleId,
+        contactId = contactId,
+        dueDateEpochDay = dueDate?.toEpochDay(),
+        settlesEventId = settlesEventId,
     )
 
     private fun calculateFormulaTotal(quantityText: String?, unitPriceRupiah: Long?): Long? {
@@ -1343,6 +1359,7 @@ class FinanceRepository(private val database: AppDatabase) {
         FinancialEventType.ASSET_PURCHASE_CASH -> "Peralatan dan aset"
         FinancialEventType.OWNER_CAPITAL -> "Modal pemilik"
         FinancialEventType.OWNER_DRAWING -> "Pengambilan pemilik"
+        FinancialEventType.CREDIT_PURCHASE -> "Operasional"
     }
 
     private fun normalize(value: String): String = value.lowercase(Locale.forLanguageTag("id-ID"))

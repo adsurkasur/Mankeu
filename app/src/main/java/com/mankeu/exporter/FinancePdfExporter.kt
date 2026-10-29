@@ -267,6 +267,7 @@ class FinancePdfExporter {
                 FinancialEventType.OWNER_CAPITAL -> "Modal pemilik"
                 FinancialEventType.OWNER_DRAWING -> "Pengambilan pemilik"
                 FinancialEventType.ASSET_PURCHASE_CASH -> "Pembelian aset tunai"
+                FinancialEventType.CREDIT_PURCHASE -> "Pembelian kredit (utang usaha)"
             }
         } ?: raw.replace('_', ' ').lowercase().replaceFirstChar(Char::uppercase)
     }

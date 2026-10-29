@@ -32,6 +32,7 @@ object BusinessWords {
         FinancialEventType.OWNER_CAPITAL -> R.string.kind_capital_in
         FinancialEventType.OWNER_DRAWING -> R.string.kind_capital_out
         FinancialEventType.ASSET_PURCHASE_CASH -> R.string.kind_tool_cash
+        FinancialEventType.CREDIT_PURCHASE -> R.string.kind_credit_purchase
     }
 
     /** Event types that increase cash on hand. Used for the +/- sign and the in/out colour. */

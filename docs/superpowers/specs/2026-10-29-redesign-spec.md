@@ -58,3 +58,15 @@ tidak bisa dicatat, dan alur Rencana/Catatan membingungkan.
 5. ~~`delete:` `SkeletonMetricGrid` tidak dipakai.~~ Temuan ditarik: `SkeletonMetricGrid` dipakai di `HomeScreen.kt:139` (keadaan memuat).
 6. `yagni:` tiga jalur salinan data → dua (keputusan #8, Fase 5).
 7. `shrink:` `MankeuApp.kt` 1.368 baris, menyusut saat saklar global dihapus (Fase 3).
+
+## Keputusan Fase 2 (user-confirmed, grill 2026-10-29, sebelum rencana Fase 2 ditulis)
+
+| # | Keputusan |
+|---|---|
+| F2-1 | **Untung dan belanja produksi:** belanja berkategori biaya variabel (bahan, kemasan, gas; sifat biaya `VARIABLE`) tidak dikurangkan langsung dari untung; yang dikurangkan HPP produk terjual. Biaya tetap tetap biaya. Laporan menampilkan baris selisih "belanja variabel bulan ini vs HPP terjual" supaya tidak ada selisih tak terjelaskan. Arus kas tetap mencatat semua uang keluar. |
+| F2-2 | **Daftar kontak** (satu layar Kontak): pelanggan dan pemasok dalam satu daftar (bisa keduanya), dengan nama, no. HP, alamat, catatan. Nota memilih pelanggan; belanja tempo memilih pemasok. |
+| F2-3 | **Pelanggan di nota** wajib hanya bila nota belum lunas, dibayar sebagian, atau titip; nota lunas boleh tanpa pelanggan (tampil "Umum"). |
+| F2-4 | **Data lama:** saat update, setiap uang masuk berproduk menjadi nota lunas satu baris; HPP baris diisi HPP saat update dan ditandai perkiraan. Semua penjualan produk lewat satu jalur (nota). |
+| F2-5 | **Beli tempo ke pemasok:** belanja berstatus belum dibayar dengan jatuh tempo opsional; biaya diakui tanggal beli (untung), uang keluar dicatat saat dibayar (arus kas); bayar sebagian boleh; sisa tampil di daftar utang. |
+| F2-6 | **Konsinyasi:** harga setor per satuan ditetapkan saat titip; laporan laku membuat nota otomatis dengan harga itu (bisa diubah di nota). |
+| F2-7 | **Diskon:** satu diskon rupiah per nota; total = jumlah baris − diskon; untung memakai total setelah diskon. |

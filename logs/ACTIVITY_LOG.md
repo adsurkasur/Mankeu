@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 15:44] [Claude Code (Opus) — grill dan rencana Fase 2]
+- **Goal**: Settle phase-2 owner decisions and write the phase-2 plan.
+- **Actions**: Grill (two rounds, AskUserQuestion): variable spend goes through HPP with a variance line; contact list for customers and suppliers; customer required only when unpaid/partial/consignment; old product cash sales become paid notes with estimated HPP; credit purchases cost at purchase date, cash at payment; consignment price fixed when sending; one rupiah discount per note. Recorded as F2-1..F2-7 in the redesign spec. Wrote `docs/superpowers/plans/2026-10-29-fase2-nota-piutang.md` (8 tasks, schema 14, 12 planner rulings for DEC-029).
+- **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/superpowers/plans/2026-10-29-fase2-nota-piutang.md` (new), `docs/WORK_IN_PROGRESS.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-10-29 15:42] [Claude Code (Opus) — perapihan Fase 1: final verification and report]
 - **Goal**: Close the phase-1 cleanup (P1 to P10) with the full verification, the emulator hand checks and a durable report.
 - **Actions**: Ran the suites; checked P1 and P6 by hand on emulator-5554 after a reboot; wrote `docs/superpowers/plans/2026-10-29-fase1-perapihan-laporan.md`; final Status line in the plan.

@@ -22,8 +22,11 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-**Sekarang (2026-10-29): perapihan temuan Fase 1** sesuai `docs/superpowers/plans/2026-10-29-fase1-perapihan.md`
-(P1–P10; status per item ada di bagian Status berkas itu). Sesudahnya: tulis rencana Fase 2.
+**Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai di branch `fase1-perapihan`
+(`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`), sedang direview sebelum
+merge. **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di
+`docs/superpowers/plans/2026-10-29-fase2-nota-piutang.md` (8 tugas, schema 14; 12 keputusan penulis rencana menunggu
+tinjauan pemilik, masuk DEC-029). Berikutnya: merge perapihan, lalu eksekusi Fase 2 mulai Task 1.
 
 **Uji alur sebagai pengusaha baru (2026-10-29)**, dicatat per checkpoint di
 `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`. Semua checkpoint (CP1–CP7) selesai.

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 15:42] [Claude Code (Opus) — perapihan Fase 1: final verification and report]
+- **Goal**: Close the phase-1 cleanup (P1 to P10) with the full verification, the emulator hand checks and a durable report.
+- **Actions**: Ran the suites; checked P1 and P6 by hand on emulator-5554 after a reboot; wrote `docs/superpowers/plans/2026-10-29-fase1-perapihan-laporan.md`; final Status line in the plan.
+- **Files**: `docs/superpowers/plans/2026-10-29-fase1-perapihan-laporan.md` (new), plan Status, `logs/ACTIVITY_LOG.md`.
+- **Verification**: unit 96/0; lintDebug 0 errors; assembleDebug and assembleRelease ok; full connected 67 tests, 1 failed (`ViewModelFlowsTest.syncRunsOnStartAndAgainShortlyAfterAChange`, timing, untouched code; 4/0 on rerun), 2 skipped. By hand: P1 two productions (800) -> Riwayat stok -> delete one with confirmation -> 400; P6 Back closes the scope sheet and the Produksi sheet without any code change.
+
 ### [2026-10-29 15:30] [Claude Code (Opus) — perapihan Fase 1: drop flaky SheetBackTest]
 - **Goal**: The full connected suite failed only in `SheetBackTest` (2 tests): `RootViewWithoutFocusException` / no key delivered, while the same test passed alone after a reboot.
 - **Actions**: Removed `SheetBackTest`; it depends on which window holds key focus, which this emulator does not keep reliably during a long suite. P6 (no code change) rests on the manual check. DEC-028 P6 addendum updated.

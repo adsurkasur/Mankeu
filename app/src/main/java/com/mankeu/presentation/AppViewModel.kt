@@ -307,7 +307,9 @@ class AppViewModel(
         items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id
             ?.let(repository::accountingSummary) ?: flowOf(EMPTY_SUMMARY)
     }.stateIn(viewModelScope, KeepWarm, EMPTY_SUMMARY)
-    private val realizationMonths = actualProfitInputs.map { it.months().size.coerceAtLeast(1) }
+    private val realizationMonths = books.flatMapLatest { items ->
+        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id?.let(repository::recordedMonthCount) ?: flowOf(0)
+    }.map { it.coerceAtLeast(1) }
 
     private val scopeContent = combine(businesses, projects, books, categories) {
             businessItems, projectItems, bookItems, categoryItems ->
@@ -738,6 +740,11 @@ class AppViewModel(
 
     fun setCategoryCostNature(id: String, nature: CostNature?) = mutating {
         runCatching { repository.setCategoryCostNature(id, nature) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_category_add_failed) }
+    }
+
+    fun setCategoryIncludedInHpp(id: String, included: Boolean) = mutating {
+        runCatching { repository.setCategoryIncludedInHpp(id, included) }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_category_add_failed) }
     }
 

@@ -90,7 +90,7 @@ object PlanAssembly {
     /**
      * One month of the Realisasi book from the same [ProfitInputs] as the summary (DEC-029 §4):
      * note revenue and HPP, other income, fixed and variable spend (cash or on credit) by effective
-     * cost nature, and depreciation by [ProfitCalculator.depreciation]. Units sold come from note
+     * cost nature and HPP category (F2-8), and depreciation by [ProfitCalculator.depreciation]. Units sold come from note
      * lines, counted in each product's main sale unit; a consignment sell-through is a sale too.
      */
     fun actualMonth(month: YearMonth, inputs: ProfitInputs, products: List<ProductRecord>): ActualMonthInputs {
@@ -104,6 +104,7 @@ object PlanAssembly {
             variableSpendRupiah = m.productionSpendRupiah,
             depreciationRupiah = m.depreciationRupiah,
             hppRupiah = m.hppRupiah,
+            otherVariableCostRupiah = m.variableCostRupiah,
         )
     }
 

@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.
 
 ### Changed
-- Profit is counted when goods are sold: income is sale notes after discount plus other money in; costs are the HPP of what was sold, fixed costs and depreciation. Spend on materials reaches profit through HPP, a supplier payment is not a cost again, and a purchase on credit counts on its purchase date. Cash flow still counts only cash.
+- Profit is counted when goods are sold: income is sale notes after discount plus other money in; costs are the HPP of what was sold, every other expense and depreciation. Spend in categories marked "Biaya produksi (sudah dihitung di HPP)" (by default only Bahan Baku & Stok; the owner can mark others such as packaging or gas) reaches profit through HPP; transport and other spend reduce profit directly. A supplier payment is not a cost again, and a purchase on credit counts on its purchase date. Cash flow still counts only cash. Beranda names the periods: "Untung semua bulan" and "Untung bulan ini".
 - Database schema 14 (DEC-029): contacts, sale notes with HPP per line, consignments, credit purchases from suppliers. On update, each earlier sale that named a product becomes a paid note with one line; its HPP is today's recipe cost and is marked as an estimate. Schema-12 and schema-13 backups are converted the same way on restore.
 - Tab Stok menjadi Produk; bahan ada di bagian Bahan & barang.
 - Template Excel v5: lembar Produk, Satuan Jual, Resep per batch; kolom Satuan dan Bahan di Transaksi. File template lama ditolak dengan daftar kolom yang berbeda.

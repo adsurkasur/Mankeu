@@ -25,6 +25,8 @@ data class DefaultCategoryTemplate(
     val role: CategoryRole,
     /** Expense categories only (DEC-014 B-1). */
     val costNature: CostNature? = null,
+    /** "Biaya produksi (sudah dihitung di HPP)" (F2-8): spend here is represented by HPP. */
+    val includedInHpp: Boolean = false,
 )
 
 object DefaultMasterData {
@@ -32,7 +34,7 @@ object DefaultMasterData {
     val categories: List<DefaultCategoryTemplate> = listOf(
         DefaultCategoryTemplate("Penjualan & Jasa", CategoryRole.REVENUE),
         DefaultCategoryTemplate("Pendapatan Lain", CategoryRole.REVENUE),
-        DefaultCategoryTemplate("Bahan Baku & Stok", CategoryRole.EXPENSE, CostNature.VARIABLE),
+        DefaultCategoryTemplate("Bahan Baku & Stok", CategoryRole.EXPENSE, CostNature.VARIABLE, includedInHpp = true),
         DefaultCategoryTemplate("Gaji & Upah", CategoryRole.EXPENSE, CostNature.FIXED),
         DefaultCategoryTemplate("Sewa Tempat", CategoryRole.EXPENSE, CostNature.FIXED),
         DefaultCategoryTemplate("Listrik, Air & Internet", CategoryRole.EXPENSE, CostNature.FIXED),
@@ -42,4 +44,10 @@ object DefaultMasterData {
         DefaultCategoryTemplate("Ambil untuk Pribadi (Prive)", CategoryRole.DRAWING),
         DefaultCategoryTemplate("Beli Peralatan & Aset", CategoryRole.ASSET),
     )
+
+    /** Normalised name of the default materials category, the one counted in HPP from the start (F2-8). */
+    const val MATERIALS_KEY = "bahan baku stok"
+
+    /** A category created by hand, import or migration starts counted in HPP only if it is the materials one. */
+    fun includedInHppByDefault(role: CategoryRole, normalizedName: String) = role == CategoryRole.EXPENSE && normalizedName == MATERIALS_KEY
 }

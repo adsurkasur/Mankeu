@@ -40,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -121,6 +122,7 @@ fun DataScreen(
     onCreateCategory: (String, CategoryRole) -> Unit,
     onArchiveCategory: (String) -> Unit,
     onSetCategoryCostNature: (String, CostNature?) -> Unit,
+    onSetCategoryIncludedInHpp: (String, Boolean) -> Unit = { _, _ -> },
     onChooseWorkbook: () -> Unit,
     onCommitImport: () -> Unit,
     onUndoImportBatch: (String) -> Unit,
@@ -253,6 +255,7 @@ fun DataScreen(
         onCreateCategory = onCreateCategory,
         onArchiveCategory = onArchiveCategory,
         onSetCategoryCostNature = onSetCategoryCostNature,
+        onSetCategoryIncludedInHpp = onSetCategoryIncludedInHpp,
     )
     if (backupDialog) BackupDialog(
         onDismiss = { backupDialog = false },
@@ -552,6 +555,7 @@ private fun MasterDataDialog(
     onCreateCategory: (String, CategoryRole) -> Unit,
     onArchiveCategory: (String) -> Unit,
     onSetCategoryCostNature: (String, CostNature?) -> Unit,
+    onSetCategoryIncludedInHpp: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     var categoryName by rememberSaveable { mutableStateOf("") }
     var categoryRole by rememberSaveable { mutableStateOf(CategoryRole.EXPENSE) }
@@ -580,6 +584,12 @@ private fun MasterDataDialog(
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.master_add_category)) }
         val feedback = LocalFeedback.current
+        // Said once for the whole list (F2-8), not under every expense category.
+        Text(
+            stringResource(R.string.category_included_in_hpp_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         categories.forEach { category ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -604,6 +614,14 @@ private fun MasterDataDialog(
                                     },
                                 )
                             }
+                        }
+                        // F2-8: spend here is represented by HPP of what is sold.
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = category.includedInHpp,
+                                onCheckedChange = { onSetCategoryIncludedInHpp(category.id, it) },
+                            )
+                            Text(stringResource(R.string.category_included_in_hpp), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }

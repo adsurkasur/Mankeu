@@ -21,11 +21,11 @@ class ProfitCalculatorTest {
             ),
             otherIncome = listOf(d(8) to 50_000L),
             expenses = listOf(
-                ProfitExpense(d(3), 4_900_000, variable = true),
-                ProfitExpense(d(4), 300_000, variable = true), // on credit, same month
-                ProfitExpense(d(2), 1_000_000, variable = false),
-                ProfitExpense(d(2), 200_000, variable = false),
-                ProfitExpense(d(2, 11), 777, variable = false), // November, ignored
+                ProfitExpense(d(3), 4_900_000, includedInHpp = true),
+                ProfitExpense(d(4), 300_000, includedInHpp = true), // on credit, same month
+                ProfitExpense(d(2), 1_000_000, includedInHpp = false),
+                ProfitExpense(d(2), 200_000, includedInHpp = false),
+                ProfitExpense(d(2, 11), 777, includedInHpp = false), // November, ignored
             ),
             assets = listOf(ProfitAsset(d(10, 9), 3_600_000, 36)),
         )
@@ -45,19 +45,52 @@ class ProfitCalculatorTest {
         sales = listOf(ProfitSale(d(5), 3_700_000, 3_000_000, false), ProfitSale(d(12), 1_680_000, 1_440_000, false)),
         otherIncome = listOf(d(8) to 50_000L),
         expenses = listOf(
-            ProfitExpense(d(3), 4_900_000, variable = true),
-            ProfitExpense(d(4), 300_000, variable = true),
-            ProfitExpense(d(2), 1_200_000, variable = false),
+            ProfitExpense(d(3), 4_900_000, includedInHpp = true),
+            ProfitExpense(d(4), 300_000, includedInHpp = true),
+            ProfitExpense(d(2), 1_200_000, includedInHpp = false),
         ),
         assets = listOf(ProfitAsset(d(10, 9), 3_600_000, 36)),
     )
 
     @Test fun inputsCoverEveryMonthFromTheFirstToTheLastRecord() {
-        val months = golden.months()
+        val months = golden.months(through = oct)
         assertEquals(listOf(YearMonth.of(2026, 9), oct), months.map { it.month })
         assertEquals(-100_000L, months.first().profitRupiah) // the asset's first month of depreciation
         assertEquals(-310_000L, months.last().profitRupiah)
-        assertEquals(emptyList<MonthProfit>(), ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()).months())
+        assertEquals(emptyList<MonthProfit>(), ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()).months(through = oct))
+    }
+
+    /** F2-8: an asset keeps wearing after the last record, so the months run to today when that is later. */
+    @Test fun monthsRunThroughTodayWhenItIsLater() {
+        val months = golden.months(through = YearMonth.of(2026, 12))
+        assertEquals(listOf(9, 10, 11, 12), months.map { it.month.monthValue })
+        assertEquals(400_000L, months.sumOf { it.depreciationRupiah })
+        assertEquals(listOf(9, 10), golden.months(through = YearMonth.of(2026, 8)).map { it.month.monthValue })
+    }
+
+    /** F2-8: only spend in a category counted in HPP is replaced by HPP; transport, even variable, is a cost. */
+    @Test fun spendOutsideHppCategoriesReducesProfitEvenWhenVariable() {
+        val withTransport = golden.copy(expenses = golden.expenses + ProfitExpense(d(15), 150_000, includedInHpp = false, variable = true))
+        val october = withTransport.months(through = oct).last()
+        assertEquals(-460_000L, october.profitRupiah)
+        assertEquals(150_000L, october.variableCostRupiah)
+        assertEquals(5_200_000L, october.productionSpendRupiah)
+    }
+
+    /** F2-8: a service business without products: every expense reduces profit, nothing is production spend. */
+    @Test fun aServiceBusinessWithoutProductsCountsEveryExpense() {
+        val inputs = ProfitInputs(
+            sales = emptyList(),
+            otherIncome = listOf(d(5) to 2_000_000L),
+            expenses = listOf(ProfitExpense(d(6), 500_000, includedInHpp = false, variable = true), ProfitExpense(d(7), 300_000, includedInHpp = false)),
+            assets = emptyList(),
+        )
+        val m = inputs.months(through = oct).single()
+        assertEquals(1_200_000L, m.profitRupiah)
+        assertEquals(0L, m.productionSpendRupiah)
+        assertEquals(0L, m.productionVarianceRupiah)
+        val s = ProfitCalculator.summary(PostingReportCalculator.calculate(emptyList()), listOf(m), noteTotalRupiah = 0)
+        assertEquals(800_000L, s.operatingExpenseRupiah)
     }
 
     @Test fun summaryTakesProfitFromDataAndCashFromPostings() {
@@ -67,7 +100,7 @@ class ProfitCalculatorTest {
             // Postings: Rp2 jt paid on notes (credit Piutang), Rp300.000 still owed to the supplier.
             receivableRupiah = -2_000_000, payableRupiah = 300_000,
         )
-        val s = ProfitCalculator.summary(posted, golden.months(), noteTotalRupiah = 5_380_000)
+        val s = ProfitCalculator.summary(posted, golden.months(through = oct), noteTotalRupiah = 5_380_000)
         assertEquals(5_430_000L, s.operatingIncomeRupiah)
         assertEquals(4_440_000L + 1_200_000L + 200_000L, s.operatingExpenseRupiah)
         assertEquals(-410_000L, s.profitRupiah)
@@ -78,6 +111,11 @@ class ProfitCalculatorTest {
         assertEquals(3_380_000L, s.receivableRupiah)
         assertEquals(300_000L, s.payableRupiah)
         assertEquals(listOf(123L, 7L, -3L, 130L), listOf(s.operatingCashFlowRupiah, s.financingCashFlowRupiah, s.investingCashFlowRupiah, s.cashBalanceRupiah))
+    }
+
+    /** F2-8: only the default materials category starts counted in HPP. */
+    @Test fun onlyBahanBakuStartsCountedInHpp() {
+        assertEquals(listOf("Bahan Baku & Stok"), DefaultMasterData.categories.filter { it.includedInHpp }.map { it.name })
     }
 
     @Test fun estimatedHppIsFlagged() {

@@ -308,7 +308,16 @@ class SalesFlowTest {
         val dao = db.financeDao()
         val categories = dao.getCategories(businessId)
         fun role(role: com.mankeu.domain.CategoryRole) = categories.first { it.role == role.name }
-        val expense = role(com.mankeu.domain.CategoryRole.EXPENSE)
+        // F2-8: bahan is counted in HPP by default; kemasan is flagged by the owner; rent and power are not.
+        val bahan = categories.single { it.name == "Bahan Baku & Stok" }
+        assertTrue(bahan.includedInHpp)
+        val kemasanId = repo.createCategory(businessId, "Kemasan", com.mankeu.domain.CategoryRole.EXPENSE, costNature = com.mankeu.domain.CostNature.VARIABLE)
+        repo.setCategoryIncludedInHpp(kemasanId, true)
+        val kemasan = dao.getCategory(kemasanId)!!
+        val sewa = categories.single { it.name == "Sewa Tempat" }
+        val listrik = categories.single { it.name == "Listrik, Air & Internet" }
+        assertFalse(sewa.includedInHpp || listrik.includedInHpp)
+        assertEquals("Hanya kategori pengeluaran yang bisa dihitung di HPP.", failure { repo.setCategoryIncludedInHpp(role(com.mankeu.domain.CategoryRole.REVENUE).id, true) })
         suspend fun event(type: FinancialEventType, amount: Long, date: LocalDate, category: CategoryEntity, nature: com.mankeu.domain.CostNature? = null, life: Int? = null, contact: String? = null) =
             repo.recordEvent(EventDraft(businessId, projectId, bookId, type, amount, date, category.name, category.name, categoryId = category.id, costNature = nature, usefulLifeMonths = life, contactId = contact))
         val toko = repo.saveContact(businessId, null, ContactDraft("Toko B"))
@@ -323,11 +332,11 @@ class SalesFlowTest {
         val line = repo.consignments(projectId).first().single().lines.single().line.id
         repo.reportConsignmentSold(titip, listOf(line to "6"), LocalDate.of(2026, 10, 12), 0)
         event(FinancialEventType.CASH_INCOME, 50_000, LocalDate.of(2026, 10, 8), role(com.mankeu.domain.CategoryRole.REVENUE))
-        event(FinancialEventType.CASH_EXPENSE, 4_900_000, LocalDate.of(2026, 10, 3), expense, com.mankeu.domain.CostNature.VARIABLE)
-        val tempo = event(FinancialEventType.CREDIT_PURCHASE, 300_000, LocalDate.of(2026, 10, 4), expense, com.mankeu.domain.CostNature.VARIABLE, contact = pemasok)
+        event(FinancialEventType.CASH_EXPENSE, 4_900_000, LocalDate.of(2026, 10, 3), bahan)
+        val tempo = event(FinancialEventType.CREDIT_PURCHASE, 300_000, LocalDate.of(2026, 10, 4), kemasan, contact = pemasok)
         repo.recordSupplierPayment(tempo, 100_000, LocalDate.of(2026, 10, 20))
-        event(FinancialEventType.CASH_EXPENSE, 1_000_000, LocalDate.of(2026, 10, 2), expense, com.mankeu.domain.CostNature.FIXED)
-        event(FinancialEventType.CASH_EXPENSE, 200_000, LocalDate.of(2026, 10, 2), expense, com.mankeu.domain.CostNature.FIXED)
+        event(FinancialEventType.CASH_EXPENSE, 1_000_000, LocalDate.of(2026, 10, 2), sewa)
+        event(FinancialEventType.CASH_EXPENSE, 200_000, LocalDate.of(2026, 10, 2), listrik)
 
         // October, as Beranda's and Laporan's "this month" card reads it.
         val inputs = repo.profitInputs(bookId).first()
@@ -339,15 +348,16 @@ class SalesFlowTest {
         assertEquals(-310_000L, card.profitRupiah)
         assertQty(740, card.unitsSold.getValue(keripik).multiply(BigDecimal(40))) // 500 bungkus + 6 dus, in dus
 
-        // The whole book: September adds one month of depreciation and nothing else.
+        // The whole book: depreciation from September through the later of October and today (F2-8 fix round).
+        val wear = java.time.temporal.ChronoUnit.MONTHS.between(java.time.YearMonth.of(2026, 9), maxOf(java.time.YearMonth.of(2026, 10), java.time.YearMonth.now())).plus(1).coerceAtMost(36) * 100_000L
         val s = repo.accountingSummary(bookId).first()
         assertEquals(5_430_000L, s.operatingIncomeRupiah)
-        assertEquals(4_440_000L + 1_200_000L + 200_000L, s.operatingExpenseRupiah)
-        assertEquals(-410_000L, s.profitRupiah)
+        assertEquals(4_440_000L + 1_200_000L + wear, s.operatingExpenseRupiah)
+        assertEquals(5_430_000L - 4_440_000L - 1_200_000L - wear, s.profitRupiah) // -410.000 in October 2026
         assertEquals(4_440_000L, s.hppRupiah)
         assertEquals(5_200_000L, s.productionSpendRupiah)
         assertEquals(760_000L, s.productionVarianceRupiah)
-        assertEquals(200_000L, s.depreciationRupiah)
+        assertEquals(wear, s.depreciationRupiah)
         assertEquals(5_380_000L - 2_000_000L, s.receivableRupiah)
         assertEquals(200_000L, s.payableRupiah)
         // Cash counts only cash: note payment 2 jt + other income − cash spend − supplier payment.
@@ -359,5 +369,12 @@ class SalesFlowTest {
         assertEquals(4_900_000L + 300_000L + 1_200_000L, repo.categoryTotals(bookId).first().sumOf { it.totalRupiah })
         // PDF and xlsx read the same summary.
         assertEquals(s, repo.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }.summary)
+
+        // F2-8: transport is variable but not a production cost, so it reduces profit directly.
+        event(FinancialEventType.CASH_EXPENSE, 150_000, LocalDate.of(2026, 10, 15), categories.single { it.name == "Transportasi" })
+        val withTransport = repo.profitInputs(bookId).first().months().single { it.month == java.time.YearMonth.of(2026, 10) }
+        assertEquals(-460_000L, withTransport.profitRupiah)
+        assertEquals(5_200_000L, withTransport.productionSpendRupiah)
+        assertEquals(s.profitRupiah - 150_000L, repo.accountingSummary(bookId).first().profitRupiah)
     }
 }

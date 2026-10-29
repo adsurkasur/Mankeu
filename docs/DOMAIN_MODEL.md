@@ -57,7 +57,7 @@ is created on the user's behalf since D-015.
 | `Project` | id, business id, name, optional type/template, start/end period, status | Belongs to one business; template fields are optional. |
 | `Book` | id, project id, mode, timestamps | Unique project + mode pair; exactly one projection and one realization book. |
 | `Account` | compile-time account role | `LedgerAccount`: CASH, REVENUE, OPERATING_EXPENSE, OWNER_EQUITY, OWNER_DRAWING, EQUIPMENT_ASSET; user labels live in categories. |
-| `Category` | id, business id, name, role, optional cost nature | The role decides the cash type of a record (DEC-011 K-2); cost nature FIXED/VARIABLE feeds break-even. |
+| `Category` | id, business id, name, role, optional cost nature, counted in HPP | The role decides the cash type of a record (DEC-011 K-2); cost nature FIXED/VARIABLE feeds break-even. An expense category marked "Biaya produksi (sudah dihitung di HPP)" (F2-8; by default only Bahan Baku & Stok) is production spend: HPP of what is sold stands for it in profit. |
 | `BudgetItem` (plan line) | Projection book id, category, amount, recurrence MONTHLY/ONCE, month, cost nature, useful life | Fixed costs, one-off costs and income, assets, planned capital (DEC-014). |
 | `Product` | unit id, name, base unit, batch yield, target per month (in the main sale unit), first selling month | HPP of a sale unit = batch cost x content / batch yield, rounded half up once (DEC-028). |
 | `ProductUnit` (sale unit) | product id, name, content (base units), price, order | The first is the main unit used by the plan and the sale form (DEC-028 §8). |
@@ -146,7 +146,7 @@ These mappings live in `LedgerPolicy.journalFor` and are covered by `LedgerPolic
 
 Reports are deterministic projections of canonical records:
 
-- profit/loss derives from revenue and expense postings;
+- profit/loss of the Realisasi book is profit when sold (DEC-029 §4, F2-8): sale notes after discount plus income without a note, minus HPP of what was sold, every expense (cash or on credit, at purchase date) whose category is not counted in HPP, and depreciation; spend in HPP categories is shown as production spend with its difference from HPP; payments of notes and debts are neither income nor cost. Proyeksi profit derives from the plan or from revenue and expense postings;
 - cash flow derives from cash-account postings grouped by period;
 - cash flow separates operating, investing, and financing movements;
 - break-even, R/C, B/C, and capital need are shown only when the plan has the products, targets, and costs they need.

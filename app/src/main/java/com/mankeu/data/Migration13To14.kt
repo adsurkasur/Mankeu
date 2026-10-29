@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.DefaultMasterData
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.sync.SyncSchema
 
@@ -42,8 +44,17 @@ object Migration13To14 : Migration(13, 14) {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_financial_events_$column` ON `financial_events` (`$column`)")
         }
         db.execSQL("ALTER TABLE product_movements ADD COLUMN `consignmentId` TEXT")
+        // F2-8: the materials category starts counted in HPP; the owner can flag others.
+        db.execSQL("ALTER TABLE categories ADD COLUMN `includedInHpp` INTEGER NOT NULL DEFAULT 0")
 
-        SyncSchema.quietly(db) { convertSales(db) }
+        SyncSchema.quietly(db) {
+            // Quiet like the conversion: every phone derives the same flag.
+            db.execSQL(
+                "UPDATE categories SET includedInHpp = 1 WHERE role = ? AND normalizedName = ?",
+                arrayOf<Any>(CategoryRole.EXPENSE.name, DefaultMasterData.MATERIALS_KEY),
+            )
+            convertSales(db)
+        }
         SyncSchema.createTriggers(db)
         // The next sync publishes this phone's whole data, converted, so a phone that skipped this
         // phone's schema-13 change sets (SyncEngine.MIN_SYNC_SCHEMA) still gets it. Harmless while

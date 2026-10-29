@@ -173,6 +173,8 @@ class FinanceRepository(private val database: AppDatabase) {
 
     fun eventCount(bookId: String): Flow<Int> = dao.observeEventCount(bookId)
 
+    fun recordedMonthCount(bookId: String): Flow<Int> = dao.observeRecordedMonthCount(bookId)
+
     fun cashFlowRecords(bookId: String): Flow<List<CashFlowRecord>> =
         dao.observeCashFlowRows(bookId).map { rows ->
             rows.map { row ->
@@ -215,7 +217,7 @@ class FinanceRepository(private val database: AppDatabase) {
             sales = dao.getSaleMonths(book.projectId).map { ProfitSale(LocalDate.ofEpochDay(it.dateEpochDay), it.revenueRupiah, it.hppRupiah, it.hppEstimated) },
             otherIncome = rows.filter { it.type == FinancialEventType.CASH_INCOME.name }.map { date(it) to it.amountRupiah },
             expenses = rows.filter { it.type == FinancialEventType.CASH_EXPENSE.name || it.type == FinancialEventType.CREDIT_PURCHASE.name }
-                .map { ProfitExpense(date(it), it.amountRupiah, it.variable) },
+                .map { ProfitExpense(date(it), it.amountRupiah, it.includedInHpp, it.variable) },
             assets = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }
                 .map { ProfitAsset(date(it), it.amountRupiah, it.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS) },
         )
@@ -466,6 +468,13 @@ class FinanceRepository(private val database: AppDatabase) {
         dao.setCategoryCostNature(id, nature?.name)
     }
 
+    /** "Biaya produksi (sudah dihitung di HPP)" on an expense category (F2-8). */
+    suspend fun setCategoryIncludedInHpp(id: String, included: Boolean) = database.withTransaction {
+        val category = dao.getCategory(id) ?: error("Kategori tidak ditemukan.")
+        require(!included || CategoryRole.parse(category.role) == CategoryRole.EXPENSE) { "Hanya kategori pengeluaran yang bisa dihitung di HPP." }
+        dao.setCategoryIncludedInHpp(id, included)
+    }
+
     suspend fun exportProjectPdf(projectId: String): ByteArray =
         FinancePdfExporter().export(buildProjectExportBundle(projectId))
 
@@ -634,6 +643,8 @@ class FinanceRepository(private val database: AppDatabase) {
                 createdAtEpochMillis = System.currentTimeMillis(),
                 // Expenses default to fixed until the owner says otherwise (overheads are the safe BEP default).
                 costNature = (costNature ?: CostNature.FIXED.takeIf { role == CategoryRole.EXPENSE })?.name,
+                // A materials category made by hand or by an import starts counted in HPP, as the default one (F2-8).
+                includedInHpp = DefaultMasterData.includedInHppByDefault(role, normalize(cleanName)),
             ),
         )
         id
@@ -1802,6 +1813,7 @@ class FinanceRepository(private val database: AppDatabase) {
                     templateOrigin = "DEFAULT",
                     createdAtEpochMillis = now,
                     costNature = category.costNature?.name,
+                    includedInHpp = category.includedInHpp,
                 ),
             )
         }

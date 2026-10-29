@@ -430,6 +430,7 @@ fun MankeuApp(
                                         onCreateCategory = viewModel::createCategory,
                                         onArchiveCategory = viewModel::archiveCategory,
                                         onSetCategoryCostNature = viewModel::setCategoryCostNature,
+                                        onSetCategoryIncludedInHpp = viewModel::setCategoryIncludedInHpp,
                                         onChooseWorkbook = {
                                             workbookPicker.launch(
                                                 arrayOf(

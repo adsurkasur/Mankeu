@@ -7,6 +7,8 @@ import com.mankeu.data.ProductRecipeLineEntity
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.ProductUnitEntity
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.DefaultMasterData
 import com.mankeu.domain.FinancialEventType
 
 /**
@@ -141,10 +143,21 @@ object BackupUpgrade {
             } + rebuilt.map { listOf(BackupValue.Text(it.id), BackupValue.Text(it.journalId), BackupValue.Text(it.account), BackupValue.Text(it.side), BackupValue.Integer(it.amountRupiah)) },
         )
 
+        // F2-8, as Migration13To14: the materials category starts counted in HPP.
+        val categories = byName.getValue("categories")
+        val upgradedCategories = categories.copy(
+            columns = categories.columns + "includedInHpp",
+            rows = categories.rows.map { row ->
+                val materials = DefaultMasterData.includedInHppByDefault(CategoryRole.parse(categories.text(row, "role")), categories.text(row, "normalizedName").orEmpty())
+                row + BackupValue.Integer(if (materials) 1 else 0)
+            },
+        )
+
         val empty = listOf("contacts", "consignments", "consignment_lines").map { BackupTable(it, listOf("id"), emptyList()) }
         return snapshot.copy(
             schemaVersion = 14,
-            tables = snapshot.tables.filterNot { it.name == "financial_events" || it.name == "postings" } + upgradedEvents + upgradedPostings + sales + saleLines + empty,
+            tables = snapshot.tables.filterNot { it.name == "financial_events" || it.name == "postings" || it.name == "categories" } +
+                upgradedEvents + upgradedPostings + upgradedCategories + sales + saleLines + empty,
         )
     }
 

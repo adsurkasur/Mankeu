@@ -33,7 +33,7 @@ data class CategoryTotalRow(val category: String, val totalRupiah: Long)
 data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
 
 /** Income, spend and assets that make profit (DEC-029 §4); see [FinanceDao.getProfitEventRows]. */
-data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val variable: Boolean, val usefulLifeMonths: Int?)
+data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean, val usefulLifeMonths: Int?)
 
 /** A note line of a product as the stock count reads it; see [FinanceDao.observeProductSaleLines]. */
 data class ProductSaleRow(
@@ -201,6 +201,19 @@ interface FinanceDao {
     @Query("SELECT COUNT(*) FROM financial_events WHERE bookId = :bookId")
     fun observeEventCount(bookId: String): Flow<Int>
 
+    /** Months with any record in the book, notes of its unit included: Komparasi's per-month divisor. */
+    @Query(
+        """
+        SELECT COUNT(*) FROM (
+            SELECT strftime('%Y-%m', dateEpochDay * 86400, 'unixepoch') FROM financial_events WHERE bookId = :bookId
+            UNION
+            SELECT strftime('%Y-%m', s.dateEpochDay * 86400, 'unixepoch') FROM sales s INNER JOIN books b ON b.projectId = s.projectId
+            WHERE b.id = :bookId AND b.mode = 'REALIZATION'
+        )
+        """,
+    )
+    fun observeRecordedMonthCount(bookId: String): Flow<Int>
+
     @Query(
         """
         SELECT MIN(id) AS id, MIN(dateEpochDay) AS dateEpochDay, type, cashFlowRole, SUM(amountRupiah) AS amountRupiah
@@ -284,13 +297,14 @@ interface FinanceDao {
     suspend fun getSaleMonths(projectId: String): List<SaleMonthRow>
 
     /**
-     * Profit rows of a book summed per month, type and effective cost nature: income without a note,
+     * Profit rows of a book summed per month, type, HPP category (F2-8) and effective cost nature: income without a note,
      * cash spend that pays no supplier, credit purchases at purchase date, and every asset on its own
      * (depreciation divides each asset, so assets are not summed). Note and supplier payments are absent.
      */
     @Query(
         """
         SELECT e.type, MIN(e.dateEpochDay) AS dateEpochDay, SUM(e.amountRupiah) AS amountRupiah,
+               COALESCE(c.includedInHpp, 0) AS includedInHpp,
                COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) AS variable,
                MAX(e.usefulLifeMonths) AS usefulLifeMonths
         FROM financial_events e
@@ -299,7 +313,7 @@ interface FinanceDao {
           AND ((e.type = 'CASH_INCOME' AND e.saleId IS NULL)
             OR (e.type = 'CASH_EXPENSE' AND e.settlesEventId IS NULL)
             OR e.type IN ('CREDIT_PURCHASE', 'ASSET_PURCHASE_CASH'))
-        GROUP BY strftime('%Y-%m', e.dateEpochDay * 86400, 'unixepoch'), e.type, variable,
+        GROUP BY strftime('%Y-%m', e.dateEpochDay * 86400, 'unixepoch'), e.type, includedInHpp, variable,
                  CASE WHEN e.type = 'ASSET_PURCHASE_CASH' THEN e.id END
         """,
     )
@@ -428,6 +442,9 @@ interface FinanceDao {
 
     @Query("UPDATE categories SET costNature = :costNature WHERE id = :id")
     suspend fun setCategoryCostNature(id: String, costNature: String?)
+
+    @Query("UPDATE categories SET includedInHpp = :included WHERE id = :id")
+    suspend fun setCategoryIncludedInHpp(id: String, included: Boolean)
 
     /** Note lines of a unit's products: product stock subtracts these unless sold through a consignment (DEC-029 §8). */
     @Query(

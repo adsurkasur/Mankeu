@@ -4,7 +4,12 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 data class ProfitSale(val date: LocalDate, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
-data class ProfitExpense(val date: LocalDate, val amountRupiah: Long, val variable: Boolean)
+/**
+ * A cash or credit purchase. [includedInHpp]: its category is "Biaya produksi (sudah dihitung di HPP)"
+ * (F2-8), so HPP of what is sold stands for it. [variable] (effective cost nature) only splits the
+ * other expenses for break-even; both kinds reduce profit.
+ */
+data class ProfitExpense(val date: LocalDate, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean = false)
 data class ProfitAsset(val date: LocalDate, val amountRupiah: Long, val usefulLifeMonths: Int)
 
 data class MonthProfit(
@@ -12,14 +17,17 @@ data class MonthProfit(
     val salesRupiah: Long,
     val otherIncomeRupiah: Long,
     val hppRupiah: Long,
+    /** Expenses not counted in HPP whose cost nature is not variable. */
     val fixedCostRupiah: Long,
+    /** Expenses not counted in HPP but variable (transport, a service's materials): a cost all the same (F2-8). */
+    val variableCostRupiah: Long,
     val depreciationRupiah: Long,
     val productionSpendRupiah: Long,
     val hppEstimatedIncluded: Boolean,
 ) {
     val grossProfitRupiah get() = salesRupiah - hppRupiah
-    val profitRupiah get() = salesRupiah + otherIncomeRupiah - hppRupiah - fixedCostRupiah - depreciationRupiah
-    /** Positive: more bought for production than sold at HPP (stock built up or HPP too low). */
+    val profitRupiah get() = salesRupiah + otherIncomeRupiah - hppRupiah - fixedCostRupiah - variableCostRupiah - depreciationRupiah
+    /** Positive: more spent in HPP categories than sold at HPP (stock built up or HPP too low). */
     val productionVarianceRupiah get() = productionSpendRupiah - hppRupiah
 }
 
@@ -31,15 +39,14 @@ data class ProfitInputs(
     val assets: List<ProfitAsset>,
 ) {
     /**
-     * Every month from the first to the last dated row, in order.
-     * ponytail: depreciation stops at the last recorded month, not today, so the figures do not move
-     * with the clock; extend to the current month if owners stop recording but still want wear counted.
+     * Every month from the first dated row to the later of the last dated row and [through] (normally
+     * today's month), in order: an asset keeps wearing after the last record (F2-8 fix round). No rows, no months.
      */
-    fun months(): List<MonthProfit> {
+    fun months(through: YearMonth = YearMonth.now()): List<MonthProfit> {
         val dated = sales.map { it.date } + otherIncome.map { it.first } + expenses.map { it.date } + assets.map { it.date }
         if (dated.isEmpty()) return emptyList()
         val first = YearMonth.from(dated.min())
-        val last = YearMonth.from(dated.max())
+        val last = maxOf(YearMonth.from(dated.max()), through)
         return generateSequence(first) { it.plusMonths(1).takeIf { next -> !next.isAfter(last) } }
             .map { ProfitCalculator.month(it, sales, otherIncome, expenses, assets) }.toList()
     }
@@ -65,9 +72,10 @@ object ProfitCalculator {
             salesRupiah = s.sumOf { it.revenueRupiah },
             otherIncomeRupiah = otherIncome.filter { YearMonth.from(it.first) == month }.sumOf { it.second },
             hppRupiah = s.sumOf { it.hppRupiah },
-            fixedCostRupiah = e.filterNot { it.variable }.sumOf { it.amountRupiah },
+            fixedCostRupiah = e.filter { !it.includedInHpp && !it.variable }.sumOf { it.amountRupiah },
+            variableCostRupiah = e.filter { !it.includedInHpp && it.variable }.sumOf { it.amountRupiah },
             depreciationRupiah = assets.sumOf { depreciation(month, YearMonth.from(it.date), it.amountRupiah, it.usefulLifeMonths) },
-            productionSpendRupiah = e.filter { it.variable }.sumOf { it.amountRupiah },
+            productionSpendRupiah = e.filter { it.includedInHpp }.sumOf { it.amountRupiah },
             hppEstimatedIncluded = s.any { it.hppEstimated },
         )
     }
@@ -81,7 +89,7 @@ object ProfitCalculator {
         val depreciation = months.sumOf { it.depreciationRupiah }
         val production = months.sumOf { it.productionSpendRupiah }
         val income = months.sumOf { it.salesRupiah + it.otherIncomeRupiah }
-        val expense = hpp + months.sumOf { it.fixedCostRupiah } + depreciation
+        val expense = hpp + months.sumOf { it.fixedCostRupiah + it.variableCostRupiah } + depreciation
         return posted.copy(
             operatingIncomeRupiah = income,
             operatingExpenseRupiah = expense,

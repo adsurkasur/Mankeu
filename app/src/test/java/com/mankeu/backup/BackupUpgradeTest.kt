@@ -73,6 +73,11 @@ class BackupUpgradeTest {
                     val j = "journal-${(it[0] as BackupValue.Text).value}"
                     listOf(listOf(t("$j-0"), t(j), t("CASH"), t("DEBIT"), it[5]), listOf(t("$j-1"), t(j), t("REVENUE"), t("CREDIT"), it[5]))
                 })
+                "categories" -> table(name, listOf("id", "businessId", "role", "name", "normalizedName"), listOf(
+                    listOf(t("bahan"), t("b"), t("EXPENSE"), t("Bahan Baku & Stok"), t("bahan baku stok")),
+                    listOf(t("transport"), t("b"), t("EXPENSE"), t("Transportasi"), t("transportasi")),
+                    listOf(t("odd"), t("b"), t("REVENUE"), t("Bahan Baku & Stok"), t("bahan baku stok")),
+                ))
                 else -> table(name)
             }
         }
@@ -125,6 +130,8 @@ class BackupUpgradeTest {
         assertEquals(listOf(Triple(t("CASH"), t("DEBIT"), i(75_000)), Triple(t("REVENUE"), t("CREDIT"), i(75_000))), postings[t("journal-jasa")])
         assertEquals(t("REVENUE"), postings.getValue(t("journal-planned"))[1].first)
         assertEquals(16, rows("postings").size)
+        // F2-8: only the materials expense category starts counted in HPP.
+        assertEquals(mapOf(t("bahan") to i(1), t("transport") to i(0), t("odd") to i(0)), rows("categories").associate { it["id"] to it["includedInHpp"] })
     }
 
     @Test fun `current snapshot passes through untouched`() {

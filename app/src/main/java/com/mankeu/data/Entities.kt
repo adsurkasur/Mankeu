@@ -72,6 +72,11 @@ data class CategoryEntity(
     val createdAtEpochMillis: Long,
     /** `FIXED` / `VARIABLE` for expense categories (DEC-014); null for income, capital, drawing, asset. */
     val costNature: String? = null,
+    /**
+     * "Biaya produksi (sudah dihitung di HPP)" (F2-8, schema 14): spend in this expense category is
+     * represented by the HPP of what is sold, so it is production spend, not a cost of the month.
+     */
+    @androidx.room.ColumnInfo(defaultValue = "0") val includedInHpp: Boolean = false,
 )
 
 @Entity(

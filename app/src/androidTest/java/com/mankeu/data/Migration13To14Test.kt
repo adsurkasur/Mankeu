@@ -40,6 +40,8 @@ class Migration13To14Test {
             db.execSQL("INSERT INTO product_recipe_lines (id, productId, name, stockItemId, quantityText, amountRupiah, sortOrder) VALUES ('r1', 'krp', 'Singkong', 'm1', '2', NULL, 0), ('r2', 'krp', 'Gas', NULL, NULL, 10000, 1)")
             db.execSQL("INSERT INTO stock_items (id, businessId, name, unit, basePriceRupiah, initialStockText, currentStockText, minAlertStockText, archived, createdAtEpochMillis, updatedAtEpochMillis) VALUES ('m1', 'b', 'Singkong', 'kg', 20000, '0', '0', '0', 0, 0, 0)")
             // The latest purchase (Rp25.000/kg) prices singkong, not the item's Rp20.000 or the older Rp22.000.
+            // F2-8: the materials category is flagged as counted in HPP, other categories are not.
+            db.execSQL("INSERT INTO categories (id, businessId, role, name, normalizedName, aliases, templateOrigin, active, createdAtEpochMillis, costNature) VALUES ('c-bahan', 'b', 'EXPENSE', 'Bahan Baku & Stok', 'bahan baku stok', '', 'DEFAULT', 1, 0, 'VARIABLE'), ('c-trans', 'b', 'EXPENSE', 'Transportasi', 'transportasi', '', 'DEFAULT', 1, 0, 'VARIABLE')")
             db.event("buy1", "real", "CASH_EXPENSE", 44_000, quantity = "2", unitPrice = 22_000, stockItemId = "m1", day = 19_990)
             db.event("buy2", "real", "CASH_EXPENSE", 50_000, quantity = "2", unitPrice = 25_000, stockItemId = "m1", day = 19_995)
             db.event("sale", "real", "CASH_INCOME", 600_000, productId = "krp", quantity = "2", unit = "dus")
@@ -58,6 +60,9 @@ class Migration13To14Test {
         }
 
         helper.runMigrationsAndValidate(DB, 14, true, Migration13To14).use { db ->
+            db.query("SELECT id, includedInHpp FROM categories ORDER BY id").use { c ->
+                assertEquals(listOf("c-bahan" to 1, "c-trans" to 0), buildList { while (c.moveToNext()) add(c.getString(0) to c.getInt(1)) })
+            }
             db.query("SELECT id, projectId, dateEpochDay, hppEstimated, contactId IS NULL, discountRupiah, importBatchId, createdAtEpochMillis, updatedAtEpochMillis FROM sales ORDER BY id").use { c ->
                 val rows = buildList { while (c.moveToNext()) add((0..8).map { c.getString(it) }) }
                 // Timestamps come from the event (two phones migrating alone agree); the batch id follows the event (review I-1).

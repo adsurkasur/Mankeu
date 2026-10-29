@@ -297,11 +297,13 @@ data class ActualMonthInputs(
     /** Revenue from sales entries that named no product; split by the planned mix. */
     val unattributedRevenueRupiah: Long,
     val fixedCostRupiah: Long,
-    /** Variable spend, cash or on credit; compared with the recipe, not counted as cost (F2-1). */
+    /** Spend in categories counted in HPP (F2-8), cash or on credit; compared with the recipe, not counted as cost. */
     val variableSpendRupiah: Long,
     val depreciationRupiah: Long,
-    /** HPP of what was sold this month: the variable cost profit counts (profit when sold). */
+    /** HPP of what was sold this month: what profit counts instead of [variableSpendRupiah] (profit when sold). */
     val hppRupiah: Long = 0,
+    /** Variable expenses outside HPP categories (transport): a cost, but not part of the fixed cost for BEP. */
+    val otherVariableCostRupiah: Long = 0,
 )
 
 data class ActualMonthAnalysis(
@@ -344,7 +346,7 @@ object ActualBepCalculator {
             BigDecimal.valueOf(fc).multiply(unitRevenue).divide(unitCm, 0, RoundingMode.HALF_UP).toLong()
         } else null
 
-        val totalCost = fc + actual.hppRupiah
+        val totalCost = fc + actual.hppRupiah + actual.otherVariableCostRupiah
         val profit = actual.revenueRupiah - totalCost
         return ActualMonthAnalysis(
             month = actual.month,

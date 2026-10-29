@@ -112,7 +112,12 @@ class PlanAssemblyTest {
         val inputs = ProfitInputs(
             sales = listOf(ProfitSale(day, 5_000_000, 2_500_000, false)),
             otherIncome = listOf(day to 2_000_000L),
-            expenses = listOf(ProfitExpense(day, 2_000_000, variable = false), ProfitExpense(day, 3_500_000, variable = true)),
+            expenses = listOf(
+                ProfitExpense(day, 2_000_000, includedInHpp = false),
+                ProfitExpense(day, 3_500_000, includedInHpp = true),
+                // F2-8: transport is variable but not counted in HPP, so it is a cost of the month.
+                ProfitExpense(day, 300_000, includedInHpp = false, variable = true),
+            ),
             assets = listOf(ProfitAsset(LocalDate.of(2026, 10, 1), 12_000_000, 24)),
         )
 
@@ -128,7 +133,8 @@ class PlanAssemblyTest {
         // 500 named + 200 inferred from Rp2 jt at the planned mix = 700 cups.
         assertEquals(BigDecimal("700.000"), result.unitsSold["kopi"])
         assertEquals(2_500_000L, result.fixedCostRupiah)
-        assertEquals(7_000_000L - 2_500_000L - 2_500_000L, result.profitRupiah)
+        assertEquals(300_000L, actual.otherVariableCostRupiah)
+        assertEquals(7_000_000L - 2_500_000L - 2_500_000L - 300_000L, result.profitRupiah)
     }
 
     @Test fun `units sold are counted in the main sale unit from note lines`() {

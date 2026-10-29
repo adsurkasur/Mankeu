@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:01] [Claude Code (Opus) — Fase 1 merge]
+- **Goal**: Close redesign phase 1 on main.
+- **Actions**: Final whole-branch review (merge after fixes, 0 Critical / 5 Important / 12 Minor), one fix wave for I-1..I-5 and M-3/M-4/M-6/M-11/M-12, scoped re-review (all addressed, merge yes). Fast-forwarded main to the branch and deleted `fase1-produk-hpp`; parked review items moved into WORK_IN_PROGRESS because the SDD workspace is scratch.
+- **Files**: `docs/WORK_IN_PROGRESS.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Last full run on the merged head: unit 92 passed / 0 failed; lintDebug 0 errors; assembleDebug and assembleRelease ok; connected 58 tests, 0 failed, 2 skipped (screenshot tests). Not verified: real Gboard, two-phone sync across schema versions, real Google sign-in.
+
 ### [2026-10-29 10:58] [Claude Code (Opus) — Fase 1 final review fix wave: verification and report]
 - **Goal**: Close the final-review fix wave (I-1 to I-5, M-3, M-4, M-6, M-11, M-12; M-1, M-2, M-7 to M-10 parked) with the full verification.
 - **Actions**: Ran the full suites on the fixed branch; wrote the fix report; updated `docs/WORK_IN_PROGRESS.md`.

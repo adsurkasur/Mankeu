@@ -27,14 +27,16 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 **Redesign disepakati (DEC-026)**: spec `docs/superpowers/specs/2026-10-29-redesign-spec.md` (20 keputusan),
 peta fase `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`. **Fase 0 selesai** dan sudah di main (DEC-027).
-**Fase 1 selesai (2026-10-29, DEC-028)** di branch `fase1-produk-hpp`: produk dengan satuan dasar, satuan jual dan resep
+**Fase 1 selesai (2026-10-29, DEC-028)** dan sudah di main: produk dengan satuan dasar, satuan jual dan resep
 per batch, HPP per satuan jual, stok produk (Produksi, Hitung stok), harga bahan dari belanja terakhir dengan peringatan
 HPP, template Excel v5, tab Produk dan editor halaman penuh. Uji emulator CP1 sampai CP9 dan angka verifikasi:
 `docs/audit/2026-10-29_UJI_FASE1.md`. Satu crash ditemukan dan diperbaiki saat uji (Rencana Usaha dengan produk dua
 satuan). Berikutnya: **tulis rencana Fase 2** (nota multi-produk, piutang, konsinyasi, snapshot HPP per baris nota, laba
 saat terjual) di `docs/superpowers/plans/`. Review akhir branch: I-1 sampai I-5 dan M-3, M-4, M-6, M-11, M-12 sudah
-diperbaiki (`.superpowers/sdd/2026-10-29-fase1-produk-hpp/final-fix-report.md`; lembar baru **Produksi & Stok** di
-template v5, DEC-028 §9 diamandemen); M-1, M-2, M-7 sampai M-10 diparkir. Terbuka dari Fase 1: tidak ada tes otomatis untuk dua cabang form catat (produk tanpa
+diperbaiki (lembar baru **Produksi & Stok** di template v5, DEC-028 §9 diamandemen). Diparkir: bahan arsip kembali
+aktif setelah impor ulang; harga bahan bersama dihitung dari belanja seluruh usaha; Back tidak menutup sheet Usaha/Unit
+(sudah ada sebelum Fase 1); entri Produksi/Hitung stok yang salah belum bisa dihapus (koreksi lewat Hitung stok;
+kandidat Fase 2); nama produk kembar di satu file. Terbuka dari Fase 1: tidak ada tes otomatis untuk dua cabang form catat (produk tanpa
 satuan jual, bahan terpilih lalu pindah ke Uang masuk; diperiksa tangan di CP), generator `docs/evidence/make_sims.py`
 masih menulis template v4, Gboard asli dan sinkron dua HP lintas versi belum diuji. Rilis internal testing adalah
 tindakan pemilik; catatan rilis: "perbarui semua HP yang memakai sinkron" (DEC-028 §7).

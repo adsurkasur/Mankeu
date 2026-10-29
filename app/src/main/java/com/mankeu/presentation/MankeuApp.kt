@@ -585,7 +585,7 @@ fun MankeuApp(
                                                     onManageScope = { manageScope = true },
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                     onOpenProduct = openProduct,
-                                                onOpenStockHistory = openStockHistory,
+                                                    onOpenStockHistory = openStockHistory,
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,

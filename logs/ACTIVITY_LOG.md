@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 16:05] [Claude Code (Opus) — perapihan Fase 1 merge]
+- **Goal**: Merge the phase-1 cleanup (P1–P10) after review.
+- **Actions**: Branch review (merge after fixes: 0 Critical, 1 Important, 9 Minor); the fix round cd636ca handled I-1 (P10 claim narrowed, test pins the unit's own purchase) and M-5..M-9, M-1..M-4 written as known limits in DEC-028. Controller re-indented one line the fix round mis-indented in MankeuApp.kt; fast-forwarded main.
+- **Files**: `presentation/MankeuApp.kt`, `docs/WORK_IN_PROGRESS.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Last runs on the branch: unit 96/0; connected 68 tests, 0 failed, 2 skipped (after emulator reboot); the formerly flaky sync timing test 5/5. Whitespace-only change by controller, not re-run.
+
 ### [2026-10-29 16:03] [Claude Code (Opus) — perapihan Fase 1: review fix round]
 - **Goal**: Address the branch review (`.superpowers/sdd/perapihan/review.md`): I-1 and M-5 to M-9; record M-1 to M-4 as known limits.
 - **Actions**: I-1 (controller ruling, DEC-028 §2 applied in the destination): new `ImportCommitTest.aSharedMaterialTheUnitBoughtItselfTakesTheUnitsOwnLatestPurchaseAfterImport` (own purchase Rp20.000, another unit's Rp27.500, Harga Beli 27.500 in the file, copy priced Rp20.000); CHANGELOG line, P10 Status line and DEC-028 P10 addendum narrowed to that. M-5: `msg_stock_entry_delete_failed` (ID + EN) as the delete fallback. M-6: EN "Stock after:", "Delete … on …?", "Production (batches: …)". M-7: the Riwayat stok overlay closes itself when its product disappears; argument indentation fixed. M-8: DEC-028 open items (c) and (d) marked closed by P7/P8. M-9: `ViewModelFlowsTest.syncRunsOnStartAndAgainShortlyAfterAChange` waits for `Ready` instead of asserting it right after the upload count. M-1 to M-4 written into DEC-028 as known limits. Report gained a "Review fix round" section.

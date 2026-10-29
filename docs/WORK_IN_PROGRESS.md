@@ -27,10 +27,16 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 **Redesign disepakati (DEC-026)**: spec `docs/superpowers/specs/2026-10-29-redesign-spec.md` (20 keputusan),
 peta fase `docs/superpowers/plans/2026-10-29-redesign-roadmap.md`. **Fase 0 selesai** dan sudah di main (DEC-027).
-**Rencana Fase 1 tertulis**: `docs/superpowers/plans/2026-10-29-fase1-produk-hpp.md` (7 tugas, schema 13). Bagian
-"Keputusan rencana" berisi sembilan keputusan penulis rencana yang menunggu tinjauan pemilik; keputusan itu dicatat
-sebagai DEC-028 di Task 2. Eksekusi di branch `fase1-produk-hpp`: Task 1 sampai Task 5 selesai (domain HPP/stok,
-schema 13, stok dari penjualan, template v5, tab Produk dan editor produk). Berikutnya: Task 6.
+**Fase 1 selesai (2026-10-29, DEC-028)** di branch `fase1-produk-hpp`: produk dengan satuan dasar, satuan jual dan resep
+per batch, HPP per satuan jual, stok produk (Produksi, Hitung stok), harga bahan dari belanja terakhir dengan peringatan
+HPP, template Excel v5, tab Produk dan editor halaman penuh. Uji emulator CP1 sampai CP9 dan angka verifikasi:
+`docs/audit/2026-10-29_UJI_FASE1.md`. Satu crash ditemukan dan diperbaiki saat uji (Rencana Usaha dengan produk dua
+satuan). Berikutnya: **tulis rencana Fase 2** (nota multi-produk, piutang, konsinyasi, snapshot HPP per baris nota, laba
+saat terjual) di `docs/superpowers/plans/`. Terbuka dari Fase 1: stok produk tidak ikut template Excel (impor ke unit
+baru menghasilkan stok minus sampai ada Produksi), tidak ada tes otomatis untuk dua cabang form catat (produk tanpa
+satuan jual, bahan terpilih lalu pindah ke Uang masuk; diperiksa tangan di CP), generator `docs/evidence/make_sims.py`
+masih menulis template v4, Gboard asli dan sinkron dua HP lintas versi belum diuji. Rilis internal testing adalah
+tindakan pemilik; catatan rilis: "perbarui semua HP yang memakai sinkron" (DEC-028 §7).
 
 Sebelumnya: review run audit dan perbaikannya selesai (laporan: `docs/audit/2026-10-22_AUDIT_PRA_RILIS.md` bagian 11).
 Sisa untuk pemilik: bagian 10 laporan itu (uji sync dua HP dengan akun Google nyata, AAB bertanda tangan, Data Safety,

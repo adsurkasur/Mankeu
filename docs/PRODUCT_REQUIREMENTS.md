@@ -36,6 +36,9 @@ Mankeu is a standalone Android application with a universal financial core and o
 
 - **FR-PLAN-001:** Each project can contain a complete projection and a complete realization dataset.
 - **FR-PLAN-002:** The projection is a business plan (DEC-014, DEC-017): plan period, products with per-unit cost recipes and a first selling month, monthly fixed costs, one-off costs and income, assets with useful life, and planned capital. Realization holds the recorded cash.
+- **FR-PLAN-004 (Fase 1, DEC-028):** A product has a base unit, sale units with their own prices, and a per-batch recipe of materials and free costs. The app shows the HPP and profit of every sale unit without manual calculation, and the plan uses the main (first) sale unit.
+- **FR-PLAN-005 (Fase 1, DEC-028):** Product stock is automatic: Produksi adds, sales subtract, and a stock count (Hitung stok) corrects it. Materials are kept apart and are not reduced by production.
+- **FR-PLAN-006 (Fase 1, DEC-028):** A material's price follows its latest purchase. When a purchase changes it, the owner sees which products' HPP and profit change; deleting the purchase restores the price.
 - **FR-PLAN-003:** Comparison reads final projection and realization outputs (averages per month, cash basis) and never acts as a transaction source.
 
 ### Reports

@@ -59,7 +59,7 @@ is created on the user's behalf since D-015.
 | `Account` | compile-time account role | `LedgerAccount`: CASH, REVENUE, OPERATING_EXPENSE, OWNER_EQUITY, OWNER_DRAWING, EQUIPMENT_ASSET; user labels live in categories. |
 | `Category` | id, business id, name, role, optional cost nature | The role decides the cash type of a record (DEC-011 K-2); cost nature FIXED/VARIABLE feeds break-even. |
 | `BudgetItem` (plan line) | Projection book id, category, amount, recurrence MONTHLY/ONCE, month, cost nature, useful life | Fixed costs, one-off costs and income, assets, planned capital (DEC-014). |
-| `Product` | unit id, name, base unit, batch yield, target per month (in the main sale unit), first selling month | HPP per base unit = batch cost / batch yield, rounded half up once (DEC-028). |
+| `Product` | unit id, name, base unit, batch yield, target per month (in the main sale unit), first selling month | HPP of a sale unit = batch cost x content / batch yield, rounded half up once (DEC-028). |
 | `ProductUnit` (sale unit) | product id, name, content (base units), price, order | The first is the main unit used by the plan and the sale form (DEC-028 §8). |
 | `ProductRecipeLine` | product id, name, material (stock item) + quantity per batch, or a free amount per batch | A material line is priced at the material's price; an unpriced or removed material makes the HPP incomplete, never cheaper. |
 | `ProductMovement` | product id, PRODUCTION (with batches) or ADJUSTMENT (a count), quantity in base units, date | Stock = these plus sales in date order; may go negative (spec #9). |
@@ -71,7 +71,17 @@ is created on the user's behalf since D-015.
 | `ProvenanceRecord` | target record/field, source locator, rationale | Kept for history; the template importer writes none (DEC-012). |
 | `ImportNotice` | severity, title, explanation, batch (null for SYSTEM notices) | Every import and every data cleanup leaves one. |
 
-## Implemented persistence (schema 12)
+## Product, recipe and stock rules (DEC-028)
+
+Derived values are never stored; the screens and the exporter read them from these rules (`ProductCosting`, `ProductStock`, `materialPrice`).
+
+- **Product** has one base unit (the smallest thing stocked and costed, e.g. bungkus) and a batch yield in base units. **Sale units** (bungkus, dus of 40) each have a content in base units and a price; the first is the main unit.
+- **Recipe line** is per batch: material quantity (priced at the material's current price) or a free amount (gas, wages). Batch cost = sum of lines; HPP of a sale unit = batch cost x content / batch yield (base unit: content 1). **Rounding:** exactly one division per sale unit, half up to whole rupiah, with no rounded intermediate (Rp2.400.000 x 1 / 400 = Rp6.000; Rp2.400.000 x 40 / 400 = Rp240.000). Profit per unit = price - HPP. A line without a price or with a removed material makes the HPP incomplete (shown as such), never cheaper.
+- **Material price is derived:** the unit price of the latest expense (date, then time recorded) linked to the material; else the price entered when the material was created. Deleting a purchase restores the previous price. A purchase does not change material stock; material stock stays manual, and production does not consume materials.
+- **Product movement** is PRODUCTION (batches x yield) or ADJUSTMENT (a stock count). **Product stock is derived:** movements and sales (quantity x sale-unit content) in date order, so editing or deleting a sale needs no mirrored write. Stock may be negative (sales from before the update, or no production recorded); the screen says so.
+- The per-sale HPP snapshot is not stored in Fase 1 (moved to Fase 2); changing a material price therefore changes today's HPP, never a past sale's recorded cash.
+
+## Implemented persistence (schema 13)
 
 Room schema 13 implements businesses, units, books, categories, plan lines, cash events, journals, postings, products with sale units, recipe lines and movements, stock items and movements, import batches/notices/provenance, and the sync outbox. Repository transaction boundaries enforce:
 

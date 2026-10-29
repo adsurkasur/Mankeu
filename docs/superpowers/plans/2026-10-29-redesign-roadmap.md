@@ -9,8 +9,8 @@ hasil fase sebelumnya. Hanya Fase 0 yang sudah rinci.
 | Fase | Isi | Keputusan | Rencana rinci |
 |---|---|---|---|
 | 0 | Pembersihan dan bug sheet | #1, #8 (Firebase), #13 (sheet pendek), #16 (tur) | `2026-10-29-fase0-pembersihan.md` |
-| 1 | Model produk: satuan dasar + satuan jual, bahan, resep per batch, HPP, stok produk, Produksi, peringatan harga bahan | #5, #6, #9, #20 | `2026-10-29-fase1-produk-hpp.md` (snapshot HPP per penjualan pindah ke F2, lihat §Keputusan rencana 5) |
-| 2 | Penjualan nota multi-produk, status bayar, piutang, utang pemasok, konsinyasi, pelunasan; laba saat terjual | #2, #3, #7, #17 | ditulis saat mulai |
+| 1 (selesai 2026-10-29, DEC-028; uji: `docs/audit/2026-10-29_UJI_FASE1.md`) | Model produk: satuan dasar + satuan jual, bahan, resep per batch, HPP, stok produk, Produksi, peringatan harga bahan | #5, #6, #9, #20 | `2026-10-29-fase1-produk-hpp.md` (snapshot HPP per penjualan pindah ke F2, lihat §Keputusan rencana 5) |
+| 2 | + snapshot HPP per baris nota (#6, dipindah dari F1, DEC-028 §5). Penjualan nota multi-produk, status bayar, piutang, utang pemasok, konsinyasi, pelunasan; laba saat terjual | #2, #3, #7, #17 | ditulis saat mulai |
 | 3 | Navigasi baru, form halaman penuh, Rencana tanpa periode, unit tersembunyi, Beranda baru | #4, #13, #14, #15 | ditulis saat mulai |
 | 4 | Laporan: laba dengan HPP, arus kas terpisah, rencana vs realisasi, ringkas (tabel/lipat), grafik Canvas, bahasa awam, PDF formal | #3, #19 | ditulis saat mulai |
 | 5 | Template Excel v2, backup/sinkron untuk schema baru, backup Drive digabung ke sinkron | #8, #10 | ditulis saat mulai |
@@ -21,7 +21,7 @@ hasil fase sebelumnya. Hanya Fase 0 yang sudah rinci.
 
 - **F0:** sheet tidak tertutup karena geser isi dan tidak memantul saat keyboard; schema hanya 12; tanpa Firebase;
   tanpa tur; semua tes hijau; uji emulator alur CP1–CP6 tetap jalan.
-- **F1:** produk keripik (batch Rp2,4 jt → 400 bungkus, dus isi 40) menampilkan HPP Rp6.000/bungkus dan
+- **F1 (dicentang, bukti di `docs/audit/2026-10-29_UJI_FASE1.md` CP2, CP3, CP5):** produk keripik (batch Rp2,4 jt → 400 bungkus, dus isi 40) menampilkan HPP Rp6.000/bungkus dan
   Rp240.000/dus tanpa hitungan manual; belanja minyak dengan harga baru memunculkan peringatan HPP; Produksi 1 batch
   menambah stok 400 bungkus.
 - **F2:** nota ke Toko A berisi 2 produk, status "belum dibayar", tampil di piutang; pelunasan sebagian dan penuh;

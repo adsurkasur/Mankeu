@@ -829,7 +829,11 @@ class AppViewModel(
     fun undoImportBatch(id: String) = mutating {
         runCatching { repository.undoImportBatch(id) }
             .onSuccess { result ->
-                message.value = UiText.of(if (result.periodCleared) R.string.msg_batch_undone_period else R.string.msg_batch_undone, result.records)
+                message.value = if (result.kept.isEmpty()) {
+                    UiText.of(if (result.periodCleared) R.string.msg_batch_undone_period else R.string.msg_batch_undone, result.records)
+                } else {
+                    UiText.of(if (result.periodCleared) R.string.msg_batch_undone_period_kept else R.string.msg_batch_undone_kept, result.records, result.kept.joinToString())
+                }
             }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_batch_undo_failed) }
     }

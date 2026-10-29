@@ -7,9 +7,11 @@ import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.ProductCosting
+import com.mankeu.domain.ProductMovementType
 import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.importer.ImportBudgetLine
 import com.mankeu.importer.ImportProduct
+import com.mankeu.importer.ImportProductMovement
 import com.mankeu.importer.ImportRecipeLine
 import com.mankeu.importer.ImportSaleUnit
 import com.mankeu.importer.ImportStockItem
@@ -369,6 +371,41 @@ class ImportCommitTest {
 
         val copy = database.stockDao().getStockItems(otherBusiness, otherUnit).single()
         assertEquals(27_500L, repository.materialPrice(copy.id))
+    }
+
+    /**
+     * Cleanup P3: undo removes what the file added, not what the owner recorded since. An imported
+     * product or material that later records use stays (released from the batch) and is named;
+     * the file's own production rows and unused products and materials still go.
+     */
+    @Test
+    fun undoKeepsImportedProductsAndMaterialsThatLaterRecordsUse() = runBlocking {
+        val file = keripik().let { p ->
+            p.copy(
+                products = p.products.map { it.copy(movements = listOf(ImportProductMovement("Produksi & Stok!A2", DAY, ProductMovementType.PRODUCTION, "20", "1"))) } +
+                    ImportProduct("Produk!A3", "Rengginang", "bungkus", "10", null, 1, units = listOf(ImportSaleUnit("bungkus", "1", 4_000)), recipe = emptyList()),
+                stockItems = p.stockItems + ImportStockItem("Stok Barang!A3", "Gula", "kg", 15_000, "0", "0"),
+            )
+        }
+        repository.commitImport(businessId, projectId, file)
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val keripik = dao.getProducts(projectId).single { it.name == "Keripik" }.id
+        val oil = database.stockDao().getStockItems(businessId, projectId).single { it.name == "Minyak" }.id
+        val later = DAY.plusDays(1)
+        repository.recordProduction(keripik, BigDecimal.ONE, later, "sesudah impor")
+        repository.recordEvent(EventDraft(businessId, projectId, actual, FinancialEventType.CASH_INCOME, 45_000, later, "Jual keripik lagi", "Penjualan & Jasa", quantityText = "1", unit = "dus", productId = keripik))
+        repository.recordEvent(EventDraft(businessId, projectId, actual, FinancialEventType.CASH_EXPENSE, 27_500, later, "Beli minyak lagi", "Bahan Baku & Stok", quantityText = "1", unit = "liter", stockItemId = oil))
+
+        val undo = repository.undoImportBatch(dao.getImportBatches(projectId).single().id)
+
+        assertEquals(listOf("Keripik", "Minyak"), undo.kept)
+        assertEquals(listOf("Keripik"), dao.getProducts(projectId).map { it.name })
+        assertEquals(null, dao.getProduct(keripik)!!.importBatchId)
+        assertEquals(listOf("sesudah impor"), dao.getProductMovements(keripik).map { it.notes })
+        assertEquals(setOf("Jual keripik lagi", "Beli minyak lagi"), dao.getEventsForBook(actual).map { it.description }.toSet())
+        assertEquals(listOf("Minyak"), database.stockDao().getStockItems(businessId, projectId).map { it.name })
+        assertEquals(null, database.stockDao().getStockItem(oil)!!.importBatchId)
+        assertEquals(listOf(oil), dao.getRecipeLines(keripik).mapNotNull { it.stockItemId })
     }
 
     private fun keripik() = WorkbookImportPreview(

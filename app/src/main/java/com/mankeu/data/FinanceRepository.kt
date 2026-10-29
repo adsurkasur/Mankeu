@@ -966,7 +966,8 @@ class FinanceRepository(private val database: AppDatabase) {
         addedMovements.forEachIndexed { index, (productId, m) ->
             dao.insertProductMovement(
                 ProductMovementEntity(
-                    id = UUID.randomUUID().toString(),
+                    // The batch prefix lets undo remove these and keep production recorded later (cleanup P3).
+                    id = "$batchId:${UUID.randomUUID()}",
                     productId = productId,
                     movementType = m.type.name,
                     quantityText = m.quantityText,
@@ -1113,13 +1114,20 @@ class FinanceRepository(private val database: AppDatabase) {
 
     /**
      * Undoes an import (DEC-019): its transactions are deleted (journals cascade), its plan lines
-     * archived, its stock and products removed. The batch row stays as history, marked undone.
+     * archived, its production rows, stock and products removed. The batch row stays as history, marked undone.
+     * An imported product or material that records made after the import use (a sale, production, a
+     * purchase, a recipe line, a stock movement) is kept and released from the batch instead, so undo
+     * never takes the owner's later records with it (cleanup P3).
      */
     suspend fun undoImportBatch(batchId: String): ImportUndo = database.withTransaction {
         val deletedEvents = dao.deleteEventsForImportBatch(batchId)
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
         archivedBudgets.forEach { item -> dao.archiveBudgetItem(item.id, now) }
+        val removedMovements = dao.deleteImportedProductMovements(batchId)
+        // Products first: a kept product's recipe keeps its materials.
+        val keptProducts = dao.getUsedImportedProducts(batchId).also { kept -> if (kept.isNotEmpty()) dao.releaseFromImport(kept.map { it.id }) }
+        val keptStock = stockDao.getUsedImportedItems(batchId).also { kept -> if (kept.isNotEmpty()) stockDao.releaseFromImport(kept.map { it.id }) }
         val removedStock = stockDao.deleteImportedItems(batchId)
         val removedProducts = dao.deleteImportedProducts(batchId)
         // Undo the plan period the import filled in, unless the owner has changed it since.
@@ -1132,7 +1140,7 @@ class FinanceRepository(private val database: AppDatabase) {
         check(dao.markImportBatchUndone(batchId, now) == 1) {
             "Impor ini sudah dibatalkan."
         }
-        ImportUndo(deletedEvents + archivedBudgets.size + removedStock + removedProducts, periodCleared)
+        ImportUndo(deletedEvents + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
     }
 
     private suspend fun createProjectInternal(businessId: String, name: String, isGeneral: Boolean): ProjectEntity {
@@ -1346,5 +1354,8 @@ class FinanceRepository(private val database: AppDatabase) {
     }
 }
 
-/** What undoing an import batch removed: [records] rows, and whether the unit's plan period was cleared. */
-data class ImportUndo(val records: Int, val periodCleared: Boolean)
+/**
+ * What undoing an import batch removed: [records] rows, and whether the unit's plan period was cleared.
+ * [kept] names imported products and materials that stayed because later records use them (cleanup P3).
+ */
+data class ImportUndo(val records: Int, val periodCleared: Boolean, val kept: List<String> = emptyList())

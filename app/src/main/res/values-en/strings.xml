@@ -277,6 +277,8 @@
     <string name="msg_batch_undo_failed">The import could not be undone.</string>
     <string name="msg_batch_undone_period">Import undone: %1$d records deleted. The plan period this import set was cleared again.</string>
     <string name="msg_batch_undone">Import undone: %1$d records deleted.</string>
+    <string name="msg_batch_undone_kept">Import undone: %1$d records deleted. Kept because records made after the import use them: %2$s.</string>
+    <string name="msg_batch_undone_period_kept">Import undone: %1$d records deleted. The plan period this import set was cleared again. Kept because records made after the import use them: %2$s.</string>
     <string name="batch_state_undone">undone</string>
     <string name="batch_state_committed">active</string>
     <string name="batch_undo_body">%1$d records from %2$s will be deleted. This import stays listed in the history.</string>

@@ -279,6 +279,8 @@
     <string name="msg_batch_undo_failed">Impor tidak dapat dibatalkan.</string>
     <string name="msg_batch_undone_period">Impor dibatalkan: %1$d catatan dihapus. Periode rencana yang diisi impor ini dikosongkan kembali.</string>
     <string name="msg_batch_undone">Impor dibatalkan: %1$d catatan dihapus.</string>
+    <string name="msg_batch_undone_kept">Impor dibatalkan: %1$d catatan dihapus. Tetap disimpan karena sudah dipakai catatan sesudah impor: %2$s.</string>
+    <string name="msg_batch_undone_period_kept">Impor dibatalkan: %1$d catatan dihapus. Periode rencana yang diisi impor ini dikosongkan kembali. Tetap disimpan karena sudah dipakai catatan sesudah impor: %2$s.</string>
     <string name="batch_state_undone">dibatalkan</string>
     <string name="batch_state_committed">aktif</string>
     <string name="batch_undo_body">%1$d catatan dari %2$s akan dihapus. Riwayat impor ini tetap tercatat.</string>

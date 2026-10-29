@@ -299,6 +299,24 @@ interface FinanceDao {
     @Query("DELETE FROM products WHERE importBatchId = :batchId")
     suspend fun deleteImportedProducts(batchId: String): Int
 
+    /** Rows an import added, by their id prefix (`<batchId>:`), so undo removes them and nothing recorded later. */
+    @Query("DELETE FROM product_movements WHERE substr(id, 1, length(:batchId) + 1) = :batchId || ':'")
+    suspend fun deleteImportedProductMovements(batchId: String): Int
+
+    /** Imported products a sale or a production/count outside the batch still uses (cleanup P3). */
+    @Query(
+        """
+        SELECT * FROM products WHERE importBatchId = :batchId AND (
+            EXISTS (SELECT 1 FROM financial_events e WHERE e.productId = products.id AND (e.importBatchId IS NULL OR e.importBatchId != :batchId))
+            OR EXISTS (SELECT 1 FROM product_movements m WHERE m.productId = products.id AND substr(m.id, 1, length(:batchId) + 1) != :batchId || ':')
+        ) ORDER BY name COLLATE NOCASE
+        """,
+    )
+    suspend fun getUsedImportedProducts(batchId: String): List<ProductEntity>
+
+    @Query("UPDATE products SET importBatchId = NULL WHERE id IN (:ids)")
+    suspend fun releaseFromImport(ids: List<String>)
+
     @Query(
         """
         SELECT u.* FROM product_units u INNER JOIN products p ON p.id = u.productId

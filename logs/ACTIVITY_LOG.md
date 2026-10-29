@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:31] [Claude Code (Opus) — perapihan Fase 1: P3]
+- **Goal**: Cleanup plan P3: undoing an import deleted imported products and materials together with production recorded after the import (FK cascade) and left later sales and purchases pointing at nothing.
+- **Actions**: `undoImportBatch` now deletes the batch's own Produksi & Stok rows (new id prefix `<batchId>:` written by `commitImport`, `FinanceDao.deleteImportedProductMovements`), then keeps and releases (`importBatchId = null`) products used by a sale or production outside the batch (`getUsedImportedProducts`) and then materials used by a purchase outside the batch, a recipe line of a non-batch product, or a stock movement (`StockDao.getUsedImportedItems`); only the rest is deleted. `ImportUndo.kept` lists their names; the undo snackbar names them (`msg_batch_undone_kept`, `msg_batch_undone_period_kept`, ID + EN). Records count now includes the deleted production rows. DEC-028 addendum (no schema change; older batches keep products with production).
+- **Files**: `data/{FinanceRepository,FinanceDao}.kt`, `domain/StockManagement.kt`, `presentation/AppViewModel.kt`, `res/values{,-en}/strings.xml`, `androidTest/.../ImportCommitTest.kt`, `logs/DECISION_LOG.md`, plan Status, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED: `undoKeepsImportedProductsAndMaterialsThatLaterRecordsUse` expected [Keripik, Minyak] but was [] (everything deleted). GREEN: connected ImportCommitTest + LedgerIntegrityTest + SyncEngineTest 29/0.
+
 ### [2026-10-29 11:26] [Claude Code (Opus) — perapihan Fase 1: P10]
 - **Goal**: Cleanup plan P10: prove a shared material keeps its price through export and import; fix it if not.
 - **Actions**: The plan assumed the export already wrote the current price; the new test showed it wrote the price entered at creation (Rp20.000 instead of Rp27.500 bought by another unit). `FinanceRepository.exportedStock` now gives each exported item its current price (`latestPurchasePrice`, else the entered price), so Stok Barang "Harga Beli" carries it. DEC-028 addendum.

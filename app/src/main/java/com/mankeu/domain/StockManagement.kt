@@ -194,6 +194,26 @@ interface StockDao {
     @Query("DELETE FROM stock_items WHERE importBatchId = :batchId")
     suspend fun deleteImportedItems(batchId: String): Int
 
+    /**
+     * Imported items that something outside the batch still uses: a purchase, a recipe line of a
+     * product that is not (or no longer) part of the batch, or a stock movement (cleanup P3). Call
+     * after the used products are released, so a kept product's recipe keeps its materials.
+     */
+    @Query(
+        """
+        SELECT * FROM stock_items WHERE importBatchId = :batchId AND (
+            EXISTS (SELECT 1 FROM financial_events e WHERE e.stockItemId = stock_items.id AND (e.importBatchId IS NULL OR e.importBatchId != :batchId))
+            OR EXISTS (SELECT 1 FROM product_recipe_lines l INNER JOIN products p ON p.id = l.productId
+                       WHERE l.stockItemId = stock_items.id AND (p.importBatchId IS NULL OR p.importBatchId != :batchId))
+            OR EXISTS (SELECT 1 FROM stock_movements m WHERE m.stockItemId = stock_items.id)
+        ) ORDER BY name COLLATE NOCASE
+        """,
+    )
+    suspend fun getUsedImportedItems(batchId: String): List<StockItemEntity>
+
+    @Query("UPDATE stock_items SET importBatchId = NULL WHERE id IN (:ids)")
+    suspend fun releaseFromImport(ids: List<String>)
+
     @Query("UPDATE stock_items SET archived = 1, updatedAtEpochMillis = :updatedAt WHERE id = :id")
     suspend fun archiveStockItem(id: String, updatedAt: Long)
 }

@@ -726,7 +726,7 @@ class AppViewModel(
     fun deleteProductMovement(id: String) = mutating {
         runCatching { repository.deleteProductMovement(id) }
             .onSuccess { message.value = UiText.of(R.string.msg_stock_entry_deleted) }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_stock_entry_delete_failed) }
     }
 
     fun archiveProduct(id: String) = mutating {

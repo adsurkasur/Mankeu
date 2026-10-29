@@ -100,6 +100,8 @@ Schema tetap 13, template tetap v5. Tidak ada dependensi baru.
 ### P10 Harga bahan bersama
 - **Perubahan:** anggapan rencana ("ekspor menulis harga saat ini") salah: ekspor menulis harga saat bahan dibuat. `exportedStock`
   kini menulis harga terkini (belanja terakhir di usaha, kalau tidak ada harga awal).
+- **Batas (review I-1):** harga salinan sama dengan harga sumber hanya bila unit yang diekspor tidak pernah membeli bahan itu.
+  Bila unit itu membelinya sendiri, belanjanya ikut di Transaksi dan menjadi belanja terakhir salinan (lihat bagian Review fix round).
 - **Bukti:** RED `aSharedMaterialKeepsItsCurrentPriceThroughExportAndImport` expected 27500 but was 20000; GREEN 20/0 (tiga kelas).
 
 ## Verifikasi akhir (kode pada `7abad87`, kode produksi sama dengan HEAD laporan ini)
@@ -123,3 +125,22 @@ Schema tetap 13, template tetap v5. Tidak ada dependensi baru.
 4. P4: dua baris resep bernama sama dalam satu produk kembar tetap tergabung saat sinkron.
 5. Belum diverifikasi: HP fisik, Gboard, sinkron dua HP sungguhan.
 6. Branch belum di-push dan pointer superproject belum diperbarui (tugas ini: commit saja).
+
+## Review fix round (2026-10-29)
+
+Review: `.superpowers/sdd/perapihan/review.md` (merge after fixes; Important 1, Minor 9).
+
+- **I-1 (P10), keputusan controller:** perilaku diterima sebagai DEC-028 §2 di tujuan. Tes baru
+  `ImportCommitTest.aSharedMaterialTheUnitBoughtItselfTakesTheUnitsOwnLatestPurchaseAfterImport`: unit membeli Minyak sendiri
+  Rp20.000/liter, unit lain kemudian Rp27.500; ekspor menulis Harga Beli 27.500, dan setelah impor ke usaha lain harga salinan
+  **Rp20.000** (belanja terakhir salinan sendiri). Baris CHANGELOG, Status P10 dan addendum DEC-028 dipersempit sesuai itu.
+- **M-5:** gagal hapus catatan stok kini memakai `msg_stock_entry_delete_failed` (ID + EN), bukan pesan rencana usaha.
+- **M-6:** EN: "Stock after: …", "Delete … on …?", "Production (batches: …)".
+- **M-7:** overlay Riwayat stok menutup sendiri bila produknya hilang (diarsipkan, unit berganti, tersinkron hilang); indentasi argumen dirapikan.
+- **M-8:** butir terbuka DEC-028 (c) dan (d) ditandai selesai oleh P7/P8.
+- **M-9:** `ViewModelFlowsTest.syncRunsOnStartAndAgainShortlyAfterAChange` kini menunggu status `Ready` alih-alih menegaskannya
+  langsung setelah hitungan upload; 5 run berturut-turut hijau.
+- **M-1 sampai M-4:** tidak diubah; masing-masing ditulis di DEC-028 sebagai batas yang diketahui.
+
+Verifikasi putaran ini: lihat entri Status "Review fix round" di rencana perapihan.
+

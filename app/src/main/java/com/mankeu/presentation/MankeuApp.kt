@@ -539,6 +539,8 @@ fun MankeuApp(
 
                                 Overlay.STOCK_HISTORY -> {
                                     val record = state.products.firstOrNull { it.product.id == stockHistoryId }
+                                    // The product can disappear while the page is open (archived, unit changed, synced away).
+                                    LaunchedEffect(record == null) { if (record == null) overlay = Overlay.NONE }
                                     OverlayScaffold(
                                         title = stringResource(R.string.stock_history_title, record?.product?.name.orEmpty()),
                                         onBack = { overlay = Overlay.NONE },
@@ -583,7 +585,7 @@ fun MankeuApp(
                                                     onManageScope = { manageScope = true },
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                     onOpenProduct = openProduct,
-                                                    onOpenStockHistory = openStockHistory,
+                                                onOpenStockHistory = openStockHistory,
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,

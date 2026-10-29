@@ -408,6 +408,31 @@ class ImportCommitTest {
         assertEquals(listOf(oil), dao.getRecipeLines(keripik).mapNotNull { it.stockItemId })
     }
 
+    /**
+     * Review I-1 (controller ruling): DEC-028 §2 applies in the destination. When the exported unit bought the shared
+     * material itself, that purchase travels in Transaksi and is the copy's latest purchase, so it sets the price
+     * (Rp20.000), not the newer purchase another unit made (Rp27.500, written only as Harga Beli).
+     */
+    @Test
+    fun aSharedMaterialTheUnitBoughtItselfTakesTheUnitsOwnLatestPurchaseAfterImport() = runBlocking {
+        val oil = repository.createStockItem(businessId, projectId, true, "Minyak", "liter", 15_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        val ownBook = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        repository.recordEvent(EventDraft(businessId, projectId, ownBook, FinancialEventType.CASH_EXPENSE, 40_000, DAY, "Beli minyak", "Bahan Baku & Stok", quantityText = "2", unit = "liter", stockItemId = oil))
+        val branch = repository.createProject(businessId, "Cabang 2")
+        val branchBook = dao.getBooks(branch).first { it.mode == BookMode.REALIZATION.name }.id
+        repository.recordEvent(EventDraft(businessId, branch, branchBook, FinancialEventType.CASH_EXPENSE, 55_000, DAY.plusDays(1), "Beli minyak", "Bahan Baku & Stok", quantityText = "2", unit = "liter", stockItemId = oil))
+        assertEquals(27_500L, repository.materialPrice(oil))
+
+        val preview = FinanceWorkbookImporter().preview("ekspor.xlsx", repository.exportProjectWorkbook(projectId))
+        assertEquals(emptyList<String>(), preview.errors)
+        assertEquals(27_500L, preview.stockItems.single().priceRupiah)
+        val (otherBusiness, otherUnit) = repository.createBusinessWithUnit("Usaha Lain", "Pusat")
+        repository.commitImport(otherBusiness, otherUnit, preview)
+
+        val copy = database.stockDao().getStockItems(otherBusiness, otherUnit).single()
+        assertEquals(20_000L, repository.materialPrice(copy.id))
+    }
+
     private fun keripik() = WorkbookImportPreview(
         sourceName = "keripik.xlsx",
         sourceSha256 = "sha-keripik",

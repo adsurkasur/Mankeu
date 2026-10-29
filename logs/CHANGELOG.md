@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Sync: the same product created on two phones keeps one set of sale units and recipe lines, and later edits arrive whole.
 - Undoing an import keeps an imported product or material that you used afterwards (production, a sale, a purchase) and says which; only what the file added is removed.
-- Excel export writes a material's current price (its latest purchase, possibly by another unit), so a copy imported elsewhere has the same HPP.
+- Excel export writes a material's current price (its latest purchase, possibly by another unit) as Harga Beli. A copy imported elsewhere keeps that price when the exported unit never bought the material; otherwise the unit's own latest purchase sets it.
 - An archived material stays archived after Excel export and import (new Stok Barang column Diarsipkan), still linked from its recipe lines and purchases.
 - An import file that names the same product twice in the Produk sheet is refused, naming the cell.
 - The save message says "Transaksi tersimpan." instead of speaking of journals, debit and credit.

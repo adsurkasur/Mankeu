@@ -528,6 +528,7 @@
     <string name="stock_history_delete_title">Hapus %1$s tanggal %2$s?</string>
     <string name="stock_history_delete_body">Stok dihitung ulang tanpa baris ini.</string>
     <string name="msg_stock_entry_deleted">Catatan stok dihapus.</string>
+    <string name="msg_stock_entry_delete_failed">Catatan stok tidak bisa dihapus.</string>
     <string name="production_title">Produksi %1$s</string>
     <string name="production_batches">Berapa batch?</string>
     <string name="production_result">= %1$s %2$s masuk stok</string>

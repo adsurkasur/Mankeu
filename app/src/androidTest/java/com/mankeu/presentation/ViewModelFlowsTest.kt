@@ -82,7 +82,8 @@ class ViewModelFlowsTest {
 
         mainThread { viewModel.createBusiness("Warung Bu Ani", "Utama") }
         waitFor("round about 5 s after the change", timeoutMillis = 15_000) { store.uploads.size == 2 }
-        assertTrue(sync.state.value is SyncController.State.Ready)
+        // The upload is recorded before the round acknowledges and settles, so wait for the final state (review M-9).
+        waitFor("ready after the second round") { sync.state.value is SyncController.State.Ready }
     }
 
     @Test

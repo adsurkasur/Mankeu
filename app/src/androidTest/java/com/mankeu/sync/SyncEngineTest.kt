@@ -241,6 +241,19 @@ class SyncEngineTest {
         }
     }
 
+    /** Review I-2: a schema-13 phone does not convert its new product sales into notes; its changes are refused. */
+    @Test
+    fun aChangeSetFromBeforeSchema14IsRefusedAndNothingChanges() = runBlocking {
+        a.repository.createBusiness("HP lama")
+        val old = a.engine.collectLocalChanges()!!.changeSet.copy(schemaVersion = 13)
+
+        val failure = runCatching { b.engine.applyRemote(old) }.exceptionOrNull()
+
+        assertTrue("expected a refusal, got $failure", failure is IllegalArgumentException)
+        assertTrue(failure!!.message!!.contains("Perbarui aplikasi"))
+        assertTrue(b.database.financeDao().getBusinesses().isEmpty())
+    }
+
     @Test
     fun nothingIsCapturedWhileSyncIsOff() = runBlocking {
         a.engine.disable()

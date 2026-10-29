@@ -81,6 +81,7 @@ object BackupUpgrade {
                 quantityText = events.text(row, "quantityText"),
                 unit = events.text(row, "unit"),
                 unitPriceRupiah = events.longOrNull(row, "unitPriceRupiah"),
+                importBatchId = events.text(row, "importBatchId"),
             )
         }
 
@@ -88,7 +89,7 @@ object BackupUpgrade {
         val stock = byName.getValue("stock_items")
         val prices = LegacySaleShape.materialPrices(
             items = stock.rows.map { Triple(stock.text(it, "id")!!, stock.text(it, "businessId")!!, stock.long(it, "basePriceRupiah")) },
-            // Rows are captured in rowid order; a stable sort by date then time keeps rowid as the tie-break.
+            // EncryptedBackupManager captures in rowid order; a stable sort by date then time keeps rowid as the tie-break.
             purchasesOldestFirst = events.rows
                 .filter { events.text(it, "stockItemId") != null && (events.longOrNull(it, "unitPriceRupiah") ?: 0) > 0 }
                 .sortedWith(compareBy({ events.long(it, "dateEpochDay") }, { events.long(it, "createdAtEpochMillis") }))
@@ -103,7 +104,7 @@ object BackupUpgrade {
                 val s = pair.first
                 listOf(
                     BackupValue.Text(s.id), BackupValue.Text(s.businessId), BackupValue.Text(s.projectId), BackupValue.Null, BackupValue.Integer(s.dateEpochDay),
-                    BackupValue.Null, BackupValue.Integer(s.discountRupiah), BackupValue.Text(s.notes), BackupValue.Null, BackupValue.Integer(1), BackupValue.Null,
+                    BackupValue.Null, BackupValue.Integer(s.discountRupiah), BackupValue.Text(s.notes), BackupValue.Null, BackupValue.Integer(1), text(s.importBatchId),
                     BackupValue.Integer(s.createdAtEpochMillis), BackupValue.Integer(s.updatedAtEpochMillis),
                 )
             },

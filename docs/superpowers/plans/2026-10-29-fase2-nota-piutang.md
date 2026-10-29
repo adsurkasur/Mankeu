@@ -420,3 +420,4 @@ Diperbarui di setiap commit tugas.
 - 2026-10-29 16:19: Task 1 selesai. feat(domain): sales, profit and consignment math. Unit test 107/0 (96 + 11 baru); golden untung Oktober -310.000, selisih produksi +760.000; RED = gagal kompilasi sebelum implementasi.
 - 2026-10-29 16:23: Task 1 review (spec PASS, Approved). Perbaikan reviewer: pembagian diskon tidak pernah negatif (pembulatan kumulatif). Unit 108/0.
 - 2026-10-29 20:22: Task 2 selesai. Schema 14, migrasi F2-4 (nota lunas `<eventId>-s`, HPP perkiraan), jurnal piutang/utang, BackupUpgrade 12→13→14, DEC-029. Tambahan di luar brief: `product_movements.consignmentId`. Unit 112/0; connected penuh 71/0 (2 skip).
+- 2026-10-29 20:45: Task 2 review fix round 1 (I-1 nota ikut importBatchId + undo impor menghapusnya; I-2 sinkron menolak change set < schema 14; M1 tes tambahan; M2 nama satuan yang tidak ada lagi jadi satuan utama; M5 cadangan ORDER BY rowid). M3/M4 ke Task 3. Unit 112/0; connected penuh 73/0 (2 skip).

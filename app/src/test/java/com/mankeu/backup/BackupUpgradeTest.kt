@@ -47,9 +47,9 @@ class BackupUpgradeTest {
         assertEquals(listOf(t("CASH"), t("RECEIVABLE")), postings.rows.map { it[2] })
     }
 
-    private val eventColumns = listOf("id", "businessId", "projectId", "bookId", "type", "amountRupiah", "dateEpochDay", "createdAtEpochMillis", "productId", "quantityText", "unit", "unitPriceRupiah", "stockItemId")
-    private fun event(id: String, book: String, type: String, amount: Long, productId: String? = null, quantity: String? = null, unit: String? = null, unitPrice: Long? = null, stockItemId: String? = null, day: Long = 20_000, created: Long = 0) =
-        listOf(t(id), t("b"), t("p"), t(book), t(type), i(amount), i(day), i(created), productId?.let(::t) ?: nul, quantity?.let(::t) ?: nul, unit?.let(::t) ?: nul, unitPrice?.let(::i) ?: nul, stockItemId?.let(::t) ?: nul)
+    private val eventColumns = listOf("id", "businessId", "projectId", "bookId", "type", "amountRupiah", "dateEpochDay", "createdAtEpochMillis", "productId", "quantityText", "unit", "unitPriceRupiah", "stockItemId", "importBatchId")
+    private fun event(id: String, book: String, type: String, amount: Long, productId: String? = null, quantity: String? = null, unit: String? = null, unitPrice: Long? = null, stockItemId: String? = null, day: Long = 20_000, created: Long = 0, batch: String? = null) =
+        listOf(t(id), t("b"), t("p"), t(book), t(type), i(amount), i(day), i(created), productId?.let(::t) ?: nul, quantity?.let(::t) ?: nul, unit?.let(::t) ?: nul, unitPrice?.let(::i) ?: nul, stockItemId?.let(::t) ?: nul, batch?.let(::t) ?: nul)
 
     private fun schema13(eventRows: List<List<BackupValue>>): PortableBackup {
         val tables = (AppDatabase.DATA_TABLES - newIn14).map { name ->
@@ -86,7 +86,10 @@ class BackupUpgradeTest {
                     // Two purchases of singkong; the later one (Rp25.000/kg) prices it, not the item's Rp20.000.
                     event("buy1", "real", "CASH_EXPENSE", 44_000, quantity = "2", unitPrice = 22_000, stockItemId = "m1", day = 19_990),
                     event("buy2", "real", "CASH_EXPENSE", 50_000, quantity = "2", unitPrice = 25_000, stockItemId = "m1", day = 19_995),
-                    event("sale", "real", "CASH_INCOME", 600_000, productId = "krp", quantity = "2", unit = "dus"),
+                    event("sale", "real", "CASH_INCOME", 600_000, productId = "krp", quantity = "2", unit = "dus", created = 4_321, batch = "batch-1"),
+                    event("bks", "real", "CASH_INCOME", 30_000, productId = "krp", quantity = "3", unit = "bungkus", unitPrice = 9_000),
+                    event("gone", "real", "CASH_INCOME", 100_000, productId = "deleted", quantity = "3", unit = "pak"),
+                    event("renamed", "real", "CASH_INCOME", 300_000, productId = "krp", quantity = "1", unit = "pak"),
                     event("jasa", "real", "CASH_INCOME", 75_000),
                     event("planned", "plan", "CASH_INCOME", 900_000, productId = "krp", quantity = "3", unit = "dus"),
                 ),
@@ -96,11 +99,18 @@ class BackupUpgradeTest {
         assertEquals(AppDatabase.DATA_TABLES.toSet(), upgraded.tables.map { it.name }.toSet())
         fun rows(name: String) = upgraded.tables.single { it.name == name }.let { tbl -> tbl.rows.map { tbl.columns.zip(it).toMap() } }
 
-        val sale = rows("sales").single()
-        assertEquals(t("sale-s"), sale["id"])
+        val sale = rows("sales").single { it["id"] == t("sale-s") }
         assertEquals(i(1), sale["hppEstimated"])
         assertEquals(i(20_000), sale["dateEpochDay"])
-        val line = rows("sale_lines").single()
+        // Review I-1 and M1: the batch id and the timestamps follow the event.
+        assertEquals(listOf(t("batch-1"), i(4_321), i(4_321)), listOf(sale["importBatchId"], sale["createdAtEpochMillis"], sale["updatedAtEpochMillis"]))
+        assertEquals(nul, rows("sales").single { it["id"] == t("bks-s") }["importBatchId"])
+        val lines = rows("sale_lines").associateBy { it["id"] }
+        fun summary(id: String) = listOf("unitName", "contentText", "unitPriceRupiah", "hppRupiah").map { lines.getValue(t(id)).getValue(it) }
+        assertEquals(listOf(t("bungkus"), t("1"), i(9_000), i(18_000)), summary("bks-l"))
+        assertEquals(listOf(t("pak"), t("1"), i(33_333), i(0)), summary("gone-l"))
+        assertEquals(listOf(t("dus"), t("40"), i(300_000), i(240_000)), summary("renamed-l"))
+        val line = lines.getValue(t("sale-l"))
         // Batch 2 × 25.000 + 10.000 = 60.000 for 10 bungkus; 2 dus = 80 bungkus → 480.000.
         assertEquals(
             mapOf("id" to t("sale-l"), "saleId" to t("sale-s"), "productId" to t("krp"), "unitName" to t("dus"), "contentText" to t("40"), "quantityText" to t("2"),
@@ -108,13 +118,13 @@ class BackupUpgradeTest {
             line,
         )
         val saleIds = rows("financial_events").associate { it["id"] to it["saleId"] }
-        assertEquals(mapOf(t("buy1") to nul, t("buy2") to nul, t("sale") to t("sale-s"), t("jasa") to nul, t("planned") to nul), saleIds)
+        assertEquals(mapOf(t("buy1") to nul, t("buy2") to nul, t("sale") to t("sale-s"), t("bks") to t("bks-s"), t("gone") to t("gone-s"), t("renamed") to t("renamed-s"), t("jasa") to nul, t("planned") to nul), saleIds)
 
         val postings = rows("postings").groupBy({ it["journalId"] }, { Triple(it["account"], it["side"], it["amountRupiah"]) })
         assertEquals(listOf(Triple(t("CASH"), t("DEBIT"), i(600_000)), Triple(t("RECEIVABLE"), t("CREDIT"), i(600_000))), postings[t("journal-sale")])
         assertEquals(listOf(Triple(t("CASH"), t("DEBIT"), i(75_000)), Triple(t("REVENUE"), t("CREDIT"), i(75_000))), postings[t("journal-jasa")])
         assertEquals(t("REVENUE"), postings.getValue(t("journal-planned"))[1].first)
-        assertEquals(10, rows("postings").size)
+        assertEquals(16, rows("postings").size)
     }
 
     @Test fun `current snapshot passes through untouched`() {

@@ -16,11 +16,11 @@ class Migration13To14Test {
     @get:Rule
     val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), AppDatabase::class.java)
 
-    private fun SupportSQLiteDatabase.event(id: String, book: String, type: String, amount: Long, productId: String? = null, quantity: String? = null, unit: String? = null, unitPrice: Long? = null, stockItemId: String? = null, day: Long = 20_000) {
+    private fun SupportSQLiteDatabase.event(id: String, book: String, type: String, amount: Long, productId: String? = null, quantity: String? = null, unit: String? = null, unitPrice: Long? = null, stockItemId: String? = null, day: Long = 20_000, batch: String? = null, created: Long = 7) {
         execSQL(
-            "INSERT INTO financial_events (id, businessId, projectId, bookId, type, amountRupiah, dateEpochDay, description, category, quantityText, unit, unitPriceRupiah, cashFlowRole, createdAtEpochMillis, productId, stockItemId) " +
-                "VALUES (?, 'b', 'p', ?, ?, ?, ?, 'x', 'c', ?, ?, ?, 'OPERATING', 7, ?, ?)",
-            arrayOf<Any?>(id, book, type, amount, day, quantity, unit, unitPrice, productId, stockItemId),
+            "INSERT INTO financial_events (id, businessId, projectId, bookId, type, amountRupiah, dateEpochDay, description, category, quantityText, unit, unitPriceRupiah, cashFlowRole, createdAtEpochMillis, productId, stockItemId, importBatchId) " +
+                "VALUES (?, 'b', 'p', ?, ?, ?, ?, 'x', 'c', ?, ?, ?, 'OPERATING', ?, ?, ?, ?)",
+            arrayOf<Any?>(id, book, type, amount, day, quantity, unit, unitPrice, created, productId, stockItemId, batch),
         )
         execSQL("INSERT INTO journal_entries (id, sourceEventId, dateEpochDay, description) VALUES (?, ?, ?, 'x')", arrayOf<Any>("journal-$id", id, day))
         val (debit, credit) = if (type == "CASH_INCOME") "CASH" to "REVENUE" else "OPERATING_EXPENSE" to "CASH"
@@ -43,7 +43,13 @@ class Migration13To14Test {
             db.event("buy1", "real", "CASH_EXPENSE", 44_000, quantity = "2", unitPrice = 22_000, stockItemId = "m1", day = 19_990)
             db.event("buy2", "real", "CASH_EXPENSE", 50_000, quantity = "2", unitPrice = 25_000, stockItemId = "m1", day = 19_995)
             db.event("sale", "real", "CASH_INCOME", 600_000, productId = "krp", quantity = "2", unit = "dus")
-            db.event("loose", "real", "CASH_INCOME", 40_000, productId = "krp", quantity = "5")
+            db.event("loose", "real", "CASH_INCOME", 40_000, productId = "krp", quantity = "5", batch = "batch-1", created = 1_234)
+            // Review M1: the event's own unit price, the base unit (content 1): 3 × Rp6.000 HPP.
+            db.event("bks", "real", "CASH_INCOME", 30_000, productId = "krp", quantity = "3", unit = "bungkus", unitPrice = 9_000)
+            // Review M1: a deleted product: content 1, HPP 0; 100.000 ÷ 3 rounds to 33.333.
+            db.event("gone", "real", "CASH_INCOME", 100_000, productId = "deleted", quantity = "3", unit = "pak")
+            // Review M2: a unit renamed since ("pak" no longer exists): the line names the unit it counted (dus, 40).
+            db.event("renamed", "real", "CASH_INCOME", 300_000, productId = "krp", quantity = "1", unit = "pak")
             db.event("jasa", "real", "CASH_INCOME", 75_000)
             db.event("planned", "plan", "CASH_INCOME", 900_000, productId = "krp", quantity = "3", unit = "dus")
             // Sync on: the conversion must not fill the outbox (both phones derive the same rows).
@@ -52,9 +58,19 @@ class Migration13To14Test {
         }
 
         helper.runMigrationsAndValidate(DB, 14, true, Migration13To14).use { db ->
-            db.query("SELECT id, projectId, dateEpochDay, hppEstimated, contactId IS NULL, discountRupiah FROM sales ORDER BY id").use { c ->
-                val rows = buildList { while (c.moveToNext()) add((0..5).map { c.getString(it) }) }
-                assertEquals(listOf(listOf("loose-s", "p", "20000", "1", "1", "0"), listOf("sale-s", "p", "20000", "1", "1", "0")), rows)
+            db.query("SELECT id, projectId, dateEpochDay, hppEstimated, contactId IS NULL, discountRupiah, importBatchId, createdAtEpochMillis, updatedAtEpochMillis FROM sales ORDER BY id").use { c ->
+                val rows = buildList { while (c.moveToNext()) add((0..8).map { c.getString(it) }) }
+                // Timestamps come from the event (two phones migrating alone agree); the batch id follows the event (review I-1).
+                assertEquals(
+                    listOf(
+                        listOf("bks-s", "p", "20000", "1", "1", "0", null, "7", "7"),
+                        listOf("gone-s", "p", "20000", "1", "1", "0", null, "7", "7"),
+                        listOf("loose-s", "p", "20000", "1", "1", "0", "batch-1", "1234", "1234"),
+                        listOf("renamed-s", "p", "20000", "1", "1", "0", null, "7", "7"),
+                        listOf("sale-s", "p", "20000", "1", "1", "0", null, "7", "7"),
+                    ),
+                    rows,
+                )
             }
             db.query("SELECT id, saleId, productId, unitName, contentText, quantityText, unitPriceRupiah, totalRupiah, hppRupiah FROM sale_lines ORDER BY id").use { c ->
                 val rows = buildList { while (c.moveToNext()) add((0..8).map { c.getString(it) }) }
@@ -62,7 +78,10 @@ class Migration13To14Test {
                 // no unit means the main unit (dus): 5 dus = 200 bungkus → 1.200.000, price 40.000 ÷ 5.
                 assertEquals(
                     listOf(
+                        listOf("bks-l", "bks-s", "krp", "bungkus", "1", "3", "9000", "30000", "18000"),
+                        listOf("gone-l", "gone-s", "deleted", "pak", "1", "3", "33333", "100000", "0"),
                         listOf("loose-l", "loose-s", "krp", "dus", "40", "5", "8000", "40000", "1200000"),
+                        listOf("renamed-l", "renamed-s", "krp", "dus", "40", "1", "300000", "300000", "240000"),
                         listOf("sale-l", "sale-s", "krp", "dus", "40", "2", "300000", "600000", "480000"),
                     ),
                     rows,
@@ -70,7 +89,10 @@ class Migration13To14Test {
             }
             db.query("SELECT id, saleId FROM financial_events ORDER BY id").use { c ->
                 val rows = buildList { while (c.moveToNext()) add(c.getString(0) to c.getString(1)) }
-                assertEquals(listOf("buy1" to null, "buy2" to null, "jasa" to null, "loose" to "loose-s", "planned" to null, "sale" to "sale-s"), rows)
+                assertEquals(
+                    listOf("bks" to "bks-s", "buy1" to null, "buy2" to null, "gone" to "gone-s", "jasa" to null, "loose" to "loose-s", "planned" to null, "renamed" to "renamed-s", "sale" to "sale-s"),
+                    rows,
+                )
             }
             fun postings(event: String) = db.query("SELECT account, side, amountRupiah FROM postings WHERE journalId = ? ORDER BY id", arrayOf<Any>("journal-$event")).use { c ->
                 buildList { while (c.moveToNext()) add(Triple(c.getString(0), c.getString(1), c.getLong(2))) }

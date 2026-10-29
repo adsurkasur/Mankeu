@@ -328,7 +328,8 @@ class EncryptedBackupManager(
     private fun capture(): PortableBackup {
         val writable = database.openHelper.writableDatabase
         val tables = TABLES.map { tableName ->
-            writable.query("SELECT * FROM `$tableName`").use { cursor ->
+            // rowid order is part of the format: BackupUpgrade breaks purchase-date ties by row order (review M5).
+            writable.query("SELECT * FROM `$tableName` ORDER BY rowid").use { cursor ->
                 BackupTable(
                     name = tableName,
                     columns = cursor.columnNames.toList(),

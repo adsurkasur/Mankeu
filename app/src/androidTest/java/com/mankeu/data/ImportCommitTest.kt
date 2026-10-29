@@ -244,6 +244,36 @@ class ImportCommitTest {
         assertTrue(dao.getEventsForBook(actual).isEmpty())
     }
 
+    /**
+     * Review I-1: an import made before schema 14 whose product sale the migration turned into a note
+     * (the note carries the event's batch id). Undo removes the note and its line with the sale.
+     */
+    @Test
+    fun undoRemovesTheNotesMigratedFromTheImportsSales() = runBlocking {
+        repository.commitImport(businessId, projectId, keripik())
+        val batch = dao.getImportBatches(projectId).single().id
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val sale = dao.getEventsForBook(actual).single { it.description == "Jual keripik" }
+        val db = database.openHelper.writableDatabase
+        // What Migration13To14 writes for that sale.
+        db.execSQL(
+            "INSERT INTO sales (id, businessId, projectId, dateEpochDay, discountRupiah, notes, hppEstimated, importBatchId, createdAtEpochMillis, updatedAtEpochMillis) VALUES (?, ?, ?, ?, 0, '', 1, ?, 0, 0)",
+            arrayOf<Any>(LegacySaleShape.saleId(sale.id), businessId, projectId, sale.dateEpochDay, batch),
+        )
+        db.execSQL(
+            "INSERT INTO sale_lines (id, saleId, productId, unitName, contentText, quantityText, unitPriceRupiah, totalRupiah, hppRupiah, sortOrder) VALUES (?, ?, ?, 'dus', '10', '3', 45000, 135000, 0, 0)",
+            arrayOf<Any>(LegacySaleShape.lineId(sale.id), LegacySaleShape.saleId(sale.id), sale.productId!!),
+        )
+
+        repository.undoImportBatch(batch)
+
+        db.query("SELECT (SELECT COUNT(*) FROM sales), (SELECT COUNT(*) FROM sale_lines)").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(0 to 0, c.getInt(0) to c.getInt(1))
+        }
+        assertTrue(dao.getProducts(projectId).isEmpty())
+    }
+
     /** A purchase whose amount ÷ quantity rounds to Rp0 must not zero the material's price. */
     @Test
     fun aTinyPurchaseDoesNotZeroTheMaterialPrice() = runBlocking {

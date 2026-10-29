@@ -116,6 +116,9 @@ class SyncEngine(private val database: AppDatabase) {
         require(changeSet.schemaVersion <= schemaVersion(db)) {
             "Perubahan dari perangkat lain memakai versi data lebih baru. Perbarui aplikasi dulu."
         }
+        require(changeSet.schemaVersion >= MIN_SYNC_SCHEMA) {
+            "Perubahan dari perangkat lain memakai versi aplikasi lama. Perbarui aplikasi di semua HP, lalu sinkronkan lagi."
+        }
         val localPending = dao.pending().groupBy { it.tableName to it.rowId }.mapValues { (_, e) -> e.maxOf { it.changedAtEpochMillis } }
         val byTable = changeSet.tables.filter { it.name in AppDatabase.DATA_TABLES }.associateBy { it.name }
         var applied = 0
@@ -244,6 +247,13 @@ class SyncEngine(private val database: AppDatabase) {
         private const val PUSH_COUNTER = "push_counter"
         private const val CURSOR = "cursor:"
         private const val ALIAS = "alias:"
+
+        /**
+         * Oldest change set accepted (DEC-029, review I-2). A schema-13 phone records product sales
+         * without notes and would overwrite migrated Kas/Piutang journals with Kas/Pendapatan, so the
+         * two phones' books would differ for good. Raise it whenever a migration converts data.
+         */
+        const val MIN_SYNC_SCHEMA = 14
 
         /** What makes two rows "the same thing" for the owner, per table that can be created offline twice. */
         private val NATURAL_KEYS = mapOf(

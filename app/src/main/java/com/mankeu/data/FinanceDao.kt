@@ -306,6 +306,10 @@ interface FinanceDao {
     @Query("DELETE FROM product_movements WHERE substr(id, 1, length(:batchId) + 1) = :batchId || ':'")
     suspend fun deleteImportedProductMovements(batchId: String): Int
 
+    /** Notes an import's sales became (Migration13To14 keeps the batch id); their lines cascade. */
+    @Query("DELETE FROM sales WHERE importBatchId = :batchId")
+    suspend fun deleteSalesForImportBatch(batchId: String): Int
+
     /** Imported products a sale or a production/count outside the batch still uses (cleanup P3). */
     @Query(
         """

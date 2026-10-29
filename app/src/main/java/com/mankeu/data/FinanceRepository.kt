@@ -1137,6 +1137,7 @@ class FinanceRepository(private val database: AppDatabase) {
      */
     suspend fun undoImportBatch(batchId: String): ImportUndo = database.withTransaction {
         val deletedEvents = dao.deleteEventsForImportBatch(batchId)
+        val deletedSales = dao.deleteSalesForImportBatch(batchId)
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
         archivedBudgets.forEach { item -> dao.archiveBudgetItem(item.id, now) }
@@ -1156,7 +1157,7 @@ class FinanceRepository(private val database: AppDatabase) {
         check(dao.markImportBatchUndone(batchId, now) == 1) {
             "Impor ini sudah dibatalkan."
         }
-        ImportUndo(deletedEvents + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
+        ImportUndo(deletedEvents + deletedSales + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
     }
 
     private suspend fun createProjectInternal(businessId: String, name: String, isGeneral: Boolean): ProjectEntity {

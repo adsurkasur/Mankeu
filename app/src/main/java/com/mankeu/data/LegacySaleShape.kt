@@ -27,6 +27,8 @@ object LegacySaleShape {
         val quantityText: String?,
         val unit: String?,
         val unitPriceRupiah: Long?,
+        /** The note keeps it, so undoing that import removes the note too (DEC-012, review I-1). */
+        val importBatchId: String? = null,
     )
 
     fun saleId(eventId: String) = "$eventId-s"
@@ -38,7 +40,15 @@ object LegacySaleShape {
      */
     fun convert(old: OldSale, product: ProductRecord?, materialPrices: Map<String, Long>): Pair<SaleEntity, SaleLineEntity> {
         val quantity = TransactionCalculation.parseQuantity(old.quantityText) ?: BigDecimal.ONE
-        val unitName = old.unit?.trim()?.ifBlank { null } ?: product?.let { it.mainUnit?.name ?: it.product.unit } ?: ""
+        // A unit renamed or removed since counts as the main unit (contentOf), so the line names that
+        // unit, not one that contradicts its content (review M2, DEC-029).
+        val written = old.unit?.trim()?.ifBlank { null }
+        val known = product?.let { p -> listOf(p.product.unit) + p.units.map { it.name } }
+        val unitName = when {
+            product == null -> written ?: ""
+            written != null && known!!.any { it.equals(written, ignoreCase = true) } -> written
+            else -> product.mainUnit?.name ?: product.product.unit
+        }
         val content = product?.contentOf(old.unit) ?: BigDecimal.ONE
         val hpp = product?.let { p ->
             ProductCosting.hpp(ProductCosting.cost(p.spec, materialPrices).batchCostRupiah, p.spec.batchYield, content * quantity)
@@ -49,6 +59,7 @@ object LegacySaleShape {
             projectId = old.projectId,
             dateEpochDay = old.dateEpochDay,
             hppEstimated = true,
+            importBatchId = old.importBatchId,
             createdAtEpochMillis = old.createdAtEpochMillis,
         )
         val line = SaleLineEntity(

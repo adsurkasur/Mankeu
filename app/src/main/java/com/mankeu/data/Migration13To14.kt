@@ -49,7 +49,7 @@ object Migration13To14 : Migration(13, 14) {
 
     private fun convertSales(db: SupportSQLiteDatabase) {
         val oldSales = db.query(
-            "SELECT e.id, e.businessId, e.projectId, e.productId, e.dateEpochDay, e.createdAtEpochMillis, e.amountRupiah, e.quantityText, e.unit, e.unitPriceRupiah " +
+            "SELECT e.id, e.businessId, e.projectId, e.productId, e.dateEpochDay, e.createdAtEpochMillis, e.amountRupiah, e.quantityText, e.unit, e.unitPriceRupiah, e.importBatchId " +
                 "FROM financial_events e INNER JOIN books b ON b.id = e.bookId " +
                 "WHERE e.type = ? AND e.productId IS NOT NULL AND b.mode = ?",
             arrayOf<Any>(FinancialEventType.CASH_INCOME.name, BookMode.REALIZATION.name),
@@ -58,7 +58,7 @@ object Migration13To14 : Migration(13, 14) {
                 while (c.moveToNext()) add(
                     LegacySaleShape.OldSale(
                         c.getString(0), c.getString(1), c.getString(2), c.getString(3), c.getLong(4), c.getLong(5), c.getLong(6),
-                        c.textOrNull(7), c.textOrNull(8), if (c.isNull(9)) null else c.getLong(9),
+                        c.textOrNull(7), c.textOrNull(8), if (c.isNull(9)) null else c.getLong(9), c.textOrNull(10),
                     ),
                 )
             }
@@ -81,7 +81,7 @@ object Migration13To14 : Migration(13, 14) {
             db.insert("sales", SQLiteDatabase.CONFLICT_ABORT, ContentValues().apply {
                 put("id", sale.id); put("businessId", sale.businessId); put("projectId", sale.projectId); putNull("contactId")
                 put("dateEpochDay", sale.dateEpochDay); putNull("dueDateEpochDay"); put("discountRupiah", sale.discountRupiah)
-                put("notes", sale.notes); putNull("consignmentId"); put("hppEstimated", 1); putNull("importBatchId")
+                put("notes", sale.notes); putNull("consignmentId"); put("hppEstimated", 1); put("importBatchId", sale.importBatchId)
                 put("createdAtEpochMillis", sale.createdAtEpochMillis); put("updatedAtEpochMillis", sale.updatedAtEpochMillis)
             })
             db.insert("sale_lines", SQLiteDatabase.CONFLICT_ABORT, ContentValues().apply {

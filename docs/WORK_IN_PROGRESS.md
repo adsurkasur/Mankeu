@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Sekarang (2026-10-29): perapihan temuan Fase 1** sesuai `docs/superpowers/plans/2026-10-29-fase1-perapihan.md`
+(P1–P10; status per item ada di bagian Status berkas itu). Sesudahnya: tulis rencana Fase 2.
+
 **Uji alur sebagai pengusaha baru (2026-10-29)**, dicatat per checkpoint di
 `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`. Semua checkpoint (CP1–CP7) selesai.
 

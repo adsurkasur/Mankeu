@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:17] [Claude Code (Opus) — rencana perapihan Fase 1]
+- **Goal**: Turn the parked phase-1 findings into a fix list, per owner request to fix rather than park.
+- **Actions**: Wrote `docs/superpowers/plans/2026-10-29-fase1-perapihan.md` (P1 delete production/count entries with stock history, P2 archived materials keep status on re-import, P3 undo import keeps imported products/materials used later, P4 sync twin product children, P5 duplicate product name in a file, P6 Back closes scope sheet, P7 entry-form tests, P8 v5 simulation generators, P9 everyday save message, P10 shared material price round trip). WORK_IN_PROGRESS points to it.
+- **Files**: `docs/superpowers/plans/2026-10-29-fase1-perapihan.md` (new), `docs/WORK_IN_PROGRESS.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-10-29 11:01] [Claude Code (Opus) — Fase 1 merge]
 - **Goal**: Close redesign phase 1 on main.
 - **Actions**: Final whole-branch review (merge after fixes, 0 Critical / 5 Important / 12 Minor), one fix wave for I-1..I-5 and M-3/M-4/M-6/M-11/M-12, scoped re-review (all addressed, merge yes). Fast-forwarded main to the branch and deleted `fase1-produk-hpp`; parked review items moved into WORK_IN_PROGRESS because the SDD workspace is scratch.

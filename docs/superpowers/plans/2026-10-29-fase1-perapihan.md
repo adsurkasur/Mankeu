@@ -35,3 +35,4 @@ Pemilik meminta (2026-10-29) supaya temuan yang perlu dirombak atau dibetulkan m
 Diperbarui setiap item selesai (tanggal, commit, bukti).
 
 - **P9** selesai 2026-10-29 11:19, commit `fix(mankeu): everyday save message (P9)`. Bukti: unit `ScreenLanguageTest` merah (4 string: `msg_event_saved` dan `backup_choose_body`, ID + EN), lalu hijau. Tambahan: deskripsi cadangan tidak lagi menyebut "jurnal". Tidak diubah: pesan penjaga "Jurnal tidak seimbang" di `FinanceRepository` (invarian internal, tidak muncul pada simpan normal).
+- **P5** selesai 2026-10-29 11:20, commit `fix(import): refuse a product named twice in one file (P5)`. Bukti: unit `TemplateImportTest.a product written twice in the Produk sheet is named` merah (tanpa error), lalu hijau (21/21). Nama dibandingkan tanpa beda huruf besar/kecil dan spasi tepi, sama seperti pencocokan Satuan Jual.

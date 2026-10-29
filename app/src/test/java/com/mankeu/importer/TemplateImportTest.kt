@@ -385,6 +385,21 @@ class TemplateImportTest {
         )
     }
 
+    /** Cleanup P5: a product named twice in one file is refused per cell instead of silently keeping the first. */
+    @Test
+    fun `a product written twice in the Produk sheet is named`() {
+        val bytes = template(
+            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+            products = listOf(listOf("Teh", "gelas", "5", null, null), listOf("Kopi", "gelas", "5", null, null), listOf(" teh ", "gelas", "10", null, null)),
+            saleUnits = listOf(listOf("Teh", "gelas", "1", 5_000L), listOf("Kopi", "gelas", "1", 6_000L)),
+        )
+
+        val preview = importer.preview("x.xlsx", bytes)
+
+        assertEquals(listOf("Produk!A4: produk \"teh\" ditulis dua kali di lembar \"Produk\"."), preview.errors)
+        assertFalse(preview.canCommit)
+    }
+
     // --- fixtures ---------------------------------------------------------------------------
 
     /** A minimal valid template whose Transaksi sheet is [transactions]; products and units default to none. */

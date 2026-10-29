@@ -163,8 +163,13 @@ class FinanceWorkbookImporter(
             Triple(row.ref(0), product.trim(), ImportRecipeLine(row.ref(0), name, material, quantity.takeIf { material != null }, amount))
         }
         val movements = dataRows(movementSheet).mapNotNull { row -> readMovement(row, errors) }
+        val names = mutableSetOf<String>()
         val items = dataRows(products).mapNotNull { row ->
             val name = row.requiredText(0, "Nama", errors) ?: return@mapNotNull null
+            if (!names.add(name.lowercase())) {
+                errors += "${row.ref(0)}: produk \"$name\" ditulis dua kali di lembar \"${MankeuTemplate.PRODUCTS}\"."
+                return@mapNotNull null
+            }
             val baseUnit = row.requiredText(1, "Satuan Dasar", errors) ?: return@mapNotNull null
             val yield = row.positiveQuantity(2, "Hasil per Batch") ?: return@mapNotNull null
             val target = row.text(3)

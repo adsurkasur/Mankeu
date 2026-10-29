@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:20] [Claude Code (Opus) — perapihan Fase 1: P5]
+- **Goal**: Cleanup plan P5: a product named twice in one import file was silently imported once (the second row dropped at commit).
+- **Actions**: `FinanceWorkbookImporter.readProducts` refuses the second and later rows of a name (case-insensitive, trimmed) with "Produk!A4: produk \"teh\" ditulis dua kali di lembar \"Produk\".", so the file cannot be committed.
+- **Files**: `importer/FinanceWorkbookImporter.kt`, `test/.../importer/TemplateImportTest.kt`, plan Status, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED: `a product written twice in the Produk sheet is named` failed (no error). GREEN: TemplateImportTest 21/21.
+
 ### [2026-10-29 11:19] [Claude Code (Opus) — perapihan Fase 1: P9]
 - **Goal**: Cleanup plan P9: the save message spoke of journals, debit and credit (#19 everyday language).
 - **Actions**: `msg_event_saved` = "Transaksi tersimpan." / "Transaction saved."; the backup description no longer lists "jurnal"/"journal". The repository's unbalanced-journal guard message stays (an internal invariant, never reached by a normal save). New unit test `ScreenLanguageTest` fails on debit/kredit/credit/jurnal/journal in either strings.xml.

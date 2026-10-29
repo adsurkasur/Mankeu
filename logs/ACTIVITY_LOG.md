@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:24] [Claude Code (Opus) — perapihan Fase 1: P2]
+- **Goal**: Cleanup plan P2: an archived material came back active after export then import (DEC-012).
+- **Actions**: `MankeuTemplate.STOCK_HEADERS` gains "Diarsipkan" (`MankeuTemplate.YES` = "Ya"); `ImportStockItem.archived`; the exporter writes "Ya" for archived items (listed only when a recipe or purchase still names them), the importer reads "Ya"/blank and rejects anything else per cell, `commitImport` inserts the item archived. Guide row explains the column. The five `androidTest/assets/simulasi/*.xlsx` got the new header cell F1 (openpyxl, data untouched; P8 regenerates them). DEC-028 addendum.
+- **Files**: `importer/{ImportModels,FinanceWorkbookImporter}.kt`, `exporter/FinanceWorkbookExporter.kt`, `data/FinanceRepository.kt`, tests `TemplateImportTest`, `ImportCommitTest`, `androidTest/assets/simulasi/*.xlsx`, `logs/DECISION_LOG.md`, plan Status, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED (model field only): unit 2 failures (archived false; no error for "Tidak"); connected `anArchivedMaterialStaysArchivedAndLinkedThroughExportAndImport` expected 1 but was 0. GREEN: unit 95/0; connected ImportCommitTest + ScaleSimulationTest 14/0.
+
 ### [2026-10-29 11:20] [Claude Code (Opus) — perapihan Fase 1: P5]
 - **Goal**: Cleanup plan P5: a product named twice in one import file was silently imported once (the second row dropped at commit).
 - **Actions**: `FinanceWorkbookImporter.readProducts` refuses the second and later rows of a name (case-insensitive, trimmed) with "Produk!A4: produk \"teh\" ditulis dua kali di lembar \"Produk\".", so the file cannot be committed.

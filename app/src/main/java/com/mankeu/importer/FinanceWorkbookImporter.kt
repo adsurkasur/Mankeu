@@ -262,7 +262,12 @@ class FinanceWorkbookImporter(
         val price = row.money(2, errors) ?: 0
         val quantity = row.quantity(3, errors) ?: return null
         val minimum = row.quantity(4, errors) ?: return null
-        return ImportStockItem(row.ref(0), name, unit, price, quantity, minimum)
+        val archived = when (val raw = row.text(5)) {
+            null -> false
+            MankeuTemplate.YES -> true
+            else -> return null.also { errors += "${row.ref(5)}: Diarsipkan diisi \"${MankeuTemplate.YES}\" atau dibiarkan kosong, tertulis \"$raw\"." }
+        }
+        return ImportStockItem(row.ref(0), name, unit, price, quantity, minimum, archived)
     }
 
     // ---- cell reading -----------------------------------------------------------------------

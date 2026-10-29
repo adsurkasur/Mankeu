@@ -44,7 +44,7 @@ object MankeuTemplate {
     val SALE_UNIT_HEADERS = listOf("Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)")
     val RECIPE_HEADERS = listOf("Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)")
     val MOVEMENT_HEADERS = listOf("Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan")
-    val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum")
+    val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum", "Diarsipkan")
     val CATEGORY_HEADERS = listOf("Nama", "Peran", "Sifat Biaya")
     val GUIDE_HEADERS = listOf("Kunci", "Nilai")
 
@@ -57,6 +57,8 @@ object MankeuTemplate {
     const val ONCE = "Sekali"
     const val PRODUCTION = "Produksi"
     const val STOCK_COUNT = "Hitung stok"
+    /** `Stok Barang` "Diarsipkan": an archived item; blank means active. */
+    const val YES = "Ya"
 
     /** Sheets that must exist with exactly these headers in row 1. [CATEGORIES] is reference only. */
     val REQUIRED = linkedMapOf(
@@ -151,6 +153,8 @@ data class ImportStockItem(
     val priceRupiah: Long,
     val quantityText: String,
     val minAlertText: String,
+    /** "Diarsipkan" = "Ya": still named by a recipe or purchase, but hidden from the lists (cleanup P2). */
+    val archived: Boolean = false,
 )
 
 data class WorkbookImportPreview(

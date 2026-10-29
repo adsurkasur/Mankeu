@@ -316,6 +316,34 @@ class ImportCommitTest {
         assertEquals(2, left)
     }
 
+    /** Cleanup P2: an archived material stays archived through export and import, still linked from recipe and purchase. */
+    @Test
+    fun anArchivedMaterialStaysArchivedAndLinkedThroughExportAndImport() = runBlocking {
+        val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
+        val oil = repository.createStockItem(businessId, projectId, false, "Minyak", "liter", 20_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        repository.saveProduct(projectId, null, ProductDraft(
+            name = "Keripik", baseUnit = "bungkus", batchYieldText = "20",
+            units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 5_000)),
+            recipe = listOf(RecipeLineDraft("Minyak", stockItemId = oil, quantityText = "2")),
+        ))
+        repository.recordEvent(EventDraft(businessId, projectId, actual, FinancialEventType.CASH_EXPENSE, 55_000, DAY, "Beli minyak", "Bahan Baku & Stok", quantityText = "2", unit = "liter", stockItemId = oil))
+        database.stockDao().archiveStockItem(oil, 1)
+
+        val preview = FinanceWorkbookImporter().preview("ekspor.xlsx", repository.exportProjectWorkbook(projectId))
+        assertEquals(emptyList<String>(), preview.errors)
+        val branch = repository.createProject(businessId, "Cabang 2")
+        repository.commitImport(businessId, branch, preview)
+
+        val copy = database.openHelper.writableDatabase.query("SELECT id, archived FROM stock_items WHERE projectId = ?", arrayOf(branch)).use {
+            assertTrue(it.moveToFirst()); assertEquals(1, it.count); it.getString(0) to it.getInt(1)
+        }
+        assertEquals(1, copy.second)
+        val product = dao.getProducts(branch).single()
+        assertEquals(listOf(copy.first), dao.getRecipeLines(product.id).map { it.stockItemId })
+        val branchBook = dao.getBooks(branch).first { it.mode == BookMode.REALIZATION.name }.id
+        assertEquals(copy.first, dao.getEventsForBook(branchBook).single().stockItemId)
+    }
+
     private fun keripik() = WorkbookImportPreview(
         sourceName = "keripik.xlsx",
         sourceSha256 = "sha-keripik",

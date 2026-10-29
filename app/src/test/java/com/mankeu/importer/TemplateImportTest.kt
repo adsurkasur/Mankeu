@@ -309,8 +309,31 @@ class TemplateImportTest {
         assertEquals(emptyList<String>(), preview.errors)
         assertEquals("Tepung", preview.products.single().recipe.single { it.name == "Tepung" }.materialName)
         assertEquals("Tepung", preview.transactions.single { it.description == "Beli tepung" }.materialName)
-        // Re-import resolves a Bahan only through Stok Barang, so the archived material must be listed there.
-        assertTrue(preview.stockItems.joinToString(), preview.stockItems.any { it.name == "Tepung" })
+        // Re-import resolves a Bahan only through Stok Barang, so the archived material must be listed there,
+        // and it stays archived (cleanup P2).
+        assertEquals(listOf("Gula" to false, "Tepung" to true), preview.stockItems.map { it.name to it.archived })
+    }
+
+    /** Cleanup P2: Diarsipkan is "Ya" or blank, nothing else. */
+    @Test
+    fun `an unknown Diarsipkan value is named`() {
+        val bytes = XlsxWorkbookWriter().write(
+            listOf(
+                WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
+                WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.BUDGET, MankeuTemplate.BUDGET_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.PRODUCTS, MankeuTemplate.PRODUCT_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, listOf(listOf("Gula", "kg", 15_000L, "1", "0", "Ya"), listOf("Teh", "kg", 15_000L, "1", "0", "Tidak"))),
+            ),
+        )
+
+        val preview = importer.preview("x.xlsx", bytes)
+
+        assertEquals(listOf("Stok Barang!F3: Diarsipkan diisi \"Ya\" atau dibiarkan kosong, tertulis \"Tidak\"."), preview.errors)
+        assertEquals(listOf("Gula" to true), preview.stockItems.map { it.name to it.archived })
     }
 
     @Test

@@ -133,7 +133,7 @@ class FinanceWorkbookExporter(
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
             listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
             listOf("Produksi & Stok", "Riwayat stok produk. Jenis: Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong). Hanya untuk produk di lembar Produk berkas ini. Pada tanggal yang sama, baris ini dihitung sesudah penjualan hari itu, berurutan seperti di lembar."),
-            listOf("Stok Barang", "Barang yang namanya sudah ada di aplikasi dilewati."),
+            listOf("Stok Barang", "Barang yang namanya sudah ada di aplikasi dilewati. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
     )
@@ -232,7 +232,9 @@ class FinanceWorkbookExporter(
     private fun stock(items: List<StockItemEntity>, referenced: Set<String>) = WorkbookTable(
         name = MankeuTemplate.STOCK,
         headers = MankeuTemplate.STOCK_HEADERS,
-        rows = items.filter { !it.archived || it.id in referenced }.map { listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.currentStockText), quantity(it.minAlertStockText)) },
+        rows = items.filter { !it.archived || it.id in referenced }.map {
+            listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.currentStockText), quantity(it.minAlertStockText), MankeuTemplate.YES.takeIf { _ -> it.archived })
+        },
         currencyColumns = setOf(2),
     )
 

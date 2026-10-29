@@ -887,6 +887,7 @@ class FinanceRepository(private val database: AppDatabase) {
                     importBatchId = batchId,
                     // Import is bulk entry into the selected unit (DEC-012), stock included.
                     projectId = projectId,
+                    archived = item.archived,
                 ),
             )
         }

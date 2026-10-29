@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 12:19] [Claude Code (Opus) — perapihan Fase 1: P7]
+- **Goal**: Cleanup plan P7: two entry-form fallbacks (DEC-028 open item c) had no automated test.
+- **Actions**: New `EntryFormFallbackTest` (Compose, real `EntryScreen` with a small `AppUiState` fixture: two categories, a product with a sale unit, one without, one material). (1) Choosing Kopi fills "cup"/10000, then Teh (no sale unit) gives its base unit "gelas" and an empty unit price. (2) Choosing Minyak on Uang keluar locks the unit field ("liter", no SetText action); after switching to Uang masuk the unit field takes text again. Labels come from the target context because the form is a sheet composed with the Activity's resources. No production code changed.
+- **Files**: `androidTest/.../presentation/EntryFormFallbackTest.kt` (new), plan Status, `logs/ACTIVITY_LOG.md`.
+- **Verification**: GREEN 2/0. With both fixes removed in `EntryScreen` (`main?.let { applySaleUnit(...) }` and `materialId = stockItemId`) both tests fail: expected (gelas, ) but was (cup, 10000); the unit field has no SetText action after switching to Uang masuk. Fixes restored (`git checkout`).
+
 ### [2026-10-29 12:12] [Claude Code (Opus) — perapihan Fase 1: P6]
 - **Goal**: Cleanup plan P6: the system Back did not close the Usaha/Unit sheet.
 - **Actions**: New `SheetBackHandler` (in `MankeuSheet.kt`) used by `MankeuSheet` and `ManageScopeSheet`: a `BackHandler` on the Activity's dispatcher (the sheet window does not take key focus on the emulator, so Back lands there; registered after the app's own handler, so it runs first) plus one on the sheet window's dispatcher. Several sheets stacked close top first. Material 3 1.4's own Back path (animate, then dismiss) is left in place. While debugging, an earlier instrumented run ended in `keyDispatchingTimedOut` and left the emulator delivering no key events to the app until a reboot; observations from that window were discarded.

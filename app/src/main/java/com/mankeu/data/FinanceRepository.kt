@@ -278,7 +278,9 @@ class FinanceRepository(private val database: AppDatabase) {
             }
         }
         val project = dao.getProject(projectId) ?: error("Unit usaha tidak ditemukan.")
-        val recipe = draft.recipe.filter { it.stockItemId != null || it.name.isNotBlank() }.map { line ->
+        // Only a line with nothing in it is dropped; a cost with an amount but no name is refused, so the
+        // saved HPP is the one the preview showed (final review I-3).
+        val recipe = draft.recipe.filter { it.stockItemId != null || it.name.isNotBlank() || (it.amountRupiah ?: 0) > 0 }.map { line ->
             if (line.stockItemId != null) {
                 val material = stockDao.getStockItem(line.stockItemId)
                 require(material != null && material.businessId == project.businessId) { "Bahan tidak ditemukan di usaha ini." }
@@ -286,6 +288,7 @@ class FinanceRepository(private val database: AppDatabase) {
                 // The material's name is kept on the line, so a removed material still shows what was used.
                 line.copy(name = material.name, amountRupiah = null)
             } else {
+                require(line.name.isNotBlank()) { "Isi nama biaya Rp${java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag("id-ID")).format(line.amountRupiah)}." }
                 require((line.amountRupiah ?: 0) > 0) { "Biaya \"${line.name.trim()}\" harus lebih dari nol." }
                 line.copy(name = line.name.trim(), quantityText = null)
             }
@@ -312,6 +315,7 @@ class FinanceRepository(private val database: AppDatabase) {
             require(existing.projectId == projectId) { "Produk berasal dari unit usaha lain." }
             dao.updateProduct(existing.copy(name = name, unit = baseUnit, batchYieldText = yieldText, targetPerMonthText = target, sellFromMonth = draft.sellFromMonth, updatedAtEpochMillis = now))
         }
+        if (existing != null) carrySaleUnitsToPastSales(productId, units)
         dao.deleteProductUnits(productId)
         dao.insertProductUnits(
             units.mapIndexed { index, u ->
@@ -340,6 +344,24 @@ class FinanceRepository(private val database: AppDatabase) {
             },
         )
         productId
+    }
+
+    /**
+     * Sales name their unit, not its id (final review I-2). A unit renamed in the editor (same
+     * [SaleUnitDraft.id]) renames it on the product's past sales; removing a unit that sales still
+     * name is refused, since those sales would silently count as the main unit.
+     */
+    private suspend fun carrySaleUnitsToPastSales(productId: String, units: List<SaleUnitDraft>) {
+        val kept = units.filter { it.id != null }.associateBy { it.id }
+        val old = dao.getProductUnits(productId)
+        old.filter { it.id !in kept }.forEach { removed ->
+            val used = dao.countSalesWithUnit(productId, removed.name)
+            require(used == 0) { "Satuan \"${removed.name}\" masih dipakai di $used penjualan. Ubah penjualan itu dulu, atau ganti nama satuannya saja." }
+        }
+        val renamed = old.mapNotNull { unit -> kept[unit.id]?.name?.trim()?.takeIf { it != unit.name }?.let { unit to it } }
+        // Through a placeholder, so two units swapping names do not merge their sales.
+        renamed.forEach { (unit, _) -> dao.renameSaleUnit(productId, unit.name, "${unit.id}#") }
+        renamed.forEach { (unit, name) -> dao.renameSaleUnit(productId, "${unit.id}#", name) }
     }
 
     /** Produksi (spec #9): [batches] batches add batches × yield base units to stock. */

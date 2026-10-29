@@ -316,6 +316,12 @@ interface FinanceDao {
     @Query("DELETE FROM product_units WHERE productId = :productId")
     suspend fun deleteProductUnits(productId: String)
 
+    @Query("SELECT COUNT(*) FROM financial_events WHERE productId = :productId AND unit = :unit COLLATE NOCASE")
+    suspend fun countSalesWithUnit(productId: String, unit: String): Int
+
+    @Query("UPDATE financial_events SET unit = :newName WHERE productId = :productId AND unit = :oldName COLLATE NOCASE")
+    suspend fun renameSaleUnit(productId: String, oldName: String, newName: String): Int
+
     @Query(
         """
         SELECT r.* FROM product_recipe_lines r INNER JOIN products p ON p.id = r.productId

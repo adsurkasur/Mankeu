@@ -91,4 +91,64 @@ class ProductStockFlowTest {
         assertEquals(20_000L, flowPrice())
         assertEquals(20_000L, repo.materialPrice(minyak))
     }
+
+    private data class Shop(val businessId: String, val projectId: String, val bookId: String, val productId: String)
+
+    private suspend fun keripikShop(): Shop {
+        val (businessId, projectId) = repo.createBusinessWithUnit("Keripik Bu Sri", "Umum")
+        val book = repo.books(projectId).first().single { it.mode == BookMode.REALIZATION.name }
+        val productId = repo.saveProduct(projectId, null, ProductDraft(
+            name = "Keripik", baseUnit = "bungkus", batchYieldText = "400",
+            units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8_000), SaleUnitDraft(name = "dus", contentText = "40", priceRupiah = 300_000)),
+            recipe = listOf(RecipeLineDraft("Bumbu", amountRupiah = 300_000)),
+        ))
+        repo.recordProduction(productId, BigDecimal.ONE, LocalDate.of(2026, 10, 1), "")
+        repo.recordEvent(EventDraft(businessId, projectId, book.id, FinancialEventType.CASH_INCOME, 600_000, LocalDate.of(2026, 10, 2), "Jual", "Penjualan", quantityText = "2", unit = "Dus", productId = productId))
+        return Shop(businessId, projectId, book.id, productId)
+    }
+
+    private fun ProductRecord.draftWith(units: List<SaleUnitDraft>) = ProductDraft(
+        name = product.name, baseUnit = product.unit, batchYieldText = product.batchYieldText, units = units,
+        recipe = recipe.map { RecipeLineDraft(it.name, it.stockItemId, it.quantityText, it.amountRupiah) },
+    )
+
+    /** Final review I-2: past sales follow a renamed sale unit, so stock does not jump. */
+    @Test fun renamingASaleUnitCarriesToPastSales() = runBlocking {
+        val shop = keripikShop()
+        suspend fun keripik() = repo.products(shop.projectId).first().single()
+        assertEquals(0, BigDecimal(320).compareTo(keripik().stock))
+        val units = keripik().units.sortedBy { it.sortOrder }.map { SaleUnitDraft(it.id, it.name, it.contentText, it.priceRupiah) }
+
+        repo.saveProduct(shop.projectId, shop.productId, keripik().draftWith(units.map { if (it.name == "dus") it.copy(name = "karton") else it }))
+
+        assertEquals(listOf("karton"), db.financeDao().getEventsForBook(shop.bookId).map { it.unit })
+        assertEquals(0, BigDecimal(320).compareTo(keripik().stock))
+    }
+
+    /** Final review I-2: a sale unit that sales still name cannot be removed. */
+    @Test fun removingASaleUnitThatSalesUseIsRefused() = runBlocking {
+        val shop = keripikShop()
+        suspend fun keripik() = repo.products(shop.projectId).first().single()
+        val units = keripik().units.sortedBy { it.sortOrder }.map { SaleUnitDraft(it.id, it.name, it.contentText, it.priceRupiah) }
+
+        val refused = runCatching { repo.saveProduct(shop.projectId, shop.productId, keripik().draftWith(units.filter { it.name != "dus" })) }
+
+        assertEquals("Satuan \"dus\" masih dipakai di 1 penjualan. Ubah penjualan itu dulu, atau ganti nama satuannya saja.", refused.exceptionOrNull()?.message)
+        assertEquals(listOf("bungkus", "dus"), keripik().units.sortedBy { it.sortOrder }.map { it.name })
+        assertEquals(0, BigDecimal(320).compareTo(keripik().stock))
+    }
+
+    /** Final review I-3: a free cost with an amount but no name is refused, not dropped; an empty line is dropped. */
+    @Test fun aFreeCostWithoutANameIsRefused() = runBlocking {
+        val shop = keripikShop()
+        val keripik = repo.products(shop.projectId).first().single()
+        val units = keripik.units.map { SaleUnitDraft(it.id, it.name, it.contentText, it.priceRupiah) }
+        val base = keripik.draftWith(units)
+
+        val refused = runCatching { repo.saveProduct(shop.projectId, shop.productId, base.copy(recipe = base.recipe + RecipeLineDraft("  ", amountRupiah = 2_400_000))) }
+        assertEquals("Isi nama biaya Rp2.400.000.", refused.exceptionOrNull()?.message)
+
+        repo.saveProduct(shop.projectId, shop.productId, base.copy(recipe = base.recipe + RecipeLineDraft("")))
+        assertEquals(listOf("Bumbu"), repo.products(shop.projectId).first().single().recipe.map { it.name })
+    }
 }

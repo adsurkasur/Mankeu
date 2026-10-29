@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 10:34] [Claude Code (Opus) — Fase 1 final review fix: I-2, I-3]
+- **Goal**: Final review I-2 (renaming or removing a sale unit silently changed the stock counted from past sales) and I-3 (a free cost with an amount but no name was shown in the HPP preview and dropped on save).
+- **Actions**: `saveProduct` (same transaction): for an existing product, `carrySaleUnitsToPastSales` matches units by `SaleUnitDraft.id`; a removed unit that sales still name is refused ("Satuan \"dus\" masih dipakai di N penjualan. ..."); a renamed unit renames `financial_events.unit` for that product (case-insensitive) through an id placeholder so two swapped names do not merge. New DAO `countSalesWithUnit`, `renameSaleUnit`. Recipe: only a completely empty line is dropped; a free cost with an amount and a blank name is refused ("Isi nama biaya Rp2.400.000."). The editor stays open on failure, as before.
+- **Files**: `data/FinanceRepository.kt`, `data/FinanceDao.kt`, `androidTest/.../ProductStockFlowTest.kt`, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED (implementation stashed): 3 failures (message null, unit stayed "Dus"). GREEN: connected ProductStockFlowTest + ProductEditorTest 7 tests, 0 failed.
+
 ### [2026-10-29 10:29] [Claude Code (Opus) — Fase 1 final review fix: I-4, M-5, I-5]
 - **Goal**: Final whole-branch review I-4 (the two material-price reads broke ties in opposite directions), M-5 (a Rp0 purchase price could price a material) and I-5 (sync twin merge left an event's `stockItemId` on the other phone's id).
 - **Actions**: `observeMaterialPurchases` orders by date, createdAt, rowid and `latestPurchasePrice` by the same columns descending; both require `unitPriceRupiah > 0`. `AppDatabase.DATA_TABLES` now lists `stock_items`, `products`, `product_units`, `product_recipe_lines`, `product_movements` before `budget_items`/`financial_events` (`stock_movements` moved to the end, after its parent); KDoc explains the alias reason. Parents still precede children, so backup restore (forwards), erase and sync deletes (backwards) stay valid.

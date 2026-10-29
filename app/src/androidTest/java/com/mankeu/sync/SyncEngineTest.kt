@@ -6,6 +6,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mankeu.data.AppDatabase
 import com.mankeu.data.EventDraft
 import com.mankeu.data.FinanceRepository
+import com.mankeu.data.ProductDraft
+import com.mankeu.data.RecipeLineDraft
+import com.mankeu.data.SaleUnitDraft
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
@@ -173,6 +176,41 @@ class SyncEngineTest {
         assertEquals(1, atB.merged)
         assertEquals(onB, b.database.financeDao().getEvent(purchase)!!.stockItemId)
         assertEquals(27_500L, b.repository.materialPrice(onB))
+    }
+
+    /**
+     * Cleanup P4: both phones add "Keripik" sold per "bungkus" with a "Bumbu" cost offline. After
+     * sync each keeps one product with one "bungkus" and one "Bumbu"; a later edit on A (new unit,
+     * new cost) arrives whole on B instead of losing the replaced recipe line.
+     */
+    @Test
+    fun twinProductsMergeTheirSaleUnitsAndRecipeLinesAndLaterEditsFollow() = runBlocking {
+        val (businessId, projectId) = a.repository.run { createBusiness("Keripik").let { it to createProject(it, "Utama") } }
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        fun draft(name: String, units: List<SaleUnitDraft>, bumbu: Long) = ProductDraft(name, "bungkus", "400", units, listOf(RecipeLineDraft("Bumbu", amountRupiah = bumbu)))
+        val onA = a.repository.saveProduct(projectId, null, draft("Keripik", listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8_000)), 2_400_000))
+        b.repository.saveProduct(projectId, null, draft("keripik", listOf(SaleUnitDraft(name = "Bungkus", contentText = "1", priceRupiah = 8_000)), 2_400_000))
+
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+
+        fun Device.shape() = runBlocking {
+            val dao = database.financeDao()
+            dao.getProducts(projectId).map { p ->
+                Triple(p.name.lowercase(), dao.getProductUnits(p.id).sortedBy { it.sortOrder }.map { it.name.lowercase() }, dao.getRecipeLines(p.id).map { it.name to it.amountRupiah })
+            }
+        }
+        for (device in listOf(a, b)) assertEquals(listOf(Triple("keripik", listOf("bungkus"), listOf("Bumbu" to 2_400_000L))), device.shape())
+
+        val bungkus = a.database.financeDao().getProductUnits(onA).single()
+        a.repository.saveProduct(projectId, onA, draft("Keripik", listOf(SaleUnitDraft(bungkus.id, "bungkus", "1", 8_000), SaleUnitDraft(name = "dus", contentText = "40", priceRupiah = 300_000)), 2_500_000))
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val atB = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+
+        assertEquals(0, atB.rejected)
+        assertEquals(listOf(Triple("keripik", listOf("bungkus", "dus"), listOf("Bumbu" to 2_500_000L))), b.shape())
     }
 
     @Test

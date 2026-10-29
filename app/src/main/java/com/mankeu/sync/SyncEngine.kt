@@ -26,7 +26,8 @@ import com.mankeu.data.AppDatabase
  * Two devices that create the same category, stock item or product offline (same natural key,
  * different ids) are merged: the incoming row is not inserted, an alias remote id -> local id is
  * kept in `sync_meta`, and every reference to it (`categoryId`, `productId`, `stockItemId`), now and
- * in later change sets, is rewritten to the local row. Counted in [ApplyResult.merged]. A row a
+ * in later change sets, is rewritten to the local row. A merged product's sale units and recipe lines
+ * are merged the same way by name. Counted in [ApplyResult.merged]. A row a
  * constraint still refuses is skipped and counted in [ApplyResult.rejected].
  */
 class SyncEngine(private val database: AppDatabase) {
@@ -151,13 +152,16 @@ class SyncEngine(private val database: AppDatabase) {
                     }
                 }
             }
+            // A product's units and recipe lines are deleted first: the editor replaces them, and a
+            // replacement must not be merged into the very row it replaces (cleanup P4). Nothing refers to them.
+            eachChange(PRODUCT_CHILDREN, DELETE) { table, id, _ -> db.delete(table, "id = ?", arrayOf(id)) }
             // Parents before children on the way in, children before parents on the way out.
             eachChange(AppDatabase.DATA_TABLES, UPSERT) { table, id, values ->
                 val content = ContentValues(values.size).apply { values.forEach { (column, value) -> put(column, value) } }
                 // UPDATE then INSERT, never INSERT OR REPLACE: REPLACE deletes first and would
                 // cascade away the row's journals and postings.
                 if (db.update(table, SQLiteDatabase.CONFLICT_ABORT, content, "id = ?", arrayOf(id)) == 0) {
-                    val twin = NATURAL_KEYS[table]?.let { keys -> twinOf(db, table, keys, values) }
+                    val twin = NATURAL_KEYS[table]?.takeIf { table !in PRODUCT_CHILDREN || isMergedProduct(values) }?.let { keys -> twinOf(db, table, keys, values) }
                     if (twin != null) {
                         db.execSQL("INSERT OR REPLACE INTO sync_meta(`key`, value) VALUES (?, ?)", arrayOf<Any>("$ALIAS$table:$id", twin))
                         merged++
@@ -166,12 +170,24 @@ class SyncEngine(private val database: AppDatabase) {
                     }
                 }
             }
-            eachChange(AppDatabase.DATA_TABLES.asReversed(), DELETE) { table, id, _ ->
+            eachChange(AppDatabase.DATA_TABLES.asReversed() - PRODUCT_CHILDREN.toSet(), DELETE) { table, id, _ ->
                 db.delete(table, "id = ?", arrayOf(id))
             }
         }
         ApplyResult(applied - merged, older, rejected, merged)
     }
+
+    /**
+     * Whether the (already alias-resolved) product of an incoming unit or recipe line is a local product
+     * that absorbed another phone's twin. Only then are its children matched by name: within one product
+     * a name match would merge two lines that merely share a name ("Lain-lain").
+     */
+    private fun isMergedProduct(values: Map<String, BackupValue>): Boolean {
+        val product = (values["productId"] as? BackupValue.Text)?.value ?: return false
+        return db().query("SELECT 1 FROM sync_meta WHERE `key` LIKE ? AND value = ? LIMIT 1", arrayOf<Any>("${ALIAS}products:%", product)).use { it.moveToFirst() }
+    }
+
+    private fun db() = database.openHelper.writableDatabase
 
     /** The local row with the same natural key as an incoming one, e.g. a category of that name. */
     private fun twinOf(db: SupportSQLiteDatabase, table: String, keys: List<String>, values: Map<String, BackupValue>): String? {
@@ -234,7 +250,11 @@ class SyncEngine(private val database: AppDatabase) {
             "categories" to listOf("businessId", "role", "normalizedName"),
             "stock_items" to listOf("businessId", "projectId", "name"),
             "products" to listOf("projectId", "name"),
+            // Only for a merged twin product, see isMergedProduct (cleanup P4).
+            "product_units" to listOf("productId", "name"),
+            "product_recipe_lines" to listOf("productId", "name"),
         )
+        private val PRODUCT_CHILDREN = listOf("product_units", "product_recipe_lines")
 
         /** Reference columns and the table they point into, rewritten through aliases. */
         private val REFERENCES = mapOf("categoryId" to "categories", "productId" to "products", "stockItemId" to "stock_items")

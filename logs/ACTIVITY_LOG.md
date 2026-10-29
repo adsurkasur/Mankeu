@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:35] [Claude Code (Opus) — perapihan Fase 1: P4]
+- **Goal**: Cleanup plan P4: a product created offline on two phones was merged, but its sale units and recipe lines were doubled.
+- **Actions**: `SyncEngine.NATURAL_KEYS` gains `product_units` and `product_recipe_lines` (`productId`, `name`), applied only when the resolved product absorbed a twin (`isMergedProduct`, alias lookup in `sync_meta`). Deletes of those two tables now run before upserts (`PRODUCT_CHILDREN`): without it, a later edit on one phone (recipe lines get new ids) merged the new line into the old one and then deleted it. DEC-028 addendum.
+- **Files**: `sync/SyncEngine.kt`, `androidTest/.../sync/SyncEngineTest.kt`, `logs/DECISION_LOG.md`, plan Status, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED: `twinProductsMergeTheirSaleUnitsAndRecipeLinesAndLaterEditsFollow` got two "bungkus" units. With natural keys but without delete-first, the edit step lost the line (expected [(Bumbu, 2500000)] but was []). GREEN: connected SyncEngineTest + SyncControllerTest 14/0.
+
 ### [2026-10-29 11:31] [Claude Code (Opus) — perapihan Fase 1: P3]
 - **Goal**: Cleanup plan P3: undoing an import deleted imported products and materials together with production recorded after the import (FK cascade) and left later sales and purchases pointing at nothing.
 - **Actions**: `undoImportBatch` now deletes the batch's own Produksi & Stok rows (new id prefix `<batchId>:` written by `commitImport`, `FinanceDao.deleteImportedProductMovements`), then keeps and releases (`importBatchId = null`) products used by a sale or production outside the batch (`getUsedImportedProducts`) and then materials used by a purchase outside the batch, a recipe line of a non-batch product, or a stock movement (`StockDao.getUsedImportedItems`); only the rest is deleted. `ImportUndo.kept` lists their names; the undo snackbar names them (`msg_batch_undone_kept`, `msg_batch_undone_period_kept`, ID + EN). Records count now includes the deleted production rows. DEC-028 addendum (no schema change; older batches keep products with production).

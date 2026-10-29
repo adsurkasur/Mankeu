@@ -26,13 +26,15 @@ object SalesMath {
         val sub = subtotal(lines)
         require(discountRupiah in 0..sub) { "discount $discountRupiah outside 0..$sub" }
         if (sub == 0L) return lines.map { 0L }
-        var left = discountRupiah
-        return lines.mapIndexed { i, l ->
-            val share = if (i == lines.lastIndex) left else
-                BigDecimal(discountRupiah).multiply(BigDecimal(lineTotal(l.quantity, l.unitPriceRupiah)))
-                    .divide(BigDecimal(sub), 0, RoundingMode.HALF_UP).longValueExact()
-            left -= share
-            share
+        // Rounding the running total, not each share, keeps every share >= 0 and the sum exact
+        // (per-share rounding gave 1, 1, 1, -1 for four equal lines and a discount of 2).
+        var cumulative = 0L
+        var allocated = 0L
+        return lines.map { l ->
+            cumulative += lineTotal(l.quantity, l.unitPriceRupiah)
+            val upTo = BigDecimal(discountRupiah).multiply(BigDecimal(cumulative))
+                .divide(BigDecimal(sub), 0, RoundingMode.HALF_UP).longValueExact()
+            (upTo - allocated).also { allocated = upTo }
         }
     }
 

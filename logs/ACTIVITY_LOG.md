@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 16:23] [Claude Code (Opus) — Fase 2 Task 1 review fix]
+- **Goal**: Fix the review finding that a discount share could go negative.
+- **Actions**: `SalesMath.discountShares` now rounds the running total instead of each share, so shares are never negative and still sum exactly (four equal lines with a discount of 2 gave 1, 1, 1, -1). Golden shares 17/33/50 unchanged. Test added for that case and for a single line.
+- **Files**: `domain/SalesMath.kt`, `test/.../domain/SalesMathTest.kt`, plan Status, `logs/ACTIVITY_LOG.md`.
+- **Verification**: unit 108 passed, 0 failed (new test fails on the old rule by construction: last share = 2 - 3 = -1).
+
 ### [2026-10-29 16:21] [Claude Code (Opus) — perbaikan encoding log]
 - **Goal**: Repair mojibake in the activity log.
 - **Actions**: Since 597f88e (Fase 1 Task 4) a PowerShell write re-encoded `logs/ACTIVITY_LOG.md` (UTF-8 read as cp1252), turning em dashes and § into mojibake; 556e46d repeated it on the whole file and on the phase-2 plan. Restored every affected line to UTF-8 (byte-level reversal), kept the Task 1 entry and Status line. Repo-wide grep finds no other mojibake. Subagent briefs now require writing logs as UTF-8 without re-encoding the whole file.

@@ -27,6 +27,13 @@ class SalesMathTest {
         assertEquals(100L, shares.sum())
     }
 
+    @Test fun noShareIsNegativeAndASingleLineTakesItAll() {
+        val shares = SalesMath.discountShares(List(4) { line(1) }, 2)
+        assertTrue(shares.toString(), shares.all { it >= 0 })
+        assertEquals(2L, shares.sum())
+        assertEquals(listOf(70L), SalesMath.discountShares(listOf(line(1_000)), 70))
+    }
+
     @Test fun zeroValueLinesShareNothing() {
         assertEquals(listOf(0L, 0L), SalesMath.discountShares(listOf(line(0), line(0)), 0))
     }

@@ -418,3 +418,4 @@ Diperbarui di setiap commit tugas.
 
 - 2026-10-29: rencana ditulis setelah grill F2-1..F2-7. Belum ada kode.
 - 2026-10-29 16:19: Task 1 selesai. feat(domain): sales, profit and consignment math. Unit test 107/0 (96 + 11 baru); golden untung Oktober -310.000, selisih produksi +760.000; RED = gagal kompilasi sebelum implementasi.
+- 2026-10-29 16:23: Task 1 review (spec PASS, Approved). Perbaikan reviewer: pembagian diskon tidak pernah negatif (pembulatan kumulatif). Unit 108/0.

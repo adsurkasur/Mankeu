@@ -9,6 +9,7 @@ import com.mankeu.domain.PlanInputs
 import com.mankeu.domain.PlanLine
 import com.mankeu.domain.PlanProduct
 import com.mankeu.domain.ProductCosting
+import com.mankeu.domain.ProfitCalculator
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import java.math.BigDecimal
@@ -99,9 +100,10 @@ object PlanAssembly {
         val named = sales.filter { it.productId != null && TransactionCalculation.parseQuantity(it.quantityText) != null }
         val expenses = inMonth.filter { it.type == FinancialEventType.CASH_EXPENSE.name }
         val depreciation = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }.sumOf { asset ->
-            val bought = YearMonth.from(LocalDate.ofEpochDay(asset.dateEpochDay))
-            val life = asset.usefulLifeMonths ?: DEFAULT_ASSET_LIFE_MONTHS
-            if (!month.isBefore(bought) && month.isBefore(bought.plusMonths(life.toLong()))) asset.amountRupiah / life else 0L
+            ProfitCalculator.depreciation(
+                month, YearMonth.from(LocalDate.ofEpochDay(asset.dateEpochDay)), asset.amountRupiah,
+                asset.usefulLifeMonths ?: DEFAULT_ASSET_LIFE_MONTHS,
+            )
         }
         return ActualMonthInputs(
             month = month,

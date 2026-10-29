@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 12:23] [Claude Code (Opus) — perapihan Fase 1: P8]
+- **Goal**: Cleanup plan P8: the simulation generators still wrote template v4.
+- **Actions**: `docs/evidence/2026-10-22_simulasi_skala_umkm/make_sims.py` writes v5 natively: Transaksi with Satuan/Bahan/Harga Satuan, Produk with base unit and batch yield, Satuan Jual, Resep Produk per batch (free costs), empty Produksi & Stok, Stok Barang with Diarsipkan. Ran it with `python -I`; every cell of every sheet equals the previous androidTest assets (compared with openpyxl), `expected.json` differs only in `file_bytes`. The assets and `expected.json` are now copies of the generator output. The two 2026-10-21 generators are left as v3/v4 historical evidence with a docstring note. DEC-028 addendum.
+- **Files**: `docs/evidence/2026-10-22_simulasi_skala_umkm/{make_sims.py,expected.json,*.xlsx}`, `docs/evidence/2026-10-21_*/make_sims.py` (docstring), `app/src/androidTest/assets/simulasi/*`, `logs/DECISION_LOG.md`, plan Status, `logs/ACTIVITY_LOG.md`.
+- **Verification**: connected ScaleSimulationTest + LedgerIntegrityTest + ViewModelFlowsTest 13/0 with the regenerated assets.
+
 ### [2026-10-29 12:19] [Claude Code (Opus) — perapihan Fase 1: P7]
 - **Goal**: Cleanup plan P7: two entry-form fallbacks (DEC-028 open item c) had no automated test.
 - **Actions**: New `EntryFormFallbackTest` (Compose, real `EntryScreen` with a small `AppUiState` fixture: two categories, a product with a sale unit, one without, one material). (1) Choosing Kopi fills "cup"/10000, then Teh (no sale unit) gives its base unit "gelas" and an empty unit price. (2) Choosing Minyak on Uang keluar locks the unit field ("liter", no SetText action); after switching to Uang masuk the unit field takes text again. Labels come from the target context because the form is a sheet composed with the Activity's resources. No production code changed.

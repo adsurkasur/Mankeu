@@ -1,14 +1,18 @@
 """Pre-release scale simulations (2026-10-22): one micro, one small and one medium business.
 
-Each is a full year of realistic cash records, written as a Mankeu template (v4) for the import
-path an experienced owner or admin would use. Expected figures are computed here from the rows
+Each is a full year of realistic cash records, written as a Mankeu template (v5, DEC-028) for the
+import path an experienced owner or admin would use. The files are the androidTest assets in
+`app/src/androidTest/assets/simulasi/` (copy them there after a run; `ScaleSimulationTest` checks
+them against `expected.json`). Expected figures are computed here from the rows
 themselves, not by calling the app:
 - cash in, cash out, closing cash;
 - operating revenue, operating cost and cash profit (capital, drawings and assets excluded);
 - cash per month (net) and the deepest month.
 
 Scale follows PP 7/2021 (annual sales): micro <= Rp2 M, small Rp2-15 M, medium Rp15-50 M.
-Run: python -I make_sims.py  (needs openpyxl). The .xlsx files are generated, not committed.
+Run: python -I make_sims.py  (needs openpyxl). The .xlsx files here are the last run's output.
+Products are v5-native: a base unit, a batch yield, sale units (name, content, price) and per-batch
+recipe lines (free costs here; no material, so the Stok Barang and Produksi & Stok sheets stay empty).
 """
 import json
 import os
@@ -18,11 +22,14 @@ from datetime import date, timedelta
 from openpyxl import Workbook
 
 OUT = os.path.dirname(os.path.abspath(__file__))
-TX = ["Tanggal", "Keterangan", "Kategori", "Pemasukan (Rp)", "Pengeluaran (Rp)", "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)"]
+TX = ["Tanggal", "Keterangan", "Kategori", "Pemasukan (Rp)", "Pengeluaran (Rp)", "Produk", "Jumlah", "Sifat Biaya", "Umur Pakai (bulan)",
+      "Satuan", "Bahan", "Harga Satuan (Rp)"]
 BUDGET = ["Bulan", "Kategori", "Item", "Jumlah", "Satuan", "Harga Satuan (Rp)", "Total (Rp)", "Berulang", "Sifat Biaya", "Umur Pakai (bulan)"]
-PRODUCT = ["Nama", "Satuan", "Harga Jual (Rp)", "Target per Bulan", "Mulai Dijual (bulan ke-)"]
-RECIPE = ["Produk", "Komponen", "Biaya (Rp)", "Untuk Berapa Unit"]
-STOCK = ["Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum"]
+PRODUCT = ["Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)"]
+SALE_UNIT = ["Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)"]
+RECIPE = ["Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)"]
+MOVEMENT = ["Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan"]
+STOCK = ["Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum", "Diarsipkan"]
 
 JUAL, LAIN = "Penjualan & Jasa", "Pendapatan Lain"
 BAHAN, GAJI, SEWA, LISTRIK, TRANSPORT, LAINLAIN = (
@@ -81,7 +88,8 @@ def bengkel(rng):
             rows.append((d, "Sewa ruko", SEWA, None, 4_500_000))
             rows.append((d, "Listrik dan internet", LISTRIK, None, round_to(rng.gauss(850_000, 80_000), 1000)))
             rows.append((d, "Ambil gaji pemilik", PRIVE, None, 12_000_000))
-    products = [(n, "servis", p, per * 26, 1, [("Oli dan bahan habis", round_to(p * 0.25, 500), 1)]) for n, p, per in jobs]
+    # (name, base unit, batch yield, target/month, first month, [(sale unit, content, price)], [(cost, Rp per batch)])
+    products = [(n, "servis", 1, per * 26, 1, [("servis", 1, p)], [("Oli dan bahan habis", round_to(p * 0.25, 500))]) for n, p, per in jobs]
     return dict(jenis="Kecil: bengkel motor empat montir, pemilik paham, mencatat per servis", tx=rows, units=["Bengkel Jaya Motor"], products=products)
 
 
@@ -114,14 +122,14 @@ def penggilingan(rng):
             if d.day == 28:
                 rows.append((d, "Penjualan dedak dan sekam", LAIN, round_to(rng.gauss(9_000_000 * scale, 900_000), 1000), None))
         units[unit] = rows
-    products = [("Beras 5 kg", "karung", 64_800, 25_000, 1, [("Gabah 8,5 kg", 52_000, 1), ("Karung dan jahit", 1_400, 1)])]
+    products = [("Beras 5 kg", "karung", 1, 25_000, 1, [("karung", 1, 64_800)], [("Gabah 8,5 kg", 52_000), ("Karung dan jahit", 1_400)])]
     return dict(jenis="Menengah: penggilingan + distribusi beras, 3 unit, admin terlatih, setiap faktur dicatat",
                 units=list(units), tx_by_unit=units, products=products)
 
 
 def normalize(row):
     d, desc, cat, inc, out, *rest = row
-    rest = (list(rest) + [None] * 4)[:4]
+    rest = (list(rest) + [None] * 7)[:7]
     return [d.isoformat(), desc, cat, inc, out] + rest
 
 
@@ -156,12 +164,17 @@ def write(name, rows, products):
     wb.create_sheet("Rencana Anggaran").append(BUDGET)
     p = wb.create_sheet("Produk")
     p.append(PRODUCT)
+    su = wb.create_sheet("Satuan Jual")
+    su.append(SALE_UNIT)
     rc = wb.create_sheet("Resep Produk")
     rc.append(RECIPE)
-    for pname, unit, price, target, start, comps in products:
-        p.append([pname, unit, price, target, start])
-        for c, cost, y in comps:
-            rc.append([pname, c, cost, y])
+    for pname, base, batch, target, start, units, costs in products:
+        p.append([pname, base, batch, target, start])
+        for uname, content, price in units:
+            su.append([pname, uname, content, price])
+        for c, cost in costs:
+            rc.append([pname, c, None, None, cost])
+    wb.create_sheet("Produksi & Stok").append(MOVEMENT)
     wb.create_sheet("Stok Barang").append(STOCK)
     path = os.path.join(OUT, f"{name}.xlsx")
     wb.save(path)

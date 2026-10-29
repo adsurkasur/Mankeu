@@ -2,7 +2,7 @@
  "M1_warung_Warung_Bu_Ani": {
   "jenis": "Mikro: warung kelontong, catatan harian ringkas, pemilik awam",
   "unit": "Warung Bu Ani",
-  "file_bytes": 19417,
+  "file_bytes": 20511,
   "rows": 547,
   "cash_in": 263284000,
   "cash_out": 235099000,
@@ -30,7 +30,7 @@
  "K1_bengkel_Bengkel_Jaya_Motor": {
   "jenis": "Kecil: bengkel motor empat montir, pemilik paham, mencatat per servis",
   "unit": "Bengkel Jaya Motor",
-  "file_bytes": 62856,
+  "file_bytes": 64040,
   "rows": 2119,
   "cash_in": 2777174000,
   "cash_out": 2204581000,
@@ -58,7 +58,7 @@
  "N1_penggilingan_Pabrik_Klaten": {
   "jenis": "Menengah: penggilingan + distribusi beras, 3 unit, admin terlatih, setiap faktur dicatat",
   "unit": "Pabrik Klaten",
-  "file_bytes": 243468,
+  "file_bytes": 244636,
   "rows": 8975,
   "cash_in": 25208896000,
   "cash_out": 22170709000,
@@ -86,7 +86,7 @@
  "N1_penggilingan_Gudang_Solo": {
   "jenis": "Menengah: penggilingan + distribusi beras, 3 unit, admin terlatih, setiap faktur dicatat",
   "unit": "Gudang Solo",
-  "file_bytes": 153302,
+  "file_bytes": 154433,
   "rows": 5513,
   "cash_in": 15059646000,
   "cash_out": 12182798000,
@@ -114,7 +114,7 @@
  "N1_penggilingan_Gudang_Yogya": {
   "jenis": "Menengah: penggilingan + distribusi beras, 3 unit, admin terlatih, setiap faktur dicatat",
   "unit": "Gudang Yogya",
-  "file_bytes": 119137,
+  "file_bytes": 120291,
   "rows": 4252,
   "cash_in": 11159049000,
   "cash_out": 10757251000,

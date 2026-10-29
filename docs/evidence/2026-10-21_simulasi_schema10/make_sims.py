@@ -6,6 +6,10 @@ expected figures computed here from first principles, not by calling the app:
 - capital need = deepest cumulative cash deficit of operations + investment, walked month by month.
 
 Run: python -I make_sims.py  (needs openpyxl). The .xlsx files are generated, not committed.
+
+Historical record (2026-10-29, phase-1 cleanup P8): this run predates template v5 (DEC-028); the
+current importer rejects these files by their headers. Kept unchanged as the evidence of that run;
+the v5 generator is `docs/evidence/2026-10-22_simulasi_skala_umkm/make_sims.py`.
 """
 from decimal import Decimal as D, ROUND_HALF_UP
 import json, os

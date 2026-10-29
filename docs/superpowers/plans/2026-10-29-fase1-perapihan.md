@@ -34,4 +34,4 @@ Pemilik meminta (2026-10-29) supaya temuan yang perlu dirombak atau dibetulkan m
 
 Diperbarui setiap item selesai (tanggal, commit, bukti).
 
-- (belum mulai)
+- **P9** selesai 2026-10-29 11:19, commit `fix(mankeu): everyday save message (P9)`. Bukti: unit `ScreenLanguageTest` merah (4 string: `msg_event_saved` dan `backup_choose_body`, ID + EN), lalu hijau. Tambahan: deskripsi cadangan tidak lagi menyebut "jurnal". Tidak diubah: pesan penjaga "Jurnal tidak seimbang" di `FinanceRepository` (invarian internal, tidak muncul pada simpan normal).

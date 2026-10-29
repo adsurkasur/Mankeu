@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 
 ### Fixed
+- The save message says "Transaksi tersimpan." instead of speaking of journals, debit and credit.
 - Excel export and import keep product production and stock counts (new sheet Produksi & Stok in template v5), so a unit imported from an export shows the same product stock.
 - A stock entry of an unknown kind (from a newer phone or backup) no longer crashes the Produk tab.
 - Tambah bahan in the product editor starts on a material the recipe does not use yet.

@@ -287,7 +287,7 @@
     <string name="backup_title">Cadangan terenkripsi</string>
     <string name="backup_create_title">Buat cadangan</string>
     <string name="backup_restore_title">Pulihkan cadangan</string>
-    <string name="backup_choose_body">Cadangan .aabk menyimpan seluruh usaha, unit usaha, transaksi, jurnal, rencana anggaran, stok, dan jejak impor. Berkas dienkripsi di perangkat.</string>
+    <string name="backup_choose_body">Cadangan .aabk menyimpan seluruh usaha, unit usaha, transaksi, rencana anggaran, stok, dan jejak impor. Berkas dienkripsi di perangkat.</string>
     <string name="backup_create_cta">Buat cadangan baru</string>
     <string name="backup_restore_cta">Pulihkan dari berkas</string>
     <string name="backup_export_recovery">Ekspor data sebelum pemulihan terakhir</string>
@@ -336,7 +336,7 @@
     <string name="msg_category_add_failed">Kategori tidak dapat ditambahkan.</string>
     <string name="msg_category_archived">Kategori diarsipkan; transaksi lama tetap utuh.</string>
     <string name="msg_category_archive_failed">Kategori tidak dapat diarsipkan.</string>
-    <string name="msg_event_saved">Transaksi tersimpan; jurnal debit dan kredit seimbang.</string>
+    <string name="msg_event_saved">Transaksi tersimpan.</string>
     <string name="msg_event_save_failed">Transaksi tidak dapat disimpan.</string>
     <string name="batch_money_in_out">masuk %1$s · keluar %2$s</string>
     <string name="msg_import_failed">Workbook tidak dapat diproses.</string>

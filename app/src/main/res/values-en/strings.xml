@@ -285,7 +285,7 @@
     <string name="backup_title">Encrypted backup</string>
     <string name="backup_create_title">Create a backup</string>
     <string name="backup_restore_title">Restore a backup</string>
-    <string name="backup_choose_body">An .aabk backup holds every business, business unit, transaction, journal, budget plan, stock item and import trail. The file is encrypted on the device.</string>
+    <string name="backup_choose_body">An .aabk backup holds every business, business unit, transaction, budget plan, stock item and import trail. The file is encrypted on the device.</string>
     <string name="backup_create_cta">Create a new backup</string>
     <string name="backup_restore_cta">Restore from a file</string>
     <string name="backup_export_recovery">Export the data from before the last restore</string>
@@ -334,7 +334,7 @@
     <string name="msg_category_add_failed">The category could not be added.</string>
     <string name="msg_category_archived">Category archived; older transactions are untouched.</string>
     <string name="msg_category_archive_failed">The category could not be archived.</string>
-    <string name="msg_event_saved">Saved; the journal balances.</string>
+    <string name="msg_event_saved">Transaction saved.</string>
     <string name="msg_event_save_failed">The transaction could not be saved.</string>
     <string name="batch_money_in_out">in %1$s · out %2$s</string>
     <string name="msg_import_failed">The workbook could not be processed.</string>

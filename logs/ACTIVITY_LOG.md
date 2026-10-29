@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:19] [Claude Code (Opus) — perapihan Fase 1: P9]
+- **Goal**: Cleanup plan P9: the save message spoke of journals, debit and credit (#19 everyday language).
+- **Actions**: `msg_event_saved` = "Transaksi tersimpan." / "Transaction saved."; the backup description no longer lists "jurnal"/"journal". The repository's unbalanced-journal guard message stays (an internal invariant, never reached by a normal save). New unit test `ScreenLanguageTest` fails on debit/kredit/credit/jurnal/journal in either strings.xml.
+- **Files**: `res/values/strings.xml`, `res/values-en/strings.xml`, `test/.../presentation/ScreenLanguageTest.kt` (new), `docs/superpowers/plans/2026-10-29-fase1-perapihan.md` (Status), `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED: ScreenLanguageTest listed 4 strings (msg_event_saved and backup_choose_body, ID and EN). GREEN: ScreenLanguageTest passes.
+
 ### [2026-10-29 11:17] [Claude Code (Opus) — rencana perapihan Fase 1]
 - **Goal**: Turn the parked phase-1 findings into a fix list, per owner request to fix rather than park.
 - **Actions**: Wrote `docs/superpowers/plans/2026-10-29-fase1-perapihan.md` (P1 delete production/count entries with stock history, P2 archived materials keep status on re-import, P3 undo import keeps imported products/materials used later, P4 sync twin product children, P5 duplicate product name in a file, P6 Back closes scope sheet, P7 entry-form tests, P8 v5 simulation generators, P9 everyday save message, P10 shared material price round trip). WORK_IN_PROGRESS points to it.

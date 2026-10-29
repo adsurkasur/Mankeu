@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Products now have a base unit, sale units with their own price and a per-batch recipe (database schema 13, DEC-028). Existing products and schema-12 backups are converted automatically: each recipe line "Rp X for N units" becomes Rp X ÷ N per unit, rounded to the rupiah, so a product's variable cost can move by Rp1.
 
 ### Fixed
+- Excel export writes a material's current price (its latest purchase, possibly by another unit), so a copy imported elsewhere has the same HPP.
 - An archived material stays archived after Excel export and import (new Stok Barang column Diarsipkan), still linked from its recipe lines and purchases.
 - An import file that names the same product twice in the Produk sheet is refused, naming the cell.
 - The save message says "Transaksi tersimpan." instead of speaking of journals, debit and credit.

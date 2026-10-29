@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-29 11:26] [Claude Code (Opus) — perapihan Fase 1: P10]
+- **Goal**: Cleanup plan P10: prove a shared material keeps its price through export and import; fix it if not.
+- **Actions**: The plan assumed the export already wrote the current price; the new test showed it wrote the price entered at creation (Rp20.000 instead of Rp27.500 bought by another unit). `FinanceRepository.exportedStock` now gives each exported item its current price (`latestPurchasePrice`, else the entered price), so Stok Barang "Harga Beli" carries it. DEC-028 addendum.
+- **Files**: `data/FinanceRepository.kt`, `androidTest/.../ImportCommitTest.kt`, `logs/DECISION_LOG.md`, plan Status, `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: RED: `aSharedMaterialKeepsItsCurrentPriceThroughExportAndImport` expected 27500 but was 20000. GREEN: connected ImportCommitTest + ScaleSimulationTest + ProductStockFlowTest 20/0.
+
 ### [2026-10-29 11:24] [Claude Code (Opus) — perapihan Fase 1: P2]
 - **Goal**: Cleanup plan P2: an archived material came back active after export then import (DEC-012).
 - **Actions**: `MankeuTemplate.STOCK_HEADERS` gains "Diarsipkan" (`MankeuTemplate.YES` = "Ya"); `ImportStockItem.archived`; the exporter writes "Ya" for archived items (listed only when a recipe or purchase still names them), the importer reads "Ya"/blank and rejects anything else per cell, `commitImport` inserts the item archived. Guide row explains the column. The five `androidTest/assets/simulasi/*.xlsx` got the new header cell F1 (openpyxl, data untouched; P8 regenerates them). DEC-028 addendum.

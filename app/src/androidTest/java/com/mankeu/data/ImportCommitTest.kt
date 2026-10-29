@@ -344,6 +344,33 @@ class ImportCommitTest {
         assertEquals(copy.first, dao.getEventsForBook(branchBook).single().stockItemId)
     }
 
+    /**
+     * Cleanup P10: a shared material is priced by the latest purchase anywhere in the business
+     * (DEC-028 §2), here bought by another unit. Exporting one unit must carry that price, so the
+     * material costs the same after import into another business.
+     */
+    @Test
+    fun aSharedMaterialKeepsItsCurrentPriceThroughExportAndImport() = runBlocking {
+        val oil = repository.createStockItem(businessId, projectId, true, "Minyak", "liter", 20_000, BigDecimal.ZERO, BigDecimal.ZERO)
+        repository.saveProduct(projectId, null, ProductDraft(
+            name = "Keripik", baseUnit = "bungkus", batchYieldText = "20",
+            units = listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 5_000)),
+            recipe = listOf(RecipeLineDraft("Minyak", stockItemId = oil, quantityText = "2")),
+        ))
+        val branch = repository.createProject(businessId, "Cabang 2")
+        val branchBook = dao.getBooks(branch).first { it.mode == BookMode.REALIZATION.name }.id
+        repository.recordEvent(EventDraft(businessId, branch, branchBook, FinancialEventType.CASH_EXPENSE, 55_000, DAY, "Beli minyak", "Bahan Baku & Stok", quantityText = "2", unit = "liter", stockItemId = oil))
+        assertEquals(27_500L, repository.materialPrice(oil))
+
+        val preview = FinanceWorkbookImporter().preview("ekspor.xlsx", repository.exportProjectWorkbook(projectId))
+        assertEquals(emptyList<String>(), preview.errors)
+        val (otherBusiness, otherUnit) = repository.createBusinessWithUnit("Usaha Lain", "Pusat")
+        repository.commitImport(otherBusiness, otherUnit, preview)
+
+        val copy = database.stockDao().getStockItems(otherBusiness, otherUnit).single()
+        assertEquals(27_500L, repository.materialPrice(copy.id))
+    }
+
     private fun keripik() = WorkbookImportPreview(
         sourceName = "keripik.xlsx",
         sourceSha256 = "sha-keripik",

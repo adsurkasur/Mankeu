@@ -219,12 +219,16 @@ class FinanceRepository(private val database: AppDatabase) {
             )
         }
 
-    /** What the unit sees, plus archived items a recipe line or a transaction still names, so a re-import can resolve them. */
+    /**
+     * What the unit sees, plus archived items a recipe line or a transaction still names, so a re-import can resolve them.
+     * Each carries its current price (DEC-028 §2), which for a shared material may come from another unit's purchase
+     * the export does not hold, so the copy costs the same after import (cleanup P10).
+     */
     private suspend fun exportedStock(businessId: String, projectId: String, products: List<ProductRecord>, books: List<FinanceExportBook>): List<StockItemEntity> {
         val visible = stockDao.getStockItems(businessId, projectId)
         val referenced = (products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } } + books.flatMap { b -> b.events.mapNotNull { it.stockItemId } }).toSet()
         val missing = (referenced - visible.map { it.id }.toSet()).mapNotNull { stockDao.getStockItem(it) }.filter { it.businessId == businessId }
-        return visible + missing
+        return (visible + missing).map { it.copy(basePriceRupiah = dao.latestPurchasePrice(it.id) ?: it.basePriceRupiah) }
     }
 
     suspend fun exportProjectWorkbook(projectId: String): ByteArray =

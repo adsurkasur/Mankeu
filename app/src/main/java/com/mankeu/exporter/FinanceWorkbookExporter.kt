@@ -264,7 +264,7 @@ class FinanceWorkbookExporter(
                     listOf(
                         listOf(mode, "HPP (harga pokok penjualan)", hppRupiah),
                         listOf(mode, "Penyusutan", depreciationRupiah),
-                        listOf(mode, "Belanja produksi (variabel, lewat HPP)", productionSpendRupiah),
+                        listOf(mode, "Belanja biaya produksi (lewat HPP)", productionSpendRupiah),
                         listOf(mode, "Selisih belanja produksi vs HPP", productionVarianceRupiah),
                         listOf(mode, "Piutang usaha", receivableRupiah),
                         listOf(mode, "Utang usaha", payableRupiah),

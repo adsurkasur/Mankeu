@@ -49,7 +49,7 @@ class FinancePdfExporter {
                     // Profit when sold (DEC-029 §4): the same figures as Beranda and Laporan.
                     report.keyValue("HPP (harga pokok penjualan)", money(book.summary.hppRupiah))
                     report.keyValue("Penyusutan", money(book.summary.depreciationRupiah))
-                    report.keyValue("Belanja produksi (variabel, lewat HPP)", money(book.summary.productionSpendRupiah))
+                    report.keyValue("Belanja biaya produksi (lewat HPP)", money(book.summary.productionSpendRupiah))
                     report.keyValue("Selisih belanja produksi vs HPP", money(book.summary.productionVarianceRupiah))
                     report.keyValue("Piutang usaha", money(book.summary.receivableRupiah))
                     report.keyValue("Utang usaha", money(book.summary.payableRupiah))

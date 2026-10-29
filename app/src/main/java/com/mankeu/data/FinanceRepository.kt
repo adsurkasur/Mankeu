@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Locale
 import java.util.UUID
 
@@ -132,7 +133,11 @@ enum class ScopeRemoval { DELETED, ARCHIVED }
 /** Which business/project the shell should select on launch. Nulls mean "nothing exists yet". */
 data class WorkspaceSelection(val businessId: String?, val projectId: String?)
 
-class FinanceRepository(private val database: AppDatabase) {
+class FinanceRepository(
+    private val database: AppDatabase,
+    /** The current month for depreciation through today (F2-8); tests pin it. */
+    private val currentMonth: () -> YearMonth = { YearMonth.now() },
+) {
     private val dao = database.financeDao()
     val stockDao = database.stockDao()
 
@@ -205,7 +210,7 @@ class FinanceRepository(private val database: AppDatabase) {
         val posted = dao.getPostingTotals(bookId).summary()
         val inputs = profitInputsOf(bookId)
         if (dao.getBookById(bookId)?.mode != BookMode.REALIZATION.name) posted
-        else ProfitCalculator.summary(posted, inputs.months(), noteTotalRupiah = inputs.sales.sumOf { it.revenueRupiah })
+        else ProfitCalculator.summary(posted, inputs.months(through = currentMonth()), noteTotalRupiah = inputs.sales.sumOf { it.revenueRupiah })
     }
 
     private suspend fun profitInputsOf(bookId: String): ProfitInputs {

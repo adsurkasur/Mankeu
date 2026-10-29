@@ -348,12 +348,17 @@ class SalesFlowTest {
         assertEquals(-310_000L, card.profitRupiah)
         assertQty(740, card.unitsSold.getValue(keripik).multiply(BigDecimal(40))) // 500 bungkus + 6 dus, in dus
 
-        // The whole book: depreciation from September through the later of October and today (F2-8 fix round).
-        val wear = java.time.temporal.ChronoUnit.MONTHS.between(java.time.YearMonth.of(2026, 9), maxOf(java.time.YearMonth.of(2026, 10), java.time.YearMonth.now())).plus(1).coerceAtMost(36) * 100_000L
-        val s = repo.accountingSummary(bookId).first()
+        // The whole book, seen in October 2026: September adds one month of depreciation (review m-4: the month is pinned).
+        val wear = 200_000L
+        val october2026 = FinanceRepository(db, currentMonth = { java.time.YearMonth.of(2026, 10) })
+        val s = october2026.accountingSummary(bookId).first()
         assertEquals(5_430_000L, s.operatingIncomeRupiah)
         assertEquals(4_440_000L + 1_200_000L + wear, s.operatingExpenseRupiah)
-        assertEquals(5_430_000L - 4_440_000L - 1_200_000L - wear, s.profitRupiah) // -410.000 in October 2026
+        assertEquals(-410_000L, s.profitRupiah)
+        // Seen in December, the asset has worn two more months (F2-8 fix round: through the current month).
+        assertEquals(-610_000L, FinanceRepository(db, currentMonth = { java.time.YearMonth.of(2026, 12) }).accountingSummary(bookId).first().profitRupiah)
+        // Komparasi's cash basis (review I-1): note payment + other income in; cash spend + supplier payment out.
+        assertEquals(2_050_000L to 6_200_000L, s.operatingCashInRupiah to s.operatingCashOutRupiah)
         assertEquals(4_440_000L, s.hppRupiah)
         assertEquals(5_200_000L, s.productionSpendRupiah)
         assertEquals(760_000L, s.productionVarianceRupiah)
@@ -368,13 +373,13 @@ class SalesFlowTest {
         // The cost chart: credit purchase at purchase date, the supplier payment not again.
         assertEquals(4_900_000L + 300_000L + 1_200_000L, repo.categoryTotals(bookId).first().sumOf { it.totalRupiah })
         // PDF and xlsx read the same summary.
-        assertEquals(s, repo.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }.summary)
+        assertEquals(s, october2026.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }.summary)
 
         // F2-8: transport is variable but not a production cost, so it reduces profit directly.
         event(FinancialEventType.CASH_EXPENSE, 150_000, LocalDate.of(2026, 10, 15), categories.single { it.name == "Transportasi" })
         val withTransport = repo.profitInputs(bookId).first().months().single { it.month == java.time.YearMonth.of(2026, 10) }
         assertEquals(-460_000L, withTransport.profitRupiah)
         assertEquals(5_200_000L, withTransport.productionSpendRupiah)
-        assertEquals(s.profitRupiah - 150_000L, repo.accountingSummary(bookId).first().profitRupiah)
+        assertEquals(s.profitRupiah - 150_000L, october2026.accountingSummary(bookId).first().profitRupiah)
     }
 }

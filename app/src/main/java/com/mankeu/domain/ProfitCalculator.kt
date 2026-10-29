@@ -52,7 +52,7 @@ data class ProfitInputs(
     }
 }
 
-/** Profit from data, not postings (Fase 2, F2-1). Payments of notes and debts are neither revenue nor cost. */
+/** Profit from data, not postings (Fase 2, F2-1 as corrected by F2-8). Payments of notes and debts are neither revenue nor cost. */
 object ProfitCalculator {
     /** The one depreciation rule: amount / life (integer division) from the purchase month for [lifeMonths] months. */
     fun depreciation(month: YearMonth, bought: YearMonth, amountRupiah: Long, lifeMonths: Int): Long =

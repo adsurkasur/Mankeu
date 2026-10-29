@@ -343,24 +343,21 @@ private fun FeasibilitySection(
 /**
  * Plan against actual as averages per month. The plan covers its own period (often 12 months)
  * and Realisasi only the months recorded so far, so comparing totals produced a "shortfall" of
- * eleven months of sales. Realisasi profit counts HPP of goods sold, fixed costs and depreciation (DEC-029 §4).
+ * eleven months of sales. Both sides are cash, before depreciation ([com.mankeu.domain.PlanComparison]).
  */
 @Composable
 private fun ComparisonSection(state: AppUiState) {
     val planMonths = state.plan?.months?.size ?: 1
     val actualMonths = state.realizationMonths
-    fun perMonth(total: Long, months: Int) =
-        java.math.BigDecimal.valueOf(total).divide(java.math.BigDecimal.valueOf(months.toLong()), 0, java.math.RoundingMode.HALF_UP).toLong()
-    val plan = state.projectionSummary
-    val actual = state.realizationSummary
+    val rows = com.mankeu.domain.PlanComparison.perMonth(state.projectionSummary, planMonths, state.realizationSummary, actualMonths)
     ReportCard(stringResource(R.string.reports_comparison_title)) {
         Text(
             stringResource(R.string.reports_comparison_note, planMonths, actualMonths),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        ComparisonRow(stringResource(R.string.reports_income), perMonth(plan.operatingIncomeRupiah, planMonths), perMonth(actual.operatingIncomeRupiah, actualMonths))
-        ComparisonRow(stringResource(R.string.reports_operating_expense), perMonth(plan.operatingExpenseRupiah, planMonths), perMonth(actual.operatingExpenseRupiah, actualMonths), higherIsBetter = false)
-        ComparisonRow(stringResource(R.string.reports_profit_loss), perMonth(plan.profitRupiah, planMonths), perMonth(actual.profitRupiah, actualMonths))
+        ComparisonRow(stringResource(R.string.reports_income), rows.planIncome, rows.actualIncome)
+        ComparisonRow(stringResource(R.string.reports_operating_expense), rows.planExpense, rows.actualExpense, higherIsBetter = false)
+        ComparisonRow(stringResource(R.string.reports_profit_loss), rows.planProfit, rows.actualProfit)
     }
 }

@@ -178,6 +178,26 @@ class ImportCommitTest {
         assertEquals(0L, repository.accountingSummary(actual).first().profitRupiah)
     }
 
+    /** Review m-2 / F2-8: a materials category made by hand or by an import starts counted in HPP; others do not. */
+    @Test
+    fun aMaterialsCategoryMadeByHandOrImportStartsCountedInHpp() = runBlocking {
+        fun dropMaterials(business: String) = database.openHelper.writableDatabase.execSQL(
+            "DELETE FROM categories WHERE businessId = ? AND normalizedName = 'bahan baku stok'", arrayOf<Any>(business),
+        )
+        dropMaterials(businessId)
+        repository.commitImport(businessId, projectId, WorkbookImportPreview(
+            "bahan.xlsx", "sha-bahan",
+            transactions = listOf(ImportTransaction("Transaksi!A2", DAY, "Beli tepung", "Bahan Baku & Stok", incoming = false, amountRupiah = 80_000)),
+        ))
+        assertTrue(dao.getCategories(businessId).single { it.normalizedName == "bahan baku stok" }.includedInHpp)
+
+        val other = repository.createBusiness("Toko Lain")
+        dropMaterials(other)
+        val byHand = repository.createCategory(other, "Bahan Baku & Stok", CategoryRole.EXPENSE)
+        val gas = repository.createCategory(other, "Gas", CategoryRole.EXPENSE)
+        assertEquals(true to false, dao.getCategory(byHand)!!.includedInHpp to dao.getCategory(gas)!!.includedInHpp)
+    }
+
     /** Schema 10: undoing an import must not clear a period the owner set after it. */
     @Test
     fun aPeriodTheOwnerChangedAfterImportSurvivesUndo() = runBlocking {

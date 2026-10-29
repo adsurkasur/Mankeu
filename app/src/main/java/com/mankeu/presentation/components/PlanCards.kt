@@ -291,7 +291,7 @@ fun com.mankeu.domain.FinancialSummary.hasProfitDetail() =
     hppRupiah != 0L || productionSpendRupiah != 0L || receivableRupiah != 0L || payableRupiah != 0L
 
 /**
- * HPP, production spend and its variance with one plain sentence (F2-1, #19), then what customers and
+ * HPP, production spend and its variance with one plain sentence (F2-1/F2-8, #19), then what customers and
  * suppliers are still owed. Minimal until F4 redesigns the reports.
  */
 @Composable

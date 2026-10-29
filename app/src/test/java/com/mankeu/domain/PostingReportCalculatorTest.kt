@@ -30,6 +30,8 @@ class PostingReportCalculatorTest {
         assertEquals(700_000, summary.financingCashFlowRupiah)
         assertEquals(-500_000, summary.investingCashFlowRupiah)
         assertEquals(1_800_000, summary.cashBalanceRupiah)
+        // Komparasi's cash basis: operating money in and out (Task 4 review I-1).
+        assertEquals(2_000_000L to 400_000L, summary.operatingCashInRupiah to summary.operatingCashOutRupiah)
     }
 
     @Test

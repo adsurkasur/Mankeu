@@ -745,7 +745,7 @@ class AppViewModel(
 
     fun setCategoryIncludedInHpp(id: String, included: Boolean) = mutating {
         runCatching { repository.setCategoryIncludedInHpp(id, included) }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_category_add_failed) }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_category_update_failed) }
     }
 
     /** The plan period is the unit's start and end month (DEC-014 §3). */

@@ -342,8 +342,11 @@ object ActualBepCalculator {
         // BEP in rupiah at the actual mix: FC / weighted contribution-margin ratio.
         val unitRevenue = units.entries.fold(BigDecimal.ZERO) { s, (id, q) -> s + q * BigDecimal.valueOf(byId.getValue(id).priceRupiah) }
         val unitCm = units.entries.fold(BigDecimal.ZERO) { s, (id, q) -> s + q * byId.getValue(id).contributionMargin }
+        // The base is fixed cost plus variable spend outside any recipe (transport), as in the plan
+        // (plan_bep_base_note), so "impas" means the profit row is zero (Task 4 review I-2).
+        val bepBase = fc + actual.otherVariableCostRupiah
         val bep = if (totalUnits.signum() > 0 && unitCm.signum() > 0) {
-            BigDecimal.valueOf(fc).multiply(unitRevenue).divide(unitCm, 0, RoundingMode.HALF_UP).toLong()
+            BigDecimal.valueOf(bepBase).multiply(unitRevenue).divide(unitCm, 0, RoundingMode.HALF_UP).toLong()
         } else null
 
         val totalCost = fc + actual.hppRupiah + actual.otherVariableCostRupiah
@@ -361,6 +364,35 @@ object ActualBepCalculator {
             profitRupiah = profit,
             revenueCostRatio = PlanCalculator.ratio(actual.revenueRupiah, totalCost),
             benefitCostRatio = PlanCalculator.ratio(profit, totalCost),
+        )
+    }
+}
+
+/** Komparasi per month, plan against Realisasi; see [PlanComparison.perMonth]. */
+data class ComparisonFigures(
+    val planIncome: Long,
+    val planExpense: Long,
+    val planProfit: Long,
+    val actualIncome: Long,
+    val actualExpense: Long,
+    val actualProfit: Long,
+)
+
+/**
+ * Plan against actual as averages per month, both on the cash basis before depreciation the plan
+ * uses (Task 4 review I-1): Realisasi is operating money in and out, not profit when sold, which
+ * Beranda and Laporan show. F3/F4 redesign this comparison.
+ */
+object PlanComparison {
+    fun perMonth(plan: FinancialSummary, planMonths: Int, actual: FinancialSummary, actualMonths: Int): ComparisonFigures {
+        fun avg(total: Long, months: Int) = BigDecimal.valueOf(total).divide(BigDecimal.valueOf(months.coerceAtLeast(1).toLong()), 0, RoundingMode.HALF_UP).toLong()
+        return ComparisonFigures(
+            planIncome = avg(plan.operatingIncomeRupiah, planMonths),
+            planExpense = avg(plan.operatingExpenseRupiah, planMonths),
+            planProfit = avg(plan.profitRupiah, planMonths),
+            actualIncome = avg(actual.operatingCashInRupiah, actualMonths),
+            actualExpense = avg(actual.operatingCashOutRupiah, actualMonths),
+            actualProfit = avg(actual.operatingCashInRupiah - actual.operatingCashOutRupiah, actualMonths),
         )
     }
 }

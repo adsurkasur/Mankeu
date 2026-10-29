@@ -29,6 +29,8 @@ object PostingReportCalculator {
             // Notes post no revenue (DEC-029 §2), so this is minus what was paid on notes until the
             // repository adds the note totals; the payable is complete here.
             receivableRupiah = debitBalance(records, LedgerAccount.RECEIVABLE),
+            operatingCashInRupiah = records.filter { it.account == LedgerAccount.CASH && it.cashFlowRole == CashFlowRole.OPERATING && it.side == PostingSide.DEBIT }.sumOf { it.amountRupiah },
+            operatingCashOutRupiah = records.filter { it.account == LedgerAccount.CASH && it.cashFlowRole == CashFlowRole.OPERATING && it.side == PostingSide.CREDIT }.sumOf { it.amountRupiah },
             payableRupiah = creditBalance(records, LedgerAccount.PAYABLE),
         )
     }

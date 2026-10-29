@@ -66,6 +66,32 @@ class BusinessPlanTest {
         assertEquals(1_500_000L, actual.profitRupiah)
     }
 
+    /** Review I-2: variable spend outside HPP categories (transport) is in the break-even base, as in the plan. */
+    @Test
+    fun `transport outside HPP moves the actual break-even so impas means profit zero`() {
+        val actual = ActualBepCalculator.analyse(
+            listOf(kopi),
+            ActualMonthInputs(month, mapOf("kopi" to BigDecimal("500")), 5_000_000, 0, 2_000_000, 2_500_000, 0, hppRupiah = 2_500_000, otherVariableCostRupiah = 500_000),
+        )
+        assertEquals(5_000_000L, actual.breakEvenRupiah)
+        assertTrue(actual.reached!!)
+        assertEquals(0L, actual.profitRupiah)
+    }
+
+    /** Review I-1: Komparasi compares the plan with Realisasi on the cash basis, per month. */
+    @Test
+    fun `comparison reads realisasi on the cash basis per recorded month`() {
+        val plan = FinancialSummary(12_000_000, 9_000_000, 3_000_000, 0, 0, 0)
+        val actual = FinancialSummary(
+            operatingIncomeRupiah = 5_430_000, operatingExpenseRupiah = 5_840_000, profitRupiah = -410_000,
+            operatingCashFlowRupiah = -4_150_000, financingCashFlowRupiah = 10_000_000, cashBalanceRupiah = 2_250_000,
+            operatingCashInRupiah = 2_050_000, operatingCashOutRupiah = 6_200_000,
+        )
+        val rows = PlanComparison.perMonth(plan, planMonths = 12, actual = actual, actualMonths = 2)
+        assertEquals(listOf(1_000_000L, 750_000L, 250_000L), listOf(rows.planIncome, rows.planExpense, rows.planProfit))
+        assertEquals(listOf(1_025_000L, 3_100_000L, -2_075_000L), listOf(rows.actualIncome, rows.actualExpense, rows.actualProfit))
+    }
+
     @Test
     fun `two products break even on the weighted margin of their mix`() {
         val teh = PlanProduct("teh", "Teh susu", "cup", 8_000, BigDecimal("300"), listOf(CostComponent("Teh + susu + cup", 3_000)))

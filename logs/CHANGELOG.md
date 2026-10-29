@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+- Untung dihitung saat barang terjual: penjualan nota − HPP − biaya; belanja berkategori "Biaya produksi (sudah dihitung di HPP)" diganti HPP dengan baris selisih (F2-8). Arus kas tetap dari uang yang benar-benar masuk/keluar.
 ### Added
 - Beranda and Laporan show HPP of goods sold, production spend, the difference between them with one plain sentence, what customers still owe and what is still owed to suppliers. PDF and Excel summaries carry the same figures.
 - Data layer for phase 2 (screens follow): contacts; sale notes with several products, a discount, HPP per line and pay now, later or in part; supplier purchases paid later with their payments; consignment (send, report sold as a note, settle, take back). Product stock now reads note lines and shows consigned goods apart. A product sale from the old income form becomes a paid note, and deleting it there removes the note.

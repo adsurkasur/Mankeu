@@ -29,8 +29,8 @@ tinjauan pemilik, masuk DEC-029). Eksekusi di branch `fase2-nota-piutang`: Task 
 direview; Task 2 (schema 14, migrasi F2-4, jurnal piutang/utang, BackupUpgrade 13→14, DEC-029) selesai dan direview;
 Task 3 (repository kontak, nota, pembayaran, belanja tempo, titip; stok dari `sale_lines`; aturan M3/M4 di DEC-029)
 selesai dan direview; Task 4 (untung saat terjual di ringkasan, `actualMonth`, Beranda/Laporan, PDF/xlsx) selesai,
-ditambah fix round F2-8 (kategori "Biaya produksi (sudah dihitung di HPP)"), belum direview (laporan `.superpowers/sdd/2026-10-29-fase2-nota-piutang/task-4-report.md`).
-Berikutnya: review Task 4, lalu Task 5 (layar nota).
+ditambah fix round F2-8 (kategori "Biaya produksi (sudah dihitung di HPP)") dan fix round 2 (Komparasi tetap basis kas,
+BEP memuat biaya variabel non-HPP), selesai dan direview. Berikutnya: Task 5 (layar kontak, nota, tagihan).
 
 **Uji alur sebagai pengusaha baru (2026-10-29)**, dicatat per checkpoint di
 `docs/audit/2026-10-29_UJI_ALUR_PENGUSAHA.md`. Semua checkpoint (CP1–CP7) selesai.

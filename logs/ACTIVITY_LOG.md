@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-30 06:30] [Claude Code (Opus) — Fase 2 Task 4 tutup]
+- **Goal**: Close Task 4 after the re-review.
+- **Actions**: Re-review of fix round 2 approved (I-1, I-2, m-1, m-2, m-4, m-6, m-7 addressed). WORK_IN_PROGRESS updated; CHANGELOG line for profit when sold and F2-8 added.
+- **Files**: `docs/WORK_IN_PROGRESS.md`, `logs/CHANGELOG.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only; last runs unit 122/0, connected 86/0/2.
+
 ### [2026-10-30 06:28] [Claude Code (Opus) — Fase 2 Task 4 review fix round 2]
 - **Goal**: Address `task-4-review.md`: I-1 (controller ruling: Komparasi on the cash basis), I-2, m-1, m-2, m-4, m-6, m-7.
 - **Actions**: Tests first (RED: compile failure on `operatingCashInRupiah`/`PlanComparison`; the I-2 BEP test fails with the base reverted, checked by a temporary mutation). `PostingReportCalculator` fills operating cash in/out; `PlanComparison.perMonth` feeds Komparasi (Realisasi = operating money in and out per recorded month), note text extended (ID + EN). `ActualBepCalculator` BEP base adds `otherVariableCostRupiah`. `FinanceRepository(currentMonth)` and the golden pins October/December 2026 (−410.000 / −610.000) and checks cash in/out 2.050.000 / 6.200.000. ImportCommitTest: materials category made by hand or by import starts counted in HPP, Gas does not. `msg_category_update_failed`. F2-8 wording in KDoc and PDF/xlsx labels ("Belanja biaya produksi (lewat HPP)"). DEC-029 addendum (I-1, I-2, m-4, m-7).

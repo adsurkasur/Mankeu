@@ -22,6 +22,10 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Sekarang (2026-10-30 08:26): audit UI/UX semua layar** atas permintaan pemilik ("form berjejer jelek", "APP INI HARUS USEFUL").
+Laporan per checkpoint: `docs/audit/2026-10-30_AUDIT_UI_UX.md`. Fase 2 Task 6–8 ditunda sampai audit dan perbaikannya
+selesai. Warna ungu sudah diganti biru (edd2527).
+
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di
 `docs/superpowers/plans/2026-10-29-fase2-nota-piutang.md` (8 tugas, schema 14; 12 keputusan penulis rencana menunggu

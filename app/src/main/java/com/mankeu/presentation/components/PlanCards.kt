@@ -142,7 +142,7 @@ private fun statusColor(status: FeasibilityStatus): Color {
     val semantic = LocalMankeuSemanticColors.current
     return when (status) {
         FeasibilityStatus.FEASIBLE -> semantic.success
-        FeasibilityStatus.WATCH -> MaterialTheme.colorScheme.tertiary
+        FeasibilityStatus.WATCH -> semantic.onWarningContainer
         FeasibilityStatus.NOT_FEASIBLE -> semantic.danger
         FeasibilityStatus.UNKNOWN -> MaterialTheme.colorScheme.outline
     }
@@ -341,7 +341,7 @@ fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, 
                     value = actual.revenueRupiah.toRupiah(),
                     progress = progressTo(actual.revenueRupiah, bep),
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    barColor = if (actual.reached == true) semantic.success else MaterialTheme.colorScheme.tertiary,
+                    barColor = if (actual.reached == true) semantic.success else MaterialTheme.colorScheme.primary,
                     supporting = if (actual.reached == true) {
                         stringResource(R.string.actual_reached, bep.toRupiah())
                     } else {

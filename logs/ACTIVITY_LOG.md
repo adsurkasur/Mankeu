@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-30 08:24] [Claude Code (Opus) — warna ungu diganti biru]
+- **Goal**: Remove purple from the blue UI (owner report 2026-10-30).
+- **Actions**: Root cause: the Material tertiary role was still the purple baseline (6B5778 / F3DAFF), used by the Beranda hero gradient, the BEP progress bar, the "Waspada" status colour and the auto unit-price hint. Tertiary tonal roles (light and dark, incl. fixed) re-tinted to a sky-blue palette (00658E / C7E7FF / 84CFFF / 004C6C); BEP bar below target uses primary; WATCH status uses the warning semantic colour instead of tertiary. Chart category colours left as they are (distinct hues needed).
+- **Files**: `presentation/Theme.kt`, `presentation/components/PlanCards.kt`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: assembleDebug green, installed on the emulator (fresh data). Full visual audit of every screen still to do.
+
 ### [2026-10-30 07:28] [Claude Code (Opus) — Fase 2 Task 5 review fix round 1]
 - **Goal**: Address `task-5-review.md` I-1..I-3 and minors 4–8.
 - **Actions**: Four Compose tests added to `SaleNoteFlowTest` and run against the previous screens first (RED 4/4: no recompute message, no bound in the pay sheet, no duplicate check, contact amount missing for another unit). I-1: saving an edited note says "Nota disimpan. HPP dihitung ulang dengan harga bahan sekarang." (ID + EN). I-2: pay sheet keeps Simpan off outside 1..sisa and before the note date, shows "Maks Rp…"; contact sheet catches a name already in the business (case-insensitive); a repository refusal while a sheet is open is shown in the sheet (VM `saveContact`/`archiveContact`/`paySale` take `onError`). I-3 (controller ruling): Kontak amounts are business-wide (`FinanceDao.observeSalesOfBusiness`/lines/payments, `FinanceRepository.salesOfBusiness`, `AppUiState.businessSales/businessPayables`); Beranda stays per unit. Minors: customer field red while a not-paid note has none; Total never negative, discount above subtotal shows an inline error and disables Simpan; Sebagian shows "Maks Rp{total}"; date parsing guarded; "Semua" shows every note (5-note cap and `notes_show_all` removed).

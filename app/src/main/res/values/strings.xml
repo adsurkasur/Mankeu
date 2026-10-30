@@ -874,4 +874,14 @@
     <string name="sale_max_amount">Maks %1$s</string>
     <string name="sale_pay_date_early">Tanggal bayar tidak boleh sebelum tanggal nota.</string>
     <string name="contact_duplicate">Kontak \"%1$s\" sudah ada.</string>
+    <!-- UX U1: shared form components (DEC-030) -->
+    <string name="form_discard_title">Buang perubahan?</string>
+    <string name="form_discard_body">Isian yang belum disimpan akan hilang.</string>
+    <string name="form_discard_confirm">Buang</string>
+    <string name="form_discard_keep">Lanjut isi</string>
+    <string name="picker_search">Cari</string>
+    <string name="picker_add">Tambah \'%1$s\'</string>
+    <string name="picker_empty">Tidak ada yang cocok.</string>
+    <string name="stepper_decrease">Kurangi</string>
+    <string name="stepper_increase">Tambah</string>
 </resources>

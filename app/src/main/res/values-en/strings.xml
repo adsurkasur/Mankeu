@@ -872,4 +872,14 @@
     <string name="sale_max_amount">At most %1$s</string>
     <string name="sale_pay_date_early">The payment date cannot be before the note date.</string>
     <string name="contact_duplicate">Contact \"%1$s\" already exists.</string>
+    <!-- UX U1: shared form components (DEC-030) -->
+    <string name="form_discard_title">Discard changes?</string>
+    <string name="form_discard_body">What you entered and did not save will be lost.</string>
+    <string name="form_discard_confirm">Discard</string>
+    <string name="form_discard_keep">Keep editing</string>
+    <string name="picker_search">Search</string>
+    <string name="picker_add">Add \'%1$s\'</string>
+    <string name="picker_empty">Nothing matches.</string>
+    <string name="stepper_decrease">Decrease</string>
+    <string name="stepper_increase">Increase</string>
 </resources>

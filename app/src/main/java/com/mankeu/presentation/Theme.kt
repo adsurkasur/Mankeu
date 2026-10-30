@@ -140,6 +140,8 @@ data class MankeuSemanticColors(
     val onDanger: Color,
     val dangerContainer: Color,
     val onDangerContainer: Color,
+    /** Text and icons that need attention (unpaid, low stock, due); 5.8:1 / 10:1 on the surfaces. */
+    val warning: Color,
     val warningContainer: Color,
     val onWarningContainer: Color,
     val chart: List<Color>,
@@ -154,6 +156,7 @@ private val MankeuLightSemanticColors = MankeuSemanticColors(
     onDanger = Color(0xFFFFFFFF),
     dangerContainer = Color(0xFFFFDBD2),
     onDangerContainer = Color(0xFF3C0800),
+    warning = Color(0xFF8A5100),
     warningContainer = Color(0xFFE1E991),
     onWarningContainer = Color(0xFF1A1D00),
     chart = listOf(
@@ -175,6 +178,7 @@ private val MankeuDarkSemanticColors = MankeuSemanticColors(
     onDanger = Color(0xFF5D1805),
     dangerContainer = Color(0xFF7C2E19),
     onDangerContainer = Color(0xFFFFDBD2),
+    warning = Color(0xFFFFB870),
     warningContainer = Color(0xFF444B01),
     onWarningContainer = Color(0xFFE1E991),
     chart = listOf(

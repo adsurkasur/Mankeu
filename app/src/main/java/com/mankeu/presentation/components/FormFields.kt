@@ -27,7 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.presentation.toDisplayDate
@@ -83,7 +87,32 @@ fun sanitizeDecimal(raw: String): String {
     return builder.toString().take(12)
 }
 
-/** A rupiah amount field: `Rp` prefix, numeric keyboard, [sanitizeRupiah] applied on every key. */
+/** "1250000" -> "1.250.000". Only grouping: the input is already digits ([sanitizeRupiah]). */
+fun groupThousands(digits: String): String = digits.reversed().chunked(3).joinToString(".").reversed()
+
+/**
+ * Shows the dots while typing (audit P2 §6) without putting them in the value: the field's text
+ * stays the bare digits every caller already parses. A dot sits in front of every digit whose
+ * distance from the end is a multiple of three.
+ */
+internal object ThousandsTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text
+        val grouped = groupThousands(digits)
+        return TransformedText(
+            AnnotatedString(grouped),
+            object : OffsetMapping {
+                override fun originalToTransformed(offset: Int): Int =
+                    offset + (1 until offset).count { (digits.length - it) % 3 == 0 }
+
+                override fun transformedToOriginal(offset: Int): Int =
+                    offset - grouped.take(offset).count { it == '.' }
+            },
+        )
+    }
+}
+
+/** A rupiah amount field: `Rp` prefix, numeric keyboard, [sanitizeRupiah] applied on every key, thousands dotted. */
 @Composable
 fun MoneyField(
     label: String,
@@ -100,6 +129,7 @@ fun MoneyField(
         onValueChange = { onValueChange(sanitizeRupiah(it)) },
         label = { Text(label) },
         prefix = { Text("Rp ") },
+        visualTransformation = ThousandsTransformation,
         supportingText = supportingText,
         isError = isError,
         singleLine = true,

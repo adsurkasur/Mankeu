@@ -65,6 +65,8 @@ fun MankeuSheet(
     // Multi-step sheets need the dismiss button to step back while the scrim and back still close it.
     onDismissClick: () -> Unit = onDismiss,
     onConfirm: (() -> Unit)? = null,
+    // Left of the row, apart from Batal/Simpan: e.g. Hapus in LineEditSheet.
+    startAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     // Kept internal: `rememberModalBottomSheetState` is experimental, and as a default parameter it
@@ -103,6 +105,7 @@ fun MankeuSheet(
                 content = content,
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                startAction?.invoke()
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = onDismissClick) { Text(dismissLabel) }
                 if (confirmLabel != null && onConfirm != null) {

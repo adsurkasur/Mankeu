@@ -24,7 +24,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 **Sekarang (2026-10-30 11:29): Fase UX** (`docs/superpowers/plans/2026-10-30-fase-ux.md`, tugas U1–U9) setelah audit UI/UX
 (`docs/audit/2026-10-30_AUDIT_UI_UX.md`) dan keputusan pemilik U-1..U-4 (spec). Fase 2 Task 6–8 menyusul dengan
-komponen form baru. Status per tugas di bagian Status rencana itu.
+komponen form baru. Status per tugas di bagian Status rencana itu. U1 (token desain, komponen form bersama di
+`presentation/components/form/`, DEC-030, investigasi Back) selesai, menunggu review
+(`.superpowers/sdd/2026-10-30-fase-ux/task-U1-report.md`). Berikutnya: U2.
 
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di

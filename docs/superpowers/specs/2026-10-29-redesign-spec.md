@@ -71,3 +71,14 @@ tidak bisa dicatat, dan alur Rencana/Catatan membingungkan.
 | F2-6 | **Konsinyasi:** harga setor per satuan ditetapkan saat titip; laporan laku membuat nota otomatis dengan harga itu (bisa diubah di nota). |
 | F2-7 | **Diskon:** satu diskon rupiah per nota; total = jumlah baris − diskon; untung memakai total setelah diskon. |
 | F2-8 | **Belanja yang diwakili HPP (mengoreksi F2-1, grill 2026-10-30):** bukan semua biaya bersifat variabel, melainkan kategori pengeluaran yang bertanda **"Biaya produksi (sudah dihitung di HPP)"**. Bawaan menyala hanya untuk "Bahan Baku & Stok"; pemilik bisa menyalakannya untuk kategori lain (gas, kemasan). Belanja berkategori itu diganti HPP (dengan baris selisih); semua belanja lain, termasuk transport dan usaha jasa tanpa produk, tetap mengurangi untung. Alasan: uji Task 4 menunjukkan Transportasi (variabel bawaan) ikut hilang dari untung. |
+
+## Keputusan setelah audit UI/UX (user-confirmed, 2026-10-30)
+
+Dasar: `docs/audit/2026-10-30_AUDIT_UI_UX.md` (32 layar, pola P1–P7).
+
+| # | Keputusan |
+|---|---|
+| U-1 | **Rombak tampilan dulu**, sebelum sisa Fase 2: pola form baru, Beranda baru, satu angka untung di semua layar, saklar Rencana/Realisasi dihapus (isi Fase 3 ditarik maju). Titip dan belanja tempo (F2 Task 6) dibuat sesudahnya dengan pola baru. |
+| U-2 | **Stok bahan nyata:** belanja yang menautkan bahan menambah stok bahan; Produksi mengurangi bahan sesuai resep (jumlah per batch × batch). Koreksi lewat "Hitung ulang stok". Menggantikan spec #9 bagian "tidak dikurangi otomatis oleh produksi" dan DEC-028 §3. |
+| U-3 | **Kirim nota / pengingat tagihan** lewat menu bagikan Android (teks rapi, tanpa izin atau akun baru) dan **jatuh tempo cepat** (7 / 14 / 30 hari) saat nota belum lunas. |
+| U-4 | **Tab Catatan satu daftar per tanggal**: nota, pembayaran, belanja, uang masuk lain, dengan filter (Semua / Belum lunas / Uang masuk / Uang keluar). |

@@ -882,4 +882,5 @@
     <string name="picker_empty">Nothing matches.</string>
     <string name="stepper_decrease">Decrease</string>
     <string name="stepper_increase">Increase</string>
+    <string name="line_delete_title">Delete this line?</string>
 </resources>

@@ -33,10 +33,12 @@ object Space {
     val Edge = 16.dp
     /** Between sections. */
     val Section = 24.dp
-    /** A one-line list row; also the minimum touch target is 48. */
+    /** A one-line list row. Touch targets are never under 48 dp (M3 buttons already ensure it). */
     val Row = 56.dp
     /** A two-line list row. */
     val RowTwoLine = 72.dp
+    /** The typed number between − and + of a Stepper: room for four digits. */
+    val NumberField = 80.dp
 }
 
 /**

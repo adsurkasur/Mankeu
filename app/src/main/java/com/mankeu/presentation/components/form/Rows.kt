@@ -15,6 +15,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -22,6 +26,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.mankeu.R
+import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.MankeuType
 import com.mankeu.presentation.Space
 import com.mankeu.presentation.components.MankeuSheet
@@ -104,7 +109,7 @@ fun LineRow(
 
 /**
  * The small sheet that edits one [LineRow]: at most three fields (the caller's discipline), Simpan,
- * and a red Hapus when the line already exists.
+ * and a red Hapus when the line already exists. Hapus asks once before [onDelete] runs.
  */
 @Composable
 fun LineEditSheet(
@@ -115,18 +120,29 @@ fun LineEditSheet(
     onDelete: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    var confirmDelete by remember { mutableStateOf(false) }
+    val danger = LocalMankeuSemanticColors.current.danger
     MankeuSheet(
         title = title,
         onDismiss = onDismiss,
         confirmEnabled = saveEnabled,
         onConfirm = onSave,
-        startAction = onDelete?.let { delete ->
+        startAction = onDelete?.let {
             {
-                TextButton(onClick = delete) {
-                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { confirmDelete = true }) {
+                    Text(stringResource(R.string.action_delete), color = danger)
                 }
             }
         },
         content = content,
     )
+    if (confirmDelete && onDelete != null) {
+        MankeuSheet(
+            title = stringResource(R.string.line_delete_title),
+            onDismiss = { confirmDelete = false },
+            confirmLabel = stringResource(R.string.action_delete),
+            destructive = true,
+            onConfirm = { confirmDelete = false; onDelete() },
+        ) { Text(title) }
+    }
 }

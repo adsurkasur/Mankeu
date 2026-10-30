@@ -89,8 +89,10 @@ class FormComponentsTest {
                 Stepper(value = current, onValueChange = { current = it; value = it }, label = "Batch", min = 1)
             }
         }
-        val minus = compose.onNodeWithContentDescription(text(R.string.stepper_decrease))
-        val plus = compose.onNodeWithContentDescription(text(R.string.stepper_increase))
+        // Named after the stepper: "Kurangi Batch".
+        val minus = compose.onNodeWithContentDescription(text(R.string.stepper_decrease) + " Batch")
+        val plus = compose.onNodeWithContentDescription(text(R.string.stepper_increase) + " Batch")
+        compose.onNodeWithContentDescription("Batch").assert(hasSetTextAction())
         minus.assertIsNotEnabled()
         plus.performClick()
         assertEquals(2, value)
@@ -100,6 +102,12 @@ class FormComponentsTest {
         // Typing under the minimum is clamped, not stored.
         field().performTextReplacement("0")
         assertEquals(1, value)
+        // The field can be emptied to retype; nothing is stored until a number is typed.
+        field().performTextClearance()
+        assertEquals("", fieldText())
+        assertEquals(1, value)
+        field().performTextInput("7")
+        assertEquals(7, value)
     }
 
     @Test
@@ -161,6 +169,24 @@ class FormComponentsTest {
         compose.waitForIdle()
         compose.onNodeWithText(2_000_000L.toRupiah(), substring = true).assertExists()
         assertEquals(0, onAllNodesWithTextCount("Ubah bahan"))
+    }
+
+    @Test
+    fun lineEditSheetAsksBeforeDeleting() {
+        var deleted = 0
+        compose.setContent {
+            MankeuTheme {
+                LineEditSheet(title = "Singkong", onDismiss = {}, onSave = {}, onDelete = { deleted++ }) { }
+            }
+        }
+        compose.onNodeWithText(text(R.string.action_delete)).performClick()
+        compose.waitForIdle()
+        assertEquals(0, deleted)
+        compose.onNodeWithText(text(R.string.line_delete_title)).assertExists()
+        // Two "Hapus" now: the one in the first sheet and the confirmation; the confirmation is last.
+        compose.onAllNodes(hasText(text(R.string.action_delete)) and hasClickAction()).let { it[it.fetchSemanticsNodes().size - 1] }.performClick()
+        compose.waitForIdle()
+        assertEquals(1, deleted)
     }
 
     /**

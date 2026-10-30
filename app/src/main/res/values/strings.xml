@@ -884,4 +884,5 @@
     <string name="picker_empty">Tidak ada yang cocok.</string>
     <string name="stepper_decrease">Kurangi</string>
     <string name="stepper_increase">Tambah</string>
+    <string name="line_delete_title">Hapus baris ini?</string>
 </resources>

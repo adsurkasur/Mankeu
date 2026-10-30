@@ -831,7 +831,6 @@
     <string name="notes_filter_open">Belum lunas</string>
     <string name="notes_filter_overdue">Lewat jatuh tempo</string>
     <string name="notes_empty">Tidak ada nota di sini.</string>
-    <string name="notes_show_all">Tampilkan semua (%1$d)</string>
     <string name="sale_pay">Bayar</string>
     <string name="sale_pay_title">Bayar nota</string>
     <string name="sale_pay_amount">Nominal</string>
@@ -870,4 +869,9 @@
     <string name="home_bills_open">Lihat nota</string>
     <string name="profit_detail_home_title">Rincian untung</string>
     <string name="sale_discount_row">Diskon</string>
+    <string name="msg_sale_saved_hpp_recomputed">Nota disimpan. HPP dihitung ulang dengan harga bahan sekarang.</string>
+    <string name="sale_discount_too_high">Diskon lebih besar dari subtotal %1$s</string>
+    <string name="sale_max_amount">Maks %1$s</string>
+    <string name="sale_pay_date_early">Tanggal bayar tidak boleh sebelum tanggal nota.</string>
+    <string name="contact_duplicate">Kontak \"%1$s\" sudah ada.</string>
 </resources>

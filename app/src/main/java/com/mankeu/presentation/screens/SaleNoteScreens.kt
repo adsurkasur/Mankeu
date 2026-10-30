@@ -42,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -69,6 +70,8 @@ import com.mankeu.domain.StockItem
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.ChoiceMenu
 import com.mankeu.presentation.LocalMankeuSemanticColors
+import com.mankeu.presentation.UiText
+import com.mankeu.presentation.resolve
 import com.mankeu.presentation.components.DateField
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.MoneyField
@@ -112,8 +115,8 @@ fun SaleNoteEditorScreen(
     sales: List<SaleRecord>,
     payables: List<PayableRecord>,
     onSave: (SaleDraft) -> Unit,
-    onSaveContact: (String?, ContactDraft, (String) -> Unit) -> Unit,
-    onArchiveContact: (String, () -> Unit) -> Unit,
+    onSaveContact: (String?, ContactDraft, (String) -> Unit, (UiText) -> Unit) -> Unit,
+    onArchiveContact: (String, () -> Unit, (UiText) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var contactId by rememberSaveable { mutableStateOf(existing?.sale?.contactId) }
@@ -143,7 +146,19 @@ fun SaleNoteEditorScreen(
     val subtotal = results.sumOf { it?.first ?: 0 }
     val hpp = results.sumOf { it?.second ?: 0 }
     val discountRupiah = discount.toLongOrNull() ?: 0
-    val total = subtotal - discountRupiah
+    // Checked here only to explain and to keep Simpan off; saveSale stays the authority.
+    val discountTooHigh = discountRupiah > subtotal
+    val total = (subtotal - discountRupiah).coerceAtLeast(0)
+    val partRupiah = partAmount.toLongOrNull() ?: 0
+    val paidNow = when (paidChoice) {
+        PaidChoice.FULL -> total
+        PaidChoice.NONE -> 0
+        PaidChoice.PART -> partRupiah
+    }
+    val partTooHigh = paidChoice == PaidChoice.PART && partRupiah > total
+    // F2-3: a customer is needed while the note is not fully paid; shown before Simpan, not only after.
+    val needsCustomer = contactId == null && (existing?.paid ?: paidNow) < total
+    val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
     val showDue = if (existing == null) paidChoice != PaidChoice.FULL else existing.outstanding > 0 || due.isNotBlank()
 
     Box(modifier.fillMaxSize()) {
@@ -159,6 +174,7 @@ fun SaleNoteEditorScreen(
                             name = contacts.firstOrNull { it.id == contactId }?.name ?: existing?.contact?.takeIf { it.id == contactId }?.name,
                             onOpen = { picking = true },
                             onClear = { contactId = null },
+                            isError = needsCustomer,
                         )
                         DateField(value = date, label = stringResource(R.string.sale_date), onValueChange = { date = it })
                         if (showDue) {
@@ -232,7 +248,11 @@ fun SaleNoteEditorScreen(
                 }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MoneyField(stringResource(R.string.sale_discount), discount) { discount = it }
+                        MoneyField(
+                            stringResource(R.string.sale_discount), discount,
+                            isError = discountTooHigh,
+                            supportingText = if (discountTooHigh) ({ Text(stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())) }) else null,
+                        ) { discount = it }
                         ReportRow(stringResource(R.string.sale_subtotal), subtotal.toRupiah())
                         if (discountRupiah > 0) ReportRow(stringResource(R.string.sale_discount_row), discountRupiah.toRupiah())
                         ReportRow(stringResource(R.string.sale_total), total.toRupiah(), emphasized = true)
@@ -259,7 +279,11 @@ fun SaleNoteEditorScreen(
                                 }
                             }
                             if (paidChoice == PaidChoice.PART) {
-                                MoneyField(stringResource(R.string.sale_paid_amount), partAmount) { partAmount = it }
+                                MoneyField(
+                                    stringResource(R.string.sale_paid_amount), partAmount,
+                                    isError = partTooHigh,
+                                    supportingText = { Text(stringResource(R.string.sale_max_amount, total.toRupiah())) },
+                                ) { partAmount = it }
                             }
                         }
                     } else {
@@ -278,21 +302,17 @@ fun SaleNoteEditorScreen(
                     onSave(
                         SaleDraft(
                             contactId = contactId,
-                            date = LocalDate.parse(date),
-                            dueDate = due.takeIf { showDue && it.isNotBlank() }?.let(LocalDate::parse),
+                            date = parsedDate ?: return@Button,
+                            dueDate = due.takeIf { showDue }?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
                             discountRupiah = discountRupiah,
                             notes = notes,
                             // A line without a product is an untouched row, not an error.
                             lines = lines.filter { it.productId != null }.map { SaleLineDraft(it.productId!!, it.unit, it.quantity, it.price.toLongOrNull() ?: 0) },
-                            paidNowRupiah = when (paidChoice) {
-                                PaidChoice.FULL -> total.coerceAtLeast(0)
-                                PaidChoice.NONE -> 0
-                                PaidChoice.PART -> partAmount.toLongOrNull() ?: 0
-                            },
+                            paidNowRupiah = paidNow,
                         ),
                     )
                 },
-                enabled = products.isNotEmpty(),
+                enabled = products.isNotEmpty() && !discountTooHigh && !partTooHigh && parsedDate != null,
                 modifier = Modifier.fillMaxWidth().padding(16.dp).imePadding(),
             ) { Text(stringResource(R.string.action_save)) }
         }
@@ -321,7 +341,7 @@ fun SaleNoteEditorScreen(
 
 /** The customer as a read-only field that opens the contact picker; "Umum" when none (F2-3). */
 @Composable
-private fun CustomerField(name: String?, onOpen: () -> Unit, onClear: () -> Unit) {
+private fun CustomerField(name: String?, onOpen: () -> Unit, onClear: () -> Unit, isError: Boolean) {
     Box(Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = name ?: stringResource(R.string.sale_customer_none),
@@ -330,6 +350,7 @@ private fun CustomerField(name: String?, onOpen: () -> Unit, onClear: () -> Unit
             singleLine = true,
             label = { Text(stringResource(R.string.sale_customer)) },
             supportingText = { Text(stringResource(R.string.sale_customer_hint)) },
+            isError = isError,
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
             trailingIcon = if (name != null) {
                 { IconButton(onClick = onClear) { Icon(Icons.Default.Close, contentDescription = stringResource(R.string.sale_customer_clear)) } }
@@ -367,21 +388,17 @@ private fun List<SaleRecord>.filtered(filter: NoteFilter, today: LocalDate) = wh
 
 /**
  * The notes of the unit above the transactions in Catatan (DEC-029 §12, until F3): filter chips and
- * one card per note. "Semua" shows the newest few until asked for all, so a long history does not
- * push the transactions out of reach.
+ * one card per note. "Belum lunas" is the default, so a long paid history stays out of the way.
  */
 fun LazyListScope.saleNoteItems(
     sales: List<SaleRecord>,
     filter: NoteFilter,
     onFilter: (NoteFilter) -> Unit,
-    showAll: Boolean,
-    onShowAll: () -> Unit,
     onOpen: (String) -> Unit,
 ) {
     if (sales.isEmpty()) return
     val today = LocalDate.now()
     val visible = sales.filtered(filter, today)
-    val shown = if (showAll) visible else visible.take(NOTES_SHOWN)
     item(key = "notes-title") {
         Text(stringResource(R.string.notes_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
     }
@@ -393,18 +410,11 @@ fun LazyListScope.saleNoteItems(
             }
         }
     }
-    if (shown.isEmpty()) {
+    if (visible.isEmpty()) {
         item(key = "notes-empty") { Text(stringResource(R.string.notes_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
-    items(shown, key = { "note-" + it.sale.id }) { record -> SaleNoteCard(record, today) { onOpen(record.sale.id) } }
-    if (shown.size < visible.size) {
-        item(key = "notes-more") {
-            TextButton(onClick = onShowAll) { Text(stringResource(R.string.notes_show_all, visible.size)) }
-        }
-    }
+    items(visible, key = { "note-" + it.sale.id }) { record -> SaleNoteCard(record, today) { onOpen(record.sale.id) } }
 }
-
-private const val NOTES_SHOWN = 5
 
 @Composable
 private fun SaleNoteCard(record: SaleRecord, today: LocalDate, onClick: () -> Unit) {
@@ -445,7 +455,7 @@ private fun SaleNoteCard(record: SaleRecord, today: LocalDate, onClick: () -> Un
 fun SaleNoteDetailScreen(
     record: SaleRecord,
     products: List<ProductRecord>,
-    onPay: (amountRupiah: Long, date: LocalDate, onDone: () -> Unit) -> Unit,
+    onPay: (amountRupiah: Long, date: LocalDate, onDone: () -> Unit, onError: (UiText) -> Unit) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -517,15 +527,27 @@ fun SaleNoteDetailScreen(
     if (paying) {
         var amount by rememberSaveable { mutableStateOf(record.outstanding.toString()) }
         var date by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
+        var error by remember { mutableStateOf<UiText?>(null) }
+        val value = amount.toLongOrNull() ?: 0
+        val parsed = runCatching { LocalDate.parse(date) }.getOrNull()
+        val amountOk = value in 1..record.outstanding
+        val dateOk = parsed != null && parsed.toEpochDay() >= record.sale.dateEpochDay
         MankeuSheet(
             title = stringResource(R.string.sale_pay_title),
             onDismiss = { paying = false },
-            confirmEnabled = (amount.toLongOrNull() ?: 0) > 0,
-            onConfirm = { onPay(amount.toLongOrNull() ?: 0, LocalDate.parse(date)) { paying = false } },
+            confirmEnabled = amountOk && dateOk,
+            onConfirm = { error = null; onPay(value, parsed!!, { paying = false }, { error = it }) },
         ) {
             Text(stringResource(R.string.sale_left, record.outstanding.toRupiah()), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MoneyField(stringResource(R.string.sale_pay_amount), amount) { amount = it }
+            MoneyField(
+                stringResource(R.string.sale_pay_amount), amount,
+                isError = value > record.outstanding,
+                supportingText = { Text(stringResource(R.string.sale_max_amount, record.outstanding.toRupiah())) },
+            ) { amount = it }
             DateField(value = date, label = stringResource(R.string.sale_pay_date), onValueChange = { date = it })
+            if (parsed != null && !dateOk) Text(stringResource(R.string.sale_pay_date_early), color = MaterialTheme.colorScheme.error)
+            // A refusal from the repository: the snackbar is behind this sheet.
+            error?.let { Text(it.resolve(), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
         }
     }
     if (confirmDelete) {

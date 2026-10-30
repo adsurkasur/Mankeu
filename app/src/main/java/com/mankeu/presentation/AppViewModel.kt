@@ -128,10 +128,21 @@ data class AppUiState(
     val contacts: List<ContactEntity> = emptyList(),
     val sales: List<SaleRecord> = emptyList(),
     val payables: List<PayableRecord> = emptyList(),
+    /** Every unit of the business: what each contact owes or is owed on the Kontak page. */
+    val businessSales: List<SaleRecord> = emptyList(),
+    val businessPayables: List<PayableRecord> = emptyList(),
 ) {
     /** True when the unit has a business plan worth showing instead of posted projection rows. */
     val hasPlan: Boolean get() = products.isNotEmpty() || planItems.isNotEmpty()
 }
+
+private data class SalesContent(
+    val contacts: List<ContactEntity>,
+    val sales: List<SaleRecord>,
+    val payables: List<PayableRecord>,
+    val businessSales: List<SaleRecord>,
+    val businessPayables: List<PayableRecord>,
+)
 
 /** A material's price moved from [oldPriceRupiah] to [newPriceRupiah] per [unit]; [changes] are the products it touches. */
 data class PriceAlert(
@@ -354,12 +365,13 @@ class AppViewModel(
     private val salesContent = combine(
         selectedBusinessId.flatMapLatest { id -> id?.let(repository::contacts) ?: flowOf(emptyList()) },
         selectedProjectId.flatMapLatest { id -> id?.let(repository::sales) ?: flowOf(emptyList()) },
-        combine(selectedBusinessId, selectedProjectId, ::Pair).flatMapLatest { (business, project) ->
-            // Credit purchases are per business; the unit's own are what its Beranda and contacts show.
-            business?.let { b -> repository.payables(b).map { rows -> rows.filter { it.purchase.projectId == project } } } ?: flowOf(emptyList())
-        },
-        ::Triple,
-    )
+        selectedBusinessId.flatMapLatest { id -> id?.let(repository::payables) ?: flowOf(emptyList()) },
+        selectedBusinessId.flatMapLatest { id -> id?.let(repository::salesOfBusiness) ?: flowOf(emptyList()) },
+        selectedProjectId,
+    ) { contactRows, saleRows, payableRows, businessSaleRows, project ->
+        // Beranda is per unit; the Kontak page sums what each contact owes across the business (§9).
+        SalesContent(contactRows, saleRows, payableRows.filter { it.purchase.projectId == project }, businessSaleRows, payableRows)
+    }
 
     val uiState = combine(scopeContent, financeAndAggregates, importAudit, selections, comparison) {
             scope, financePair, audit, selection, comparison ->
@@ -394,7 +406,9 @@ class AppViewModel(
             isLoading = false,
         )
     }.combine(priceAlert) { state, alert -> state.copy(priceAlert = alert) }
-        .combine(salesContent) { state, (contactRows, saleRows, payableRows) -> state.copy(contacts = contactRows, sales = saleRows, payables = payableRows) }
+        .combine(salesContent) { state, c ->
+            state.copy(contacts = c.contacts, sales = c.sales, payables = c.payables, businessSales = c.businessSales, businessPayables = c.businessPayables)
+        }
         .stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
 
     init {
@@ -735,31 +749,33 @@ class AppViewModel(
     }
 
     /** Creates ([id] null) or edits a contact; [onSaved] gets its id, so a picker can select a new one. */
-    fun saveContact(id: String?, draft: ContactDraft, onSaved: (String) -> Unit = {}) = mutating {
+    /** [onError] lets an open sheet show the refusal itself: the snackbar sits behind the sheet. */
+    fun saveContact(id: String?, draft: ContactDraft, onSaved: (String) -> Unit, onError: (UiText) -> Unit) = mutating {
         val businessId = selectedBusinessId.value ?: return@mutating
         runCatching { repository.saveContact(businessId, id, draft) }
             .onSuccess { message.value = UiText.of(R.string.msg_contact_saved, draft.name.trim()); onSaved(it) }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_contact_failed) }
+            .onFailure { UiText.fromError(it, R.string.msg_contact_failed).also { e -> message.value = e; onError(e) } }
     }
 
-    fun archiveContact(id: String, onDone: () -> Unit = {}) = mutating {
+    fun archiveContact(id: String, onDone: () -> Unit, onError: (UiText) -> Unit) = mutating {
         runCatching { repository.archiveContact(id) }
             .onSuccess { message.value = UiText.of(R.string.msg_contact_archived); onDone() }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_contact_failed) }
+            .onFailure { UiText.fromError(it, R.string.msg_contact_failed).also { e -> message.value = e; onError(e) } }
     }
 
     /** Creates ([id] null) or edits a note; [onSaved] runs only once stored, so a refused note stays open. */
     fun saveSale(id: String?, draft: SaleDraft, onSaved: (String) -> Unit = {}) = mutating {
         val projectId = selectedProjectId.value ?: return@mutating
         runCatching { repository.saveSale(projectId, id, draft) }
-            .onSuccess { message.value = UiText.of(R.string.msg_sale_saved); onSaved(it) }
+            // An edit recomputes every line's HPP at today's material prices (DEC-029 §7): say so.
+            .onSuccess { message.value = UiText.of(if (id != null) R.string.msg_sale_saved_hpp_recomputed else R.string.msg_sale_saved); onSaved(it) }
             .onFailure { message.value = UiText.fromError(it, R.string.msg_sale_failed) }
     }
 
-    fun paySale(saleId: String, amountRupiah: Long, date: LocalDate, onDone: () -> Unit = {}) = mutating {
+    fun paySale(saleId: String, amountRupiah: Long, date: LocalDate, onDone: () -> Unit, onError: (UiText) -> Unit) = mutating {
         runCatching { repository.recordSalePayment(saleId, amountRupiah, date) }
             .onSuccess { message.value = UiText.of(R.string.msg_sale_paid); onDone() }
-            .onFailure { message.value = UiText.fromError(it, R.string.msg_sale_failed) }
+            .onFailure { UiText.fromError(it, R.string.msg_sale_failed).also { e -> message.value = e; onError(e) } }
     }
 
     fun deleteSale(id: String, onDone: () -> Unit = {}) = mutating {

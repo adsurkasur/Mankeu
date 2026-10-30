@@ -515,6 +515,16 @@ interface FinanceDao {
     @Query("SELECT * FROM financial_events WHERE projectId = :projectId AND saleId IS NOT NULL ORDER BY dateEpochDay, createdAtEpochMillis")
     fun observeSalePayments(projectId: String): Flow<List<FinancialEventEntity>>
 
+    /** Business-wide notes, lines and payments: what a contact owes across units (contacts are per business). */
+    @Query("SELECT * FROM sales WHERE businessId = :businessId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
+    fun observeSalesOfBusiness(businessId: String): Flow<List<SaleEntity>>
+
+    @Query("SELECT l.* FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.businessId = :businessId ORDER BY l.saleId, l.sortOrder")
+    fun observeSaleLinesOfBusiness(businessId: String): Flow<List<SaleLineEntity>>
+
+    @Query("SELECT * FROM financial_events WHERE businessId = :businessId AND saleId IS NOT NULL ORDER BY dateEpochDay, createdAtEpochMillis")
+    fun observeSalePaymentsOfBusiness(businessId: String): Flow<List<FinancialEventEntity>>
+
     @Query("SELECT * FROM sale_lines WHERE saleId = :saleId ORDER BY sortOrder")
     suspend fun getSaleLines(saleId: String): List<SaleLineEntity>
 

@@ -198,7 +198,6 @@ fun EntryScreen(
     var justSaved by rememberSaveable { mutableStateOf(false) }
     // The record being corrected with Ubah; null when the form records a new one.
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
-    var showAllNotes by rememberSaveable { mutableStateOf(false) }
 
     /** Sets the unit and, when known, its price, and re-derives the amount from a typed quantity. */
     fun applySaleUnit(name: String, priceRupiah: Long?) {
@@ -365,8 +364,6 @@ fun EntryScreen(
             sales = state.sales,
             filter = noteFilter,
             onFilter = { feedback(FeedbackEvent.TAP); onNoteFilter(it) },
-            showAll = showAllNotes,
-            onShowAll = { showAllNotes = true },
             onOpen = onOpenSale,
         )
 

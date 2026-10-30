@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -37,6 +38,8 @@ import com.mankeu.data.ContactEntity
 import com.mankeu.data.PayableRecord
 import com.mankeu.data.SaleRecord
 import com.mankeu.presentation.LocalMankeuSemanticColors
+import com.mankeu.presentation.UiText
+import com.mankeu.presentation.resolve
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.toRupiah
 
@@ -48,11 +51,12 @@ import com.mankeu.presentation.toRupiah
 @Composable
 fun ContactsScreen(
     contacts: List<ContactEntity>,
+    /** Notes and credit purchases of the whole business: contacts are per business (DEC-029 §9). */
     sales: List<SaleRecord>,
     payables: List<PayableRecord>,
-    /** Saves ([id] null = new) and calls back with the stored id; refused, the sheet stays open. */
-    onSave: (id: String?, draft: ContactDraft, onSaved: (String) -> Unit) -> Unit,
-    onArchive: (id: String, onDone: () -> Unit) -> Unit,
+    /** Saves ([id] null = new) and calls back with the stored id; refused, [onError] and the sheet stays open. */
+    onSave: (id: String?, draft: ContactDraft, onSaved: (String) -> Unit, onError: (UiText) -> Unit) -> Unit,
+    onArchive: (id: String, onDone: () -> Unit, onError: (UiText) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
     onPick: ((String) -> Unit)? = null,
     header: @Composable () -> Unit = {},
@@ -112,17 +116,21 @@ fun ContactsScreen(
 
     editing?.let { id ->
         val existing = contacts.firstOrNull { it.id == id }
+        var error by remember(id) { mutableStateOf<UiText?>(null) }
         ContactSheet(
             existing = existing,
+            others = contacts.filter { it.id != existing?.id },
+            error = error?.resolve(),
             initialName = if (existing == null) search.trim() else "",
             onDismiss = { editing = null },
             onSave = { draft ->
-                onSave(existing?.id, draft) { savedId ->
+                error = null
+                onSave(existing?.id, draft, { savedId ->
                     editing = null
                     if (existing == null) onPick?.invoke(savedId)
-                }
+                }, { error = it })
             },
-            onArchive = existing?.let { c -> { onArchive(c.id) { editing = null } } },
+            onArchive = existing?.let { c -> { error = null; onArchive(c.id, { editing = null }, { error = it }) } },
         )
     }
 }
@@ -131,6 +139,10 @@ fun ContactsScreen(
 @Composable
 private fun ContactSheet(
     existing: ContactEntity?,
+    /** The business's other active contacts: a name already in use is caught here, before saving. */
+    others: List<ContactEntity>,
+    /** A refusal from the repository, shown in the sheet because the snackbar is behind it. */
+    error: String?,
     initialName: String,
     onDismiss: () -> Unit,
     onSave: (ContactDraft) -> Unit,
@@ -142,13 +154,19 @@ private fun ContactSheet(
     var notes by rememberSaveable { mutableStateOf(existing?.notes.orEmpty()) }
     var customer by rememberSaveable { mutableStateOf(existing?.isCustomer ?: true) }
     var supplier by rememberSaveable { mutableStateOf(existing?.isSupplier ?: false) }
+    val duplicate = others.any { it.name.trim().equals(name.trim(), ignoreCase = true) }
     MankeuSheet(
         title = stringResource(if (existing == null) R.string.contact_new_title else R.string.contact_edit_title),
         onDismiss = onDismiss,
-        confirmEnabled = name.isNotBlank(),
+        confirmEnabled = name.isNotBlank() && !duplicate,
         onConfirm = { onSave(ContactDraft(name, phone, address, notes, customer, supplier)) },
     ) {
-        OutlinedTextField(name, { name = it }, singleLine = true, label = { Text(stringResource(R.string.contact_name)) }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            name, { name = it }, singleLine = true, label = { Text(stringResource(R.string.contact_name)) },
+            isError = duplicate,
+            supportingText = if (duplicate) ({ Text(stringResource(R.string.contact_duplicate, name.trim())) }) else null,
+            modifier = Modifier.fillMaxWidth(),
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = customer, onClick = { customer = !customer }, label = { Text(stringResource(R.string.contact_customer)) })
             FilterChip(selected = supplier, onClick = { supplier = !supplier }, label = { Text(stringResource(R.string.contact_supplier)) })
@@ -159,6 +177,7 @@ private fun ContactSheet(
         )
         OutlinedTextField(address, { address = it }, label = { Text(stringResource(R.string.contact_address)) }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(notes, { notes = it }, label = { Text(stringResource(R.string.contact_notes)) }, modifier = Modifier.fillMaxWidth())
+        error?.let { Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
         if (onArchive != null) {
             TextButton(onClick = onArchive) { Text(stringResource(R.string.contact_archive), color = MaterialTheme.colorScheme.error) }
         }

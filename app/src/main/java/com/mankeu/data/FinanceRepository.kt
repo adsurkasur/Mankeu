@@ -976,12 +976,27 @@ class FinanceRepository(
     // ---- Sale notes (spec #17, F2-3, F2-7, DEC-029 §2 §6 §7) ----------------------------------
 
     /** Notes of a unit, newest first, with lines, payments and customer. */
-    fun sales(projectId: String): Flow<List<SaleRecord>> = combine(
+    fun sales(projectId: String): Flow<List<SaleRecord>> = saleRecords(
         dao.observeSales(projectId),
         dao.observeSaleLinesOfProject(projectId),
         dao.observeSalePayments(projectId),
         dao.observeAllContactsOfProject(projectId),
-    ) { sales, lines, payments, contacts ->
+    )
+
+    /** Notes of every unit of a business: the Kontak page's amounts per contact (DEC-029 §9). */
+    fun salesOfBusiness(businessId: String): Flow<List<SaleRecord>> = saleRecords(
+        dao.observeSalesOfBusiness(businessId),
+        dao.observeSaleLinesOfBusiness(businessId),
+        dao.observeSalePaymentsOfBusiness(businessId),
+        dao.observeAllContacts(businessId),
+    )
+
+    private fun saleRecords(
+        salesFlow: Flow<List<SaleEntity>>,
+        linesFlow: Flow<List<SaleLineEntity>>,
+        paymentsFlow: Flow<List<FinancialEventEntity>>,
+        contactsFlow: Flow<List<ContactEntity>>,
+    ): Flow<List<SaleRecord>> = combine(salesFlow, linesFlow, paymentsFlow, contactsFlow) { sales, lines, payments, contacts ->
         val linesOf = lines.groupBy { it.saleId }
         val paymentsOf = payments.groupBy { it.saleId }
         val contactOf = contacts.associateBy { it.id }

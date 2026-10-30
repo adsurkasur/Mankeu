@@ -829,7 +829,6 @@
     <string name="notes_filter_open">Not paid</string>
     <string name="notes_filter_overdue">Overdue</string>
     <string name="notes_empty">No notes here.</string>
-    <string name="notes_show_all">Show all (%1$d)</string>
     <string name="sale_pay">Pay</string>
     <string name="sale_pay_title">Pay note</string>
     <string name="sale_pay_amount">Amount</string>
@@ -868,4 +867,9 @@
     <string name="home_bills_open">See notes</string>
     <string name="profit_detail_home_title">Profit details</string>
     <string name="sale_discount_row">Discount</string>
+    <string name="msg_sale_saved_hpp_recomputed">Note saved. HPP recalculated with current material prices.</string>
+    <string name="sale_discount_too_high">Discount is more than the subtotal %1$s</string>
+    <string name="sale_max_amount">At most %1$s</string>
+    <string name="sale_pay_date_early">The payment date cannot be before the note date.</string>
+    <string name="contact_duplicate">Contact \"%1$s\" already exists.</string>
 </resources>

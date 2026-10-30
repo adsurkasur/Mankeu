@@ -485,8 +485,8 @@ fun MankeuApp(
                                 ) {
                                     ContactsScreen(
                                         contacts = state.contacts,
-                                        sales = state.sales,
-                                        payables = state.payables,
+                                        sales = state.businessSales,
+                                        payables = state.businessPayables,
                                         onSave = viewModel::saveContact,
                                         onArchive = viewModel::archiveContact,
                                     )
@@ -503,8 +503,8 @@ fun MankeuApp(
                                             products = state.products,
                                             materials = state.stockItems,
                                             contacts = state.contacts,
-                                            sales = state.sales,
-                                            payables = state.payables,
+                                            sales = state.businessSales,
+                                            payables = state.businessPayables,
                                             // Closed only once saved: a refusal keeps the owner's input and shows why.
                                             onSave = { draft ->
                                                 viewModel.saveSale(saleEditorId, draft) { id ->
@@ -530,7 +530,7 @@ fun MankeuApp(
                                             SaleNoteDetailScreen(
                                                 record = it,
                                                 products = state.products,
-                                                onPay = { amount, date, onDone -> viewModel.paySale(it.sale.id, amount, date, onDone) },
+                                                onPay = { amount, date, onDone, onError -> viewModel.paySale(it.sale.id, amount, date, onDone, onError) },
                                                 onEdit = { openSaleEditor(it.sale.id) },
                                                 onDelete = { viewModel.deleteSale(it.sale.id) },
                                             )

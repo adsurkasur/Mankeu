@@ -6,6 +6,8 @@ import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToIndexAction
@@ -189,6 +191,79 @@ class SaleNoteFlowTest {
         exists("Lunas")
         assertEquals(SaleStatus.PAID, runBlocking { repository.sales(projectId).first() }.single().status)
     }
+
+    private fun seedUnpaidNote(projectId: String = this.projectId, product: String = keripik): String = runBlocking {
+        val sari = repository.saveContact(businessId, null, ContactDraft("Bu Sari"))
+        repository.saveSale(
+            projectId, null,
+            SaleDraft(sari, LocalDate.now(), null, 0, "", listOf(SaleLineDraft(product, "dus", "2", 300_000)), paidNowRupiah = 0),
+        )
+    }
+
+    /** Review I-1 (DEC-029 §7): an edit recomputes HPP at today's prices, and the owner is told. */
+    @Test
+    fun savingAnEditedNoteSaysItsHppWasRecomputed() {
+        seedUnpaidNote()
+        start()
+        click("Catatan")
+        click("Bu Sari")
+        click("Ubah")
+        exists("Ubah nota")
+        click("Simpan")
+        exists("HPP dihitung ulang dengan harga bahan sekarang")
+    }
+
+    /** Review I-2: the pay sheet explains its bound and keeps Simpan off above what is left. */
+    @Test
+    fun thePaySheetRefusesMoreThanIsLeftInsideTheSheet() {
+        seedUnpaidNote()
+        start()
+        click("Catatan")
+        click("Bu Sari")
+        click("Bayar")
+        type("Nominal", "999999999")
+        exists("Maks Rp600.000")
+        saveButton().assertIsNotEnabled()
+        type("Nominal", "600000")
+        saveButton().assertIsEnabled()
+    }
+
+    /** Review I-2: a name already in the business is caught in the contact sheet, not behind it. */
+    @Test
+    fun aDuplicateContactNameIsShownInTheSheet() {
+        seedUnpaidNote()
+        start()
+        clickDescription("Catat")
+        click("Nota penjualan")
+        // A touch, as the owner taps: the read-only field's own OnClick only focuses it.
+        settle()
+        compose.onAllNodesWithText("Umum (tanpa nama)", useUnmergedTree = true)[0].performClick()
+        settle()
+        click("Tambah kontak baru")
+        type("Nama", "bu sari")
+        exists("Kontak \"bu sari\" sudah ada.")
+        saveButton().assertIsNotEnabled()
+    }
+
+    /** Review I-3: contacts are per business, so what a customer owes counts every unit. */
+    @Test
+    fun theContactsPageCountsWhatIsOwedInEveryUnit() {
+        runBlocking {
+            val branch = repository.createProject(businessId, "Cabang Dua")
+            val chips = repository.saveProduct(
+                branch, null,
+                ProductDraft("Kerupuk", "bungkus", "10", listOf(SaleUnitDraft(name = "dus", contentText = "10", priceRupiah = 300_000)), listOf(RecipeLineDraft("Bahan", amountRupiah = 10_000))),
+            )
+            seedUnpaidNote(branch, chips)
+        }
+        start()
+        exists("Utama")
+        clickDescription("Berkas dan Data")
+        click("Kelola")
+        exists("Belum bayar Rp600.000")
+    }
+
+    private fun saveButton() = compose.onAllNodes(hasText("Simpan") and hasClickAction()).let { it[it.fetchSemanticsNodes().size - 1] }
 
     // ---- helpers (same approach as ModuleScreenshotTest) ----------------------------------------
 

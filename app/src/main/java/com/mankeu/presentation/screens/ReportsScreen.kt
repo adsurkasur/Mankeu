@@ -229,18 +229,29 @@ private fun FinancialsSection(
     summary: com.mankeu.domain.FinancialSummary,
     monthlyCashFlow: List<com.mankeu.domain.MonthlyCashFlow>,
 ) {
-    ReportCard(stringResource(R.string.reports_income_statement)) {
+    // Realisasi: the current month's MonthlySummary, named by month (U2); F4 adds a month selector.
+    val month = state.thisMonth.takeIf { state.selectedBookMode == BookMode.REALIZATION }
+    val title = month?.let { stringResource(R.string.reports_income_statement_month, it.month.format(DateTimeFormatter.ofPattern("MMMM yyyy", appLocale()))) }
+        ?: stringResource(R.string.reports_income_statement)
+    ReportCard(title) {
         // The income-versus-expense donut is gone with the hand-rolled charts. Two slices is not a
         // composition — it is one comparison, and the three rows immediately below already state
         // it exactly, with the figures the owner has to reconcile against a workbook. The cost
         // *breakdown* donut on Beranda, which really does have a dozen slices, stays.
-        ReportRow(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah)
-        ReportRow(stringResource(R.string.reports_operating_expense), -summary.operatingExpenseRupiah)
-        HorizontalDivider()
-        ReportRow(stringResource(R.string.reports_net_profit), summary.profitRupiah, emphasized = true)
-        if (summary.hasProfitDetail()) {
+        if (month != null) {
+            ReportRow(stringResource(R.string.reports_operating_income), month.salesRupiah + month.otherIncomeRupiah)
+            ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
             HorizontalDivider()
-            ProfitDetailRows(summary)
+            ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
+            if (month.hasProfitDetail()) {
+                HorizontalDivider()
+                ProfitDetailRows(month)
+            }
+        } else {
+            ReportRow(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah)
+            ReportRow(stringResource(R.string.reports_operating_expense), -summary.operatingExpenseRupiah)
+            HorizontalDivider()
+            ReportRow(stringResource(R.string.home_plan_profit), summary.profitRupiah, emphasized = true)
         }
         Text(
             stringResource(R.string.reports_income_note),
@@ -310,7 +321,7 @@ private fun FeasibilitySection(
     }
 
     // Realisasi: this month against its own break-even, then what was actually financed.
-    state.actualMonth?.let { ActualMonthCard(it, state.products) }
+    state.actualMonth?.let { ActualMonthCard(it, state.products, state.thisMonth) }
     ReportCard(stringResource(R.string.reports_financing_actual_title)) {
         Text(
             stringResource(R.string.reports_financing_actual_note),
@@ -349,15 +360,19 @@ private fun FeasibilitySection(
 private fun ComparisonSection(state: AppUiState) {
     val planMonths = state.plan?.months?.size ?: 1
     val actualMonths = state.realizationMonths
-    val rows = com.mankeu.domain.PlanComparison.perMonth(state.projectionSummary, planMonths, state.realizationSummary, actualMonths)
+    // Realisasi: the money in and out of every MonthlySummary (U2), cash basis; never called profit.
+    val rows = com.mankeu.domain.PlanComparison.perMonth(
+        state.projectionSummary, planMonths,
+        state.monthlySummaries.sumOf { it.moneyInRupiah }, state.monthlySummaries.sumOf { it.moneyOutRupiah }, actualMonths,
+    )
     ReportCard(stringResource(R.string.reports_comparison_title)) {
         Text(
             stringResource(R.string.reports_comparison_note, planMonths, actualMonths),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        ComparisonRow(stringResource(R.string.reports_income), rows.planIncome, rows.actualIncome)
-        ComparisonRow(stringResource(R.string.reports_operating_expense), rows.planExpense, rows.actualExpense, higherIsBetter = false)
+        ComparisonRow(stringResource(R.string.reports_money_in), rows.planIncome, rows.actualIncome)
+        ComparisonRow(stringResource(R.string.reports_money_out), rows.planExpense, rows.actualExpense, higherIsBetter = false)
         ComparisonRow(stringResource(R.string.reports_profit_loss), rows.planProfit, rows.actualProfit)
     }
 }

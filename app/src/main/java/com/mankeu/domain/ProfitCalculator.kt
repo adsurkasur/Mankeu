@@ -48,8 +48,10 @@ data class ProfitInputs(
         val first = YearMonth.from(dated.min())
         val last = maxOf(YearMonth.from(dated.max()), through)
         return generateSequence(first) { it.plusMonths(1).takeIf { next -> !next.isAfter(last) } }
-            .map { ProfitCalculator.month(it, sales, otherIncome, expenses, assets) }.toList()
+            .map(::month).toList()
     }
+
+    fun month(month: YearMonth): MonthProfit = ProfitCalculator.month(month, sales, otherIncome, expenses, assets)
 }
 
 /** Profit from data, not postings (Fase 2, F2-1 as corrected by F2-8). Payments of notes and debts are neither revenue nor cost. */

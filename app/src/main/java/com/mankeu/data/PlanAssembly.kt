@@ -9,7 +9,7 @@ import com.mankeu.domain.PlanLine
 import com.mankeu.domain.PlanProduct
 import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.ProfitCalculator
-import com.mankeu.domain.ProfitInputs
+import com.mankeu.domain.MonthProfit
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
 import java.math.BigDecimal
@@ -88,16 +88,15 @@ object PlanAssembly {
     }
 
     /**
-     * One month of the Realisasi book from the same [ProfitInputs] as the summary (DEC-029 §4):
+     * One month of the Realisasi book from its [com.mankeu.domain.MonthlySummary] profit lines (U2, DEC-029 §4):
      * note revenue and HPP, other income, fixed and variable spend (cash or on credit) by effective
      * cost nature and HPP category (F2-8), and depreciation by [ProfitCalculator.depreciation]. Units sold come from note
      * lines, counted in each product's main sale unit; a consignment sell-through is a sale too.
      */
-    fun actualMonth(month: YearMonth, inputs: ProfitInputs, products: List<ProductRecord>): ActualMonthInputs {
-        val m = ProfitCalculator.month(month, inputs.sales, inputs.otherIncome, inputs.expenses, inputs.assets)
+    fun actualMonth(m: MonthProfit, products: List<ProductRecord>): ActualMonthInputs {
         return ActualMonthInputs(
-            month = month,
-            unitsSold = products.associate { it.product.id to it.unitsSoldIn(month) }.filterValues { it.signum() > 0 },
+            month = m.month,
+            unitsSold = products.associate { it.product.id to it.unitsSoldIn(m.month) }.filterValues { it.signum() > 0 },
             revenueRupiah = m.salesRupiah + m.otherIncomeRupiah,
             unattributedRevenueRupiah = m.otherIncomeRupiah,
             fixedCostRupiah = m.fixedCostRupiah,

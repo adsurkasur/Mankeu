@@ -286,8 +286,8 @@ fun PlanBreakdownCard(plan: PlanAnalysis, modifier: Modifier = Modifier) {
     }
 }
 
-/** True when the Realisasi summary has anything for [ProfitDetailRows] to show. */
-fun com.mankeu.domain.FinancialSummary.hasProfitDetail() =
+/** True when the month has anything for [ProfitDetailRows] to show. */
+fun com.mankeu.domain.MonthlySummary.hasProfitDetail() =
     hppRupiah != 0L || productionSpendRupiah != 0L || receivableRupiah != 0L || payableRupiah != 0L
 
 /**
@@ -296,7 +296,7 @@ fun com.mankeu.domain.FinancialSummary.hasProfitDetail() =
  */
 @Composable
 fun ProfitDetailRows(
-    summary: com.mankeu.domain.FinancialSummary,
+    summary: com.mankeu.domain.MonthlySummary,
     /** False on Beranda, where the Tagihan card already shows both amounts. */
     withBills: Boolean = true,
 ) {
@@ -321,7 +321,13 @@ fun ProfitDetailRows(
 
 /** "Status BEP bulan ini": this month's Realisasi against its own break-even point. */
 @Composable
-fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, modifier: Modifier = Modifier) {
+fun ActualMonthCard(
+    actual: ActualMonthAnalysis,
+    products: List<ProductRecord>,
+    /** The same month's [com.mankeu.domain.MonthlySummary]: its spend-vs-HPP gap is the one every screen shows (U2, L27). */
+    month: com.mankeu.domain.MonthlySummary?,
+    modifier: Modifier = Modifier,
+) {
     // No sales yet (a planting or set-up month) is not "not feasible": there is nothing to judge.
     val noSales = actual.revenueRupiah == 0L
     val status = if (noSales) FeasibilityStatus.UNKNOWN else feasibilityStatusOf(actual.revenueCostRatio)
@@ -364,15 +370,13 @@ fun ActualMonthCard(actual: ActualMonthAnalysis, products: List<ProductRecord>, 
             ReportRow(stringResource(R.string.actual_fixed_cost), actual.fixedCostRupiah, highlightNegative = false)
             ReportRow(stringResource(R.string.plan_total_cost), actual.totalCostRupiah, highlightNegative = false)
             ReportRow(stringResource(R.string.actual_profit), actual.profitRupiah, emphasized = true)
-            if (actual.standardVariableCostRupiah > 0 && actual.variableVarianceRupiah != 0L) {
-                val over = actual.variableVarianceRupiah > 0
+            // The gap at note HPP snapshots, not at today's recipe cost: one selisih per month (audit L27).
+            val variance = month?.productionVarianceRupiah ?: 0L
+            if (month != null && month.hppRupiah > 0 && variance != 0L) {
                 Text(
-                    stringResource(
-                        if (over) R.string.actual_variance_over else R.string.actual_variance_under,
-                        kotlin.math.abs(actual.variableVarianceRupiah).toRupiah(),
-                    ),
+                    stringResource(if (variance > 0) R.string.profit_variance_over else R.string.profit_variance_under, kotlin.math.abs(variance).toRupiah()),
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (over) semantic.danger else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             if (!noSales) {

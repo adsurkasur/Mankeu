@@ -121,7 +121,7 @@ class PlanAssemblyTest {
             assets = listOf(ProfitAsset(LocalDate.of(2026, 10, 1), 12_000_000, 24)),
         )
 
-        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 11), inputs, listOf(record))
+        val actual = PlanAssembly.actualMonth(inputs.month(YearMonth.of(2026, 11)), listOf(record))
         val result = ActualBepCalculator.analyse(PlanAssembly.products(listOf(kopi), emptyMap()), actual)
 
         assertEquals(7_000_000L, actual.revenueRupiah)
@@ -150,7 +150,7 @@ class PlanAssemblyTest {
                 ProductSaleRow("3", "k", "99", "dus", LocalDate.of(2026, 9, 30).toEpochDay(), 0, "40"),
             ),
         )
-        val actual = PlanAssembly.actualMonth(YearMonth.of(2026, 10), ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()), listOf(record))
+        val actual = PlanAssembly.actualMonth(ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()).month(YearMonth.of(2026, 10)), listOf(record))
         assertEquals(0, BigDecimal(3).compareTo(actual.unitsSold.getValue("k")))
     }
 }

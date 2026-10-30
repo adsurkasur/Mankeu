@@ -71,6 +71,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -83,7 +84,6 @@ import java.time.LocalDate
 import java.util.UUID
 
 private val EMPTY_SUMMARY = PostingReportCalculator.calculate(emptyList())
-private val NO_PROFIT_INPUTS = com.mankeu.domain.ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList())
 
 data class AppUiState(
     val businesses: List<BusinessEntity> = emptyList(),
@@ -105,7 +105,10 @@ data class AppUiState(
     val stockItems: List<StockItem> = emptyList(),
     val summary: FinancialSummary = EMPTY_SUMMARY,
     val projectionSummary: FinancialSummary = EMPTY_SUMMARY,
-    val realizationSummary: FinancialSummary = EMPTY_SUMMARY,
+    /** The Realisasi book's current month (U2, P7): the one source of "untung bulan ini" and its money lines. */
+    val thisMonth: com.mankeu.domain.MonthlySummary? = null,
+    /** Every Realisasi month through the current one; Komparasi sums their money in and out. */
+    val monthlySummaries: List<com.mankeu.domain.MonthlySummary> = emptyList(),
     /** Distinct months with Realisasi records; the comparison averages over it. */
     val realizationMonths: Int = 1,
     /** The selected unit's products with recipes, its Proyeksi plan lines and their analysis (DEC-014). */
@@ -293,9 +296,13 @@ class AppViewModel(
     private val planItems = books.flatMapLatest { items ->
         items.firstOrNull { it.mode == BookMode.PROJECTION.name }?.id?.let(repository::budgetItems) ?: flowOf(emptyList())
     }.stateIn(viewModelScope, KeepWarm, emptyList())
-    private val actualProfitInputs = books.flatMapLatest { items ->
-        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id?.let(repository::profitInputs) ?: flowOf(NO_PROFIT_INPUTS)
-    }.stateIn(viewModelScope, KeepWarm, NO_PROFIT_INPUTS)
+    private val realizationBookId = books.map { items -> items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id }.distinctUntilChanged()
+    private val thisMonth = realizationBookId.flatMapLatest { id ->
+        id?.let { repository.monthlySummary(it) } ?: flowOf(null)
+    }.stateIn(viewModelScope, KeepWarm, null)
+    private val monthlySummaries = realizationBookId.flatMapLatest { id ->
+        id?.let(repository::monthlySummaries) ?: flowOf(emptyList())
+    }.stateIn(viewModelScope, KeepWarm, emptyList())
 
     /** Products with the material prices their HPP is costed at (Task 3 derives prices from purchases). */
     private val pricedProducts = combine(products, stockItems) { productRows, items ->
@@ -309,22 +316,18 @@ class AppViewModel(
         else PlanCalculator.analyse(PlanAssembly.planInputs(project, productRows, lines, categoryRows, LocalDate.now(), prices))
         Triple(productRows to prices, lines, plan)
     }
-    private val planAndActual = combine(planContent, actualProfitInputs) { (priced, lines, plan), inputs ->
+    private val planAndActual = combine(planContent, thisMonth) { (priced, lines, plan), month ->
         val (productRows, prices) = priced
-        val actual = if (inputs == NO_PROFIT_INPUTS) null
-        else ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(YearMonth.now(), inputs, productRows))
-        PlanContent(productRows, lines, plan, actual)
-    }.stateIn(viewModelScope, KeepWarm, PlanContent(emptyList(), emptyList(), null, null))
+        // The BEP card reads the same MonthlySummary as Beranda and Laporan (U2).
+        val actual = month?.let { ActualBepCalculator.analyse(PlanAssembly.products(productRows, prices), PlanAssembly.actualMonth(it.profit, productRows)) }
+        PlanContent(productRows, lines, plan, actual, month)
+    }.stateIn(viewModelScope, KeepWarm, PlanContent(emptyList(), emptyList(), null, null, null))
     private val importBatches = selectedProjectId.flatMapLatest { id ->
         id?.let(repository::importBatches) ?: flowOf(emptyList())
     }.stateIn(viewModelScope, KeepWarm, emptyList())
 
     private val projectionSummary = books.flatMapLatest { items ->
         items.firstOrNull { it.mode == BookMode.PROJECTION.name }?.id
-            ?.let(repository::accountingSummary) ?: flowOf(EMPTY_SUMMARY)
-    }.stateIn(viewModelScope, KeepWarm, EMPTY_SUMMARY)
-    private val realizationSummary = books.flatMapLatest { items ->
-        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id
             ?.let(repository::accountingSummary) ?: flowOf(EMPTY_SUMMARY)
     }.stateIn(viewModelScope, KeepWarm, EMPTY_SUMMARY)
     private val realizationMonths = books.flatMapLatest { items ->
@@ -352,8 +355,8 @@ class AppViewModel(
             businessId, projectId, mode, bookId ->
         SelectionContent(businessId, projectId, mode, bookId)
     }
-    private val comparison = combine(projectionSummary, realizationSummary, realizationMonths) { projection, realization, months ->
-        ComparisonContent(projection, realization, months)
+    private val comparison = combine(projectionSummary, monthlySummaries, realizationMonths) { projection, months, count ->
+        ComparisonContent(projection, months, count)
     }
     // Import notices belong to the unit whose batch made them; system notices (migrations, no
     // batch) concern the whole device. Unfiltered, one unit's import showed on every unit's Beranda.
@@ -392,7 +395,8 @@ class AppViewModel(
             categoryTotals = aggregates.categoryTotals,
             stockItems = finance.stockItems,
             summary = finance.summary,
-            realizationSummary = comparison.realization,
+            thisMonth = finance.plan.thisMonth,
+            monthlySummaries = comparison.monthlySummaries,
             realizationMonths = comparison.realizationMonths,
             products = finance.plan.products,
             planItems = finance.plan.planItems,
@@ -1223,6 +1227,7 @@ class AppViewModel(
         val planItems: List<BudgetItemEntity>,
         val plan: PlanAnalysis?,
         val actualMonth: ActualMonthAnalysis?,
+        val thisMonth: com.mankeu.domain.MonthlySummary?,
     )
 
     private data class SelectionContent(
@@ -1239,7 +1244,7 @@ class AppViewModel(
 
     private data class ComparisonContent(
         val projection: FinancialSummary,
-        val realization: FinancialSummary,
+        val monthlySummaries: List<com.mankeu.domain.MonthlySummary>,
         val realizationMonths: Int,
     )
 }

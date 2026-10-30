@@ -124,6 +124,8 @@ fun HomeScreen(
     // Both produce the same summary and schedule shapes, so every card below reads one code path.
     val plan = state.plan.takeIf { state.selectedBookMode == BookMode.PROJECTION }
     val summary = plan?.summary ?: state.summary
+    // Realisasi: every profit, money and bill figure below is this month's MonthlySummary (U2, P7).
+    val month = state.thisMonth.takeIf { state.selectedBookMode == BookMode.REALIZATION }
     val monthlyCashFlow = remember(state.cashFlowRecords, plan) {
         plan?.schedule ?: MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
     }
@@ -175,7 +177,7 @@ fun HomeScreen(
         item {
             HeroCard(
                 mode = state.selectedBookMode,
-                amount = summary.cashBalanceRupiah,
+                amount = month?.cashOnHandRupiah ?: summary.cashBalanceRupiah,
                 latestMonth = monthlyCashFlow.lastOrNull(),
                 projectId = state.selectedProjectId,
                 onClick = { onNavigate(Destination.REPORTS) },
@@ -199,9 +201,10 @@ fun HomeScreen(
             Column(
                 modifier = Modifier.animateContentSize(tween(maxOf(LocalMotion.current.mediumMillis, 1), easing = FastOutSlowInEasing)),
             ) {
+                val profitRupiah = month?.profitRupiah ?: summary.profitRupiah
                 val profitTone = when {
-                    summary.profitRupiah < 0 -> MetricTone.DANGER
-                    summary.profitRupiah > 0 -> MetricTone.SUCCESS
+                    profitRupiah < 0 -> MetricTone.DANGER
+                    profitRupiah > 0 -> MetricTone.SUCCESS
                     else -> MetricTone.PRIMARY
                 }
                 val cashFlowTone = when {
@@ -209,20 +212,28 @@ fun HomeScreen(
                     summary.operatingCashFlowRupiah > 0 -> MetricTone.SUCCESS
                     else -> MetricTone.PRIMARY
                 }
-                // Operating cash flow leads: it answers "is the business itself paying for
-                // itself", which is the question a loss-making month topped up with owner capital
-                // hides from the balance in the hero card. Profit follows, then operating income and expense.
                 SimpleMetricGrid(
-                    listOf(
-                        SimpleMetric(stringResource(R.string.home_cash_flow), summary.operatingCashFlowRupiah, Icons.Default.SwapHoriz, cashFlowTone),
-                        SimpleMetric(stringResource(R.string.home_profit), summary.profitRupiah, Icons.Default.Assessment, profitTone),
-                        SimpleMetric(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
-                        SimpleMetric(stringResource(R.string.reports_operating_expense), summary.operatingExpenseRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
-                    ),
+                    if (month != null) {
+                        // This month only, no all-months figure (U2): profit leads; Beranda redesign is U4.
+                        listOf(
+                            SimpleMetric(stringResource(R.string.home_profit), month.profitRupiah, Icons.Default.Assessment, profitTone),
+                            SimpleMetric(stringResource(R.string.home_sales_month), month.salesRupiah + month.otherIncomeRupiah, Icons.Default.Insights, MetricTone.SUCCESS),
+                            SimpleMetric(stringResource(R.string.home_money_in_month), month.moneyInRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
+                            SimpleMetric(stringResource(R.string.home_money_out_month), month.moneyOutRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
+                        )
+                    } else {
+                        // Proyeksi: the plan's whole period.
+                        listOf(
+                            SimpleMetric(stringResource(R.string.home_cash_flow), summary.operatingCashFlowRupiah, Icons.Default.SwapHoriz, cashFlowTone),
+                            SimpleMetric(stringResource(R.string.home_plan_profit), summary.profitRupiah, Icons.Default.Assessment, profitTone),
+                            SimpleMetric(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
+                            SimpleMetric(stringResource(R.string.reports_operating_expense), summary.operatingExpenseRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
+                        )
+                    },
                 )
                 // Cash basis: restocking is a cost the day it is paid, so a restock day reads as a loss.
                 // Said here, where a new owner sees the red figure (owner decision 2026-10-22).
-                if (state.selectedBookMode == BookMode.REALIZATION && summary.profitRupiah < 0) {
+                if (month != null && month.profitRupiah < 0) {
                     Text(
                         stringResource(R.string.home_cash_loss_note),
                         style = MaterialTheme.typography.bodySmall,
@@ -234,15 +245,15 @@ fun HomeScreen(
         }
         // Tagihan (DEC-029 §12): the amounts are the summary's, the same as Laporan; the overdue count is per note.
         val overdue = state.sales.count { it.overdue(LocalDate.now()) }
-        if (state.selectedBookMode == BookMode.REALIZATION && (summary.receivableRupiah != 0L || summary.payableRupiah != 0L || overdue > 0)) {
+        if (month != null && (month.receivableRupiah != 0L || month.payableRupiah != 0L || overdue > 0)) {
             item {
-                BillsCard(summary.receivableRupiah, summary.payableRupiah, overdue) {
+                BillsCard(month.receivableRupiah, month.payableRupiah, overdue) {
                     onOpenBills(if (overdue > 0) NoteFilter.OVERDUE else NoteFilter.OPEN)
                 }
             }
         }
-        if (state.selectedBookMode == BookMode.REALIZATION && (summary.hppRupiah != 0L || summary.productionSpendRupiah != 0L)) {
-            item { ReportCard(stringResource(R.string.profit_detail_home_title)) { ProfitDetailRows(summary, withBills = false) } }
+        if (month != null && (month.hppRupiah != 0L || month.productionSpendRupiah != 0L)) {
+            item { ReportCard(stringResource(R.string.profit_detail_home_title)) { ProfitDetailRows(month, withBills = false) } }
         }
         item {
             ExpenseDistributionCard(
@@ -269,7 +280,7 @@ fun HomeScreen(
                 }
             }
         } else {
-            state.actualMonth?.let { actual -> item { ActualMonthCard(actual, state.products) } }
+            state.actualMonth?.let { actual -> item { ActualMonthCard(actual, state.products, month) } }
         }
         if (state.notices.isNotEmpty()) {
             item {

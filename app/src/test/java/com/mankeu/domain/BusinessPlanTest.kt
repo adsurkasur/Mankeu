@@ -82,12 +82,8 @@ class BusinessPlanTest {
     @Test
     fun `comparison reads realisasi on the cash basis per recorded month`() {
         val plan = FinancialSummary(12_000_000, 9_000_000, 3_000_000, 0, 0, 0)
-        val actual = FinancialSummary(
-            operatingIncomeRupiah = 5_430_000, operatingExpenseRupiah = 5_840_000, profitRupiah = -410_000,
-            operatingCashFlowRupiah = -4_150_000, financingCashFlowRupiah = 10_000_000, cashBalanceRupiah = 2_250_000,
-            operatingCashInRupiah = 2_050_000, operatingCashOutRupiah = 6_200_000,
-        )
-        val rows = PlanComparison.perMonth(plan, planMonths = 12, actual = actual, actualMonths = 2)
+        // Golden October money in/out (MonthlySummary) over 2 recorded months.
+        val rows = PlanComparison.perMonth(plan, planMonths = 12, actualInRupiah = 2_050_000, actualOutRupiah = 6_200_000, actualMonths = 2)
         assertEquals(listOf(1_000_000L, 750_000L, 250_000L), listOf(rows.planIncome, rows.planExpense, rows.planProfit))
         assertEquals(listOf(1_025_000L, 3_100_000L, -2_075_000L), listOf(rows.actualIncome, rows.actualExpense, rows.actualProfit))
     }

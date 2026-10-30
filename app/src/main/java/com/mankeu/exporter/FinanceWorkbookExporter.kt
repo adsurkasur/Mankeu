@@ -18,6 +18,7 @@ import com.mankeu.domain.CostNature
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
 import com.mankeu.domain.ProductMovementType
+import com.mankeu.domain.MonthlySummary
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.StockItemEntity
@@ -31,6 +32,8 @@ data class FinanceExportBook(
     val budgets: List<BudgetItemEntity>,
     val events: List<FinancialEventEntity>,
     val summary: FinancialSummary,
+    /** Realisasi: the current month as every screen shows it (U2); the export prints its profit lines from here. */
+    val month: MonthlySummary? = null,
 )
 
 data class FinanceExportBundle(
@@ -250,26 +253,23 @@ class FinanceWorkbookExporter(
         rows = books.flatMap { book ->
             val mode = BookMode.valueOf(book.book.mode).label()
             with(book.summary) {
-                val realization = book.book.mode == BookMode.REALIZATION.name
-                listOf(
-                    listOf(mode, "Pendapatan", operatingIncomeRupiah),
-                    listOf(mode, "Biaya operasional", operatingExpenseRupiah),
-                    listOf(mode, "Laba atau rugi", profitRupiah),
+                val cash = listOf(
                     listOf(mode, "Arus kas operasi", operatingCashFlowRupiah),
                     listOf(mode, "Arus kas investasi", investingCashFlowRupiah),
                     listOf(mode, "Arus kas pembiayaan (modal/prive)", financingCashFlowRupiah),
                     listOf(mode, "Saldo kas", cashBalanceRupiah),
-                ) + if (realization) {
-                    // Profit when sold (DEC-029 §4): the same figures as Beranda and Laporan.
+                )
+                val month = book.month
+                // Realisasi: the month's lines exactly as Beranda and Laporan show them (U2); no all-months profit.
+                if (month == null) {
                     listOf(
-                        listOf(mode, "HPP (harga pokok penjualan)", hppRupiah),
-                        listOf(mode, "Penyusutan", depreciationRupiah),
-                        listOf(mode, "Belanja biaya produksi (lewat HPP)", productionSpendRupiah),
-                        listOf(mode, "Selisih belanja produksi vs HPP", productionVarianceRupiah),
-                        listOf(mode, "Piutang usaha", receivableRupiah),
-                        listOf(mode, "Utang usaha", payableRupiah),
-                    )
-                } else emptyList()
+                        listOf(mode, "Pendapatan", operatingIncomeRupiah),
+                        listOf(mode, "Biaya operasional", operatingExpenseRupiah),
+                        listOf(mode, "Laba atau rugi", profitRupiah),
+                    ) + cash
+                } else {
+                    month.reportLines().map { (label, value) -> listOf("$mode ${month.monthLabel()}", label, value) } + cash
+                }
             }
         },
         currencyColumns = setOf(2),
@@ -335,3 +335,24 @@ internal object PlanAnalysisFormat {
     fun decimal(value: java.math.BigDecimal): String =
         java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("id-ID")).apply { maximumFractionDigits = 3 }.format(value)
 }
+
+/** The month's summary lines for the PDF and the xlsx "Laporan" sheet, both from [MonthlySummary] (U2). */
+internal fun MonthlySummary.reportLines(): List<Pair<String, Long>> = buildList {
+    add("Penjualan" to salesRupiah)
+    if (otherIncomeRupiah != 0L) add("Pendapatan lain" to otherIncomeRupiah)
+    add("HPP (harga pokok penjualan)" to hppRupiah)
+    add("Biaya lain (termasuk penyusutan)" to otherCostRupiah)
+    add("Penyusutan" to profit.depreciationRupiah)
+    add("Laba / rugi bulan ini" to profitRupiah)
+    add("Belanja biaya produksi (lewat HPP)" to productionSpendRupiah)
+    add("Selisih belanja produksi vs HPP" to productionVarianceRupiah)
+    add("Uang masuk usaha" to moneyInRupiah)
+    add("Uang keluar usaha" to moneyOutRupiah)
+    add("Kas akhir bulan" to cashOnHandRupiah)
+    add("Piutang usaha" to receivableRupiah)
+    add("Utang usaha" to payableRupiah)
+}
+
+/** "Oktober 2026": the month the export's Realisasi lines are for. */
+internal fun MonthlySummary.monthLabel(): String =
+    month.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.forLanguageTag("id")))

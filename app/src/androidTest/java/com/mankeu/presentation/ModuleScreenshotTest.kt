@@ -280,7 +280,7 @@ class ModuleScreenshotTest {
         scrollTo("Kelayakan & BEP")
         click("Kelayakan & BEP")
         shot("30_laporan_kelayakan")
-        click("Realisasi vs Target")
+        click("Uang vs rencana")
         shot("31_laporan_target")
 
         // --- 7. Berkas dan Data ------------------------------------------------------------------

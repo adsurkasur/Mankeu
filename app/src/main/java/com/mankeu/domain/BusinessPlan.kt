@@ -380,19 +380,19 @@ data class ComparisonFigures(
 
 /**
  * Plan against actual as averages per month, both on the cash basis before depreciation the plan
- * uses (Task 4 review I-1): Realisasi is operating money in and out, not profit when sold, which
- * Beranda and Laporan show. F3/F4 redesign this comparison.
+ * uses (Task 4 review I-1). Realisasi is the operating money in and out of [MonthlySummary] summed over
+ * its months, so the screen calls it "Uang masuk/keluar vs rencana", never profit (U2). F4 redesigns it.
  */
 object PlanComparison {
-    fun perMonth(plan: FinancialSummary, planMonths: Int, actual: FinancialSummary, actualMonths: Int): ComparisonFigures {
+    fun perMonth(plan: FinancialSummary, planMonths: Int, actualInRupiah: Long, actualOutRupiah: Long, actualMonths: Int): ComparisonFigures {
         fun avg(total: Long, months: Int) = BigDecimal.valueOf(total).divide(BigDecimal.valueOf(months.coerceAtLeast(1).toLong()), 0, RoundingMode.HALF_UP).toLong()
         return ComparisonFigures(
             planIncome = avg(plan.operatingIncomeRupiah, planMonths),
             planExpense = avg(plan.operatingExpenseRupiah, planMonths),
             planProfit = avg(plan.profitRupiah, planMonths),
-            actualIncome = avg(actual.operatingCashInRupiah, actualMonths),
-            actualExpense = avg(actual.operatingCashOutRupiah, actualMonths),
-            actualProfit = avg(actual.operatingCashInRupiah - actual.operatingCashOutRupiah, actualMonths),
+            actualIncome = avg(actualInRupiah, actualMonths),
+            actualExpense = avg(actualOutRupiah, actualMonths),
+            actualProfit = avg(actualInRupiah - actualOutRupiah, actualMonths),
         )
     }
 }

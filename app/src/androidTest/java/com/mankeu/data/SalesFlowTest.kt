@@ -344,7 +344,7 @@ class SalesFlowTest {
         assertEquals(-310_000L, october.profitRupiah)
         assertEquals(listOf(5_380_000L, 50_000L, 4_440_000L, 1_200_000L, 100_000L, 5_200_000L, 760_000L),
             october.let { listOf(it.salesRupiah, it.otherIncomeRupiah, it.hppRupiah, it.fixedCostRupiah, it.depreciationRupiah, it.productionSpendRupiah, it.productionVarianceRupiah) })
-        val card = com.mankeu.domain.ActualBepCalculator.analyse(PlanAssembly.products(repo.products(projectId).first(), emptyMap()), PlanAssembly.actualMonth(java.time.YearMonth.of(2026, 10), inputs, repo.products(projectId).first()))
+        val card = com.mankeu.domain.ActualBepCalculator.analyse(PlanAssembly.products(repo.products(projectId).first(), emptyMap()), PlanAssembly.actualMonth(october, repo.products(projectId).first()))
         assertEquals(-310_000L, card.profitRupiah)
         assertQty(740, card.unitsSold.getValue(keripik).multiply(BigDecimal(40))) // 500 bungkus + 6 dus, in dus
 
@@ -373,7 +373,18 @@ class SalesFlowTest {
         // The cost chart: credit purchase at purchase date, the supplier payment not again.
         assertEquals(4_900_000L + 300_000L + 1_200_000L, repo.categoryTotals(bookId).first().sumOf { it.totalRupiah })
         // PDF and xlsx read the same summary.
-        assertEquals(s, october2026.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }.summary)
+        val exported = october2026.buildProjectExportBundle(projectId).books.single { it.book.mode == BookMode.REALIZATION.name }
+        assertEquals(s, exported.summary)
+
+        // U2: the one monthly summary, which every screen and the export show for October.
+        val m = october2026.monthlySummary(bookId).first()
+        assertEquals(october, m.profit)
+        assertEquals(listOf(-310_000L, 4_440_000L, 1_300_000L, 5_200_000L, 760_000L), listOf(m.profitRupiah, m.hppRupiah, m.otherCostRupiah, m.productionSpendRupiah, m.productionVarianceRupiah))
+        assertEquals(listOf(2_050_000L, 6_200_000L, s.cashBalanceRupiah, s.receivableRupiah, s.payableRupiah), listOf(m.moneyInRupiah, m.moneyOutRupiah, m.cashOnHandRupiah, m.receivableRupiah, m.payableRupiah))
+        assertEquals(m.profitRupiah, card.profitRupiah)
+        assertEquals(m, exported.month)
+        assertEquals(listOf(9, 10), october2026.monthlySummaries(bookId).first().map { it.month.monthValue })
+        assertEquals(m, october2026.monthlySummaries(bookId).first().last())
 
         // F2-8: transport is variable but not a production cost, so it reduces profit directly.
         event(FinancialEventType.CASH_EXPENSE, 150_000, LocalDate.of(2026, 10, 15), categories.single { it.name == "Transportasi" })

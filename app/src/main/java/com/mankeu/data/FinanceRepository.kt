@@ -24,6 +24,8 @@ import com.mankeu.domain.JournalEntry
 import com.mankeu.domain.LedgerAccount
 import com.mankeu.domain.LedgerPolicy
 import com.mankeu.domain.MoneyEvent
+import com.mankeu.domain.MonthPosting
+import com.mankeu.domain.MonthlySummary
 import com.mankeu.domain.Posting
 import com.mankeu.domain.PostedRecord
 import com.mankeu.domain.PostingSide
@@ -204,6 +206,23 @@ class FinanceRepository(
     /** What profit is computed from, for the Realisasi book [bookId]; empty for Proyeksi. */
     fun profitInputs(bookId: String): Flow<ProfitInputs> = onDataChange().map { database.withTransaction { profitInputsOf(bookId) } }
 
+    /**
+     * The one summary of [month] (default: the current month) for the Realisasi book [bookId] (U2, P7):
+     * everything a screen or export says about that month's profit, money, receivable and payable.
+     */
+    fun monthlySummary(bookId: String, month: YearMonth? = null): Flow<MonthlySummary> =
+        onDataChange().map { database.withTransaction { MonthlySummary.of(month ?: currentMonth(), profitInputsOf(bookId), monthPostingsOf(bookId)) } }
+
+    /** Every month of the Realisasi book [bookId] through the current month; see [MonthlySummary.all]. */
+    fun monthlySummaries(bookId: String): Flow<List<MonthlySummary>> =
+        onDataChange().map { database.withTransaction { MonthlySummary.all(profitInputsOf(bookId), monthPostingsOf(bookId), currentMonth()) } }
+
+    private suspend fun monthPostingsOf(bookId: String): List<MonthPosting> =
+        if (dao.getBookById(bookId)?.mode != BookMode.REALIZATION.name) emptyList()
+        else dao.getMonthlyPostingTotals(bookId).map {
+            MonthPosting(YearMonth.parse(it.month), PostedRecord("", CashFlowRole.valueOf(it.cashFlowRole), LedgerAccount.valueOf(it.account), PostingSide.valueOf(it.side), it.amountRupiah))
+        }
+
     private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books")
 
     private suspend fun summaryOf(bookId: String): FinancialSummary = database.withTransaction {
@@ -254,6 +273,7 @@ class FinanceRepository(
                     budgets = dao.getBudgetItems(book.id),
                     events = dao.getEventsForBook(book.id),
                     summary = summary,
+                    month = if (book.mode == BookMode.REALIZATION.name) MonthlySummary.of(currentMonth(), profitInputsOf(book.id), monthPostingsOf(book.id)) else null,
                 )
             }
             FinanceExportBundle(

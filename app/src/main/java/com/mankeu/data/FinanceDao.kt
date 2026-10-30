@@ -62,6 +62,9 @@ data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Lon
 /** Posting total per (cash-flow role, account, side); see [FinanceDao.getPostingTotals]. */
 data class PostingTotalRow(val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
 
+/** [PostingTotalRow] per month ("yyyy-MM") of the event; see [FinanceDao.getMonthlyPostingTotals]. */
+data class MonthlyPostingTotalRow(val month: String, val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
+
 data class PostingWithEventRow(
     val eventId: String,
     val cashFlowRole: String,
@@ -282,6 +285,19 @@ interface FinanceDao {
         """,
     )
     suspend fun getPostingTotals(bookId: String): List<PostingTotalRow>
+
+    /** [getPostingTotals] per event month: what MonthlySummary takes cash, receivable and payable from (U2). */
+    @Query(
+        """
+        SELECT strftime('%Y-%m', e.dateEpochDay * 86400, 'unixepoch') AS month, e.cashFlowRole, p.account, p.side, SUM(p.amountRupiah) AS amountRupiah
+        FROM financial_events e
+        INNER JOIN journal_entries j ON j.sourceEventId = e.id
+        INNER JOIN postings p ON p.journalId = j.id
+        WHERE e.bookId = :bookId
+        GROUP BY month, e.cashFlowRole, p.account, p.side
+        """,
+    )
+    suspend fun getMonthlyPostingTotals(bookId: String): List<MonthlyPostingTotalRow>
 
     /** Notes of a unit summed per month: revenue after discount, HPP snapshots (DEC-029 §4). */
     @Query(

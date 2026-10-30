@@ -38,22 +38,20 @@ class FinancePdfExporter {
                 val mode = BookMode.valueOf(book.book.mode)
                 report.section(if (mode == BookMode.PROJECTION) "Proyeksi" else "Realisasi", followingHeight = 300f)
                 report.subsection("Ringkasan")
-                report.keyValue("Kas", money(book.summary.cashBalanceRupiah))
-                report.keyValue("Pendapatan", money(book.summary.operatingIncomeRupiah))
-                report.keyValue("Beban", money(book.summary.operatingExpenseRupiah))
-                report.keyValue("Laba / rugi", money(book.summary.profitRupiah))
+                val month = book.month
+                if (month == null) {
+                    report.keyValue("Kas", money(book.summary.cashBalanceRupiah))
+                    report.keyValue("Pendapatan", money(book.summary.operatingIncomeRupiah))
+                    report.keyValue("Beban", money(book.summary.operatingExpenseRupiah))
+                    report.keyValue("Laba / rugi", money(book.summary.profitRupiah))
+                } else {
+                    // Realisasi: the month exactly as Beranda and Laporan show it (U2, P7); no all-months profit.
+                    report.keyValue("Bulan", month.monthLabel())
+                    month.reportLines().forEach { (label, value) -> report.keyValue(label, money(value)) }
+                }
                 report.keyValue("Arus kas operasi", money(book.summary.operatingCashFlowRupiah))
                 report.keyValue("Arus kas investasi", money(book.summary.investingCashFlowRupiah))
                 report.keyValue("Arus kas pendanaan", money(book.summary.financingCashFlowRupiah))
-                if (mode == BookMode.REALIZATION) {
-                    // Profit when sold (DEC-029 §4): the same figures as Beranda and Laporan.
-                    report.keyValue("HPP (harga pokok penjualan)", money(book.summary.hppRupiah))
-                    report.keyValue("Penyusutan", money(book.summary.depreciationRupiah))
-                    report.keyValue("Belanja biaya produksi (lewat HPP)", money(book.summary.productionSpendRupiah))
-                    report.keyValue("Selisih belanja produksi vs HPP", money(book.summary.productionVarianceRupiah))
-                    report.keyValue("Piutang usaha", money(book.summary.receivableRupiah))
-                    report.keyValue("Utang usaha", money(book.summary.payableRupiah))
-                }
 
                 report.subsection("Anggaran (${book.budgets.count { !it.archived }} item aktif)")
                 val categoryNames = bundle.categories.associate { it.id to it.name }

@@ -198,6 +198,14 @@ fun MankeuApp(
     // here rather than inside EntryScreen because the dial can be pressed from Beranda, before
     // EntryScreen exists.
     var requestedEntryKind by rememberSaveable { mutableStateOf<FinancialEventType?>(null) }
+    // "Catat juga uangnya?" (U3): the material and quantity the Belanja form opens with, consumed with the kind.
+    var requestedPurchase by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
+    val buyMaterial: (String, java.math.BigDecimal) -> Unit = { id, quantity ->
+        viewModel.selectBookMode(BookMode.REALIZATION)
+        requestedPurchase = id to quantity.stripTrailingZeros().toPlainString()
+        requestedEntryKind = FinancialEventType.CASH_EXPENSE
+        destination = Destination.ENTRY
+    }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     // A sheet, not a route: ModalBottomSheet handles its own back press and scrim.
     var manageScope by rememberSaveable { mutableStateOf(false) }
@@ -670,7 +678,9 @@ fun MankeuApp(
                                                     onNoteFilter = { noteFilter = it },
                                                     onOpenBills = openBills,
                                                     requestedKind = requestedEntryKind,
-                                                    onRequestedKindConsumed = { requestedEntryKind = null },
+                                                    requestedPurchase = requestedPurchase,
+                                                    onBuyMaterial = buyMaterial,
+                                                    onRequestedKindConsumed = { requestedEntryKind = null; requestedPurchase = null },
                                                     expanded = true,
                                                 )
                                             }
@@ -710,7 +720,9 @@ fun MankeuApp(
                                                 onNoteFilter = { noteFilter = it },
                                                 onOpenBills = openBills,
                                                 requestedKind = requestedEntryKind,
-                                                onRequestedKindConsumed = { requestedEntryKind = null },
+                                                requestedPurchase = requestedPurchase,
+                                                onBuyMaterial = buyMaterial,
+                                                onRequestedKindConsumed = { requestedEntryKind = null; requestedPurchase = null },
                                                 expanded = false,
                                             )
                                         }
@@ -1299,6 +1311,8 @@ private fun ScreenContent(
     onNoteFilter: (NoteFilter) -> Unit,
     onOpenBills: (NoteFilter) -> Unit,
     requestedKind: FinancialEventType? = null,
+    requestedPurchase: Pair<String, String>? = null,
+    onBuyMaterial: (String, java.math.BigDecimal) -> Unit = { _, _ -> },
     onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
 ) {
@@ -1353,6 +1367,7 @@ private fun ScreenContent(
                     onCountStock = viewModel::countProductStock,
                     onCreateStockItem = viewModel::createStockItem,
                     onRecordStockMovement = viewModel::recordStockMovement,
+                    onBuyMaterial = onBuyMaterial,
                     expanded = expanded,
                 )
                 Destination.ENTRY -> if (state.selectedBookMode == BookMode.PROJECTION) {
@@ -1371,6 +1386,7 @@ private fun ScreenContent(
                     onDelete = viewModel::deleteTransaction,
                     onManageScope = onManageScope,
                     requestedKind = requestedKind,
+                    requestedPurchase = requestedPurchase,
                     onRequestedKindConsumed = onRequestedKindConsumed,
                     onCreateCategory = viewModel::createCategory,
                     onNewSale = onNewSale,

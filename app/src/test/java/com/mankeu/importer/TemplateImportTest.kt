@@ -19,6 +19,8 @@ import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
 import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.StockItemEntity
+import com.mankeu.domain.StockMovementEntity
+import com.mankeu.domain.StockMovementType
 import com.mankeu.exporter.FinanceExportBook
 import com.mankeu.exporter.FinanceExportBundle
 import com.mankeu.exporter.FinanceWorkbookExporter
@@ -71,14 +73,21 @@ class TemplateImportTest {
                         ImportRecipeLine("Resep Produk!A3", "Gula", materialName = "Gula", quantityText = "0.5", amountRupiah = null),
                     ),
                     movements = listOf(
-                        ImportProductMovement("Produksi & Stok!A2", DAY.minusDays(1), ProductMovementType.PRODUCTION, "60", "10", "pagi"),
-                        ImportProductMovement("Produksi & Stok!A3", DAY, ProductMovementType.ADJUSTMENT, "0"),
+                        ImportProductMovement(
+                            "Produksi & Stok!A2", DAY.minusDays(1), ProductMovementType.PRODUCTION, "60", "10", "pagi",
+                            uses = listOf(ImportMaterialUse("Produksi & Stok!A3", "Gula", "5", order = 3)), order = 2,
+                        ),
+                        ImportProductMovement("Produksi & Stok!A5", DAY, ProductMovementType.ADJUSTMENT, "0", order = 5),
                     ),
                 ),
             ),
             preview.products,
         )
-        assertEquals(listOf(ImportStockItem("Stok Barang!A2", "Gula", "kg", 15_000, "2.5", "1")), preview.stockItems)
+        // U3: Stok Barang carries the opening stock; manual moves ride in Produksi & Stok, in date-then-time order.
+        assertEquals(
+            listOf(ImportStockItem("Stok Barang!A2", "Gula", "kg", 15_000, "2.5", "1", movements = listOf(ImportMaterialMovement("Produksi & Stok!A4", DAY, StockMovementType.IN, "3", "panen", order = 4)))),
+            preview.stockItems,
+        )
         assertEquals(YearMonth.of(2026, 11) to YearMonth.of(2027, 10), preview.planPeriod)
     }
 
@@ -393,7 +402,7 @@ class TemplateImportTest {
                 "Produksi & Stok!D4: Jumlah produksi harus angka lebih dari nol, tertulis \"0\".",
                 "Produksi & Stok!D5: Jumlah hitung stok harus angka nol atau lebih, tertulis \"-1\".",
                 "Produksi & Stok!E6: Batch hanya diisi untuk Produksi.",
-                "Produksi & Stok!C7: Jenis harus \"Produksi\" atau \"Hitung stok\", tertulis \"Jual\".",
+                "Produksi & Stok!C7: Jenis harus salah satu dari \"Produksi\", \"Hitung stok\", \"Pemakaian bahan\", \"Bahan masuk\", \"Bahan keluar\", \"Hitung ulang bahan\", tertulis \"Jual\".",
                 "Produksi & Stok!A9: Tanggal wajib diisi.",
                 "Produksi & Stok!A8: produk \"Kopi\" tidak ada di lembar \"Produk\" berkas ini; produksi dan hitung stok hanya diimpor bersama produknya.",
             ),
@@ -401,10 +410,53 @@ class TemplateImportTest {
         )
         assertEquals(
             listOf(
-                ImportProductMovement("Produksi & Stok!A2", LocalDate.of(2026, 8, 1), ProductMovementType.PRODUCTION, "10", "2", "pagi"),
-                ImportProductMovement("Produksi & Stok!A3", LocalDate.of(2026, 8, 2), ProductMovementType.ADJUSTMENT, "0"),
+                ImportProductMovement("Produksi & Stok!A2", LocalDate.of(2026, 8, 1), ProductMovementType.PRODUCTION, "10", "2", "pagi", order = 2),
+                ImportProductMovement("Produksi & Stok!A3", LocalDate.of(2026, 8, 2), ProductMovementType.ADJUSTMENT, "0", order = 3),
             ),
             preview.products.single().movements,
+        )
+    }
+
+    /** U3: material rows and production use are checked cell by cell; use joins the production above it. */
+    @Test
+    fun `material rows and production use are validated`() {
+        val day = "2026-08-01"
+        val bytes = template(
+            transactions = WorkbookTable("Transaksi", MankeuTemplate.TRANSACTION_HEADERS, emptyList()),
+            products = listOf(listOf("Teh", "gelas", "5", null, null)),
+            saleUnits = listOf(listOf("Teh", "gelas", "1", 5_000L)),
+            stock = listOf(listOf("Gula", "kg", 15_000L, "1", "0", null)),
+            movements = listOf(
+                listOf(day, "Teh", "Produksi", "10", null, null, null),
+                listOf(day, "Teh", "Pemakaian bahan", "2", null, null, "Gula"),
+                listOf(day, "Kopi", "Pemakaian bahan", "2", null, null, "Gula"),
+                listOf(day, null, "Bahan masuk", "0", null, null, "Gula"),
+                listOf(day, null, "Hitung ulang bahan", "0", null, null, "Gula"),
+                listOf(day, "Teh", "Bahan keluar", "1", null, null, "Gula"),
+                listOf(day, null, "Bahan keluar", "1", null, null, "Garam"),
+                listOf(day, "Teh", "Hitung stok", "1", null, null, "Gula"),
+            ),
+        )
+
+        val preview = importer.preview("x.xlsx", bytes)
+
+        assertEquals(
+            listOf(
+                "Produksi & Stok!C4: Pemakaian bahan harus di bawah baris Produksi \"Kopi\".",
+                "Produksi & Stok!D5: Jumlah harus angka lebih dari nol, tertulis \"0\".",
+                "Produksi & Stok!B7: Produk dibiarkan kosong untuk Bahan keluar.",
+                "Produksi & Stok!G9: Bahan dibiarkan kosong untuk Hitung stok.",
+                "Produksi & Stok!A8: bahan \"Garam\" tidak ada di lembar \"Stok Barang\" berkas ini; gerakan bahan hanya diimpor bersama bahannya.",
+            ),
+            preview.errors,
+        )
+        assertEquals(
+            listOf(ImportProductMovement("Produksi & Stok!A2", LocalDate.of(2026, 8, 1), ProductMovementType.PRODUCTION, "10", uses = listOf(ImportMaterialUse("Produksi & Stok!A3", "Gula", "2", order = 3)), order = 2)),
+            preview.products.single().movements,
+        )
+        assertEquals(
+            listOf(ImportMaterialMovement("Produksi & Stok!A6", LocalDate.of(2026, 8, 1), StockMovementType.ADJUSTMENT, "0", order = 6)),
+            preview.stockItems.single().movements,
         )
     }
 
@@ -432,6 +484,7 @@ class TemplateImportTest {
         products: List<List<Any?>> = emptyList(),
         saleUnits: List<List<Any?>> = emptyList(),
         movements: List<List<Any?>> = emptyList(),
+        stock: List<List<Any?>> = emptyList(),
     ): ByteArray = XlsxWorkbookWriter().write(
         listOf(
             WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
@@ -441,7 +494,7 @@ class TemplateImportTest {
             WorkbookTable(MankeuTemplate.SALE_UNITS, MankeuTemplate.SALE_UNIT_HEADERS, saleUnits),
             WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, recipes),
             WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, movements),
-            WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
+            WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, stock),
         ),
     )
 
@@ -508,7 +561,11 @@ class TemplateImportTest {
             ),
         ),
         stockItems = listOf(
-            StockItemEntity(id = "s", businessId = "b", name = "Gula", unit = "kg", basePriceRupiah = 15_000, currentStockText = "2.5", minAlertStockText = "1", createdAtEpochMillis = 0),
+            StockItemEntity(id = "s", businessId = "b", name = "Gula", unit = "kg", basePriceRupiah = 15_000, initialStockText = "2.5", minAlertStockText = "1", createdAtEpochMillis = 0),
+        ),
+        stockMovements = listOf(
+            StockMovementEntity("use", "s", StockMovementType.CONSUME.name, "5", DAY.minusDays(1).toEpochDay(), "Kopi Susu", referenceEventId = "m1", createdAtEpochMillis = 9),
+            StockMovementEntity("in", "s", StockMovementType.IN.name, "3", DAY.toEpochDay(), "panen", createdAtEpochMillis = 1),
         ),
     )
 

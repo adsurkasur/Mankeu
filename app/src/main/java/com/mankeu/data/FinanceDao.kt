@@ -59,6 +59,9 @@ data class ConsignmentSoldLine(
 /** A purchase that names a material; the newest one prices it (DEC-028 §2). */
 data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Long)
 
+/** A Realisasi purchase that adds [quantityText] to a material's stock (U3); see [FinanceDao.observeMaterialStockPurchases]. */
+data class MaterialStockPurchaseRow(val id: String, val stockItemId: String, val quantityText: String, val dateEpochDay: Long, val createdAtEpochMillis: Long, val description: String)
+
 /** Posting total per (cash-flow role, account, side); see [FinanceDao.getPostingTotals]. */
 data class PostingTotalRow(val cashFlowRole: String, val account: String, val side: String, val amountRupiah: Long)
 
@@ -625,6 +628,20 @@ interface FinanceDao {
         """,
     )
     suspend fun latestPurchasePrice(stockItemId: String): Long?
+
+    /**
+     * Purchases that add to material stock (U3, DEC-030 §3): cash or credit, with a material and a quantity
+     * (in the material's unit, the form fixes it), in a Realisasi book. A Proyeksi line did not happen.
+     */
+    @Query(
+        """
+        SELECT e.id, e.stockItemId, e.quantityText, e.dateEpochDay, e.createdAtEpochMillis, e.description FROM financial_events e
+        INNER JOIN books b ON b.id = e.bookId
+        WHERE e.businessId = :businessId AND e.stockItemId IS NOT NULL AND e.quantityText IS NOT NULL
+          AND e.type IN ('CASH_EXPENSE', 'CREDIT_PURCHASE') AND b.mode = 'REALIZATION'
+        """,
+    )
+    fun observeMaterialStockPurchases(businessId: String): Flow<List<MaterialStockPurchaseRow>>
 
     @Query("SELECT * FROM import_batches WHERE projectId = :projectId ORDER BY committedAtEpochMillis")
     suspend fun getImportBatches(projectId: String): List<ImportBatchEntity>

@@ -3,6 +3,7 @@ package com.mankeu.importer
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.Recurrence
+import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.domain.sha256Hex
 import java.time.LocalDate
@@ -49,6 +50,14 @@ class FinanceWorkbookImporter(
         val period = sheets.getValue(MankeuTemplate.GUIDE).rows
             .firstOrNull { it.cellAt(0)?.display?.trim() == MankeuTemplate.PLAN_PERIOD }
             ?.let { row -> readPeriod(Row(MankeuTemplate.GUIDE, row), errors) }
+        val (productMoves, materialMoves) = readMovements(sheets.getValue(MankeuTemplate.MOVEMENTS), errors)
+        val stock = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { readStock(it, errors) }
+        // Material moves are imported only with their item, so undoing the import removes them too.
+        val stockNames = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { it.text(0)?.lowercase() }.toSet()
+        materialMoves.filter { it.second.lowercase() !in stockNames }.forEach { (source, material, _) ->
+            errors += "$source: bahan \"$material\" tidak ada di lembar \"${MankeuTemplate.STOCK}\" berkas ini; " +
+                "gerakan bahan hanya diimpor bersama bahannya."
+        }
         return WorkbookImportPreview(
             sourceName = sourceName,
             sourceSha256 = hash,
@@ -56,9 +65,9 @@ class FinanceWorkbookImporter(
             budgetLines = dataRows(sheets.getValue(MankeuTemplate.BUDGET)).mapNotNull { readBudget(it, errors) },
             products = readProducts(
                 sheets.getValue(MankeuTemplate.PRODUCTS), sheets.getValue(MankeuTemplate.SALE_UNITS),
-                sheets.getValue(MankeuTemplate.RECIPES), sheets.getValue(MankeuTemplate.MOVEMENTS), errors,
+                sheets.getValue(MankeuTemplate.RECIPES), productMoves, errors,
             ),
-            stockItems = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { readStock(it, errors) },
+            stockItems = stock.map { item -> item.copy(movements = materialMoves.filter { it.second.equals(item.name.trim(), ignoreCase = true) }.map { it.third }) },
             planPeriod = period,
             errors = errors,
         )
@@ -128,7 +137,7 @@ class FinanceWorkbookImporter(
         products: WorkbookSheet,
         saleUnits: WorkbookSheet,
         recipes: WorkbookSheet,
-        movementSheet: WorkbookSheet,
+        movements: List<Triple<String, String, ImportProductMovement>>,
         errors: MutableList<String>,
     ): List<ImportProduct> {
         fun Row.positiveQuantity(column: Int, label: String): String? {
@@ -162,7 +171,6 @@ class FinanceWorkbookImporter(
             }
             Triple(row.ref(0), product.trim(), ImportRecipeLine(row.ref(0), name, material, quantity.takeIf { material != null }, amount))
         }
-        val movements = dataRows(movementSheet).mapNotNull { row -> readMovement(row, errors) }
         val names = mutableSetOf<String>()
         val items = dataRows(products).mapNotNull { row ->
             val name = row.requiredText(0, "Nama", errors) ?: return@mapNotNull null
@@ -210,17 +218,70 @@ class FinanceWorkbookImporter(
         return items
     }
 
-    /** One `Produksi & Stok` row, paired with the product name it belongs to. */
-    private fun readMovement(row: Row, errors: MutableList<String>): Triple<String, String, ImportProductMovement>? {
-        val date = row.date(0, errors) ?: return null
-        val product = row.requiredText(1, "Produk", errors) ?: return null
-        val type = when (val raw = row.text(2)) {
-            MankeuTemplate.PRODUCTION -> ProductMovementType.PRODUCTION
-            MankeuTemplate.STOCK_COUNT -> ProductMovementType.ADJUSTMENT
-            else -> return null.also {
-                errors += "${row.ref(2)}: Jenis harus \"${MankeuTemplate.PRODUCTION}\" atau \"${MankeuTemplate.STOCK_COUNT}\", tertulis \"${raw.orEmpty()}\"."
+    /**
+     * `Produksi & Stok` rows in sheet order: product rows paired with their product name, material rows with their
+     * material name. A `Pemakaian bahan` row joins the nearest Produksi row of its product above it.
+     */
+    private fun readMovements(sheet: WorkbookSheet, errors: MutableList<String>): Pair<List<Triple<String, String, ImportProductMovement>>, List<Triple<String, String, ImportMaterialMovement>>> {
+        val products = mutableListOf<Triple<String, String, ImportProductMovement>>()
+        val materials = mutableListOf<Triple<String, String, ImportMaterialMovement>>()
+        val lastProduction = mutableMapOf<String, Int>()
+        dataRows(sheet).forEach { row ->
+            val date = row.date(0, errors) ?: return@forEach
+            val raw = row.text(2)
+            val material = row.text(6)
+            val product = row.text(1)
+            val order = row.source.index
+            when (raw) {
+                MankeuTemplate.PRODUCTION, MankeuTemplate.STOCK_COUNT -> {
+                    if (material != null) { errors += "${row.ref(6)}: Bahan dibiarkan kosong untuk $raw."; return@forEach }
+                    val movement = readProductRow(row, date, raw, errors) ?: return@forEach
+                    val name = product!!.trim()
+                    if (movement.type == ProductMovementType.PRODUCTION) lastProduction[name.lowercase()] = products.size
+                    products += Triple(row.ref(0), name, movement.copy(order = order))
+                }
+                MankeuTemplate.MATERIAL_USE -> {
+                    val productName = row.requiredText(1, "Produk", errors) ?: return@forEach
+                    val materialName = row.requiredText(6, "Bahan", errors) ?: return@forEach
+                    val quantity = row.materialQuantity(allowZero = false, errors) ?: return@forEach
+                    val index = lastProduction[productName.trim().lowercase()]
+                        ?: return@forEach Unit.also { errors += "${row.ref(2)}: ${MankeuTemplate.MATERIAL_USE} harus di bawah baris ${MankeuTemplate.PRODUCTION} \"${productName.trim()}\"." }
+                    val (source, name, production) = products[index]
+                    products[index] = Triple(source, name, production.copy(uses = production.uses + ImportMaterialUse(row.ref(0), materialName.trim(), quantity, order)))
+                }
+                MankeuTemplate.MATERIAL_IN, MankeuTemplate.MATERIAL_OUT, MankeuTemplate.MATERIAL_COUNT -> {
+                    if (product != null) { errors += "${row.ref(1)}: Produk dibiarkan kosong untuk $raw."; return@forEach }
+                    val materialName = row.requiredText(6, "Bahan", errors) ?: return@forEach
+                    val type = when (raw) {
+                        MankeuTemplate.MATERIAL_IN -> StockMovementType.IN
+                        MankeuTemplate.MATERIAL_OUT -> StockMovementType.OUT
+                        else -> StockMovementType.ADJUSTMENT
+                    }
+                    val quantity = row.materialQuantity(allowZero = type == StockMovementType.ADJUSTMENT, errors) ?: return@forEach
+                    materials += Triple(row.ref(0), materialName.trim(), ImportMaterialMovement(row.ref(0), date, type, quantity, row.text(5).orEmpty(), order))
+                }
+                else -> errors += "${row.ref(2)}: Jenis harus salah satu dari ${KINDS.joinToString { "\"$it\"" }}, tertulis \"${raw.orEmpty()}\"."
             }
         }
+        return products to materials
+    }
+
+    /** A material row's Jumlah, in the material's unit; Batch stays blank. */
+    private fun Row.materialQuantity(allowZero: Boolean, errors: MutableList<String>): String? {
+        if (text(4) != null) { errors += "${ref(4)}: Batch hanya diisi untuk Produksi."; return null }
+        val raw = text(3) ?: return null.also { errors += "${ref(3)}: Jumlah wajib diisi." }
+        val value = raw.replace(',', '.').toBigDecimalOrNull()
+        if (value == null || value.signum() < 0 || (!allowZero && value.signum() == 0)) {
+            errors += "${ref(3)}: Jumlah ${if (allowZero) "hitung ulang harus angka nol atau lebih" else "harus angka lebih dari nol"}, tertulis \"$raw\"."
+            return null
+        }
+        return value.stripTrailingZeros().toPlainString()
+    }
+
+    /** A Produksi or Hitung stok row of a product. */
+    private fun readProductRow(row: Row, date: LocalDate, kind: String, errors: MutableList<String>): ImportProductMovement? {
+        row.requiredText(1, "Produk", errors) ?: return null
+        val type = if (kind == MankeuTemplate.PRODUCTION) ProductMovementType.PRODUCTION else ProductMovementType.ADJUSTMENT
         val raw = row.text(3) ?: return null.also { errors += "${row.ref(3)}: Jumlah wajib diisi." }
         val value = raw.replace(',', '.').toBigDecimalOrNull()
         val production = type == ProductMovementType.PRODUCTION
@@ -234,7 +295,7 @@ class FinanceWorkbookImporter(
             errors += "${row.ref(4)}: Batch harus angka lebih dari nol, tertulis \"$batches\"."
             return null
         }
-        val movement = ImportProductMovement(
+        return ImportProductMovement(
             source = row.ref(0),
             date = date,
             type = type,
@@ -242,7 +303,6 @@ class FinanceWorkbookImporter(
             batchesText = batches?.let { TransactionCalculation.parseQuantity(it)!!.stripTrailingZeros().toPlainString() },
             notes = row.text(5).orEmpty(),
         )
-        return Triple(row.ref(0), product.trim(), movement)
     }
 
     private fun readPeriod(row: Row, errors: MutableList<String>): Pair<YearMonth, YearMonth>? {
@@ -339,6 +399,10 @@ class FinanceWorkbookImporter(
 
     private companion object {
         val EXCEL_EPOCH: LocalDate = LocalDate.of(1899, 12, 30)
+        val KINDS = listOf(
+            MankeuTemplate.PRODUCTION, MankeuTemplate.STOCK_COUNT, MankeuTemplate.MATERIAL_USE,
+            MankeuTemplate.MATERIAL_IN, MankeuTemplate.MATERIAL_OUT, MankeuTemplate.MATERIAL_COUNT,
+        )
 
         fun columnLetter(index: Int): String = ('A' + index).toString()
 

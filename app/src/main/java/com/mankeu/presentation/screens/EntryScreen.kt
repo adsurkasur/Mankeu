@@ -154,6 +154,8 @@ fun EntryScreen(
     isSaving: Boolean = false,
     /** Set by the Beranda/Catat speed dial: open straight onto this kind's form. */
     requestedKind: FinancialEventType? = null,
+    /** With [requestedKind] CASH_EXPENSE: (material id, quantity) from "Catat juga uangnya?" (U3); the form opens filled. */
+    requestedPurchase: Pair<String, String>? = null,
     onRequestedKindConsumed: () -> Unit = {},
     onCreateCategory: (String, CategoryRole) -> Unit = { _, _ -> },
     /** Fase 2: product sales are notes (DEC-029 §11); their list sits above the transactions (§12). */
@@ -292,6 +294,17 @@ fun EntryScreen(
                 categoryId = state.categories.firstOrNull { c -> CategoryRole.parse(c.role) == CategoryRole.CAPITAL_IN }?.id
             } else {
                 selected = it
+            }
+            requestedPurchase?.let { (id, qty) ->
+                state.stockItems.firstOrNull { m -> m.id == id }?.let { material ->
+                    // The category this material was last bought under, else the usual expense default.
+                    categoryId = state.events.firstOrNull { e -> e.stockItemId == id }?.categoryId
+                        ?: defaultCategoryId(state.categories.filter { c -> CategoryRole.parse(c.role) == CategoryRole.EXPENSE }, state.events)
+                    stockItemId = id
+                    quantity = qty
+                    applySaleUnit(material.unit, material.basePriceRupiah.takeIf { p -> p > 0 })
+                    advanced = true
+                }
             }
             localError = null
             justSaved = false

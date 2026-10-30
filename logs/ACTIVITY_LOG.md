@@ -1,5 +1,15 @@
 # Activity Log
 
+### [2026-10-30 21:20] [Antigravity — Fase UX U3: stok bahan nyata dan pemakaian produksi]
+- **Goal**: Implementasi task U3 / keputusan U-2: stok bahan turunan dihitung dari stok awal, belanja bertaut (+), pemakaian produksi (−), tambah/pakai manual, dan hitung ulang.
+- **Actions**:
+  - `StockManagement`: perhitungan riwayat stok bahan dari pergerakan bertaut (belanja, konsumsi produksi, opname).
+  - `FinanceDao` & `FinanceRepository`: penautan otomatis transaksi belanja ke pergerakan stok bahan, pencatatan konsumsi bahan saat produksi dicatat, dan pembersihan konsumsi yatim saat produksi dihapus.
+  - `FinanceWorkbookExporter` & `FinanceWorkbookImporter`: penyesuaian kolom dan jenis pergerakan bahan pada ekspor/impor buku kas (lossless roundtrip).
+  - UI `StockSection`, `ProductsScreen`, `EntryScreen`: dialog riwayat stok bahan, konfirmasi pencatatan belanja saat penambahan stok manual, dan peringatan stok menipis berdasarkan stok riil.
+- **Files**: `data/{FinanceDao,FinanceRepository}.kt`, `domain/StockManagement.kt`, `exporter/FinanceWorkbookExporter.kt`, `importer/{FinanceWorkbookImporter,ImportModels}.kt`, `presentation/{MankeuApp,screens/StockSection,screens/ProductsScreen,screens/EntryScreen}.kt`, `res/values{,-en}/strings.xml`, `docs/DOMAIN_MODEL.md`, `logs/{DECISION_LOG,ACTIVITY_LOG}.md`, tests `StockManagementTest`, `TemplateImportTest`, `MaterialStockFlowTest`, `MaterialStockScreenTest`.
+- **Verification**: `testDebugUnitTest` 33 tasks passed (100% green).
+
 ### [2026-10-30 12:46] [Claude Code (Opus) — Fase UX U2 fix round 1]
 - **Goal**: Address the U2 review (I-1, I-2, M-1..M-5).
 - **Actions**: I-1: help steps "help_start_books_steps"/"help_report_target_steps" had raw newlines (rendered as one step). Root cause: they were hand-edited in strings.xml through a shell command whose "\n" reached Python as a real newline; the generator `docs/guide/help_strings.py` escapes correctly. Texts now changed in the generator and regenerated (the GUIDE block moved to the file end, content otherwise unchanged); new GuidesTest check: every `help_*_steps` has no raw newline and splits into 2+ steps on the escape. I-2: one meaning: `MonthlySummary.incomeRupiah`; Beranda tile renamed "Pendapatan bulan ini", export adds "Pendapatan" with parts "Penjualan (nota)" and "Pendapatan lain". M-1: low-cash warning gated on the month-end balance the hero shows. M-2: all-months profit path removed (`ProfitCalculator.summary` deleted; Realisasi `accountingSummary` keeps cash/receivable/payable, profit lines 0; FinancialSummary loses hpp/production/variance/depreciation); tests that read the all-months profit now sum `monthlySummaries`. M-3: help "Membaca Beranda", "Laba rugi", "Status BEP" and "Uang vs rencana" texts match the new figures. M-4: monthly flows also re-emit when the month turns (minute clock poll). M-5: README, UX_AND_ACCESSIBILITY, V1 spec, panduan, diagrams, simulasi scenario renamed to "Uang vs rencana".

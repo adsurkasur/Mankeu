@@ -36,6 +36,8 @@ import com.mankeu.domain.SaleLineInput
 import com.mankeu.domain.SalesMath
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockItemEntity
+import com.mankeu.domain.StockMovement
+import com.mankeu.domain.StockMovementEntity
 import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.domain.toDomain
@@ -301,6 +303,7 @@ class FinanceRepository(
                 notices = dao.getImportNotices(project.id),
                 provenance = dao.getProvenance(project.id),
                 stockItems = exportedStock(business.id, project.id, products, exportBooks),
+                stockMovements = stockDao.getManualMovements(business.id) + stockDao.getConsumptionOfProject(project.id),
                 products = products,
                 plan = plan,
             )
@@ -313,7 +316,8 @@ class FinanceRepository(
      */
     private suspend fun exportedStock(businessId: String, projectId: String, products: List<ProductRecord>, books: List<FinanceExportBook>): List<StockItemEntity> {
         val visible = stockDao.getStockItems(businessId, projectId)
-        val referenced = (products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } } + books.flatMap { b -> b.events.mapNotNull { it.stockItemId } }).toSet()
+        val used = stockDao.getConsumptionOfProject(projectId).map { it.stockItemId }
+        val referenced = (products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } } + books.flatMap { b -> b.events.mapNotNull { it.stockItemId } } + used).toSet()
         val missing = (referenced - visible.map { it.id }.toSet()).mapNotNull { stockDao.getStockItem(it) }.filter { it.businessId == businessId }
         return (visible + missing).map { it.copy(basePriceRupiah = dao.latestPurchasePrice(it.id) ?: it.basePriceRupiah) }
     }
@@ -455,24 +459,50 @@ class FinanceRepository(
         renamed.forEach { (unit, name) -> dao.renameSaleUnit(productId, "${unit.id}#", name) }
     }
 
-    /** Produksi (spec #9): [batches] batches add batches × yield base units to stock. */
+    /**
+     * Produksi (spec #9): [batches] batches add batches × yield base units to stock, and use batches × quantity of
+     * every recipe material (U-2, DEC-030 §3), stored per line so deleting the production gives them back.
+     */
     suspend fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
         require(batches.signum() > 0) { "Jumlah batch harus lebih dari nol." }
         val product = dao.getProduct(productId) ?: error("Produk tidak ditemukan.")
         val yield = TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE
+        val now = System.currentTimeMillis()
+        val productionId = UUID.randomUUID().toString()
         dao.insertProductMovement(
             ProductMovementEntity(
-                id = UUID.randomUUID().toString(),
+                id = productionId,
                 productId = productId,
                 movementType = ProductMovementType.PRODUCTION.name,
                 quantityText = (batches * yield).stripTrailingZeros().toPlainString(),
                 batchesText = batches.stripTrailingZeros().toPlainString(),
                 dateEpochDay = date.toEpochDay(),
                 notes = notes.trim(),
-                createdAtEpochMillis = System.currentTimeMillis(),
+                createdAtEpochMillis = now,
             ),
         )
+        stockDao.insertStockMovements(
+            dao.getRecipeLines(productId).mapNotNull { line ->
+                val perBatch = TransactionCalculation.parseQuantity(line.quantityText) ?: return@mapNotNull null
+                // A recipe line may still name a material that was deleted; there is nothing to take it from.
+                line.stockItemId?.takeIf { stockDao.getStockItem(it) != null }?.let { material ->
+                    consumption(UUID.randomUUID().toString(), material, perBatch * batches, date, product.name, productionId, now)
+                }
+            },
+        )
     }
+
+    private fun consumption(id: String, stockItemId: String, quantity: BigDecimal, date: LocalDate, productName: String, productionId: String, createdAt: Long) =
+        StockMovementEntity(
+            id = id,
+            stockItemId = stockItemId,
+            movementType = StockMovementType.CONSUME.name,
+            quantityText = quantity.stripTrailingZeros().toPlainString(),
+            dateEpochDay = date.toEpochDay(),
+            notes = productName,
+            referenceEventId = productionId,
+            createdAtEpochMillis = createdAt,
+        )
 
     /** Hitung stok: the counted base units become the stock from [date] on; zero ("habis") is allowed. */
     suspend fun countProductStock(productId: String, counted: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
@@ -498,6 +528,7 @@ class FinanceRepository(
      */
     suspend fun deleteProductMovement(id: String) = database.withTransaction {
         require(dao.deleteProductionOrCount(id) == 1) { "Catatan produksi atau hitung stok tidak ditemukan." }
+        stockDao.deleteOrphanConsumption()
     }
 
     suspend fun archiveProduct(id: String) = database.withTransaction { dao.archiveProduct(id, System.currentTimeMillis()) }
@@ -631,6 +662,8 @@ class FinanceRepository(
         val project = dao.getProject(id) ?: error("Unit tidak ditemukan.")
         if (projectIsEmpty(project.id)) {
             dao.deleteProject(project.id)
+            // Its products' production went with it (cascade); so does their use of shared materials.
+            stockDao.deleteOrphanConsumption()
             ScopeRemoval.DELETED
         } else {
             dao.archiveProject(project.id, System.currentTimeMillis())
@@ -643,6 +676,7 @@ class FinanceRepository(
         val projects = dao.getProjects(id)
         return@withTransaction if (projects.all { projectIsEmpty(it.id) }) {
             dao.deleteBusiness(id)
+            stockDao.deleteOrphanConsumption()
             ScopeRemoval.DELETED
         } else {
             val now = System.currentTimeMillis()
@@ -897,11 +931,22 @@ class FinanceRepository(
      * Materials and goods of a unit. [StockItem.basePriceRupiah] is the newest purchase's unit price
      * (spec #20, DEC-028 §2), else the price entered with the item; deleting that purchase restores it.
      */
-    fun stockItems(businessId: String, projectId: String?): Flow<List<StockItem>> =
-        combine(stockDao.observeStockItems(businessId, projectId), dao.observeMaterialPurchases(businessId)) { items, purchases ->
-            val latest = purchases.associate { it.stockItemId to it.unitPriceRupiah }
-            items.map { item -> item.toDomain().let { it.copy(basePriceRupiah = latest[it.id] ?: it.basePriceRupiah) } }
+    fun stockItems(businessId: String, projectId: String?): Flow<List<StockItem>> = combine(
+        stockDao.observeStockItems(businessId, projectId),
+        dao.observeMaterialPurchases(businessId),
+        dao.observeMaterialStockPurchases(businessId),
+        stockDao.observeBusinessMovements(businessId),
+    ) { items, prices, purchases, movements ->
+        val latest = prices.associate { it.stockItemId to it.unitPriceRupiah }
+        // Stock is derived on read (U3, DEC-030 §3): opening + purchases + manual moves + counts − production use.
+        val bought = purchases.mapNotNull { p ->
+            p.quantityText.toBigDecimalOrNull()?.let { q ->
+                StockMovement(p.id, p.stockItemId, StockMovementType.PURCHASE, q, LocalDate.ofEpochDay(p.dateEpochDay), p.description, createdAtEpochMillis = p.createdAtEpochMillis)
+            }
         }
+        val moved = (movements.mapNotNull { it.toDomain() } + bought).groupBy { it.stockItemId }
+        items.map { item -> item.toDomain(moved[item.id].orEmpty()).let { it.copy(basePriceRupiah = latest[it.id] ?: it.basePriceRupiah) } }
+    }
 
     suspend fun materialPrice(stockItemId: String): Long? =
         dao.latestPurchasePrice(stockItemId) ?: stockDao.getStockItem(stockItemId)?.basePriceRupiah
@@ -930,15 +975,13 @@ class FinanceRepository(
             "Barang \"$cleanName\" sudah ada."
         }
         val now = System.currentTimeMillis()
-        val initialText = initialStock.stripTrailingZeros().toPlainString()
         val item = StockItemEntity(
             id = UUID.randomUUID().toString(),
             businessId = businessId,
             name = cleanName,
             unit = cleanUnit,
             basePriceRupiah = basePriceRupiah,
-            initialStockText = initialText,
-            currentStockText = initialText,
+            initialStockText = initialStock.stripTrailingZeros().toPlainString(),
             minAlertStockText = minAlertStock.stripTrailingZeros().toPlainString(),
             createdAtEpochMillis = now,
             projectId = owner,
@@ -947,14 +990,14 @@ class FinanceRepository(
         item.id
     }
 
-    /** Insert-movement and update-level happen together or not at all. */
+    /** A manual material move (Tambah / Pakai / Hitung ulang); the stock is derived from it. */
     suspend fun recordStockMovement(
         stockItemId: String,
         type: StockMovementType,
         quantity: BigDecimal,
         date: LocalDate,
         notes: String,
-    ): BigDecimal = database.withTransaction {
+    ) = database.withTransaction {
         RecordStockMovementUseCase(stockDao).execute(stockItemId, type, quantity, date, notes).getOrThrow()
     }
 
@@ -1536,7 +1579,6 @@ class FinanceRepository(
                     unit = item.unit.trim(),
                     basePriceRupiah = item.priceRupiah,
                     initialStockText = item.quantityText,
-                    currentStockText = item.quantityText,
                     minAlertStockText = item.minAlertText,
                     createdAtEpochMillis = now,
                     importBatchId = batchId,
@@ -1626,23 +1668,48 @@ class FinanceRepository(
         // Production and counts of the added products, after the transactions: on one date a row from
         // Produksi & Stok counts after that day's sales, in file order (DEC-028 §9). Undo removes them
         // with their product (cascade); rows of a product skipped by name are not imported.
+        // Material moves and production use too (U3), timed by their sheet row so one day keeps the file's order.
         val movementsFrom = System.currentTimeMillis() + 1
-        val addedMovements = productPlan.added.flatMap { p -> p.movements.map { productIds.getValue(normalize(p.name)) to it } }
-        addedMovements.forEachIndexed { index, (productId, m) ->
+        val addedMovements = productPlan.added.flatMap { p -> p.movements.map { p to it } }
+        addedMovements.forEachIndexed { index, (product, m) ->
+            val productionId = "$batchId:${UUID.randomUUID()}"
+            val createdAt = movementsFrom + if (m.order > 0) m.order else index
             dao.insertProductMovement(
                 ProductMovementEntity(
                     // The batch prefix lets undo remove these and keep production recorded later (cleanup P3).
-                    id = "$batchId:${UUID.randomUUID()}",
-                    productId = productId,
+                    id = productionId,
+                    productId = productIds.getValue(normalize(product.name)),
                     movementType = m.type.name,
                     quantityText = m.quantityText,
                     batchesText = m.batchesText,
                     dateEpochDay = m.date.toEpochDay(),
                     notes = m.notes,
-                    createdAtEpochMillis = movementsFrom + index,
+                    createdAtEpochMillis = createdAt,
                 ),
             )
+            stockDao.insertStockMovements(
+                m.uses.map { u ->
+                    consumption(
+                        "$batchId:${UUID.randomUUID()}", materialIds.getValue(normalize(u.materialName)), BigDecimal(u.quantityText), m.date,
+                        product.name.trim(), productionId, if (u.order > 0) movementsFrom + u.order else createdAt,
+                    )
+                },
+            )
         }
+        val addedMaterialMoves = addedStock.flatMap { item -> item.movements.map { materialIds.getValue(normalize(item.name)) to it } }
+        stockDao.insertStockMovements(
+            addedMaterialMoves.mapIndexed { index, (stockItemId, m) ->
+                StockMovementEntity(
+                    id = "$batchId:${UUID.randomUUID()}",
+                    stockItemId = stockItemId,
+                    movementType = m.type.name,
+                    quantityText = m.quantityText,
+                    dateEpochDay = m.date.toEpochDay(),
+                    notes = m.notes,
+                    createdAtEpochMillis = movementsFrom + if (m.order > 0) m.order else addedMovements.size + index,
+                )
+            },
+        )
         var sortOrder = dao.getBudgetItems(planBook.id).size
         preview.budgetLines.forEach { line ->
             val category = categories.getValue(normalize(line.categoryName))
@@ -1674,7 +1741,7 @@ class FinanceRepository(
                 severity = "IMPORT",
                 title = "Impor ${preview.sourceName} tersimpan",
                 explanation = buildList {
-                    add("${preview.transactions.size} transaksi, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedMovements.size} catatan produksi & hitung stok, ${addedStock.size} barang stok.")
+                    add("${preview.transactions.size} transaksi, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedMovements.size} catatan produksi & hitung stok, ${addedStock.size} barang stok, ${addedMaterialMoves.size} gerakan bahan.")
                     if (productPlan.skipped.isNotEmpty()) add("Produk dilewati karena namanya sudah ada, beserta produksi dan hitung stoknya: ${productPlan.skipped.joinToString()}.")
                     preview.planPeriod?.let { (start, end) ->
                         add(
@@ -1736,6 +1803,7 @@ class FinanceRepository(
                 if (row.materialName != null && row.quantityText == null) add("${row.source}: isi Jumlah untuk belanja bahan \"${row.materialName}\".")
             }
             added.forEach { p -> p.recipe.forEach { l -> if (l.materialName != null && normalize(l.materialName) !in materialNames) add(missingMaterial(l.source, l.materialName)) } }
+            added.forEach { p -> p.movements.flatMap { it.uses }.forEach { u -> if (normalize(u.materialName) !in materialNames) add(missingMaterial(u.source, u.materialName)) } }
         }
         return ProductPlan(existing, materials, added, (preview.products - added.toSet()).map { it.name }, conflicts)
     }
@@ -1792,12 +1860,13 @@ class FinanceRepository(
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
         archivedBudgets.forEach { item -> dao.archiveBudgetItem(item.id, now) }
-        val removedMovements = dao.deleteImportedProductMovements(batchId)
+        val removedMovements = dao.deleteImportedProductMovements(batchId) + stockDao.deleteImportedMovements(batchId)
         // Products first: a kept product's recipe keeps its materials.
         val keptProducts = dao.getUsedImportedProducts(batchId).also { kept -> if (kept.isNotEmpty()) dao.releaseFromImport(kept.map { it.id }) }
         val keptStock = stockDao.getUsedImportedItems(batchId).also { kept -> if (kept.isNotEmpty()) stockDao.releaseFromImport(kept.map { it.id }) }
         val removedStock = stockDao.deleteImportedItems(batchId)
         val removedProducts = dao.deleteImportedProducts(batchId)
+        stockDao.deleteOrphanConsumption()
         // Undo the plan period the import filled in, unless the owner has changed it since.
         val periodCleared = dao.getImportBatch(batchId)?.takeIf { it.appliedStartEpochDay != null }?.let { batch ->
             val unit = batch.projectId?.let { dao.getProject(it) }

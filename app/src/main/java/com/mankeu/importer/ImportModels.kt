@@ -3,6 +3,7 @@ package com.mankeu.importer
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.Recurrence
+import com.mankeu.domain.StockMovementType
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -16,6 +17,8 @@ import java.time.YearMonth
  * Version 5 (DEC-028): products have a base unit and batch yield, sale units and recipe lines
  * (material or free cost per batch) have their own sheets, and Transaksi carries unit and material.
  * Production and stock counts have their own sheet ([MOVEMENTS]) so product stock survives a round trip.
+ * U3 (DEC-030 §3, still v5, unreleased): the same sheet carries material moves and production use (column
+ * Bahan), and Stok Barang carries the opening stock, so material stock survives a round trip too.
  * Older files are rejected by their headers.
  */
 object MankeuTemplate {
@@ -43,8 +46,8 @@ object MankeuTemplate {
     val PRODUCT_HEADERS = listOf("Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)")
     val SALE_UNIT_HEADERS = listOf("Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)")
     val RECIPE_HEADERS = listOf("Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)")
-    val MOVEMENT_HEADERS = listOf("Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan")
-    val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum", "Diarsipkan")
+    val MOVEMENT_HEADERS = listOf("Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan", "Bahan")
+    val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Stok Awal", "Batas Minimum", "Diarsipkan")
     val CATEGORY_HEADERS = listOf("Nama", "Peran", "Sifat Biaya")
     val GUIDE_HEADERS = listOf("Kunci", "Nilai")
 
@@ -57,6 +60,12 @@ object MankeuTemplate {
     const val ONCE = "Sekali"
     const val PRODUCTION = "Produksi"
     const val STOCK_COUNT = "Hitung stok"
+    /** Material rows of [MOVEMENTS] (column Bahan, Produk blank): manual moves and counts of a material in Stok Barang. */
+    const val MATERIAL_IN = "Bahan masuk"
+    const val MATERIAL_OUT = "Bahan keluar"
+    const val MATERIAL_COUNT = "Hitung ulang bahan"
+    /** Production use: Produk and Bahan; belongs to the nearest Produksi row of that product above it. */
+    const val MATERIAL_USE = "Pemakaian bahan"
     /** `Stok Barang` "Diarsipkan": an archived item; blank means active. */
     const val YES = "Ya"
 
@@ -130,6 +139,23 @@ data class ImportProductMovement(
     val quantityText: String,
     val batchesText: String? = null,
     val notes: String = "",
+    /** Production only: the materials it used (the `Pemakaian bahan` rows under it). */
+    val uses: List<ImportMaterialUse> = emptyList(),
+    /** Row in the sheet, so rows of one date keep their order after import; 0 = list order. */
+    val order: Int = 0,
+)
+
+/** A `Pemakaian bahan` row: [quantityText] of [materialName] (its own unit) used by the production above it. */
+data class ImportMaterialUse(val source: String, val materialName: String, val quantityText: String, val order: Int = 0)
+
+/** A material row of `Produksi & Stok`: [type] IN, OUT or ADJUSTMENT (a count, zero allowed), in the material's unit. */
+data class ImportMaterialMovement(
+    val source: String,
+    val date: LocalDate,
+    val type: StockMovementType,
+    val quantityText: String,
+    val notes: String = "",
+    val order: Int = 0,
 )
 
 /** One `Produk` row with its `Satuan Jual`, `Resep Produk` and `Produksi & Stok` rows. */
@@ -155,6 +181,8 @@ data class ImportStockItem(
     val minAlertText: String,
     /** "Diarsipkan" = "Ya": still named by a recipe or purchase, but hidden from the lists (cleanup P2). */
     val archived: Boolean = false,
+    /** Its material rows of `Produksi & Stok`; imported only with the item, like production with its product. */
+    val movements: List<ImportMaterialMovement> = emptyList(),
 )
 
 data class WorkbookImportPreview(

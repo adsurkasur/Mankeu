@@ -17,14 +17,19 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
- * Manajemen Persediaan (Stok) Minimal UMKM.
- * Sesuai prinsip: Stok Akhir = Stok Awal + Masuk - Keluar (ditambah Opname Manual).
+ * Material stock (U-2, DEC-030 §3), derived on read like product stock: the opening stock, then every
+ * movement oldest first (date, then time recorded); a count ([StockMovementType.ADJUSTMENT]) sets the level.
+ * It may go below zero (recorded after the fact); screens then say "catat belanja atau hitung ulang".
  */
 
 enum class StockMovementType {
-    IN,         // Barang Masuk (Pembelian bahan/produk)
-    OUT,        // Barang Keluar (Penjualan / Pemakaian operasional)
-    ADJUSTMENT, // Penyesuaian stok fisik (Stock Opname)
+    IN,         // Tambah: manual stock-in without money (own harvest, correction)
+    OUT,        // Pakai: manual stock-out
+    ADJUSTMENT, // Hitung ulang: the counted level from this date on
+    /** Production use of a recipe material, stored with `referenceEventId` = the production row (deleted with it). */
+    CONSUME,
+    /** A linked purchase (CASH_EXPENSE / CREDIT_PURCHASE with a material and quantity); derived, never stored. */
+    PURCHASE,
 }
 
 data class StockItem(
@@ -37,8 +42,11 @@ data class StockItem(
     val minAlertStock: BigDecimal,
     /** Shared by every unit of the business rather than held by one branch. */
     val shared: Boolean = false,
+    /** What [currentStock] was derived from, oldest first (Riwayat stok bahan). */
+    val history: List<StockHistoryLine> = emptyList(),
 ) {
-    val isLowStock: Boolean get() = currentStock <= minAlertStock
+    /** Audit L05: without a minimum there is no "menipis"; a new material at 0 is not a warning. */
+    val isLowStock: Boolean get() = minAlertStock.signum() > 0 && currentStock <= minAlertStock
 }
 
 data class StockMovement(
@@ -49,7 +57,11 @@ data class StockMovement(
     val date: LocalDate,
     val notes: String = "",
     val referenceEventId: String? = null,
+    val createdAtEpochMillis: Long = 0,
 )
+
+/** One movement with the material stock after it. */
+data class StockHistoryLine(val movement: StockMovement, val stockAfter: BigDecimal)
 
 data class StockSummary(
     val totalItems: Int,
@@ -59,31 +71,26 @@ data class StockSummary(
 
 object StockCalculation {
 
-    /**
-     * Menghitung stok akhir dari stok awal dan urutan mutasi:
-     * Stok Akhir = Stok Awal + Total Masuk - Total Keluar (dengan penyesuaian opname jika ada).
-     */
-    fun calculateStockLevel(
-        initialStock: BigDecimal,
-        movements: List<StockMovement>,
-    ): BigDecimal {
-        var current = initialStock.coerceAtLeast(BigDecimal.ZERO)
-        for (m in movements) {
-            current = when (m.type) {
-                StockMovementType.IN -> current.add(m.quantity)
-                StockMovementType.OUT -> current.subtract(m.quantity).coerceAtLeast(BigDecimal.ZERO)
-                StockMovementType.ADJUSTMENT -> m.quantity.coerceAtLeast(BigDecimal.ZERO)
+    /** [movements] oldest first (date, then time recorded), each with the level after it; negative allowed. */
+    fun history(initialStock: BigDecimal, movements: List<StockMovement>): List<StockHistoryLine> {
+        var level = initialStock
+        return movements.sortedWith(compareBy({ it.date }, { it.createdAtEpochMillis })).map { m ->
+            level = when (m.type) {
+                StockMovementType.IN, StockMovementType.PURCHASE -> level + m.quantity
+                StockMovementType.OUT, StockMovementType.CONSUME -> level - m.quantity
+                StockMovementType.ADJUSTMENT -> m.quantity
             }
+            StockHistoryLine(m, level)
         }
-        return current.setScale(3, RoundingMode.HALF_UP)
     }
 
-    /**
-     * Menghitung total nilai persediaan dalam exact integer rupiah.
-     */
+    fun calculateStockLevel(initialStock: BigDecimal, movements: List<StockMovement>): BigDecimal =
+        (history(initialStock, movements).lastOrNull()?.stockAfter ?: initialStock).setScale(3, RoundingMode.HALF_UP)
+
+    /** Total value on hand in exact integer rupiah; a material below zero adds nothing. */
     fun computeInventoryValue(items: List<StockItem>): Long {
         return items.sumOf { item ->
-            TransactionCalculation.computeTotalRupiah(item.currentStock, item.basePriceRupiah)
+            TransactionCalculation.computeTotalRupiah(item.currentStock.coerceAtLeast(BigDecimal.ZERO), item.basePriceRupiah)
         }
     }
     fun summarize(items: List<StockItem>): StockSummary = StockSummary(
@@ -119,6 +126,7 @@ data class StockItemEntity(
     val unit: String,
     val basePriceRupiah: Long,
     val initialStockText: String = "0",
+    /** Not read or written since U3 (DEC-030 §3): stock is derived on read. Kept so schema 14 stays as it is. */
     val currentStockText: String = "0",
     val minAlertStockText: String = "0",
     val archived: Boolean = false,
@@ -149,10 +157,11 @@ data class StockItemEntity(
 data class StockMovementEntity(
     @PrimaryKey val id: String,
     val stockItemId: String,
-    val movementType: String, // "IN", "OUT", "ADJUSTMENT"
+    val movementType: String, // "IN", "OUT", "ADJUSTMENT", "CONSUME" (production use)
     val quantityText: String,
     val dateEpochDay: Long,
     val notes: String = "",
+    /** CONSUME: the product_movements row (production) this use belongs to. */
     val referenceEventId: String? = null,
     val createdAtEpochMillis: Long,
 )
@@ -185,11 +194,36 @@ interface StockDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertStockMovement(movement: StockMovementEntity)
 
-    @Query("SELECT * FROM stock_movements WHERE stockItemId = :stockItemId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
-    fun observeMovements(stockItemId: String): Flow<List<StockMovementEntity>>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertStockMovements(movements: List<StockMovementEntity>)
 
-    @Query("SELECT * FROM stock_movements WHERE stockItemId = :stockItemId ORDER BY dateEpochDay ASC, createdAtEpochMillis ASC")
-    suspend fun getMovements(stockItemId: String): List<StockMovementEntity>
+    /** Manual moves and counts of the business's materials (export, U3). */
+    @Query("SELECT m.* FROM stock_movements m INNER JOIN stock_items i ON i.id = m.stockItemId WHERE i.businessId = :businessId AND m.movementType != 'CONSUME' ORDER BY m.dateEpochDay, m.createdAtEpochMillis")
+    suspend fun getManualMovements(businessId: String): List<StockMovementEntity>
+
+    /** Production use by the active products of [projectId] (export, U3). */
+    @Query(
+        """
+        SELECT s.* FROM stock_movements s INNER JOIN product_movements m ON m.id = s.referenceEventId
+        INNER JOIN products p ON p.id = m.productId WHERE s.movementType = 'CONSUME' AND p.projectId = :projectId AND p.archived = 0
+        """,
+    )
+    suspend fun getConsumptionOfProject(projectId: String): List<StockMovementEntity>
+
+    /** Every movement of the business's materials, for the derived stock. */
+    @Query("SELECT m.* FROM stock_movements m INNER JOIN stock_items i ON i.id = m.stockItemId WHERE i.businessId = :businessId")
+    fun observeBusinessMovements(businessId: String): Flow<List<StockMovementEntity>>
+
+    /**
+     * Production use whose production is gone. Every path that deletes production (Riwayat stok, undo, a
+     * removed unit's cascade) calls this after, so the use goes with its production.
+     */
+    @Query("DELETE FROM stock_movements WHERE movementType = 'CONSUME' AND (referenceEventId IS NULL OR referenceEventId NOT IN (SELECT id FROM product_movements))")
+    suspend fun deleteOrphanConsumption(): Int
+
+    /** Rows an import added, by their id prefix (`<batchId>:`), like product movements. */
+    @Query("DELETE FROM stock_movements WHERE substr(id, 1, length(:batchId) + 1) = :batchId || ':'")
+    suspend fun deleteImportedMovements(batchId: String): Int
 
     @Query("DELETE FROM stock_items WHERE importBatchId = :batchId")
     suspend fun deleteImportedItems(batchId: String): Int
@@ -218,24 +252,36 @@ interface StockDao {
     suspend fun archiveStockItem(id: String, updatedAt: Long)
 }
 
-fun StockItemEntity.toDomain() = StockItem(
-    id = id,
-    businessId = businessId,
-    name = name,
-    unit = unit,
-    basePriceRupiah = basePriceRupiah,
-    currentStock = TransactionCalculation.parseQuantity(currentStockText) ?: BigDecimal.ZERO,
-    minAlertStock = TransactionCalculation.parseQuantity(minAlertStockText) ?: BigDecimal.ZERO,
-    shared = projectId == null,
-)
+/** The item with its stock derived from [movements] (stored ones and linked purchases) on top of the opening stock. */
+fun StockItemEntity.toDomain(movements: List<StockMovement> = emptyList()): StockItem {
+    val opening = TransactionCalculation.parseQuantity(initialStockText) ?: BigDecimal.ZERO
+    val history = StockCalculation.history(opening, movements)
+    return StockItem(
+        id = id,
+        businessId = businessId,
+        name = name,
+        unit = unit,
+        basePriceRupiah = basePriceRupiah,
+        currentStock = history.lastOrNull()?.stockAfter ?: opening,
+        minAlertStock = TransactionCalculation.parseQuantity(minAlertStockText) ?: BigDecimal.ZERO,
+        shared = projectId == null,
+        history = history,
+    )
+}
+
+/** A stored movement as the stock reads it; null for a kind this version does not know (a newer phone or backup). */
+fun StockMovementEntity.toDomain(): StockMovement? = StockMovementType.entries.firstOrNull { it.name == movementType }?.let { type ->
+    // parseQuantity returns null for "0", which a count may legitimately be.
+    StockMovement(id, stockItemId, type, quantityText.toBigDecimalOrNull() ?: BigDecimal.ZERO, LocalDate.ofEpochDay(dateEpochDay), notes, referenceEventId, createdAtEpochMillis)
+}
 
 // -------------------------------------------------------------------------------------------------
 // Use Cases
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Use Case: Mencatat mutasi alur stok (Masuk / Keluar / Penyesuaian Opname).
- * Eksekusi mutasi langsung memperbarui stok terkini pada item secara atomik.
+ * Use Case: a manual material movement (Tambah / Pakai / Hitung ulang). Only the movement is stored; the
+ * stock is derived. Taking out more than recorded is allowed (recorded after the fact); the screen warns.
  */
 class RecordStockMovementUseCase(
     private val stockDao: StockDao,
@@ -246,49 +292,29 @@ class RecordStockMovementUseCase(
         quantity: BigDecimal,
         date: LocalDate,
         notes: String = "",
-        referenceEventId: String? = null,
-    ): Result<BigDecimal> {
-        // Opname may count zero ("habis"); a movement in or out of nothing is meaningless.
+    ): Result<Unit> {
+        if (type !in MANUAL) return Result.failure(IllegalArgumentException("Jenis mutasi ini dicatat lewat belanja atau produksi."))
+        // A count may be zero ("habis"); a movement in or out of nothing is meaningless.
         val allowsZero = type == StockMovementType.ADJUSTMENT
         if (quantity.signum() < 0 || (quantity.signum() == 0 && !allowsZero)) {
             return Result.failure(IllegalArgumentException("Kuantitas mutasi harus lebih besar dari nol."))
         }
-
-        val item = stockDao.getStockItem(stockItemId)
-            ?: return Result.failure(IllegalStateException("Barang stok tidak ditemukan."))
-
-        val currentStock = TransactionCalculation.parseQuantity(item.currentStockText) ?: BigDecimal.ZERO
-        val newStock = when (type) {
-            StockMovementType.IN -> currentStock.add(quantity)
-            StockMovementType.OUT -> {
-                if (currentStock < quantity) {
-                    return Result.failure(IllegalStateException("Stok tidak mencukupi (Tersedia: $currentStock, Diminta: $quantity)."))
-                }
-                currentStock.subtract(quantity)
-            }
-            StockMovementType.ADJUSTMENT -> quantity
-        }
-
-        val now = System.currentTimeMillis()
-        val movement = StockMovementEntity(
-            id = java.util.UUID.randomUUID().toString(),
-            stockItemId = stockItemId,
-            movementType = type.name,
-            quantityText = quantity.stripTrailingZeros().toPlainString(),
-            dateEpochDay = date.toEpochDay(),
-            notes = notes,
-            referenceEventId = referenceEventId,
-            createdAtEpochMillis = now,
-        )
-
-        stockDao.insertStockMovement(movement)
-        stockDao.updateStockItem(
-            item.copy(
-                currentStockText = newStock.stripTrailingZeros().toPlainString(),
-                updatedAtEpochMillis = now,
+        stockDao.getStockItem(stockItemId) ?: return Result.failure(IllegalStateException("Barang stok tidak ditemukan."))
+        stockDao.insertStockMovement(
+            StockMovementEntity(
+                id = java.util.UUID.randomUUID().toString(),
+                stockItemId = stockItemId,
+                movementType = type.name,
+                quantityText = quantity.stripTrailingZeros().toPlainString(),
+                dateEpochDay = date.toEpochDay(),
+                notes = notes,
+                createdAtEpochMillis = System.currentTimeMillis(),
             ),
         )
+        return Result.success(Unit)
+    }
 
-        return Result.success(newStock)
+    private companion object {
+        val MANUAL = setOf(StockMovementType.IN, StockMovementType.OUT, StockMovementType.ADJUSTMENT)
     }
 }

@@ -496,12 +496,21 @@
     <string name="stock_shared_badge">dipakai semua unit</string>
     <string name="stock_row_detail">Stok %1$s %2$s · Nilai %3$s</string>
     <string name="stock_low_badge">Menipis</string>
-    <string name="stock_tap_hint">Ketuk barang untuk mencatat barang masuk, barang keluar, atau stok opname.</string>
+    <string name="stock_tap_hint">Ketuk bahan untuk menambah, memakai, atau menghitung ulang stoknya. Belanja bahan menambah stok, produksi memakainya.</string>
     <string name="stock_movement_title">Catat Stok: %1$s</string>
     <string name="stock_current">Stok saat ini: %1$s %2$s</string>
-    <string name="stock_type_in">Masuk</string>
-    <string name="stock_type_out">Keluar</string>
-    <string name="stock_type_adjust">Opname</string>
+    <string name="stock_type_in">Tambah</string>
+    <string name="stock_type_out">Pakai</string>
+    <string name="stock_type_adjust">Hitung ulang</string>
+    <string name="stock_negative_hint">Stok minus: catat belanja atau hitung ulang stok.</string>
+    <string name="stock_out_over">Lebih dari stok tercatat (%1$s %2$s). Tetap bisa disimpan; stoknya jadi minus.</string>
+    <string name="stock_money_title">Catat juga uangnya?</string>
+    <string name="stock_money_body">Kalau %1$s %2$s %3$s ini dibeli, catat sebagai belanja: uang keluar dan stok bertambah sekaligus.</string>
+    <string name="stock_money_buy">Ya, catat belanja</string>
+    <string name="stock_money_no">Tidak, tambah stok saja</string>
+    <string name="stock_history_heading">Riwayat</string>
+    <string name="stock_history_purchase">Belanja</string>
+    <string name="stock_history_use">Dipakai produksi %1$s</string>
     <string name="stock_qty">Jumlah</string>
     <string name="stock_qty_adjust">Jumlah fisik hasil hitung</string>
     <string name="stock_notes">Catatan (opsional)</string>
@@ -545,6 +554,7 @@
     <string name="production_title">Produksi %1$s</string>
     <string name="production_batches">Berapa batch?</string>
     <string name="production_result">= %1$s %2$s masuk stok</string>
+    <string name="production_materials">Bahan berkurang: %1$s</string>
     <string name="count_stock_title">Hitung stok %1$s</string>
     <string name="count_stock_field">Jumlah sekarang (%1$s)</string>
     <string name="editor_title_new">Produk baru</string>
@@ -674,7 +684,7 @@
     <string name="import_plan_period">Periode rencana (dipakai bila unit belum punya)</string>
     <string name="entry_material">Bahan (opsional)</string>
     <string name="entry_material_none">Bukan bahan resep</string>
-    <string name="entry_material_hint">Harga satuannya menjadi harga bahan untuk HPP.</string>
+    <string name="entry_material_hint">Jumlahnya menambah stok bahan ini; harga satuannya menjadi harga bahan untuk HPP.</string>
     <string name="price_alert_title">Harga %1$s berubah</string>
     <string name="price_alert_body">%1$s → %2$s per %3$s. Dampaknya:</string>
     <string name="price_alert_row">%1$s: HPP %2$s → %3$s per %4$s, untung %5$s → %6$s</string>

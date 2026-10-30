@@ -68,6 +68,7 @@ fun ProductsScreen(
     onCountStock: (String, BigDecimal, LocalDate) -> Unit,
     onCreateStockItem: (String, String, Long, BigDecimal, BigDecimal, Boolean) -> Unit,
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
+    onBuyMaterial: (String, BigDecimal) -> Unit = { _, _ -> },
     expanded: Boolean = false,
 ) {
     var produceId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -76,7 +77,7 @@ fun ProductsScreen(
     var materialId by rememberSaveable { mutableStateOf<String?>(null) }
     val prices = materials.associate { it.id to it.basePriceRupiah }
 
-    products.firstOrNull { it.product.id == produceId }?.let { ProductionSheet(it, onDismiss = { produceId = null }) { batches, date -> onProduce(it.product.id, batches, date); produceId = null } }
+    products.firstOrNull { it.product.id == produceId }?.let { ProductionSheet(it, materials, onDismiss = { produceId = null }) { batches, date -> onProduce(it.product.id, batches, date); produceId = null } }
     products.firstOrNull { it.product.id == countId }?.let { CountStockSheet(it, onDismiss = { countId = null }) { counted, date -> onCountStock(it.product.id, counted, date); countId = null } }
     MaterialSheets(
         items = materials,
@@ -87,6 +88,7 @@ fun ProductsScreen(
         onCloseMovement = { materialId = null },
         onCreateStockItem = onCreateStockItem,
         onRecordStockMovement = onRecordStockMovement,
+        onBuyMaterial = onBuyMaterial,
     )
 
     LazyColumn(
@@ -182,7 +184,7 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
 }
 
 @Composable
-private fun ProductionSheet(record: ProductRecord, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
+private fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
     var batches by rememberSaveable(record.product.id) { mutableStateOf("1") }
     var date by rememberSaveable(record.product.id) { mutableStateOf(LocalDate.now().toString()) }
     val parsed = TransactionCalculation.parseQuantity(batches)
@@ -199,6 +201,12 @@ private fun ProductionSheet(record: ProductRecord, onDismiss: () -> Unit, onSave
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
+            // U-2: the recipe's materials leave their stock (quantity per batch × batches).
+            val used = record.spec.recipe.mapNotNull { line ->
+                val material = materials.firstOrNull { m -> m.id == line.materialId } ?: return@mapNotNull null
+                line.quantity?.let { q -> "${material.name} ${(q * it).toQuantityText()} ${material.unit}" }
+            }
+            if (used.isNotEmpty()) Text(stringResource(R.string.production_materials, used.joinToString(", ")))
         }
         DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
     }

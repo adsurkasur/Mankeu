@@ -22,6 +22,8 @@ import com.mankeu.domain.MonthlySummary
 import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.StockItemEntity
+import com.mankeu.domain.StockMovementEntity
+import com.mankeu.domain.StockMovementType
 import com.mankeu.importer.MankeuTemplate
 import java.time.Instant
 import java.time.LocalDate
@@ -45,6 +47,8 @@ data class FinanceExportBundle(
     val notices: List<ImportNoticeEntity>,
     val provenance: List<ProvenanceEntity>,
     val stockItems: List<StockItemEntity> = emptyList(),
+    /** Manual moves and counts of [stockItems], and the production use of [products] (U3). */
+    val stockMovements: List<StockMovementEntity> = emptyList(),
     val products: List<ProductRecord> = emptyList(),
     /** The business plan's BEP (DEC-014), computed by the repository from the same rows. */
     val plan: PlanAnalysis? = null,
@@ -82,7 +86,9 @@ class FinanceWorkbookExporter(
         val productNames = bundle.products.associate { it.product.id to it.product.name }
         val stockNames = bundle.stockItems.associate { it.id to it.name }
         val referencedStock = bundle.products.flatMap { p -> p.recipe.mapNotNull { it.stockItemId } }.toSet() +
-            bundle.books.flatMap { b -> b.events.mapNotNull { it.stockItemId } }
+            bundle.books.flatMap { b -> b.events.mapNotNull { it.stockItemId } } +
+            bundle.stockMovements.filter { it.movementType == StockMovementType.CONSUME.name }.map { it.stockItemId }
+        val writtenStock = bundle.stockItems.filter { !it.archived || it.id in referencedStock }
         return writer.write(
             listOfNotNull(
                 guide(
@@ -101,8 +107,8 @@ class FinanceWorkbookExporter(
                 products(bundle.products),
                 saleUnits(bundle.products),
                 recipes(bundle.products, stockNames),
-                movements(bundle.products),
-                stock(bundle.stockItems, referencedStock),
+                movements(bundle.products, writtenStock, bundle.stockMovements),
+                stock(writtenStock),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
                 reportTable(bundle.books),
                 bundle.plan?.let(::feasibilityTable),
@@ -135,8 +141,8 @@ class FinanceWorkbookExporter(
             listOf("Modal & prive", "Setoran modal: Pemasukan berkategori 'Setoran Modal Pemilik'. Ambil uang pribadi: Pengeluaran berkategori 'Ambil untuk Pribadi (Prive)'. Beli alat: Pengeluaran berkategori 'Beli Peralatan & Aset'."),
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
             listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
-            listOf("Produksi & Stok", "Riwayat stok produk. Jenis: Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong). Hanya untuk produk di lembar Produk berkas ini. Pada tanggal yang sama, baris ini dihitung sesudah penjualan hari itu, berurutan seperti di lembar."),
-            listOf("Stok Barang", "Barang yang namanya sudah ada di aplikasi dilewati. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
+            listOf("Produksi & Stok", "Riwayat stok produk dan bahan. Jenis untuk produk (Bahan kosong): Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong); hanya untuk produk di lembar Produk berkas ini. Pemakaian bahan: Produk, Bahan, dan Jumlah bahan (satuan bahan) yang dipakai produksi di atasnya; tanpa baris ini produksi tidak mengurangi bahan. Jenis untuk bahan (Produk kosong): Bahan masuk, Bahan keluar, atau Hitung ulang bahan (boleh 0), Jumlah dalam satuan bahan; hanya untuk bahan di lembar Stok Barang berkas ini. Belanja bahan di Transaksi menambah stok bahan dengan sendirinya. Pada tanggal yang sama, baris ini dihitung sesudah transaksi hari itu, berurutan seperti di lembar."),
+            listOf("Stok Barang", "Stok Awal: jumlah sebelum belanja dan gerakan di berkas ini; stok sekarang dihitung dari stok awal, belanja, dan lembar Produksi & Stok. Barang yang namanya sudah ada di aplikasi dilewati, beserta gerakannya. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
     )
@@ -215,28 +221,52 @@ class FinanceWorkbookExporter(
         currencyColumns = setOf(4),
     )
 
-    /** Production and counts per product, oldest first (DEC-028 §9); the importer adds them back to the same product. */
-    private fun movements(products: List<ProductRecord>) = WorkbookTable(
-        name = MankeuTemplate.MOVEMENTS,
-        headers = MankeuTemplate.MOVEMENT_HEADERS,
-        rows = products.flatMap { p ->
-            p.movements.sortedWith(compareBy({ it.dateEpochDay }, { it.createdAtEpochMillis })).mapNotNull { m ->
+    /**
+     * Production and counts per product (DEC-028 §9), each production followed by its material use, and the manual
+     * moves and counts of the written materials (U3), all oldest first (date, then time recorded) so the importer
+     * keeps their order within a day. The importer adds them back to the same product and material.
+     */
+    private fun movements(products: List<ProductRecord>, materials: List<StockItemEntity>, stockMovements: List<StockMovementEntity>): WorkbookTable {
+        val names = materials.associate { it.id to it.name }
+        val uses = stockMovements.filter { it.movementType == StockMovementType.CONSUME.name }.groupBy { it.referenceEventId }
+        val productRows = products.flatMap { p ->
+            p.movements.mapNotNull { m ->
                 val kind = when (m.movementType) {
                     ProductMovementType.PRODUCTION.name -> MankeuTemplate.PRODUCTION
                     ProductMovementType.ADJUSTMENT.name -> MankeuTemplate.STOCK_COUNT
                     else -> return@mapNotNull null
                 }
-                listOf(LocalDate.ofEpochDay(m.dateEpochDay).toString(), p.product.name, kind, quantity(m.quantityText), quantity(m.batchesText), m.notes.ifBlank { null })
+                val date = LocalDate.ofEpochDay(m.dateEpochDay).toString()
+                val rows = listOf(listOf(date, p.product.name, kind, quantity(m.quantityText), quantity(m.batchesText), m.notes.ifBlank { null }, null)) +
+                    uses[m.id].orEmpty().sortedBy { it.createdAtEpochMillis }.mapNotNull { u ->
+                        names[u.stockItemId]?.let { listOf(date, p.product.name, MankeuTemplate.MATERIAL_USE, quantity(u.quantityText), null, null, it) }
+                    }
+                Triple(m.dateEpochDay, m.createdAtEpochMillis, rows)
             }
-        },
-    )
+        }
+        val materialRows = stockMovements.mapNotNull { m ->
+            val kind = when (m.movementType) {
+                StockMovementType.IN.name -> MankeuTemplate.MATERIAL_IN
+                StockMovementType.OUT.name -> MankeuTemplate.MATERIAL_OUT
+                StockMovementType.ADJUSTMENT.name -> MankeuTemplate.MATERIAL_COUNT
+                else -> return@mapNotNull null
+            }
+            val name = names[m.stockItemId] ?: return@mapNotNull null
+            Triple(m.dateEpochDay, m.createdAtEpochMillis, listOf(listOf(LocalDate.ofEpochDay(m.dateEpochDay).toString(), null, kind, quantity(m.quantityText), null, m.notes.ifBlank { null }, name)))
+        }
+        return WorkbookTable(
+            name = MankeuTemplate.MOVEMENTS,
+            headers = MankeuTemplate.MOVEMENT_HEADERS,
+            rows = (productRows + materialRows).sortedWith(compareBy({ it.first }, { it.second })).flatMap { it.third },
+        )
+    }
 
-    /** Archived items are written only when something still names them, so the re-import resolves every Bahan. */
-    private fun stock(items: List<StockItemEntity>, referenced: Set<String>) = WorkbookTable(
+    /** Archived items are written only when something still names them, so the re-import resolves every Bahan. Opening stock, not today's (U3). */
+    private fun stock(items: List<StockItemEntity>) = WorkbookTable(
         name = MankeuTemplate.STOCK,
         headers = MankeuTemplate.STOCK_HEADERS,
-        rows = items.filter { !it.archived || it.id in referenced }.map {
-            listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.currentStockText), quantity(it.minAlertStockText), MankeuTemplate.YES.takeIf { _ -> it.archived })
+        rows = items.map {
+            listOf(it.name, it.unit, it.basePriceRupiah, quantity(it.initialStockText), quantity(it.minAlertStockText), MankeuTemplate.YES.takeIf { _ -> it.archived })
         },
         currencyColumns = setOf(2),
     )

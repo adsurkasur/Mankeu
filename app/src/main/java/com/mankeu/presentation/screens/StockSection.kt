@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.domain.StockCalculation
+import com.mankeu.domain.StockHistoryLine
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
@@ -46,6 +49,7 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.sanitizeDecimal
+import com.mankeu.presentation.toDisplayDate
 import com.mankeu.presentation.toRupiah
 import java.math.BigDecimal
 
@@ -110,7 +114,12 @@ internal fun MaterialSheets(
     onCloseMovement: () -> Unit,
     onCreateStockItem: (String, String, Long, BigDecimal, BigDecimal, Boolean) -> Unit,
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
+    /** "Catat juga uangnya?" → Ya: opens Belanja filled with the material and quantity (U3, audit L07). */
+    onBuyMaterial: (String, BigDecimal) -> Unit = { _, _ -> },
 ) {
+    // A Tambah waits for the answer: bought (the purchase adds the stock) or stock only (a manual move), never both.
+    var pendingIn by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
+    var pendingNotes by rememberSaveable { mutableStateOf("") }
     if (adding) {
         AddStockItemSheet(
             unitName = unitName,
@@ -126,8 +135,30 @@ internal fun MaterialSheets(
             item = item,
             onDismiss = onCloseMovement,
             onSave = { type, quantity, notes ->
-                onRecordStockMovement(item.id, type, quantity, notes)
+                if (type == StockMovementType.IN) {
+                    pendingIn = item.id to quantity.toPlainString()
+                    pendingNotes = notes
+                } else {
+                    onRecordStockMovement(item.id, type, quantity, notes)
+                }
                 onCloseMovement()
+            },
+        )
+    }
+    pendingIn?.let { (id, quantityText) ->
+        val item = items.firstOrNull { it.id == id } ?: return@let
+        val quantity = BigDecimal(quantityText)
+        AlertDialog(
+            onDismissRequest = { pendingIn = null },
+            title = { Text(stringResource(R.string.stock_money_title)) },
+            text = { Text(stringResource(R.string.stock_money_body, quantity.toQuantityText(), item.unit, item.name)) },
+            confirmButton = {
+                TextButton(onClick = { pendingIn = null; onBuyMaterial(id, quantity) }) { Text(stringResource(R.string.stock_money_buy)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingIn = null; onRecordStockMovement(id, StockMovementType.IN, quantity, pendingNotes) }) {
+                    Text(stringResource(R.string.stock_money_no))
+                }
             },
         )
     }
@@ -173,6 +204,9 @@ internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (item.currentStock.signum() < 0) {
+                        Text(stringResource(R.string.stock_negative_hint), color = semantic.danger, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 if (item.isLowStock) {
                     Surface(shape = RoundedCornerShape(8.dp), color = semantic.dangerContainer) {
@@ -243,6 +277,9 @@ internal fun StockMovementSheet(
         onConfirm = { parsed?.let { onSave(type, it, notes.trim()) } },
     ) {
         Text(stringResource(R.string.stock_current, item.currentStock.toQuantityText(), item.unit), fontWeight = FontWeight.Bold)
+        if (item.currentStock.signum() < 0) {
+            Text(stringResource(R.string.stock_negative_hint), color = LocalMankeuSemanticColors.current.danger, style = MaterialTheme.typography.bodySmall)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(
                 StockMovementType.IN to R.string.stock_type_in,
@@ -256,7 +293,47 @@ internal fun StockMovementSheet(
             stringResource(if (type == StockMovementType.ADJUSTMENT) R.string.stock_qty_adjust else R.string.stock_qty),
             quantity,
         ) { quantity = it }
+        // Recorded after the fact, so taking more than recorded is allowed; the stock then shows minus.
+        if (type == StockMovementType.OUT && parsed != null && parsed > item.currentStock) {
+            Text(
+                stringResource(R.string.stock_out_over, item.currentStock.toQuantityText(), item.unit),
+                color = LocalMankeuSemanticColors.current.warning,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         OutlinedTextField(notes, { notes = it }, label = { Text(stringResource(R.string.stock_notes)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        if (item.history.isNotEmpty()) {
+            Text(stringResource(R.string.stock_history_heading), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            item.history.asReversed().take(HISTORY_LINES).forEach { MaterialHistoryRow(it, item.unit) }
+        }
+    }
+}
+
+private const val HISTORY_LINES = 5
+
+/** One line of Riwayat stok bahan: what happened (belanja, pemakaian produksi, hitung ulang…) and the stock after it. */
+@Composable
+private fun MaterialHistoryRow(line: StockHistoryLine, unit: String) {
+    val m = line.movement
+    val what = when (m.type) {
+        StockMovementType.PURCHASE -> stringResource(R.string.stock_history_purchase)
+        StockMovementType.CONSUME -> stringResource(R.string.stock_history_use, m.notes)
+        StockMovementType.IN -> stringResource(R.string.stock_type_in)
+        StockMovementType.OUT -> stringResource(R.string.stock_type_out)
+        StockMovementType.ADJUSTMENT -> stringResource(R.string.stock_type_adjust)
+    }
+    val change = when (m.type) {
+        StockMovementType.IN, StockMovementType.PURCHASE -> stringResource(R.string.stock_history_added, m.quantity.toQuantityText(), unit)
+        StockMovementType.OUT, StockMovementType.CONSUME -> stringResource(R.string.stock_history_removed, m.quantity.toQuantityText(), unit)
+        StockMovementType.ADJUSTMENT -> stringResource(R.string.stock_history_counted, m.quantity.toQuantityText(), unit)
+    }
+    Column {
+        Text("${m.date.toDisplayDate()} · $what", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            "$change · " + stringResource(R.string.stock_history_after, line.stockAfter.toQuantityText(), unit),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

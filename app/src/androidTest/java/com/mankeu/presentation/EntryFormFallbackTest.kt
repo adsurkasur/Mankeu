@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -28,7 +29,8 @@ import org.junit.runner.RunWith
 import java.math.BigDecimal
 
 /**
- * Cleanup P7: the two entry-form fallbacks DEC-028 left without an automated test. The form is a
+ * Cleanup P7: entry-form behaviour DEC-028 left without an automated test (the product fallback
+ * gave way to the sales-note link in Fase 2). The form is a
  * sheet, composed with the Activity's resources, so labels come from the target context.
  */
 @RunWith(AndroidJUnit4::class)
@@ -54,7 +56,7 @@ class EntryFormFallbackTest {
         stockItems = listOf(StockItem("minyak", "b", "Minyak", "liter", 25_000, BigDecimal.ZERO, BigDecimal.ZERO)),
     )
 
-    private fun open(kind: FinancialEventType) {
+    private fun open(kind: FinancialEventType, onNewSale: () -> Unit = {}) {
         compose.setContent {
             MankeuTheme {
                 EntryScreen(
@@ -63,6 +65,7 @@ class EntryFormFallbackTest {
                     onDelete = {},
                     onManageScope = {},
                     requestedKind = kind,
+                    onNewSale = onNewSale,
                 )
             }
         }
@@ -80,16 +83,19 @@ class EntryFormFallbackTest {
         compose.waitForIdle()
     }
 
-    /** A product without a sale unit takes its base unit and no price, never the previous product's. */
+    /**
+     * Fase 2 (DEC-029 §11): product sales go through the note. The income form no longer offers a
+     * product (the old B-7 picker and its unit fallback are gone) but links to the note instead.
+     */
     @Test
-    fun aProductWithoutSaleUnitsDoesNotKeepThePreviousProductsUnitAndPrice() {
-        open(FinancialEventType.CASH_INCOME)
+    fun theIncomeFormOffersTheSalesNoteInsteadOfAProduct() {
+        var opened = 0
+        open(FinancialEventType.CASH_INCOME) { opened++ }
 
-        choose(text(R.string.entry_product), "Kopi")
-        assertEquals("cup" to "10000", field(text(R.string.entry_unit)).value() to field(text(R.string.entry_unit_price)).value())
-
-        choose(text(R.string.entry_product), "Teh")
-        assertEquals("gelas" to "", field(text(R.string.entry_unit)).value() to field(text(R.string.entry_unit_price)).value())
+        assertEquals(0, compose.onAllNodesWithText("Kopi").fetchSemanticsNodes().size)
+        compose.onNodeWithText(text(R.string.entry_use_sale_note)).performScrollTo().performClick()
+        compose.waitForIdle()
+        assertEquals(1, opened)
     }
 
     /** A material locks the unit only while the form is a purchase; switching to Uang masuk opens it again. */

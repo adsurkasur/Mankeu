@@ -142,6 +142,7 @@ fun DataScreen(
     onRestoreDriveBackup: (String, String) -> Unit,
     onSignInGoogle: () -> Unit,
     onResetImport: () -> Unit = {},
+    onOpenContacts: () -> Unit = {},
 ) {
     var masterDataDialog by rememberSaveable { mutableStateOf(false) }
     var backupDialog by rememberSaveable { mutableStateOf(false) }
@@ -185,6 +186,17 @@ fun DataScreen(
                         Text(stringResource(R.string.data_master_count, state.categories.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     OutlinedButton(onClick = { masterDataDialog = true }) { Text(stringResource(R.string.action_manage)) }
+                }
+            }
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+                Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.contacts_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.contacts_count, state.contacts.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    OutlinedButton(onClick = onOpenContacts) { Text(stringResource(R.string.action_manage)) }
                 }
             }
         }

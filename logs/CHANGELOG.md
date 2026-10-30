@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 - Untung dihitung saat barang terjual: penjualan nota − HPP − biaya; belanja berkategori "Biaya produksi (sudah dihitung di HPP)" diganti HPP dengan baris selisih (F2-8). Arus kas tetap dari uang yang benar-benar masuk/keluar.
 ### Added
+- Nota penjualan: several products per note with unit, quantity and price, HPP and profit per line, one discount, paid now in full, not yet, or in part; a customer is needed only when the note is not fully paid. Notes appear in Catatan (filters Semua / Belum lunas / Lewat jatuh tempo) with a detail page to pay, edit or delete. Beranda shows a Tagihan card. Contacts (customers and suppliers) live in Berkas dan Data and are picked from the note.
 - Beranda and Laporan show HPP of goods sold, production spend, the difference between them with one plain sentence, what customers still owe and what is still owed to suppliers. PDF and Excel summaries carry the same figures.
 - Data layer for phase 2 (screens follow): contacts; sale notes with several products, a discount, HPP per line and pay now, later or in part; supplier purchases paid later with their payments; consignment (send, report sold as a note, settle, take back). Product stock now reads note lines and shows consigned goods apart. A product sale from the old income form becomes a paid note, and deleting it there removes the note.
 - Riwayat stok per product: production, stock counts and sales with the stock after each; a wrong production or count can be deleted (then recorded again).
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.
 
 ### Changed
+- The income form no longer offers a product: product sales go through Nota penjualan (link in the form).
 - Profit is counted when goods are sold: income is sale notes after discount plus other money in; costs are the HPP of what was sold, every other expense and depreciation. Spend in categories marked "Biaya produksi (sudah dihitung di HPP)" (by default only Bahan Baku & Stok; the owner can mark others such as packaging or gas) reaches profit through HPP; transport and other spend reduce profit directly. A supplier payment is not a cost again, and a purchase on credit counts on its purchase date. Cash flow still counts only cash. Beranda names the periods: "Untung semua bulan" and "Untung bulan ini".
 - Database schema 14 (DEC-029): contacts, sale notes with HPP per line, consignments, credit purchases from suppliers. On update, each earlier sale that named a product becomes a paid note with one line; its HPP is today's recipe cost and is marked as an estimate. Schema-12 and schema-13 backups are converted the same way on restore.
 - Tab Stok menjadi Produk; bahan ada di bagian Bahan & barang.

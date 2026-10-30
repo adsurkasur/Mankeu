@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -50,7 +51,7 @@ import com.mankeu.presentation.LocalFeedback
  * Pengeluaran" under the thumb from anywhere, and carries the same green/coral money direction the
  * entry form uses so the choice is recognisable before the label is read.
  *
- * Deliberately two options and no more: setoran modal, ambil pribadi and beli aset are money in or
+ * Fase 2 adds "Nota penjualan" on top: a product sale is a note (DEC-029 §11). Otherwise: setoran modal, ambil pribadi and beli aset are money in or
  * out too, chosen by their category in the entry form (DEC-011 K-2), so they need no button of
  * their own.
  */
@@ -58,6 +59,8 @@ import com.mankeu.presentation.LocalFeedback
 fun RecordSpeedDial(
     onRecord: (FinancialEventType) -> Unit,
     modifier: Modifier = Modifier,
+    /** Fase 2 (DEC-029 §11 §12): product sales go through the note, from the same button. */
+    onSaleNote: () -> Unit = {},
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val motion = LocalMotion.current
@@ -82,6 +85,20 @@ fun RecordSpeedDial(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    expanded = false
+                    onSaleNote()
+                },
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(stringResource(R.string.fab_sale_note), fontWeight = FontWeight.Bold)
+            }
+        }
         AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
             ExtendedFloatingActionButton(
                 onClick = {

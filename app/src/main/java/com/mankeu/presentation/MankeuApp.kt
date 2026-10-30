@@ -124,7 +124,11 @@ import com.mankeu.presentation.guide.HelpCenter
 import com.mankeu.presentation.guide.HelpSheet
 import com.mankeu.presentation.guide.articlesFor
 import com.mankeu.presentation.guide.LocalOpenHelp
+import com.mankeu.presentation.screens.ContactsScreen
 import com.mankeu.presentation.screens.DataScreen
+import com.mankeu.presentation.screens.NoteFilter
+import com.mankeu.presentation.screens.SaleNoteDetailScreen
+import com.mankeu.presentation.screens.SaleNoteEditorScreen
 import com.mankeu.presentation.screens.EntryScreen
 import com.mankeu.presentation.screens.HomeScreen
 import com.mankeu.presentation.screens.ManageScopeSheet
@@ -155,7 +159,7 @@ enum class Destination(val labelRes: Int, val icon: ImageVector) {
 /** Cash is recorded from these; elsewhere the speed dial would sit over Laporan and Produk content. */
 private val RECORDING_DESTINATIONS = setOf(Destination.HOME, Destination.ENTRY)
 
-enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY }
+enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY, CONTACTS, SALE_EDITOR, SALE_DETAIL }
 
 @Composable
 fun MankeuApp(
@@ -205,6 +209,14 @@ fun MankeuApp(
     // The product whose Riwayat stok (Overlay.STOCK_HISTORY) is open.
     var stockHistoryId by rememberSaveable { mutableStateOf<String?>(null) }
     val openStockHistory: (String) -> Unit = { id -> stockHistoryId = id; overlay = Overlay.STOCK_HISTORY }
+    // Fase 2: the note the editor is open on (null = a new note), the note whose detail is open,
+    // and the Catatan note filter, which Beranda's Tagihan card sets.
+    var saleEditorId by rememberSaveable { mutableStateOf<String?>(null) }
+    var saleDetailId by rememberSaveable { mutableStateOf<String?>(null) }
+    var noteFilter by rememberSaveable { mutableStateOf(NoteFilter.OPEN) }
+    val openSaleEditor: (String?) -> Unit = { id -> saleEditorId = id; overlay = Overlay.SALE_EDITOR }
+    val openSaleDetail: (String) -> Unit = { id -> saleDetailId = id; overlay = Overlay.SALE_DETAIL }
+    val openBills: (NoteFilter) -> Unit = { filter -> noteFilter = filter; destination = Destination.ENTRY }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
     // recreate() is not instantaneous — resources reload and the whole tree recomposes — and
     // without this the screen simply froze on the old language for a beat and then snapped.
@@ -358,6 +370,9 @@ fun MankeuApp(
     BackHandler(enabled = overlay != Overlay.NONE || destination != Destination.HOME) {
         when {
             overlay == Overlay.HELP && helpArticle != null -> helpArticle = null
+            // Ubah from a note's detail returns to that detail; Kontak returns to Berkas dan Data.
+            overlay == Overlay.SALE_EDITOR && saleEditorId != null -> overlay = Overlay.SALE_DETAIL
+            overlay == Overlay.CONTACTS -> overlay = Overlay.DATA
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             else -> destination = Destination.HOME
         }
@@ -459,7 +474,68 @@ fun MankeuApp(
                                         onBackupToDrive = { password -> withDriveToken { token -> viewModel.backupToDrive(password.toCharArray(), token) } },
                                         onRestoreDriveBackup = { fileId, password -> withDriveToken { token -> viewModel.prepareDriveBackupRestore(fileId, password.toCharArray(), token) } },
                                         onSignInGoogle = launchGoogleSignIn,
+                                        onOpenContacts = { overlay = Overlay.CONTACTS },
                                     )
+                                }
+
+                                Overlay.CONTACTS -> OverlayScaffold(
+                                    title = stringResource(R.string.contacts_title),
+                                    onBack = { overlay = Overlay.DATA },
+                                    snackbarHost = snackbarHost,
+                                ) {
+                                    ContactsScreen(
+                                        contacts = state.contacts,
+                                        sales = state.sales,
+                                        payables = state.payables,
+                                        onSave = viewModel::saveContact,
+                                        onArchive = viewModel::archiveContact,
+                                    )
+                                }
+
+                                Overlay.SALE_EDITOR -> OverlayScaffold(
+                                    title = stringResource(if (saleEditorId == null) R.string.sale_title_new else R.string.sale_title_edit),
+                                    onBack = { overlay = if (saleEditorId != null) Overlay.SALE_DETAIL else Overlay.NONE },
+                                    snackbarHost = snackbarHost,
+                                ) {
+                                    key(saleEditorId) {
+                                        SaleNoteEditorScreen(
+                                            existing = state.sales.firstOrNull { it.sale.id == saleEditorId },
+                                            products = state.products,
+                                            materials = state.stockItems,
+                                            contacts = state.contacts,
+                                            sales = state.sales,
+                                            payables = state.payables,
+                                            // Closed only once saved: a refusal keeps the owner's input and shows why.
+                                            onSave = { draft ->
+                                                viewModel.saveSale(saleEditorId, draft) { id ->
+                                                    if (saleEditorId != null) openSaleDetail(id) else overlay = Overlay.NONE
+                                                }
+                                            },
+                                            onSaveContact = viewModel::saveContact,
+                                            onArchiveContact = viewModel::archiveContact,
+                                        )
+                                    }
+                                }
+
+                                Overlay.SALE_DETAIL -> {
+                                    val record = state.sales.firstOrNull { it.sale.id == saleDetailId }
+                                    // Deleted here or synced away while open.
+                                    LaunchedEffect(record == null) { if (record == null) overlay = Overlay.NONE }
+                                    OverlayScaffold(
+                                        title = stringResource(R.string.sale_detail_title),
+                                        onBack = { overlay = Overlay.NONE },
+                                        snackbarHost = snackbarHost,
+                                    ) {
+                                        record?.let {
+                                            SaleNoteDetailScreen(
+                                                record = it,
+                                                products = state.products,
+                                                onPay = { amount, date, onDone -> viewModel.paySale(it.sale.id, amount, date, onDone) },
+                                                onEdit = { openSaleEditor(it.sale.id) },
+                                                onDelete = { viewModel.deleteSale(it.sale.id) },
+                                            )
+                                        }
+                                    }
                                 }
 
                                 Overlay.SETTINGS -> OverlayScaffold(
@@ -574,6 +650,7 @@ fun MankeuApp(
                                                     requestedEntryKind = kind
                                                     destination = Destination.ENTRY
                                                 },
+                                                onSaleNote = { openSaleEditor(null) },
                                                 compact = false,
                                             ) { padding ->
                                                 ScreenContent(
@@ -587,6 +664,11 @@ fun MankeuApp(
                                                     onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                     onOpenProduct = openProduct,
                                                     onOpenStockHistory = openStockHistory,
+                                                    onNewSale = { openSaleEditor(null) },
+                                                    onOpenSale = openSaleDetail,
+                                                    noteFilter = noteFilter,
+                                                    onNoteFilter = { noteFilter = it },
+                                                    onOpenBills = openBills,
                                                     requestedKind = requestedEntryKind,
                                                     onRequestedKindConsumed = { requestedEntryKind = null },
                                                     expanded = true,
@@ -608,6 +690,7 @@ fun MankeuApp(
                                                 requestedEntryKind = kind
                                                 destination = Destination.ENTRY
                                             },
+                                            onSaleNote = { openSaleEditor(null) },
                                             compact = true,
                                         ) { padding ->
                                             ScreenContent(
@@ -621,6 +704,11 @@ fun MankeuApp(
                                                 onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
                                                 onOpenProduct = openProduct,
                                                     onOpenStockHistory = openStockHistory,
+                                                onNewSale = { openSaleEditor(null) },
+                                                onOpenSale = openSaleDetail,
+                                                noteFilter = noteFilter,
+                                                onNoteFilter = { noteFilter = it },
+                                                onOpenBills = openBills,
                                                 requestedKind = requestedEntryKind,
                                                 onRequestedKindConsumed = { requestedEntryKind = null },
                                                 expanded = false,
@@ -771,6 +859,7 @@ private fun MainScaffold(
     onOpenSettings: () -> Unit,
     onOpenHelpSheet: () -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
+    onSaleNote: () -> Unit,
     compact: Boolean,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -783,7 +872,7 @@ private fun MainScaffold(
             if (destination in RECORDING_DESTINATIONS && state.selectedProjectId != null &&
                 state.selectedBookMode != BookMode.PROJECTION
             ) {
-                RecordSpeedDial(onRecord = onQuickRecord)
+                RecordSpeedDial(onRecord = onQuickRecord, onSaleNote = onSaleNote)
             }
         },
         topBar = {
@@ -1204,6 +1293,11 @@ private fun ScreenContent(
     onQuickRecord: (FinancialEventType) -> Unit,
     onOpenProduct: (String?) -> Unit,
     onOpenStockHistory: (String) -> Unit,
+    onNewSale: () -> Unit,
+    onOpenSale: (String) -> Unit,
+    noteFilter: NoteFilter,
+    onNoteFilter: (NoteFilter) -> Unit,
+    onOpenBills: (NoteFilter) -> Unit,
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
@@ -1244,6 +1338,7 @@ private fun ScreenContent(
                     onManageScope = onManageScope,
                     onOpenPlan = { onNavigate(Destination.ENTRY) },
                     onQuickRecord = onQuickRecord,
+                    onOpenBills = onOpenBills,
                     expanded = expanded,
                 )
                 Destination.PRODUCTS -> ProductsScreen(
@@ -1278,6 +1373,10 @@ private fun ScreenContent(
                     requestedKind = requestedKind,
                     onRequestedKindConsumed = onRequestedKindConsumed,
                     onCreateCategory = viewModel::createCategory,
+                    onNewSale = onNewSale,
+                    onOpenSale = onOpenSale,
+                    noteFilter = noteFilter,
+                    onNoteFilter = onNoteFilter,
                 )
                 Destination.REPORTS -> ReportsScreen(
                     state = state,

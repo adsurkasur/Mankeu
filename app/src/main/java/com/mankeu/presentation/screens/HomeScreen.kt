@@ -89,7 +89,6 @@ import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.ActualMonthCard
 import com.mankeu.presentation.components.ProfitDetailRows
 import com.mankeu.presentation.components.ReportCard
-import com.mankeu.presentation.components.hasProfitDetail
 import com.mankeu.presentation.components.PlanFeasibilityCard
 import com.mankeu.presentation.components.MetricTone
 import com.mankeu.presentation.components.NoticeCard
@@ -102,6 +101,7 @@ import com.mankeu.presentation.components.SkeletonMetricGrid
 import com.mankeu.presentation.LocalMotion
 import com.mankeu.presentation.appLocale
 import com.mankeu.presentation.toRupiah
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
@@ -116,6 +116,8 @@ fun HomeScreen(
     onOpenPlan: () -> Unit = {},
     /** Opens the entry form for a kind; OWNER_CAPITAL presets money in with the capital category. */
     onQuickRecord: (FinancialEventType) -> Unit = {},
+    /** Opens the Catatan note list on a filter (Tagihan card, DEC-029 §12). */
+    onOpenBills: (NoteFilter) -> Unit = {},
     expanded: Boolean = false,
 ) {
     // Proyeksi reads the business plan (DEC-014) whenever the unit has one; postings otherwise.
@@ -230,8 +232,17 @@ fun HomeScreen(
                 }
             }
         }
-        if (state.selectedBookMode == BookMode.REALIZATION && summary.hasProfitDetail()) {
-            item { ReportCard(stringResource(R.string.profit_detail_title)) { ProfitDetailRows(summary) } }
+        // Tagihan (DEC-029 §12): the amounts are the summary's, the same as Laporan; the overdue count is per note.
+        val overdue = state.sales.count { it.overdue(LocalDate.now()) }
+        if (state.selectedBookMode == BookMode.REALIZATION && (summary.receivableRupiah != 0L || summary.payableRupiah != 0L || overdue > 0)) {
+            item {
+                BillsCard(summary.receivableRupiah, summary.payableRupiah, overdue) {
+                    onOpenBills(if (overdue > 0) NoteFilter.OVERDUE else NoteFilter.OPEN)
+                }
+            }
+        }
+        if (state.selectedBookMode == BookMode.REALIZATION && (summary.hppRupiah != 0L || summary.productionSpendRupiah != 0L)) {
+            item { ReportCard(stringResource(R.string.profit_detail_home_title)) { ProfitDetailRows(summary, withBills = false) } }
         }
         item {
             ExpenseDistributionCard(

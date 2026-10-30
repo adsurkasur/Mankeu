@@ -295,7 +295,11 @@ fun com.mankeu.domain.FinancialSummary.hasProfitDetail() =
  * suppliers are still owed. Minimal until F4 redesigns the reports.
  */
 @Composable
-fun ProfitDetailRows(summary: com.mankeu.domain.FinancialSummary) {
+fun ProfitDetailRows(
+    summary: com.mankeu.domain.FinancialSummary,
+    /** False on Beranda, where the Tagihan card already shows both amounts. */
+    withBills: Boolean = true,
+) {
     if (summary.hppRupiah != 0L || summary.productionSpendRupiah != 0L) {
         ReportRow(stringResource(R.string.profit_hpp_sold), summary.hppRupiah, highlightNegative = false)
         ReportRow(stringResource(R.string.profit_production_spend), summary.productionSpendRupiah, highlightNegative = false)
@@ -309,7 +313,7 @@ fun ProfitDetailRows(summary: com.mankeu.domain.FinancialSummary) {
             )
         }
     }
-    if (summary.receivableRupiah != 0L || summary.payableRupiah != 0L) {
+    if (withBills && (summary.receivableRupiah != 0L || summary.payableRupiah != 0L)) {
         ReportRow(stringResource(R.string.profit_receivable), summary.receivableRupiah, highlightNegative = false)
         ReportRow(stringResource(R.string.profit_payable), summary.payableRupiah, highlightNegative = false)
     }

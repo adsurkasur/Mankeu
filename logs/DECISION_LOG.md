@@ -60,6 +60,11 @@
   - **m-4:** `FinanceRepository(database, currentMonth)` supplies the month that depreciation runs through; tests pin it.
   - **m-7:** an event-level cost-nature override (old form) changes only fixed/variable for break-even; it never changes whether the spend is counted in HPP, which is the category's flag. A FIXED override on a line in a flagged category is still production spend. Cost if wrong: F4 adds a per-line HPP override.
   - Not covered (Task 7): the Kategori sheet of the template is reference only, so a flag set by hand on a category other than Bahan Baku & Stok does not survive export → re-import (DEC-012); the same already holds for a category's cost nature, which travels only per row.
+- **Addendum (Task 5, screens):**
+  - Beranda's Tagihan card shows the Realisasi summary's `receivableRupiah`/`payableRupiah` (the same figures as Laporan) and the number of overdue notes; a tap opens Catatan on "Lewat jatuh tempo" when there are any, else "Belum lunas" (the default filter). Beranda's profit detail card no longer repeats the two amounts; Laporan keeps them.
+  - Contacts are per business; the per-contact amounts and the VM's `payables` use the selected unit's notes and credit purchases, like the rest of Beranda. Cost if wrong: a business-wide sales flow.
+  - "Semua" in the Catatan note list shows the newest 5 until "Tampilkan semua", so a long import history does not push the transactions away. The note detail is a full page (overlay); Bayar is a short sheet (#13); Hapus confirms with the number of payments deleted with the note.
+  - The income form keeps `productId` of an old record it corrects (M3/M4 paths unchanged); only the picker is gone.
 - **Known interim state (until Task 7):** the Excel export writes a note made in the note form only as its payments (plain income rows).
 - **Affected components**: `data/{Entities,AppDatabase,Migration13To14,LegacySaleShape,FinanceRepository}.kt`, `backup/BackupUpgrade.kt`, `sync/SyncEngine.kt`, `domain/{FinanceModels,LedgerPolicy,ProductCosting,MonthlyCashFlow}.kt`, schema `14.json`, `docs/DATABASE_MIGRATIONS.md`.
 

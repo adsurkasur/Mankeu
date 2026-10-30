@@ -156,6 +156,11 @@ fun EntryScreen(
     requestedKind: FinancialEventType? = null,
     onRequestedKindConsumed: () -> Unit = {},
     onCreateCategory: (String, CategoryRole) -> Unit = { _, _ -> },
+    /** Fase 2: product sales are notes (DEC-029 §11); their list sits above the transactions (§12). */
+    onNewSale: () -> Unit = {},
+    onOpenSale: (String) -> Unit = {},
+    noteFilter: NoteFilter = NoteFilter.OPEN,
+    onNoteFilter: (NoteFilter) -> Unit = {},
 ) {
     var selected by rememberSaveable { mutableStateOf<FinancialEventType?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
@@ -193,6 +198,7 @@ fun EntryScreen(
     var justSaved by rememberSaveable { mutableStateOf(false) }
     // The record being corrected with Ubah; null when the form records a new one.
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAllNotes by rememberSaveable { mutableStateOf(false) }
 
     /** Sets the unit and, when known, its price, and re-derives the amount from a typed quantity. */
     fun applySaleUnit(name: String, priceRupiah: Long?) {
@@ -354,6 +360,15 @@ fun EntryScreen(
                 }
             }
         }
+
+        saleNoteItems(
+            sales = state.sales,
+            filter = noteFilter,
+            onFilter = { feedback(FeedbackEvent.TAP); onNoteFilter(it) },
+            showAll = showAllNotes,
+            onShowAll = { showAllNotes = true },
+            onOpen = onOpenSale,
+        )
 
         if (state.eventCount > 0) {
             item {
@@ -680,36 +695,11 @@ fun EntryScreen(
                         }
                     }
                 }
-                if (incoming && selectedRole == CategoryRole.REVENUE && state.products.isNotEmpty()) {
-                    // Optional (B-7). Picking a product fills unit and price and opens the detail
-                    // so the quantity can be typed; the amount then follows quantity × price.
-                    ChoiceMenu(
-                        fieldLabel = stringResource(R.string.entry_product),
-                        label = state.products.firstOrNull { it.product.id == productId }?.product?.name
-                            ?: stringResource(R.string.entry_product_none),
-                        options = listOf("" to stringResource(R.string.entry_product_none)) +
-                            state.products.map { it.product.id to it.product.name },
-                        onSelected = { id ->
-                            productId = id.ifBlank { null }
-                            state.products.firstOrNull { it.product.id == productId }?.let { record ->
-                                // The main (first) sale unit is the default (DEC-028 §8). A product with none
-                                // (synced from an old phone) falls back to its base unit and no price, never
-                                // the previous product's values.
-                                val main = record.mainUnit
-                                applySaleUnit(main?.name ?: record.product.unit, main?.priceRupiah)
-                                advanced = true
-                            }
-                        },
-                    )
-                    state.products.firstOrNull { it.product.id == productId }?.takeIf { it.units.size > 1 }?.let { record ->
-                        ChoiceMenu(
-                            fieldLabel = stringResource(R.string.entry_sale_unit),
-                            label = unit,
-                            options = record.units.sortedBy { it.sortOrder }.map { it.name to it.name },
-                            onSelected = { name ->
-                                record.units.firstOrNull { it.name == name }?.let { applySaleUnit(it.name, it.priceRupiah) }
-                            },
-                        )
+                if (incoming && selectedRole == CategoryRole.REVENUE && editingId == null && state.products.isNotEmpty()) {
+                    // One path for product sales (DEC-029 §11): the note, not this form. A product on
+                    // an old record stays on it when it is corrected here (productId is kept).
+                    TextButton(onClick = { feedback(FeedbackEvent.TAP); closeSheet(); onNewSale() }) {
+                        Text(stringResource(R.string.entry_use_sale_note))
                     }
                 }
                 if (!incoming && selectedRole == CategoryRole.EXPENSE && state.stockItems.isNotEmpty()) {

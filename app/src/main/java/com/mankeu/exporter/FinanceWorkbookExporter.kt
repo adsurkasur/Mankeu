@@ -338,7 +338,8 @@ internal object PlanAnalysisFormat {
 
 /** The month's summary lines for the PDF and the xlsx "Laporan" sheet, both from [MonthlySummary] (U2). */
 internal fun MonthlySummary.reportLines(): List<Pair<String, Long>> = buildList {
-    add("Penjualan" to salesRupiah)
+    add("Pendapatan" to incomeRupiah)
+    add("Penjualan (nota)" to salesRupiah)
     if (otherIncomeRupiah != 0L) add("Pendapatan lain" to otherIncomeRupiah)
     add("HPP (harga pokok penjualan)" to hppRupiah)
     add("Biaya lain (termasuk penyusutan)" to otherCostRupiah)

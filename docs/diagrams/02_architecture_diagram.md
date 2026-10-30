@@ -87,7 +87,7 @@ flowchart TD
     screenContent --> entryScreen["EntryScreen di Realisasi<br/>formulir, cari, saring Semua Masuk Keluar"]
     screenContent --> planScreen["PlanScreen di Rencana<br/>produk, biaya, periode"]
     screenContent --> stockScreen["StockScreen<br/>barang unit dan bersama"]
-    screenContent --> reportsScreen["ReportsScreen<br/>Laba Rugi dan Arus Kas, Kelayakan dan BEP,<br/>Realisasi vs Target"]
+    screenContent --> reportsScreen["ReportsScreen<br/>Laba Rugi dan Arus Kas, Kelayakan dan BEP,<br/>Uang vs rencana"]
     homeScreen --> metricCards["SimpleMetricCard<br/>read-out tanpa klik"]
     homeScreen --> planCards["PlanFeasibilityCard<br/>ActualMonthCard, StockCard"]
     entryScreen --> ledgerCard["EventCard<br/>Ubah dan Hapus, 48dp"]

@@ -39,7 +39,7 @@ V1 is an offline native Android cash book and business planner for small busines
 - **Beranda**: cash, the four key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even status.
 - **Catatan**: the entry form and the record list (search, Semua/Masuk/Keluar) in Realisasi; Rencana Usaha in Rencana.
 - **Stok**: items of the selected unit and shared items.
-- **Laporan**: Laba Rugi dan Arus Kas, Kelayakan & BEP, Realisasi vs Target.
+- **Laporan**: Laba Rugi dan Arus Kas, Kelayakan & BEP, Uang vs rencana.
 - **Overlays** from the top bar: Berkas & Data (import, export, backup, categories, import history), Pengaturan, Pusat Bantuan.
 
 A record speed dial (Uang Masuk, Uang Keluar) is available on Beranda and Catatan.
@@ -76,7 +76,7 @@ There are no credit, receivable, payable, loan, or interest events (DEC-011).
 - **Beranda:** current cash, operating cash flow, profit, operating income and expense, expense distribution, stock summary.
 - **Laba Rugi dan Arus Kas:** revenue and expenses from postings; cash by operating, investing, and financing role and month.
 - **Kelayakan & BEP:** monthly breakdown (fixed costs, one-off costs averaged, depreciation, variable cost, revenue, profit, R/C, B/C), break-even by mix and per product, capital need (DEC-014, DEC-016, DEC-017).
-- **Realisasi vs Target:** plan and actual averages per month, cash basis.
+- **Uang vs rencana** (was "Realisasi vs Target"): plan and actual money in/out averages per month, cash basis; never called profit (U2).
 
 All amounts are derived at read time. No report total is a writable source of truth.
 

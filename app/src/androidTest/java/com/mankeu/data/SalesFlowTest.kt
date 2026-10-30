@@ -352,17 +352,17 @@ class SalesFlowTest {
         val wear = 200_000L
         val october2026 = FinanceRepository(db, currentMonth = { java.time.YearMonth.of(2026, 10) })
         val s = october2026.accountingSummary(bookId).first()
-        assertEquals(5_430_000L, s.operatingIncomeRupiah)
-        assertEquals(4_440_000L + 1_200_000L + wear, s.operatingExpenseRupiah)
-        assertEquals(-410_000L, s.profitRupiah)
+        // U2: profit exists per month only; the all-time summary carries no profit lines for Realisasi.
+        assertEquals(listOf(0L, 0L, 0L), listOf(s.operatingIncomeRupiah, s.operatingExpenseRupiah, s.profitRupiah))
+        val allMonths = october2026.monthlySummaries(bookId).first()
+        assertEquals(5_430_000L, allMonths.sumOf { it.incomeRupiah })
+        assertEquals(4_440_000L + 1_200_000L + wear, allMonths.sumOf { it.hppRupiah + it.otherCostRupiah })
+        assertEquals(-410_000L, allMonths.sumOf { it.profitRupiah })
+        assertEquals(wear, allMonths.sumOf { it.profit.depreciationRupiah })
         // Seen in December, the asset has worn two more months (F2-8 fix round: through the current month).
-        assertEquals(-610_000L, FinanceRepository(db, currentMonth = { java.time.YearMonth.of(2026, 12) }).accountingSummary(bookId).first().profitRupiah)
+        assertEquals(-610_000L, FinanceRepository(db, currentMonth = { java.time.YearMonth.of(2026, 12) }).monthlySummaries(bookId).first().sumOf { it.profitRupiah })
         // Komparasi's cash basis (review I-1): note payment + other income in; cash spend + supplier payment out.
         assertEquals(2_050_000L to 6_200_000L, s.operatingCashInRupiah to s.operatingCashOutRupiah)
-        assertEquals(4_440_000L, s.hppRupiah)
-        assertEquals(5_200_000L, s.productionSpendRupiah)
-        assertEquals(760_000L, s.productionVarianceRupiah)
-        assertEquals(wear, s.depreciationRupiah)
         assertEquals(5_380_000L - 2_000_000L, s.receivableRupiah)
         assertEquals(200_000L, s.payableRupiah)
         // Cash counts only cash: note payment 2 jt + other income − cash spend − supplier payment.
@@ -391,6 +391,6 @@ class SalesFlowTest {
         val withTransport = repo.profitInputs(bookId).first().months().single { it.month == java.time.YearMonth.of(2026, 10) }
         assertEquals(-460_000L, withTransport.profitRupiah)
         assertEquals(5_200_000L, withTransport.productionSpendRupiah)
-        assertEquals(s.profitRupiah - 150_000L, october2026.accountingSummary(bookId).first().profitRupiah)
+        assertEquals(-410_000L - 150_000L, october2026.monthlySummaries(bookId).first().sumOf { it.profitRupiah })
     }
 }

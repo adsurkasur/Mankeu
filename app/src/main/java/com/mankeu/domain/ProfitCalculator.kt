@@ -81,26 +81,4 @@ object ProfitCalculator {
             hppEstimatedIncluded = s.any { it.hppEstimated },
         )
     }
-
-    /**
-     * The Realisasi summary: profit lines from [months], cash and payable from the postings in [posted],
-     * receivable = [noteTotalRupiah] minus what the postings show paid on notes.
-     */
-    fun summary(posted: FinancialSummary, months: List<MonthProfit>, noteTotalRupiah: Long): FinancialSummary {
-        val hpp = months.sumOf { it.hppRupiah }
-        val depreciation = months.sumOf { it.depreciationRupiah }
-        val production = months.sumOf { it.productionSpendRupiah }
-        val income = months.sumOf { it.salesRupiah + it.otherIncomeRupiah }
-        val expense = hpp + months.sumOf { it.fixedCostRupiah + it.variableCostRupiah } + depreciation
-        return posted.copy(
-            operatingIncomeRupiah = income,
-            operatingExpenseRupiah = expense,
-            profitRupiah = income - expense,
-            hppRupiah = hpp,
-            productionSpendRupiah = production,
-            productionVarianceRupiah = production - hpp,
-            depreciationRupiah = depreciation,
-            receivableRupiah = noteTotalRupiah + posted.receivableRupiah,
-        )
-    }
 }

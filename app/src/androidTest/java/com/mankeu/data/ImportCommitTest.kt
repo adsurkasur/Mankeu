@@ -93,11 +93,12 @@ class ImportCommitTest {
         val note = dao.getSale(LegacySaleShape.saleId(sale.id))!!
         assertEquals(dao.getImportBatches(projectId).single().id to sale.id.let(LegacySaleShape::saleId), note.importBatchId to sale.saleId)
         val summary = repository.accountingSummary(books.getValue(BookMode.REALIZATION).id).first()
+        val months = repository.monthlySummaries(books.getValue(BookMode.REALIZATION).id).first()
         // Profit when sold (DEC-029 §4): the note's 450 cups × Rp10.000, minus their HPP (Rp18.000 of milk
         // per 6 cups = Rp3.000 a cup) and the 0.5 jt rent; the 5 jt capital moves cash, not profit.
-        assertEquals(4_500_000L, summary.operatingIncomeRupiah)
-        assertEquals(1_350_000L, summary.hppRupiah)
-        assertEquals(4_500_000L - 1_350_000L - 500_000L, summary.profitRupiah)
+        assertEquals(4_500_000L, months.sumOf { it.incomeRupiah })
+        assertEquals(1_350_000L, months.sumOf { it.hppRupiah })
+        assertEquals(4_500_000L - 1_350_000L - 500_000L, months.sumOf { it.profitRupiah })
         assertEquals(9_000_000L, summary.cashBalanceRupiah)
 
         repository.undoImportBatch(dao.getImportBatches(projectId).single().id)
@@ -175,7 +176,7 @@ class ImportCommitTest {
         repository.commitImport(businessId, projectId, drawingImport)
         val actual = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
         assertEquals(FinancialEventType.OWNER_DRAWING.name, dao.getEventsForBook(actual).single().type)
-        assertEquals(0L, repository.accountingSummary(actual).first().profitRupiah)
+        assertEquals(0L, repository.monthlySummaries(actual).first().sumOf { it.profitRupiah })
     }
 
     /** Review m-2 / F2-8: a materials category made by hand or by an import starts counted in HPP; others do not. */

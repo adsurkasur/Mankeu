@@ -390,7 +390,7 @@ Dependensi dirakit secara manual di `MankeuApplication` (pola *manual dependency
     screenContent --&gt; entryScreen[&quot;EntryScreen di Realisasi&lt;br/&gt;formulir, cari, saring Semua Masuk Keluar&quot;]
     screenContent --&gt; planScreen[&quot;PlanScreen di Proyeksi&lt;br/&gt;produk, biaya, periode&quot;]
     screenContent --&gt; stockScreen[&quot;StockScreen&lt;br/&gt;barang unit dan bersama&quot;]
-    screenContent --&gt; reportsScreen[&quot;ReportsScreen&lt;br/&gt;Laba Rugi dan Arus Kas, Kelayakan dan BEP,&lt;br/&gt;Realisasi vs Target&quot;]
+    screenContent --&gt; reportsScreen[&quot;ReportsScreen&lt;br/&gt;Laba Rugi dan Arus Kas, Kelayakan dan BEP,&lt;br/&gt;Uang vs rencana&quot;]
     homeScreen --&gt; metricCards[&quot;SimpleMetricCard&lt;br/&gt;read-out tanpa klik&quot;]
     homeScreen --&gt; planCards[&quot;PlanFeasibilityCard&lt;br/&gt;ActualMonthCard, StockCard&quot;]
     entryScreen --&gt; ledgerCard[&quot;EventCard&lt;br/&gt;Ubah dan Hapus, 48dp&quot;]
@@ -821,7 +821,7 @@ Sinkronisasi multi-perangkat (DEC-013) sudah ada sebagai kerangka di `sync/`, te
     reports --&gt; reportTabs{&quot;Tab&quot;}
     reportTabs --&gt;|&quot;Laba Rugi dan Arus Kas&quot;| summaryTab[&quot;Laba rugi, arus kas, grafik bulanan&quot;]
     reportTabs --&gt;|&quot;Kelayakan dan BEP&quot;| feasibilityTab[&quot;BEP unit dan rupiah, kebutuhan modal&quot;]
-    reportTabs --&gt;|&quot;Realisasi vs Target&quot;| compareTab[&quot;Rata-rata per bulan, basis kas&quot;]
+    reportTabs --&gt;|&quot;Uang vs rencana&quot;| compareTab[&quot;Uang masuk/keluar rata-rata per bulan, basis kas&quot;]
 
     home --&gt;|&quot;ikon Data&quot;| dataOverlay[&quot;Data&lt;br/&gt;impor, ekspor, cadangan, kategori&quot;]
     dataOverlay --&gt; importFlow[&quot;Pilih berkas templat, pratinjau, simpan&quot;]

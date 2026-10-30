@@ -239,7 +239,7 @@ private fun FinancialsSection(
         // it exactly, with the figures the owner has to reconcile against a workbook. The cost
         // *breakdown* donut on Beranda, which really does have a dozen slices, stays.
         if (month != null) {
-            ReportRow(stringResource(R.string.reports_operating_income), month.salesRupiah + month.otherIncomeRupiah)
+            ReportRow(stringResource(R.string.reports_operating_income), month.incomeRupiah)
             ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
             HorizontalDivider()
             ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)

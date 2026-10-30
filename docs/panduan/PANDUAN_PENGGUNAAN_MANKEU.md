@@ -475,12 +475,12 @@ Rencana), beserta rinciannya.
 
 ![Kelayakan dan BEP di Laporan](gambar/30_laporan_kelayakan.jpg)
 
-### 8.5 Realisasi vs Target
+### 8.5 Uang vs rencana
 
-Tab ini membandingkan **rata-rata per bulan** dari rencana dengan rata-rata per bulan dari catatan
+Tab ini (dulu "Realisasi vs Target") membandingkan **uang masuk dan keluar rata-rata per bulan** dari rencana dengan rata-rata per bulan dari catatan
 nyata.
 
-![Realisasi vs Target](gambar/31_laporan_target.jpg)
+![Uang vs rencana](gambar/31_laporan_target.jpg)
 
 Pada contoh ini pendapatan baru Rp5.500.000 dari target Rp9.000.000 (selisih −Rp3.500.000). Biaya
 operasional Rp1.800.000 di bawah rencana, sehingga ditandai hijau. Gunakan tab ini setiap akhir bulan
@@ -650,7 +650,7 @@ dengan Mankeu di bulan pertama.
 | 5 | Mencatat transaksi harian: jualan, bahan, mesin, sewa, gaji, listrik | [6](#6-mencatat-uang-masuk-dan-keluar) |
 | 6 | Memperbaiki catatan listrik yang salah ketik dengan **Ubah** | [6.7](#67-melihat-dan-memperbaiki-catatan) |
 | 7 | Mencatat stok susu dan biji kopi | [7](#7-mengelola-stok-barang) |
-| 8 | Di akhir bulan, membaca Status BEP bulan ini dan Realisasi vs Target | [8](#8-membaca-laporan) |
+| 8 | Di akhir bulan, membaca Status BEP bulan ini dan Uang vs rencana | [8](#8-membaca-laporan) |
 | 9 | Membuat cadangan terenkripsi | [9.4](#94-cadangan-terenkripsi) |
 
 **Catatan transaksi bulan ini:**
@@ -716,7 +716,7 @@ Bila masih bingung, ketuk **?** di halaman tersebut, atau cari di **Pusat Bantua
 ### Setiap akhir bulan (30 menit)
 
 - [ ] Baca **Status BEP bulan ini**: sudah melewati titik impas atau belum?
-- [ ] Baca **Realisasi vs Target**: pos mana yang meleset dari rencana?
+- [ ] Baca **Uang vs rencana**: pos mana yang meleset dari rencana?
 - [ ] Perbarui Rencana Usaha bila harga bahan atau target berubah.
 - [ ] Ekspor **PDF** untuk arsip.
 - [ ] Buat **cadangan terenkripsi** dan simpan di tempat lain.

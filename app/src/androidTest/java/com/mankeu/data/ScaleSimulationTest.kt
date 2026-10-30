@@ -62,19 +62,23 @@ class ScaleSimulationTest {
             }
             val book = dao.getBooks(projectId).first { it.mode == BookMode.REALIZATION.name }.id
             lateinit var summary: com.mankeu.domain.FinancialSummary
-            val summaryMs = measureTimeMillis { summary = repository.accountingSummary(book).first() }
+            lateinit var months: List<com.mankeu.domain.MonthlySummary>
+            val summaryMs = measureTimeMillis { summary = repository.accountingSummary(book).first() } +
+                measureTimeMillis { months = repository.monthlySummaries(book).first() }
             val cashFlowMs = measureTimeMillis { repository.cashFlowRecords(book).first() }
             val exportMs = measureTimeMillis { repository.buildProjectExportBundle(projectId) }
             Log.i(TAG, "$name rows=${sim.getInt("rows")} parse=${parseMs}ms commit=${commitMs}ms summary=${summaryMs}ms cashflow=${cashFlowMs}ms export=${exportMs}ms")
 
             assertEquals("$name rows", sim.getInt("rows"), dao.getEventsForBook(book).size)
             assertEquals("$name closing cash", sim.getLong("closing_cash"), summary.cashBalanceRupiah)
-            assertEquals("$name revenue", sim.getLong("revenue"), summary.operatingIncomeRupiah)
+            // Profit exists per month only (U2): the months' sums stand for the whole file.
+            assertEquals("$name revenue", sim.getLong("revenue"), months.sumOf { it.incomeRupiah })
             // The file's cash profit counts all spend when paid; profit when sold (DEC-029 §4) swaps the
             // variable spend for the HPP of what was sold and adds depreciation. No credit in these files.
-            assertEquals("$name cash profit", sim.getLong("cash_profit"), summary.profitRupiah + summary.hppRupiah + summary.depreciationRupiah - summary.productionSpendRupiah)
-            assertEquals("$name operating cost", sim.getLong("operating_cost"), summary.operatingExpenseRupiah - summary.hppRupiah - summary.depreciationRupiah + summary.productionSpendRupiah)
-            assertEquals("$name profit", summary.operatingIncomeRupiah - summary.operatingExpenseRupiah, summary.profitRupiah)
+            assertEquals("$name cash profit", sim.getLong("cash_profit"), months.sumOf { it.profitRupiah + it.hppRupiah + it.profit.depreciationRupiah - it.productionSpendRupiah })
+            assertEquals("$name operating cost", sim.getLong("operating_cost"), months.sumOf { it.otherCostRupiah - it.profit.depreciationRupiah + it.productionSpendRupiah })
+            assertEquals("$name profit", months.sumOf { it.incomeRupiah - it.hppRupiah - it.otherCostRupiah }, months.sumOf { it.profitRupiah })
+            assertEquals("$name closing cash = last month", summary.cashBalanceRupiah, months.last().cashOnHandRupiah)
             // Budget on a mid-range phone, generous for an emulator: a year of a medium unit (~9k
             // rows) must import within a minute and every screen query must answer within 2 s.
             assertTrue("$name import took ${parseMs + commitMs} ms", parseMs + commitMs < 60_000)

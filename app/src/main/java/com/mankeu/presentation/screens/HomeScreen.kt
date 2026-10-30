@@ -186,7 +186,8 @@ fun HomeScreen(
         // A first-time owner who records sales and restocking but not the money already in the
         // drawer sees a red, negative balance and reads it as a loss (audit 2026-10-22). Say why
         // and offer the one entry that fixes it, until capital is recorded or cash is positive.
-        if (state.selectedBookMode == BookMode.REALIZATION && summary.cashBalanceRupiah < 0 && summary.financingCashFlowRupiah <= 0) {
+        // Same balance as the hero above it (month end), so the warning never contradicts the figure (U2 review M-1).
+        if (month != null && month.cashOnHandRupiah < 0 && summary.financingCashFlowRupiah <= 0) {
             item {
                 EmptyCard(
                     stringResource(R.string.home_negative_cash_title),
@@ -217,7 +218,7 @@ fun HomeScreen(
                         // This month only, no all-months figure (U2): profit leads; Beranda redesign is U4.
                         listOf(
                             SimpleMetric(stringResource(R.string.home_profit), month.profitRupiah, Icons.Default.Assessment, profitTone),
-                            SimpleMetric(stringResource(R.string.home_sales_month), month.salesRupiah + month.otherIncomeRupiah, Icons.Default.Insights, MetricTone.SUCCESS),
+                            SimpleMetric(stringResource(R.string.home_income_month), month.incomeRupiah, Icons.Default.Insights, MetricTone.SUCCESS),
                             SimpleMetric(stringResource(R.string.home_money_in_month), month.moneyInRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
                             SimpleMetric(stringResource(R.string.home_money_out_month), month.moneyOutRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
                         )

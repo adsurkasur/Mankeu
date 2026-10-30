@@ -27,6 +27,8 @@ data class MonthlySummary(
     /** Note revenue after discount. */
     val salesRupiah get() = profit.salesRupiah
     val otherIncomeRupiah get() = profit.otherIncomeRupiah
+    /** "Pendapatan": sales plus other income, the one sum every screen and export calls income. */
+    val incomeRupiah get() = salesRupiah + otherIncomeRupiah
     val hppRupiah get() = profit.hppRupiah
     /** Every cost besides HPP: spend outside HPP categories (fixed or variable) and depreciation. */
     val otherCostRupiah get() = profit.fixedCostRupiah + profit.variableCostRupiah + profit.depreciationRupiah

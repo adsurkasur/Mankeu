@@ -16,7 +16,6 @@ import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.FinancialSummary
 import com.mankeu.domain.ProfitAsset
-import com.mankeu.domain.ProfitCalculator
 import com.mankeu.domain.ProfitExpense
 import com.mankeu.domain.ProfitInputs
 import com.mankeu.domain.ProfitSale
@@ -47,7 +46,10 @@ import com.mankeu.exporter.FinanceWorkbookExporter
 import com.mankeu.importer.MankeuTemplate
 import com.mankeu.importer.WorkbookImportPreview
 import com.mankeu.sync.SyncSchema
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
@@ -198,8 +200,9 @@ class FinanceRepository(
     fun categoryTotals(bookId: String): Flow<List<CategoryTotalRow>> = dao.observeCategoryTotals(bookId)
 
     /**
-     * The book's summary. Cash flow, cash balance and payable come from postings; for Realisasi the
-     * profit lines come from [ProfitCalculator] over notes, other income, spend and assets (DEC-029 §4).
+     * The book's all-time summary from postings: cash flow, cash balance, receivable and payable. For
+     * Realisasi the income/expense/profit lines are 0: profit exists only per month, in [monthlySummary]
+     * (U2, P7), so there is no second profit path. Proyeksi keeps its posted lines.
      */
     fun accountingSummary(bookId: String): Flow<FinancialSummary> = onDataChange().map { summaryOf(bookId) }
 
@@ -211,11 +214,21 @@ class FinanceRepository(
      * everything a screen or export says about that month's profit, money, receivable and payable.
      */
     fun monthlySummary(bookId: String, month: YearMonth? = null): Flow<MonthlySummary> =
-        onDataChange().map { database.withTransaction { MonthlySummary.of(month ?: currentMonth(), profitInputsOf(bookId), monthPostingsOf(bookId)) } }
+        onDataOrMonthChange().map { now -> database.withTransaction { MonthlySummary.of(month ?: now, profitInputsOf(bookId), monthPostingsOf(bookId)) } }
 
     /** Every month of the Realisasi book [bookId] through the current month; see [MonthlySummary.all]. */
     fun monthlySummaries(bookId: String): Flow<List<MonthlySummary>> =
-        onDataChange().map { database.withTransaction { MonthlySummary.all(profitInputsOf(bookId), monthPostingsOf(bookId), currentMonth()) } }
+        onDataOrMonthChange().map { now -> database.withTransaction { MonthlySummary.all(profitInputsOf(bookId), monthPostingsOf(bookId), now) } }
+
+    /**
+     * The current month, again on every data change and when the month turns over, so "bulan ini" follows
+     * the calendar on a screen left open (U2 review M-4).
+     */
+    private fun onDataOrMonthChange(): Flow<YearMonth> {
+        // ponytail: polls the clock once a minute; a date-change broadcast if this ever matters for battery.
+        val months = flow { while (true) { emit(currentMonth()); delay(60_000) } }.distinctUntilChanged()
+        return combine(onDataChange(), months) { _, month -> month }
+    }
 
     private suspend fun monthPostingsOf(bookId: String): List<MonthPosting> =
         if (dao.getBookById(bookId)?.mode != BookMode.REALIZATION.name) emptyList()
@@ -227,9 +240,12 @@ class FinanceRepository(
 
     private suspend fun summaryOf(bookId: String): FinancialSummary = database.withTransaction {
         val posted = dao.getPostingTotals(bookId).summary()
-        val inputs = profitInputsOf(bookId)
         if (dao.getBookById(bookId)?.mode != BookMode.REALIZATION.name) posted
-        else ProfitCalculator.summary(posted, inputs.months(through = currentMonth()), noteTotalRupiah = inputs.sales.sumOf { it.revenueRupiah })
+        // Notes post no revenue (DEC-029 §2): the posted receivable is minus what was paid on them.
+        else posted.copy(
+            operatingIncomeRupiah = 0, operatingExpenseRupiah = 0, profitRupiah = 0,
+            receivableRupiah = profitInputsOf(bookId).sales.sumOf { it.revenueRupiah } + posted.receivableRupiah,
+        )
     }
 
     private suspend fun profitInputsOf(bookId: String): ProfitInputs {

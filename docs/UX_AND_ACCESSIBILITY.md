@@ -27,7 +27,7 @@ Compact-width destinations (bottom bar; rail from 840dp):
 - `Beranda`: cash, key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even;
 - `Catatan`: entry form and record list with Ubah/Hapus in Realisasi; Rencana Usaha in the Rencana book;
 - `Stok`: stock items of the selected unit and shared items;
-- `Laporan`: Laba Rugi dan Arus Kas, Kelayakan & BEP, Realisasi vs Target.
+- `Laporan`: Laba Rugi dan Arus Kas, Kelayakan & BEP, Uang vs rencana (uang masuk/keluar, bukan untung).
 
 Overlays from the top bar: `Berkas & Data` (import, export, backup, categories, import history), `Pengaturan`, and `Pusat Bantuan`. A record speed dial (Uang Masuk, Uang Keluar) sits on Beranda and Catatan.
 

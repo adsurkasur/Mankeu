@@ -48,6 +48,7 @@ class MonthlySummaryTest {
         assertEquals(oct, m.month)
         assertEquals(5_380_000L, m.salesRupiah)
         assertEquals(50_000L, m.otherIncomeRupiah)
+        assertEquals(5_430_000L, m.incomeRupiah) // "Pendapatan" on every screen and in the export
         assertEquals(4_440_000L, m.hppRupiah)
         assertEquals(1_200_000L + 100_000L, m.otherCostRupiah) // fixed + depreciation
         assertEquals(-310_000L, m.profitRupiah)

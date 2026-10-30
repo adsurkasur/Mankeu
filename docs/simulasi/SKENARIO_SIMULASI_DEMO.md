@@ -169,7 +169,7 @@ Gulir ke **Status BEP Bulan Ini**: omzet bulan ini Rp5.500.000 **sudah melewati*
 (Rp4.035.836).
 
 **Laporan**: tab *Laba Rugi dan Arus Kas* (laba setelah penyusutan Rp1.000.000: mesin tidak dihitung
-biaya sekaligus, melainkan Rp200.000 per bulan), tab *Kelayakan & BEP*, tab *Realisasi vs Target*.
+biaya sekaligus, melainkan Rp200.000 per bulan), tab *Kelayakan & BEP*, tab *Uang vs rencana*.
 
 **Poin bicara:** kas Rp9.000.000 = 15.000.000 + 4.600.000 + 900.000 − 2.350.000 − 7.200.000 − 1.000.000 −
 800.000 − 150.000. Laba berbeda dari kas karena modal dan pembelian mesin bukan pendapatan atau biaya

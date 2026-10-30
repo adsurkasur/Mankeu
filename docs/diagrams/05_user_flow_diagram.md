@@ -42,7 +42,7 @@ flowchart TD
     reports --> reportTabs{"Tab"}
     reportTabs -->|"Laba Rugi dan Arus Kas"| summaryTab["Laba rugi, arus kas, grafik bulanan"]
     reportTabs -->|"Kelayakan dan BEP"| feasibilityTab["BEP unit dan rupiah, kebutuhan modal"]
-    reportTabs -->|"Realisasi vs Target"| compareTab["Rata-rata per bulan, basis kas"]
+    reportTabs -->|"Uang vs rencana"| compareTab["Uang masuk/keluar rata-rata per bulan, basis kas"]
 
     home -->|"ikon Data"| dataOverlay["Data<br/>impor, ekspor, cadangan, kategori"]
     dataOverlay --> importFlow["Pilih berkas templat, pratinjau, simpan"]

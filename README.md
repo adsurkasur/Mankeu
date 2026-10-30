@@ -69,7 +69,7 @@ dengan kenyataan.
 
 ### Laporan
 - Laba rugi dan arus kas (operasi, investasi, pendanaan) dengan grafik bulanan.
-- Rincian kelayakan per bulan dan perbandingan Realisasi vs Target.
+- Rincian kelayakan per bulan dan perbandingan uang masuk/keluar dengan rencana (tab Uang vs rencana).
 - Ekspor PDF untuk dicetak atau diarsipkan.
 
 ### Stok

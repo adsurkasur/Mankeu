@@ -89,28 +89,7 @@ class ProfitCalculatorTest {
         assertEquals(1_200_000L, m.profitRupiah)
         assertEquals(0L, m.productionSpendRupiah)
         assertEquals(0L, m.productionVarianceRupiah)
-        val s = ProfitCalculator.summary(PostingReportCalculator.calculate(emptyList()), listOf(m), noteTotalRupiah = 0)
-        assertEquals(800_000L, s.operatingExpenseRupiah)
-    }
-
-    @Test fun summaryTakesProfitFromDataAndCashFromPostings() {
-        val posted = FinancialSummary(
-            operatingIncomeRupiah = 999, operatingExpenseRupiah = 999, profitRupiah = 0,
-            operatingCashFlowRupiah = 123, financingCashFlowRupiah = 7, cashBalanceRupiah = 130, investingCashFlowRupiah = -3,
-            // Postings: Rp2 jt paid on notes (credit Piutang), Rp300.000 still owed to the supplier.
-            receivableRupiah = -2_000_000, payableRupiah = 300_000,
-        )
-        val s = ProfitCalculator.summary(posted, golden.months(through = oct), noteTotalRupiah = 5_380_000)
-        assertEquals(5_430_000L, s.operatingIncomeRupiah)
-        assertEquals(4_440_000L + 1_200_000L + 200_000L, s.operatingExpenseRupiah)
-        assertEquals(-410_000L, s.profitRupiah)
-        assertEquals(4_440_000L, s.hppRupiah)
-        assertEquals(5_200_000L, s.productionSpendRupiah)
-        assertEquals(760_000L, s.productionVarianceRupiah)
-        assertEquals(200_000L, s.depreciationRupiah)
-        assertEquals(3_380_000L, s.receivableRupiah)
-        assertEquals(300_000L, s.payableRupiah)
-        assertEquals(listOf(123L, 7L, -3L, 130L), listOf(s.operatingCashFlowRupiah, s.financingCashFlowRupiah, s.investingCashFlowRupiah, s.cashBalanceRupiah))
+        assertEquals(800_000L, m.fixedCostRupiah + m.variableCostRupiah)
     }
 
     /** F2-8: only the default materials category starts counted in HPP. */

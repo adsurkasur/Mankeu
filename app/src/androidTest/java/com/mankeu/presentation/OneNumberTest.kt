@@ -105,6 +105,9 @@ class OneNumberTest {
         val sheet = laporanSheet(runBlocking { repository.exportProjectWorkbook(ids.projectId) })
         assertEquals(-310_000L, numberAfter(sheet, "Laba / rugi bulan ini"))
         assertEquals(760_000L, numberAfter(sheet, "Selisih belanja produksi vs HPP"))
+        // "Pendapatan" is the same sum as on Beranda and Laporan (review I-2); its parts are labelled apart.
+        assertEquals(month.incomeRupiah, numberAfter(sheet, ">Pendapatan<"))
+        assertEquals(month.salesRupiah, numberAfter(sheet, ">Penjualan (nota)<"))
         assertTrue("no all-months Realisasi profit in the export", sheet.split("<row").none { "Realisasi" in it && "Laba atau rugi" in it })
 
         // The BEP card is built from the same month.
@@ -142,6 +145,8 @@ class OneNumberTest {
 
         // Beranda: the tile at the top, the profit detail card and the BEP card further down.
         assertBeside("Untung bulan ini", profit)
+        assertBeside("Pendapatan bulan ini", month.incomeRupiah.toRupiah())
+        absent("Penjualan bulan ini")
         absent("semua bulan")
         assertBeside("Selisih belanja produksi vs HPP", gap)
         scrollTo("Status BEP")
@@ -152,6 +157,7 @@ class OneNumberTest {
         click("Laporan")
         exists("Laporan Laba Rugi · Oktober 2026")
         assertBeside("Untung / Rugi bulan ini", profit)
+        assertBeside("Pendapatan Operasional", month.incomeRupiah.toRupiah())
         assertBeside("Selisih belanja produksi vs HPP", gap)
         assertBeside("Tagihan belum dibayar pelanggan", month.receivableRupiah.toRupiah())
         absent("semua bulan")
@@ -179,9 +185,12 @@ class OneNumberTest {
         error("No Laporan sheet with the month's lines")
     }
 
-    /** The first number cell after the cell holding [label]. */
-    private fun numberAfter(xml: String, label: String): Long =
-        Regex("<v>(-?\\d+)</v>").find(xml, xml.indexOf(label))!!.groupValues[1].toLong()
+    /** The first number cell after the cell holding [label], within the Realisasi month's rows. */
+    private fun numberAfter(xml: String, label: String): Long {
+        val at = xml.indexOf(label, xml.indexOf("Realisasi Oktober 2026"))
+        assertTrue("no $label in the Realisasi rows", at >= 0)
+        return Regex("<v>(-?\\d+)</v>").find(xml, at)!!.groupValues[1].toLong()
+    }
 
     private fun text(node: SemanticsNode) = node.config.getOrNull(SemanticsProperties.Text)?.joinToString("") { it.text }.orEmpty()
 

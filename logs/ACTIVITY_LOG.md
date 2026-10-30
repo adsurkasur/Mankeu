@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-10-30 11:12] [Claude Code (Opus) — audit UI/UX semua layar]
+- **Goal**: Full UI/UX audit requested by the owner ("form berjejer jelek", "app harus useful") before continuing phase 2.
+- **Actions**: Subagent walked 32 screens/states on the emulator with seeded "Keripik Bu Sri" data, 71 screenshots, wrote `docs/audit/2026-10-30_AUDIT_UI_UX.md` (top 10 problems, per-screen findings, cross-screen patterns P1–P7 incl. form design rules and word list, tap counts per daily job, proposed work order). Controller reviewed the patterns, usefulness table and work order.
+- **Files**: `docs/audit/2026-10-30_AUDIT_UI_UX.md`, `docs/audit/img/ui-20261030-*.png`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Audit only; no app code changed.
+
 ### [2026-10-30 08:24] [Claude Code (Opus) — warna ungu diganti biru]
 - **Goal**: Remove purple from the blue UI (owner report 2026-10-30).
 - **Actions**: Root cause: the Material tertiary role was still the purple baseline (6B5778 / F3DAFF), used by the Beranda hero gradient, the BEP progress bar, the "Waspada" status colour and the auto unit-price hint. Tertiary tonal roles (light and dark, incl. fixed) re-tinted to a sky-blue palette (00658E / C7E7FF / 84CFFF / 004C6C); BEP bar below target uses primary; WATCH status uses the warning semantic colour instead of tertiary. Chart category colours left as they are (distinct hues needed).

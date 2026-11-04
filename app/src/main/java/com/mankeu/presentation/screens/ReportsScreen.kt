@@ -67,7 +67,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.mankeu.domain.BookMode
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.mankeu.presentation.components.SkeletonHero
+import com.mankeu.presentation.components.SkeletonListItem
 import com.mankeu.domain.MonthlyCashFlowCalculator
 import com.mankeu.R
 import com.mankeu.presentation.AppUiState
@@ -110,16 +116,13 @@ private enum class ReportSection(val labelRes: Int) {
 @Composable
 fun ReportsScreen(
     state: AppUiState,
-    onOpenPlan: () -> Unit = {},
     onRecordTransaction: () -> Unit = {},
 ) {
     var section by rememberSaveable { mutableStateOf(ReportSection.FINANCIALS) }
-    val planMode = state.selectedBookMode == BookMode.PROJECTION
-    // Proyeksi reports from the business plan (DEC-014) whenever the unit has one; postings
-    // otherwise. The plan's schedule already excludes depreciation, which is not cash.
-    val plan = state.plan.takeIf { planMode }
-    val summary = plan?.summary ?: state.summary
-    val monthlyCashFlow = plan?.schedule ?: MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
+    // U4: no Rencana/Realisasi switch; Laporan reports the records. The plan is read only by
+    // Kelayakan's empty state and by Uang vs rencana (projectionSummary).
+    val summary = state.summary
+    val monthlyCashFlow = MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
 
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
@@ -171,20 +174,21 @@ fun ReportsScreen(
             }
         }
 
-        // Nothing recorded and nothing planned: every card below would render a column of Rp0,
-        // which reads as "your business made nothing" rather than "you have not told me anything
-        // yet". Say which, and offer the one action that fixes it.
-        if (!state.isLoading && state.eventCount == 0 && plan == null) {
+        // The month has not arrived yet (U2 re-review N-1): placeholders, never a column of Rp0.
+        if (state.isLoading || (state.selectedProjectId != null && state.thisMonth == null)) {
+            item { SkeletonHero() }
+            items(2) { SkeletonListItem() }
+            return@LazyColumn
+        }
+        // Nothing recorded: every card below would render a column of Rp0, which reads as "your
+        // business made nothing" rather than "you have not told me anything yet".
+        if (state.eventCount == 0 && state.sales.isEmpty()) {
             item {
                 EmptyCard(
-                    title = stringResource(
-                        if (planMode) R.string.reports_empty_plan_title else R.string.reports_empty_title,
-                    ),
-                    body = stringResource(
-                        if (planMode) R.string.reports_empty_plan_body else R.string.reports_empty_body,
-                    ),
-                    action = stringResource(if (planMode) R.string.plan_open else R.string.reports_empty_action),
-                    onAction = if (planMode) onOpenPlan else onRecordTransaction,
+                    title = stringResource(R.string.reports_empty_title),
+                    body = stringResource(R.string.reports_empty_body),
+                    action = stringResource(R.string.reports_empty_action),
+                    onAction = onRecordTransaction,
                 )
             }
             return@LazyColumn
@@ -214,7 +218,7 @@ fun ReportsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     when (current) {
                         ReportSection.FINANCIALS -> FinancialsSection(state, summary, monthlyCashFlow)
-                        ReportSection.FEASIBILITY -> FeasibilitySection(state, planMode, summary, monthlyCashFlow, onOpenPlan)
+                        ReportSection.FEASIBILITY -> FeasibilitySection(state, summary, monthlyCashFlow)
                         ReportSection.COMPARISON -> ComparisonSection(state)
                     }
                 }
@@ -229,29 +233,22 @@ private fun FinancialsSection(
     summary: com.mankeu.domain.FinancialSummary,
     monthlyCashFlow: List<com.mankeu.domain.MonthlyCashFlow>,
 ) {
-    // Realisasi: the current month's MonthlySummary, named by month (U2); F4 adds a month selector.
-    val month = state.thisMonth.takeIf { state.selectedBookMode == BookMode.REALIZATION }
-    val title = month?.let { stringResource(R.string.reports_income_statement_month, it.month.format(DateTimeFormatter.ofPattern("MMMM yyyy", appLocale()))) }
-        ?: stringResource(R.string.reports_income_statement)
+    // The current month's MonthlySummary, named by month (U2); F4 adds a month selector. ReportsScreen
+    // shows placeholders until it arrives, so it is never null here.
+    val month = state.thisMonth ?: return
+    val title = stringResource(R.string.reports_income_statement_month, month.month.format(DateTimeFormatter.ofPattern("MMMM yyyy", appLocale())))
     ReportCard(title) {
         // The income-versus-expense donut is gone with the hand-rolled charts. Two slices is not a
         // composition — it is one comparison, and the three rows immediately below already state
         // it exactly, with the figures the owner has to reconcile against a workbook. The cost
         // *breakdown* donut on Beranda, which really does have a dozen slices, stays.
-        if (month != null) {
-            ReportRow(stringResource(R.string.reports_operating_income), month.incomeRupiah)
-            ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
+        ReportRow(stringResource(R.string.reports_operating_income), month.incomeRupiah)
+        ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
+        HorizontalDivider()
+        ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
+        if (month.hasProfitDetail()) {
             HorizontalDivider()
-            ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
-            if (month.hasProfitDetail()) {
-                HorizontalDivider()
-                ProfitDetailRows(month)
-            }
-        } else {
-            ReportRow(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah)
-            ReportRow(stringResource(R.string.reports_operating_expense), -summary.operatingExpenseRupiah)
-            HorizontalDivider()
-            ReportRow(stringResource(R.string.home_plan_profit), summary.profitRupiah, emphasized = true)
+            ProfitDetailRows(month)
         }
         Text(
             stringResource(R.string.reports_income_note),
@@ -266,6 +263,8 @@ private fun FinancialsSection(
         HorizontalDivider()
         ReportRow(stringResource(R.string.reports_cf_closing), summary.cashBalanceRupiah, emphasized = true)
     }
+    // Moved from Beranda (U4); a mix of one or two categories says nothing (audit L19).
+    ExpenseDistributionCard(state)
     if (monthlyCashFlow.isNotEmpty()) {
         SectionTitle(stringResource(R.string.reports_monthly_title), stringResource(R.string.reports_monthly_subtitle))
         val locale = appLocale()
@@ -298,29 +297,11 @@ private fun FinancialsSection(
 @Composable
 private fun FeasibilitySection(
     state: AppUiState,
-    planMode: Boolean,
     summary: com.mankeu.domain.FinancialSummary,
     monthlyCashFlow: List<com.mankeu.domain.MonthlyCashFlow>,
-    onOpenPlan: () -> Unit,
 ) {
-    val plan = state.plan
-    if (planMode) {
-        if (plan == null) {
-            EmptyCard(
-                stringResource(R.string.plan_empty_title),
-                stringResource(R.string.plan_empty_body),
-                stringResource(R.string.plan_open),
-                onOpenPlan,
-                learn = HelpArticle.PLAN_CREATE,
-            )
-            return
-        }
-        PlanFeasibilityCard(plan, onOpenPlan = onOpenPlan)
-        PlanBreakdownCard(plan)
-        return
-    }
-
-    // Realisasi: this month against its own break-even, then what was actually financed.
+    // This month against its own break-even, then what was actually financed. The plan's own
+    // feasibility is on the Rencana usaha page (U4).
     state.actualMonth?.let { ActualMonthCard(it, state.products, state.thisMonth) }
     ReportCard(stringResource(R.string.reports_financing_actual_title)) {
         Text(
@@ -376,3 +357,147 @@ private fun ComparisonSection(state: AppUiState) {
         ComparisonRow(stringResource(R.string.reports_profit_loss), rows.planProfit, rows.actualProfit)
     }
 }
+
+@Composable
+private fun ExpenseDistributionCard(
+    state: AppUiState,
+    modifier: Modifier = Modifier,
+) {
+    val motion = LocalMotion.current
+    val otherLabel = stringResource(R.string.category_other)
+    // Six category hues, harmonised toward the brand green and re-toned per theme; see
+    // MankeuSemanticColors.chart. The raw Material 2 hues that used to live here ignored the palette
+    // and stayed identical in dark mode, where they glared. Read outside the remember block: it is
+    // a composition-local read, and it has to re-run when the theme changes.
+    val palette = LocalMankeuSemanticColors.current.chart
+    val expenseCategories = remember(state.categoryTotals, otherLabel, palette) {
+        val categoryExpenses = mutableMapOf<String, Long>()
+        // Summed by the database (`observeCategoryTotals`). Doing it here meant holding every event in
+        // memory to add up a dozen slices, and it silently went wrong the moment the event list
+        // was capped for display.
+        state.categoryTotals.forEach { row ->
+            val cat = row.category.ifBlank { otherLabel }
+            categoryExpenses[cat] = (categoryExpenses[cat] ?: 0L) + row.totalRupiah
+        }
+        val total = categoryExpenses.values.sum()
+        if (total == 0L) emptyList()
+        else {
+            categoryExpenses.entries
+                .sortedByDescending { it.value }
+                .mapIndexed { index, entry ->
+                    ExpenseSlice(
+                        category = entry.key,
+                        amount = entry.value,
+                        percentage = (entry.value.toDouble() / total.toDouble()) * 100.0,
+                        color = palette[index % palette.size],
+                    )
+                }
+        }
+    }
+
+    if (expenseCategories.size >= 3) {
+        val totalExpense = expenseCategories.sumOf { it.amount }
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            shape = MaterialTheme.shapes.large,
+            modifier = modifier
+                .fillMaxWidth()
+                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing)),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.home_expense_mix),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        totalExpense.toRupiah(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    // Donut Chart Canvas
+                    Box(
+                        modifier = Modifier.size(100.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Canvas(modifier = Modifier.size(90.dp)) {
+                            var startAngle = -90f
+                            val strokeWidth = 20.dp.toPx()
+                            expenseCategories.forEach { slice ->
+                                val sweep = (slice.percentage / 100.0 * 360.0).toFloat()
+                                drawArc(
+                                    color = slice.color,
+                                    startAngle = startAngle,
+                                    sweepAngle = sweep,
+                                    useCenter = false,
+                                    style = Stroke(width = strokeWidth),
+                                )
+                                startAngle += sweep
+                            }
+                        }
+                        Text(
+                            stringResource(R.string.home_expense_mix_center, expenseCategories.size),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    // Legend
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        expenseCategories.take(4).forEach { slice ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(slice.color, CircleShape),
+                                )
+                                Text(
+                                    slice.category,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(
+                                    "${String.format(appLocale(), "%.1f", slice.percentage)}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class ExpenseSlice(
+    val category: String,
+    val amount: Long,
+    val percentage: Double,
+    val color: Color,
+)

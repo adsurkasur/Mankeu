@@ -93,7 +93,6 @@ data class AppUiState(
     val budgetItems: List<BudgetItemEntity> = emptyList(),
     val selectedBusinessId: String? = null,
     val selectedProjectId: String? = null,
-    val selectedBookMode: BookMode = BookMode.REALIZATION,
     val selectedBookId: String? = null,
     /** The newest slice of the ledger, for display. Never the basis of a reported total. */
     val events: List<MoneyEvent> = emptyList(),
@@ -193,7 +192,6 @@ class AppViewModel(
 ) : ViewModel() {
     private val selectedBusinessId = MutableStateFlow<String?>(null)
     private val selectedProjectId = MutableStateFlow<String?>(null)
-    private val selectedBookMode = MutableStateFlow(BookMode.REALIZATION)
 
     val authUser: StateFlow<AuthUser?> = identity.currentUser
     val syncState: StateFlow<SyncController.State> = syncController?.state ?: MutableStateFlow(SyncController.State.Off)
@@ -262,8 +260,10 @@ class AppViewModel(
     private val books = selectedProjectId.flatMapLatest { id ->
         id?.let(repository::books) ?: flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    private val selectedBookId = combine(books, selectedBookMode) { items, mode ->
-        items.firstOrNull { it.mode == mode.name }?.id
+    // U4: no Rencana/Realisasi switch. The screens read the Realisasi book; the Proyeksi book is
+    // read only by the plan (planItems, projectionSummary) on the Rencana usaha page.
+    private val selectedBookId = books.map { items ->
+        items.firstOrNull { it.mode == BookMode.REALIZATION.name }?.id
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     // ---- Everything below is a per-book live query, and does stop when nobody is looking. ------
@@ -351,9 +351,9 @@ class AppViewModel(
     private val financeAndAggregates = combine(financeContent, ledgerAggregates) { finance, aggregates ->
         finance to aggregates
     }
-    private val selections = combine(selectedBusinessId, selectedProjectId, selectedBookMode, selectedBookId) {
-            businessId, projectId, mode, bookId ->
-        SelectionContent(businessId, projectId, mode, bookId)
+    private val selections = combine(selectedBusinessId, selectedProjectId, selectedBookId) {
+            businessId, projectId, bookId ->
+        SelectionContent(businessId, projectId, bookId)
     }
     private val comparison = combine(projectionSummary, monthlySummaries, realizationMonths) { projection, months, count ->
         ComparisonContent(projection, months, count)
@@ -387,7 +387,6 @@ class AppViewModel(
             budgetItems = finance.budgetItems,
             selectedBusinessId = selection.businessId,
             selectedProjectId = selection.projectId,
-            selectedBookMode = selection.bookMode,
             selectedBookId = selection.bookId,
             events = finance.events,
             eventCount = aggregates.eventCount,
@@ -457,10 +456,6 @@ class AppViewModel(
 
     fun selectProject(id: String) {
         selectedProjectId.value = id
-    }
-
-    fun selectBookMode(mode: BookMode) {
-        selectedBookMode.value = mode
     }
 
     /**
@@ -1233,7 +1228,6 @@ class AppViewModel(
     private data class SelectionContent(
         val businessId: String?,
         val projectId: String?,
-        val bookMode: BookMode,
         val bookId: String?,
     )
 
@@ -1249,4 +1243,3 @@ class AppViewModel(
     )
 }
 
-private fun BookMode.label() = if (this == BookMode.PROJECTION) "Proyeksi" else "Realisasi"

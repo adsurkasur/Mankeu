@@ -135,6 +135,8 @@ class SaleNoteFlowTest {
     @Test
     fun aNoteWithTwoProductsShowsTotalDiscountAndProfitAndAnUnpaidNoteNeedsACustomer() {
         start()
+        // U4: the speed dial lives on Catatan.
+        click("Catatan")
         clickDescription("Catat")
         click("Nota penjualan")
         exists("Nota penjualan baru")
@@ -233,6 +235,8 @@ class SaleNoteFlowTest {
     fun aDuplicateContactNameIsShownInTheSheet() {
         seedUnpaidNote()
         start()
+        // U4: the speed dial lives on Catatan.
+        click("Catatan")
         clickDescription("Catat")
         click("Nota penjualan")
         // A touch, as the owner taps: the read-only field's own OnClick only focuses it.
@@ -258,8 +262,9 @@ class SaleNoteFlowTest {
         }
         start()
         exists("Utama")
-        clickDescription("Berkas dan Data")
-        click("Kelola")
+        // U4: Kontak is an entry of the labelled Lainnya menu.
+        click("Lainnya")
+        click("Kontak")
         exists("Belum bayar Rp600.000")
     }
 

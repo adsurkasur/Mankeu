@@ -45,6 +45,7 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.components.DateField
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.MankeuSheet
+import com.mankeu.presentation.components.form.ResultBar
 import com.mankeu.presentation.components.sanitizeDecimal
 import com.mankeu.presentation.guide.HelpArticle
 import com.mankeu.presentation.toRupiah
@@ -183,8 +184,9 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
     }
 }
 
+/** The short Produksi sheet; also opened from Beranda's Produksi button (U4). */
 @Composable
-private fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
+internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
     var batches by rememberSaveable(record.product.id) { mutableStateOf("1") }
     var date by rememberSaveable(record.product.id) { mutableStateOf(LocalDate.now().toString()) }
     val parsed = TransactionCalculation.parseQuantity(batches)
@@ -195,20 +197,18 @@ private fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, o
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
         QuantityInput(stringResource(R.string.production_batches), batches) { batches = it }
+        DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
+        // The live result above Simpan (P2 §7). U-2: the recipe's materials leave their stock (quantity per batch × batches).
         parsed?.let {
-            Text(
-                stringResource(R.string.production_result, (it * record.spec.batchYield).toQuantityText(), record.product.unit),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            // U-2: the recipe's materials leave their stock (quantity per batch × batches).
             val used = record.spec.recipe.mapNotNull { line ->
                 val material = materials.firstOrNull { m -> m.id == line.materialId } ?: return@mapNotNull null
                 line.quantity?.let { q -> "${material.name} ${(q * it).toQuantityText()} ${material.unit}" }
             }
-            if (used.isNotEmpty()) Text(stringResource(R.string.production_materials, used.joinToString(", ")))
+            ResultBar(
+                text = stringResource(R.string.production_result, (it * record.spec.batchYield).toQuantityText(), record.product.unit),
+                detail = used.takeIf { u -> u.isNotEmpty() }?.let { u -> stringResource(R.string.production_materials, u.joinToString(", ")) },
+            )
         }
-        DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
     }
 }
 

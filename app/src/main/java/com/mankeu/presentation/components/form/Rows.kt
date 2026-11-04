@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.mankeu.R
 import com.mankeu.presentation.LocalMankeuSemanticColors
@@ -68,7 +69,9 @@ fun ListRowField(
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+            // Filled and end-aligned, so the value and › sit at the right edge even when the value is short or empty (U4).
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }

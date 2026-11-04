@@ -1,6 +1,5 @@
 package com.mankeu.presentation.guide
 
-import com.mankeu.domain.BookMode
 import com.mankeu.presentation.Destination
 import com.mankeu.presentation.Overlay
 import org.junit.Assert.assertEquals
@@ -12,11 +11,12 @@ import java.io.File
 class GuidesTest {
     @Test
     fun `the page help lists the articles of that page and the plan page is not the ledger`() {
-        val plan = articlesFor(Destination.ENTRY, BookMode.PROJECTION, Overlay.NONE)
+        val plan = articlesFor(Destination.ENTRY, Overlay.PLAN)
         assertTrue(plan.isNotEmpty() && HelpArticle.PLAN_CREATE in plan && HelpArticle.RECORD_FIX !in plan)
-        assertTrue(HelpArticle.RECORD_FIX in articlesFor(Destination.ENTRY, BookMode.REALIZATION, Overlay.NONE))
-        assertTrue(HelpArticle.DATA_IMPORT in articlesFor(Destination.HOME, BookMode.REALIZATION, Overlay.DATA))
-        assertTrue(articlesFor(Destination.HOME, BookMode.REALIZATION, Overlay.HELP).isEmpty())
+        val ledger = articlesFor(Destination.ENTRY, Overlay.NONE)
+        assertTrue(HelpArticle.RECORD_FIX in ledger && HelpArticle.PLAN_CREATE !in ledger)
+        assertTrue(HelpArticle.DATA_IMPORT in articlesFor(Destination.HOME, Overlay.DATA))
+        assertTrue(articlesFor(Destination.HOME, Overlay.HELP).isEmpty())
     }
 
     /**
@@ -52,8 +52,9 @@ class GuidesTest {
     fun `plan articles open the plan page and overlay articles keep the page`() {
         HelpArticle.entries.forEach { article ->
             val spec = article.show
-            if (spec.bookMode == BookMode.PROJECTION) assertEquals(article.name, Destination.ENTRY, spec.destination)
-            if (spec.overlay != Overlay.NONE) assertEquals(article.name, null, spec.bookMode)
+            // Plan articles open the Rencana usaha page (U4), never the Catatan ledger.
+            if (article.group == HelpGroup.PLAN) assertEquals(article.name, Overlay.PLAN, spec.overlay)
+            if (spec.overlay != Overlay.NONE) assertEquals(article.name, Destination.HOME, spec.destination)
         }
         assertTrue(HelpGroup.entries.all { group -> HelpArticle.entries.any { it.group == group } })
     }

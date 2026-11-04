@@ -60,8 +60,10 @@ fun ContactsScreen(
     modifier: Modifier = Modifier,
     onPick: ((String) -> Unit)? = null,
     header: @Composable () -> Unit = {},
+    /** Opens already searched on this name (Beranda's Tagihan rows, U4). */
+    initialSearch: String = "",
 ) {
-    var search by rememberSaveable { mutableStateOf("") }
+    var search by rememberSaveable { mutableStateOf(initialSearch) }
     // "" = a new contact, an id = that contact, null = no sheet.
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     val semantic = LocalMankeuSemanticColors.current

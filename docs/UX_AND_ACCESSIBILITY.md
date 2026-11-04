@@ -24,12 +24,16 @@ evidence_basis:
 
 Compact-width destinations (bottom bar; rail from 840dp):
 
-- `Beranda`: cash, key metrics, monthly cash flow, expense distribution, stock, plan feasibility, this month's break-even;
-- `Catatan`: entry form and record list with Ubah/Hapus in Realisasi; Rencana Usaha in the Rencana book;
+- `Beranda` (U4): one main number "Untung bulan ini" (tap for its lines), "Uang di tangan", quick Jual / Belanja /
+  Produksi, who has not paid by name (top 3) with "Terima bayar", supplier debt when any, low-stock warnings,
+  "Rencana usaha ›"; with no records, three first steps instead;
+- `Catatan`: entry form and record list with Ubah/Hapus;
 - `Stok`: stock items of the selected unit and shared items;
 - `Laporan`: Laba Rugi dan Arus Kas, Kelayakan & BEP, Uang vs rencana (uang masuk/keluar, bukan untung).
 
-Overlays from the top bar: `Berkas & Data` (import, export, backup, categories, import history), `Pengaturan`, and `Pusat Bantuan`. A record speed dial (Uang Masuk, Uang Keluar) sits on Beranda and Catatan.
+There is no Rencana/Realisasi switch (U4, spec #4). The header shows the business name (the unit only once a second
+unit exists, #15) and one labelled `Lainnya` menu: Rencana usaha (its own page), Kontak, Kategori, Bantuan, Cadangan,
+Ambil dari / Simpan ke Excel, Pengaturan. A record speed dial sits on Catatan.
 
 ## Phone behavior
 
@@ -213,7 +217,7 @@ Failures: 0
 
 ## Book-mode colour identity
 
-Rencana and Realisasi must be distinguishable at a glance, not only during the transition between
+*Historical (removed in U4 with the switch; kept for the reasoning).* Rencana and Realisasi must be distinguishable at a glance, not only during the transition between
 them. An early attempt paired `secondaryContainer` with `successContainer`; in a green-seeded
 palette those are two near-identical pale greens and the difference was invisible on device. The
 shipped pairing is semantic: a plan is provisional and wears the warning container, a realisation is

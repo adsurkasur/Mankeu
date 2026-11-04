@@ -27,8 +27,9 @@ dengan kenyataan.
 
 - **Offline dan privat.** Semua data tersimpan di HP. Tidak perlu login, tidak ada iklan, tidak ada
   pelacak, dan tidak ada server milik pengembang.
-- **Dua buku per unit usaha.** *Rencana* berisi rencana usaha; *Realisasi* berisi uang yang benar-benar
-  berpindah. Keduanya terpisah dan dibandingkan di Laporan.
+- **Catatan nyata dan Rencana usaha terpisah.** Semua tab membaca uang yang benar-benar berpindah;
+  rencana usaha punya halaman sendiri (dari Beranda atau menu Lainnya) dan dibandingkan di Laporan.
+  Tidak ada saklar mode.
 - **Untuk pengguna awam.** Satu formulir untuk memulai, kategori terpilih otomatis, keterangan boleh
   kosong, dan penjelasan langsung di layar saat angka terlihat mengkhawatirkan.
 - **Uang dihitung tepat.** Semua nominal disimpan sebagai rupiah bulat, tanpa pembulatan desimal.

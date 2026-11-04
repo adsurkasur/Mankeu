@@ -118,13 +118,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mankeu.R
-import com.mankeu.domain.BookMode
 import com.mankeu.presentation.guide.HelpArticle
 import com.mankeu.presentation.guide.HelpCenter
 import com.mankeu.presentation.guide.HelpSheet
 import com.mankeu.presentation.guide.articlesFor
 import com.mankeu.presentation.guide.LocalOpenHelp
 import com.mankeu.presentation.screens.ContactsScreen
+import com.mankeu.presentation.screens.DataFocus
+import com.mankeu.presentation.screens.ProductionSheet
+import com.mankeu.presentation.components.form.PickerPage
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Menu
 import com.mankeu.presentation.screens.DataScreen
 import com.mankeu.presentation.screens.NoteFilter
 import com.mankeu.presentation.screens.SaleNoteDetailScreen
@@ -156,10 +163,21 @@ enum class Destination(val labelRes: Int, val icon: ImageVector) {
     REPORTS(R.string.nav_reports, Icons.Default.Assessment),
 }
 
-/** Cash is recorded from these; elsewhere the speed dial would sit over Laporan and Produk content. */
-private val RECORDING_DESTINATIONS = setOf(Destination.HOME, Destination.ENTRY)
+/** The speed dial lives on Catatan only; Beranda has its own Jual / Belanja / Produksi buttons (U4). */
+private val RECORDING_DESTINATIONS = setOf(Destination.ENTRY)
 
-enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY, CONTACTS, SALE_EDITOR, SALE_DETAIL }
+enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY, CONTACTS, SALE_EDITOR, SALE_DETAIL, PLAN, PICK_PRODUCT }
+
+/** The labelled Lainnya menu in the header (U4, plan ruling 5); replaces the three unlabelled icons. */
+enum class MoreItem(val labelRes: Int, val icon: ImageVector) {
+    PLAN(R.string.home_plan_row, Icons.Default.Calculate),
+    CONTACTS(R.string.contacts_title, Icons.Default.Contacts),
+    CATEGORIES(R.string.more_categories, Icons.Default.Category),
+    HELP(R.string.help_sheet_title, Icons.AutoMirrored.Filled.HelpOutline),
+    BACKUP(R.string.more_backup, Icons.Default.Backup),
+    EXCEL(R.string.more_excel, Icons.Default.FolderOpen),
+    SETTINGS(R.string.settings_title, Icons.Default.Settings),
+}
 
 @Composable
 fun MankeuApp(
@@ -201,7 +219,6 @@ fun MankeuApp(
     // "Catat juga uangnya?" (U3): the material and quantity the Belanja form opens with, consumed with the kind.
     var requestedPurchase by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
     val buyMaterial: (String, java.math.BigDecimal) -> Unit = { id, quantity ->
-        viewModel.selectBookMode(BookMode.REALIZATION)
         requestedPurchase = id to quantity.stripTrailingZeros().toPlainString()
         requestedEntryKind = FinancialEventType.CASH_EXPENSE
         destination = Destination.ENTRY
@@ -213,7 +230,15 @@ fun MankeuApp(
     var helpSheet by rememberSaveable { mutableStateOf(false) }
     // The product the full-page editor (Overlay.PRODUCT) is open on; null = a new product.
     var productEditorId by rememberSaveable { mutableStateOf<String?>(null) }
-    val openProduct: (String?) -> Unit = { id -> productEditorId = id; overlay = Overlay.PRODUCT }
+    // Where the product editor and Kontak return to: Rencana usaha / Berkas dan Data, or the shell.
+    var productFrom by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    val openProduct: (String?) -> Unit = { id -> productEditorId = id; productFrom = overlay; overlay = Overlay.PRODUCT }
+    var contactsFrom by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    var contactsSearch by rememberSaveable { mutableStateOf("") }
+    val openContacts: (String) -> Unit = { search -> contactsSearch = search; contactsFrom = overlay; overlay = Overlay.CONTACTS }
+    var dataFocus by rememberSaveable { mutableStateOf(DataFocus.NONE) }
+    // Beranda's Produksi: the product picked in Overlay.PICK_PRODUCT, whose production sheet is open.
+    var produceId by rememberSaveable { mutableStateOf<String?>(null) }
     // The product whose Riwayat stok (Overlay.STOCK_HISTORY) is open.
     var stockHistoryId by rememberSaveable { mutableStateOf<String?>(null) }
     val openStockHistory: (String) -> Unit = { id -> stockHistoryId = id; overlay = Overlay.STOCK_HISTORY }
@@ -366,7 +391,6 @@ fun MankeuApp(
         } else {
             overlay = spec.overlay
             if (spec.overlay == Overlay.NONE) destination = spec.destination
-            spec.bookMode?.let { if (state.selectedBookMode != it) viewModel.selectBookMode(it) }
         }
     }
     LaunchedEffect(captureShow) { captureShow?.let(show) }
@@ -380,11 +404,25 @@ fun MankeuApp(
             overlay == Overlay.HELP && helpArticle != null -> helpArticle = null
             // Ubah from a note's detail returns to that detail; Kontak returns to Berkas dan Data.
             overlay == Overlay.SALE_EDITOR && saleEditorId != null -> overlay = Overlay.SALE_DETAIL
-            overlay == Overlay.CONTACTS -> overlay = Overlay.DATA
+            overlay == Overlay.CONTACTS -> overlay = contactsFrom
+            overlay == Overlay.PRODUCT -> overlay = productFrom
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             else -> destination = Destination.HOME
         }
     }
+
+    val onMore: (MoreItem) -> Unit = { item ->
+        when (item) {
+            MoreItem.PLAN -> overlay = Overlay.PLAN
+            MoreItem.CONTACTS -> openContacts("")
+            MoreItem.CATEGORIES -> { dataFocus = DataFocus.CATEGORIES; overlay = Overlay.DATA }
+            MoreItem.HELP -> helpSheet = true
+            MoreItem.BACKUP -> { dataFocus = DataFocus.BACKUP; overlay = Overlay.DATA }
+            MoreItem.EXCEL -> { dataFocus = DataFocus.NONE; overlay = Overlay.DATA }
+            MoreItem.SETTINGS -> overlay = Overlay.SETTINGS
+        }
+    }
+    val onProduce: () -> Unit = { if (state.products.isEmpty()) openProduct(null) else overlay = Overlay.PICK_PRODUCT }
 
     val feedback = rememberFeedback(prefs.hapticsEnabled, prefs.soundEnabled)
     CompositionLocalProvider(
@@ -482,23 +520,52 @@ fun MankeuApp(
                                         onBackupToDrive = { password -> withDriveToken { token -> viewModel.backupToDrive(password.toCharArray(), token) } },
                                         onRestoreDriveBackup = { fileId, password -> withDriveToken { token -> viewModel.prepareDriveBackupRestore(fileId, password.toCharArray(), token) } },
                                         onSignInGoogle = launchGoogleSignIn,
-                                        onOpenContacts = { overlay = Overlay.CONTACTS },
+                                        onOpenContacts = { openContacts("") },
+                                        focus = dataFocus,
                                     )
                                 }
 
                                 Overlay.CONTACTS -> OverlayScaffold(
                                     title = stringResource(R.string.contacts_title),
-                                    onBack = { overlay = Overlay.DATA },
+                                    onBack = { overlay = contactsFrom },
                                     snackbarHost = snackbarHost,
                                 ) {
-                                    ContactsScreen(
-                                        contacts = state.contacts,
-                                        sales = state.businessSales,
-                                        payables = state.businessPayables,
-                                        onSave = viewModel::saveContact,
-                                        onArchive = viewModel::archiveContact,
+                                    key(contactsSearch) {
+                                        ContactsScreen(
+                                            contacts = state.contacts,
+                                            sales = state.businessSales,
+                                            payables = state.businessPayables,
+                                            onSave = viewModel::saveContact,
+                                            onArchive = viewModel::archiveContact,
+                                            initialSearch = contactsSearch,
+                                        )
+                                    }
+                                }
+
+                                // Temporary full page until U7 rebuilds Rencana Usaha: the plan content, no switch.
+                                Overlay.PLAN -> OverlayScaffold(
+                                    title = stringResource(R.string.home_plan_row),
+                                    onBack = { overlay = Overlay.NONE },
+                                    snackbarHost = snackbarHost,
+                                    onHelp = { helpSheet = true },
+                                ) {
+                                    PlanScreen(
+                                        state = state,
+                                        onOpenProduct = openProduct,
+                                        onSavePlanLine = viewModel::savePlanLine,
+                                        onArchivePlanLine = viewModel::archivePlanLine,
+                                        onSetPeriod = viewModel::setPlanPeriod,
+                                        onManageScope = { manageScope = true },
                                     )
                                 }
+
+                                Overlay.PICK_PRODUCT -> PickerPage(
+                                    title = stringResource(R.string.produce_pick_title),
+                                    items = state.products,
+                                    itemLabel = { it.product.name },
+                                    onPick = { produceId = it.product.id; overlay = Overlay.NONE },
+                                    onClose = { overlay = Overlay.NONE },
+                                )
 
                                 Overlay.SALE_EDITOR -> OverlayScaffold(
                                     title = stringResource(if (saleEditorId == null) R.string.sale_title_new else R.string.sale_title_edit),
@@ -608,7 +675,7 @@ fun MankeuApp(
 
                                 Overlay.PRODUCT -> OverlayScaffold(
                                     title = stringResource(if (productEditorId == null) R.string.editor_title_new else R.string.editor_title_edit),
-                                    onBack = { overlay = Overlay.NONE },
+                                    onBack = { overlay = productFrom },
                                     snackbarHost = snackbarHost,
                                 ) {
                                     key(productEditorId) {
@@ -616,8 +683,8 @@ fun MankeuApp(
                                             existing = state.products.firstOrNull { it.product.id == productEditorId },
                                             materials = state.stockItems,
                                             // Closed only once saved: a refusal keeps the owner's input and shows why.
-                                            onSave = { viewModel.saveProduct(productEditorId, it) { overlay = Overlay.NONE } },
-                                            onDelete = productEditorId?.let { id -> { viewModel.archiveProduct(id); overlay = Overlay.NONE } },
+                                            onSave = { viewModel.saveProduct(productEditorId, it) { overlay = productFrom } },
+                                            onDelete = productEditorId?.let { id -> { viewModel.archiveProduct(id); overlay = productFrom } },
                                         )
                                     }
                                 }
@@ -649,11 +716,8 @@ fun MankeuApp(
                                                 snackbarHost = snackbarHost,
                                                 destination = destination,
                                                 onDestination = { destination = it },
-                                                onOpenData = { overlay = Overlay.DATA },
                                                 onManageScope = { manageScope = true },
-                                                onSelectBookMode = viewModel::selectBookMode,
-                                                onOpenSettings = { overlay = Overlay.SETTINGS },
-                                                onOpenHelpSheet = { helpSheet = true },
+                                                onMore = onMore,
                                                 onQuickRecord = { kind ->
                                                     requestedEntryKind = kind
                                                     destination = Destination.ENTRY
@@ -677,6 +741,9 @@ fun MankeuApp(
                                                     noteFilter = noteFilter,
                                                     onNoteFilter = { noteFilter = it },
                                                     onOpenBills = openBills,
+                                                    onOpenPlan = { overlay = Overlay.PLAN },
+                                                    onProduce = onProduce,
+                                                    onOpenContact = openContacts,
                                                     requestedKind = requestedEntryKind,
                                                     requestedPurchase = requestedPurchase,
                                                     onBuyMaterial = buyMaterial,
@@ -691,11 +758,8 @@ fun MankeuApp(
                                             snackbarHost = snackbarHost,
                                             destination = destination,
                                             onDestination = { destination = it },
-                                            onOpenData = { overlay = Overlay.DATA },
                                             onManageScope = { manageScope = true },
-                                            onSelectBookMode = viewModel::selectBookMode,
-                                            onOpenSettings = { overlay = Overlay.SETTINGS },
-                                            onOpenHelpSheet = { helpSheet = true },
+                                            onMore = onMore,
                                             onQuickRecord = { kind ->
                                                 requestedEntryKind = kind
                                                 destination = Destination.ENTRY
@@ -719,6 +783,9 @@ fun MankeuApp(
                                                 noteFilter = noteFilter,
                                                 onNoteFilter = { noteFilter = it },
                                                 onOpenBills = openBills,
+                                                onOpenPlan = { overlay = Overlay.PLAN },
+                                                onProduce = onProduce,
+                                                onOpenContact = openContacts,
                                                 requestedKind = requestedEntryKind,
                                                 requestedPurchase = requestedPurchase,
                                                 onBuyMaterial = buyMaterial,
@@ -759,7 +826,7 @@ fun MankeuApp(
                     )
                 }
 
-                val pageArticles = articlesFor(destination, state.selectedBookMode, overlay)
+                val pageArticles = articlesFor(destination, overlay)
                 if (helpSheet) {
                     HelpSheet(
                         pageArticles = pageArticles,
@@ -767,6 +834,13 @@ fun MankeuApp(
                         onOpenArticle = openHelp,
                         onOpenCenter = { helpSheet = false; helpArticle = null; overlay = Overlay.HELP },
                     )
+                }
+
+                state.products.firstOrNull { it.product.id == produceId }?.let { record ->
+                    ProductionSheet(record, state.stockItems, onDismiss = { produceId = null }) { batches, date ->
+                        viewModel.recordProduction(record.product.id, batches, date)
+                        produceId = null
+                    }
                 }
 
                 state.priceAlert?.let { alert ->
@@ -865,11 +939,8 @@ private fun MainScaffold(
     snackbarHost: SnackbarHostState,
     destination: Destination,
     onDestination: (Destination) -> Unit,
-    onOpenData: () -> Unit,
     onManageScope: () -> Unit,
-    onSelectBookMode: (BookMode) -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenHelpSheet: () -> Unit,
+    onMore: (MoreItem) -> Unit,
     onQuickRecord: (FinancialEventType) -> Unit,
     onSaleNote: () -> Unit,
     compact: Boolean,
@@ -879,22 +950,16 @@ private fun MainScaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
             // Only where recording is the next thing to do. On Laporan the owner is reading, and a
-            // permanent action button there would sit on top of the numbers for no reason. Proyeksi
-            // is a plan, not a cash book (DEC-014): it is edited on the Rencana Usaha page instead.
-            if (destination in RECORDING_DESTINATIONS && state.selectedProjectId != null &&
-                state.selectedBookMode != BookMode.PROJECTION
-            ) {
+            // permanent action button there would sit on top of the numbers for no reason.
+            if (destination in RECORDING_DESTINATIONS && state.selectedProjectId != null) {
                 RecordSpeedDial(onRecord = onQuickRecord, onSaleNote = onSaleNote)
             }
         },
         topBar = {
             ScopeHeader(
                 state = state,
-                onSelectBookMode = onSelectBookMode,
-                onOpenSettings = onOpenSettings,
-                onOpenData = onOpenData,
                 onManageScope = onManageScope,
-                onOpenHelpSheet = onOpenHelpSheet,
+                onMore = onMore,
                 compact = compact,
             )
         },
@@ -999,136 +1064,42 @@ private fun AppRail(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The header (U4): the business name, opening the sheet that manages it, and one labelled
+ * "Lainnya" menu. The Rencana/Realisasi switch is gone (#4) and the three unlabelled icons
+ * (?, folder, person) are entries of that menu, so every door says what it opens (audit P5).
+ */
 @Composable
 private fun ScopeHeader(
     state: AppUiState,
-    onSelectBookMode: (BookMode) -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenData: () -> Unit,
     onManageScope: () -> Unit,
-    onOpenHelpSheet: () -> Unit,
+    onMore: (MoreItem) -> Unit,
     compact: Boolean,
 ) {
-    val motion = LocalMotion.current
-    val semantic = LocalMankeuSemanticColors.current
-    val feedback = LocalFeedback.current
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shadowElevation = if (isDarkScheme()) 0.dp else 2.dp,
-    ) {
-        Column(
+    var menuOpen by remember { mutableStateOf(false) }
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Row(
             Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = if (compact) 16.dp else 24.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(start = if (compact) Space.Small else Space.Section, end = Space.Small, top = Space.Small, bottom = Space.Small),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // One row, not three.
-            //
-            // The header used to stack an app title with a subtitle, then a pair of 56dp dropdowns,
-            // then the mode switch — roughly a fifth of a phone screen spent restating the app's
-            // own name and two values that change a few times a week. The name is on the launcher
-            // icon and in the task switcher; the two scope values are one line of text that opens
-            // the sheet that already manages them (D-065).
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                MankeuAppLogo(size = 34.dp)
-                Spacer(Modifier.width(10.dp))
-                ScopeSummary(
-                    state = state,
-                    onClick = onManageScope,
-                    modifier = Modifier.weight(1f),
-                )
-                // Opens help for whatever destination is open. Placed in the header rather than buried
-                // in Pengaturan because the moment someone needs the explanation is the moment they
-                // are staring at the screen that confused them.
-                MankeuTooltip(stringResource(R.string.help_sheet_title)) {
-                    IconButton(onClick = onOpenHelpSheet) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.HelpOutline,
-                            contentDescription = stringResource(R.string.help_sheet_title),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            ScopeSummary(state = state, onClick = onManageScope, modifier = Modifier.weight(1f))
+            Box {
+                TextButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(Space.Small))
+                    Text(stringResource(R.string.header_more), style = MankeuType.Body, fontWeight = FontWeight.SemiBold)
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    MoreItem.entries.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(item.labelRes), style = MankeuType.Body) },
+                            leadingIcon = { Icon(item.icon, contentDescription = null) },
+                            onClick = { menuOpen = false; onMore(item) },
                         )
                     }
-                }
-                MankeuTooltip(stringResource(R.string.data_title)) {
-                    IconButton(onClick = onOpenData) {
-                        Icon(
-                            Icons.Default.FolderOpen,
-                            contentDescription = stringResource(R.string.data_title),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-                MankeuTooltip(stringResource(R.string.settings_title)) {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = stringResource(R.string.settings_title),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-
-            //
-            // Round 8 gave Realisasi the semantic success (teal) container so the two books could
-            // be told apart. It worked, and it cost more than it bought: teal is the app's money
-            // colour — Uang Masuk, a surplus, a positive cash flow — and a permanent teal block in
-            // the header competed with the figures below it, which are the thing that is actually
-            // supposed to be teal or coral. A book is a scope, not an amount.
-            //
-            // Both segments come from the generated Material 3 palette now, one step apart on the
-            // same tonal family: Realisasi on `primaryContainer`, Proyeksi on `secondaryContainer`.
-            // They stay distinguishable because only one of them is filled at a time and the
-            // selected one also carries a check icon and bold weight — the selection is legible
-            // from shape and state, not from borrowing a colour that means something else.
-            val projection = state.selectedBookMode == BookMode.PROJECTION
-            val activeContainer by animateColorAsState(
-                targetValue = if (projection) {
-                    MaterialTheme.colorScheme.secondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
-                animationSpec = tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing),
-                label = "modeContainer",
-            )
-            val activeContent by animateColorAsState(
-                targetValue = if (projection) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                },
-                animationSpec = tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing),
-                label = "modeContent",
-            )
-            // Hidden until there is a unit: before that the two books are words without meaning (2026-10-22).
-            if (state.selectedProjectId != null) SingleChoiceSegmentedButtonRow(
-                Modifier.fillMaxWidth(),
-            ) {
-                BookMode.entries.forEachIndexed { index, mode ->
-                    SegmentedButton(
-                        selected = state.selectedBookMode == mode,
-                        onClick = { feedback(FeedbackEvent.TAP); onSelectBookMode(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = BookMode.entries.size),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = activeContainer,
-                            activeContentColor = activeContent,
-                            activeBorderColor = MaterialTheme.colorScheme.outline,
-                            inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            inactiveBorderColor = MaterialTheme.colorScheme.outline,
-                        ),
-                        label = {
-                            Text(
-                                stringResource(
-                                    if (mode == BookMode.PROJECTION) R.string.scope_mode_plan else R.string.scope_mode_actual,
-                                ),
-                                fontWeight = if (state.selectedBookMode == mode) FontWeight.Bold else FontWeight.Medium,
-                                maxLines = 1,
-                            )
-                        },
-                    )
                 }
             }
         }
@@ -1158,8 +1129,9 @@ private fun ScopeSummary(
                 else -> R.string.scope_empty_business
             },
         )
-    val projectLabel = state.projects.firstOrNull { it.id == state.selectedProjectId }?.name
-        ?: stringResource(
+    // Units stay hidden until a second one exists (#15).
+    val projectLabel = state.projects.firstOrNull { it.id == state.selectedProjectId }?.name?.takeIf { state.projects.size >= 2 }
+        ?: if (hasProject && !state.isLoading) null else stringResource(
             when {
                 state.isLoading -> R.string.scope_loading_project
                 !hasBusiness -> R.string.scope_add_business
@@ -1188,12 +1160,11 @@ private fun ScopeSummary(
             Column(Modifier.weight(1f)) {
                 Text(
                     businessLabel,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Black,
+                    style = MankeuType.Title,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
+                if (projectLabel != null) Text(
                     projectLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = if (needsSetup) {
@@ -1310,6 +1281,9 @@ private fun ScreenContent(
     noteFilter: NoteFilter,
     onNoteFilter: (NoteFilter) -> Unit,
     onOpenBills: (NoteFilter) -> Unit,
+    onOpenPlan: () -> Unit,
+    onProduce: () -> Unit,
+    onOpenContact: (String) -> Unit,
     requestedKind: FinancialEventType? = null,
     requestedPurchase: Pair<String, String>? = null,
     onBuyMaterial: (String, java.math.BigDecimal) -> Unit = { _, _ -> },
@@ -1318,41 +1292,29 @@ private fun ScreenContent(
 ) {
     val motion = LocalMotion.current
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // Screen and book mode changes cross-fade with directional glide so the switch reads as
-        // deliberate and responsive rather than an instant swap. Honours the Gerakan setting: at OFF the
-        // durations are zero, which makes this equivalent to the previous hard cut.
+        // Screen changes cross-fade with a short glide so the switch reads as deliberate rather than
+        // an instant swap. Honours the Gerakan setting: at OFF the durations are zero (a hard cut).
         AnimatedContent(
-            targetState = Pair(destination, state.selectedBookMode),
+            targetState = destination,
             transitionSpec = {
-                val isBookModeChange = initialState.first == targetState.first && initialState.second != targetState.second
-                if (isBookModeChange) {
-                    val slideLeft = targetState.second == BookMode.REALIZATION
-                    val enterMillis = maxOf(motion.mediumMillis, 1)
-                    val exitMillis = maxOf(motion.fastMillis, 1)
-                    (slideInHorizontally(tween(enterMillis, easing = FastOutSlowInEasing)) { fullWidth ->
-                        if (slideLeft) fullWidth / 5 else -fullWidth / 5
-                    } + fadeIn(tween(enterMillis)))
-                        .togetherWith(
-                            slideOutHorizontally(tween(exitMillis, easing = FastOutSlowInEasing)) { fullWidth ->
-                                if (slideLeft) -fullWidth / 5 else fullWidth / 5
-                            } + fadeOut(tween(exitMillis)),
-                        )
-                } else {
-                    (fadeIn(tween(maxOf(motion.mediumMillis, 1))) +
-                        slideInVertically(tween(maxOf(motion.mediumMillis, 1))) { it / 12 })
-                        .togetherWith(fadeOut(tween(maxOf(motion.fastMillis, 1))))
-                }
+                (fadeIn(tween(maxOf(motion.mediumMillis, 1))) +
+                    slideInVertically(tween(maxOf(motion.mediumMillis, 1))) { it / 12 })
+                    .togetherWith(fadeOut(tween(maxOf(motion.fastMillis, 1))))
             },
-            label = "screenAndBookMode",
-        ) { (currentDest, _) ->
+            label = "screen",
+        ) { currentDest ->
             when (currentDest) {
                 Destination.HOME -> HomeScreen(
                     state = state,
                     onNavigate = onNavigate,
                     onManageScope = onManageScope,
-                    onOpenPlan = { onNavigate(Destination.ENTRY) },
+                    onOpenPlan = onOpenPlan,
                     onQuickRecord = onQuickRecord,
                     onOpenBills = onOpenBills,
+                    onNewSale = onNewSale,
+                    onProduce = onProduce,
+                    onNewProduct = { onOpenProduct(null) },
+                    onOpenContact = onOpenContact,
                     expanded = expanded,
                 )
                 Destination.PRODUCTS -> ProductsScreen(
@@ -1370,16 +1332,7 @@ private fun ScreenContent(
                     onBuyMaterial = onBuyMaterial,
                     expanded = expanded,
                 )
-                Destination.ENTRY -> if (state.selectedBookMode == BookMode.PROJECTION) {
-                    PlanScreen(
-                        state = state,
-                        onOpenProduct = onOpenProduct,
-                        onSavePlanLine = viewModel::savePlanLine,
-                        onArchivePlanLine = viewModel::archivePlanLine,
-                        onSetPeriod = viewModel::setPlanPeriod,
-                        onManageScope = onManageScope,
-                    )
-                } else EntryScreen(
+                Destination.ENTRY -> EntryScreen(
                     state = state,
                     isSaving = isSaving,
                     onRecord = viewModel::record,
@@ -1396,7 +1349,6 @@ private fun ScreenContent(
                 )
                 Destination.REPORTS -> ReportsScreen(
                     state = state,
-                    onOpenPlan = { onNavigate(Destination.ENTRY) },
                     onRecordTransaction = { onNavigate(Destination.ENTRY) },
                 )
             }

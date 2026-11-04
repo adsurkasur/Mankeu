@@ -1,7 +1,6 @@
 package com.mankeu.presentation.guide
 
 import com.mankeu.R
-import com.mankeu.domain.BookMode
 import com.mankeu.presentation.Destination
 import com.mankeu.presentation.Overlay
 
@@ -24,37 +23,37 @@ enum class ShowPlace {
 }
 
 /**
- * Where "Tunjukkan di aplikasi" takes the owner: the page (and book mode, or overlay) on which
- * [target] lives. [needsUnit] is false only for pages that make sense before any usaha exists.
+ * Where "Tunjukkan di aplikasi" takes the owner: the page (or overlay) on which [target] lives.
+ * [needsUnit] is false only for pages that make sense before any usaha exists. The Rencana usaha
+ * page is [Overlay.PLAN] since the Rencana/Realisasi switch was removed (U4).
  */
 data class ShowSpec(
     val target: ShowPlace,
     val destination: Destination = Destination.HOME,
-    val bookMode: BookMode? = null,
     val overlay: Overlay = Overlay.NONE,
     val needsUnit: Boolean = true,
 ) {
     /** The screenshot of this place: `res/drawable-nodpi/help_<name>.webp`, made by `HelpScreenshotTest`. */
     val imageName: String
-        get() = "help_" + target.name.lowercase() + if (bookMode == BookMode.PROJECTION) "_plan" else ""
+        get() = "help_" + target.name.lowercase() + if (overlay == Overlay.PLAN) "_plan" else ""
 }
 
-private val AT_HOME_SCOPE = ShowSpec(ShowPlace.SCOPE_BUSINESS, bookMode = BookMode.REALIZATION, needsUnit = false)
-private val AT_HOME_BOOK = ShowSpec(ShowPlace.SCOPE_BOOK, bookMode = BookMode.REALIZATION)
-private val AT_HOME_CASH = ShowSpec(ShowPlace.HERO_SUMMARY, bookMode = BookMode.REALIZATION)
-private val AT_RECORD = ShowSpec(ShowPlace.HOME_RECORD, bookMode = BookMode.REALIZATION)
-private val AT_LEDGER = ShowSpec(ShowPlace.ENTRY_HISTORY, Destination.ENTRY, BookMode.REALIZATION)
-private val AT_PLAN_PERIOD = ShowSpec(ShowPlace.PLAN_PERIOD, Destination.ENTRY, BookMode.PROJECTION)
-private val AT_PLAN_PRODUCTS = ShowSpec(ShowPlace.PLAN_PRODUCTS, Destination.ENTRY, BookMode.PROJECTION)
-private val AT_PLAN_COSTS = ShowSpec(ShowPlace.PLAN_COSTS, Destination.ENTRY, BookMode.PROJECTION)
-private val AT_PLAN_FEASIBILITY = ShowSpec(ShowPlace.PLAN_FEASIBILITY, Destination.ENTRY, BookMode.PROJECTION)
-private val AT_STOCK_ADD = ShowSpec(ShowPlace.STOCK_ADD, Destination.PRODUCTS, BookMode.REALIZATION)
-private val AT_STOCK_LIST = ShowSpec(ShowPlace.STOCK_LIST, Destination.PRODUCTS, BookMode.REALIZATION)
-private val AT_REPORT_TABS = ShowSpec(ShowPlace.REPORTS_TABS, Destination.REPORTS, BookMode.REALIZATION)
-private val AT_REPORT_PROFIT = ShowSpec(ShowPlace.REPORTS_PROFIT, Destination.REPORTS, BookMode.REALIZATION)
-private val AT_REPORT_CASH = ShowSpec(ShowPlace.REPORTS_CASHFLOW, Destination.REPORTS, BookMode.REALIZATION)
-// On Beranda: in Laporan the same card sits on the second tab, which no scroll reaches.
-private val AT_REPORT_BEP = ShowSpec(ShowPlace.HOME_BEP, bookMode = BookMode.REALIZATION)
+private val AT_HOME_SCOPE = ShowSpec(ShowPlace.SCOPE_BUSINESS, needsUnit = false)
+private val AT_HOME_BOOK = ShowSpec(ShowPlace.SCOPE_BOOK)
+private val AT_HOME_CASH = ShowSpec(ShowPlace.HERO_SUMMARY)
+private val AT_RECORD = ShowSpec(ShowPlace.HOME_RECORD)
+private val AT_LEDGER = ShowSpec(ShowPlace.ENTRY_HISTORY, Destination.ENTRY)
+private val AT_PLAN_PERIOD = ShowSpec(ShowPlace.PLAN_PERIOD, overlay = Overlay.PLAN)
+private val AT_PLAN_PRODUCTS = ShowSpec(ShowPlace.PLAN_PRODUCTS, overlay = Overlay.PLAN)
+private val AT_PLAN_COSTS = ShowSpec(ShowPlace.PLAN_COSTS, overlay = Overlay.PLAN)
+private val AT_PLAN_FEASIBILITY = ShowSpec(ShowPlace.PLAN_FEASIBILITY, overlay = Overlay.PLAN)
+private val AT_STOCK_ADD = ShowSpec(ShowPlace.STOCK_ADD, Destination.PRODUCTS)
+private val AT_STOCK_LIST = ShowSpec(ShowPlace.STOCK_LIST, Destination.PRODUCTS)
+private val AT_REPORT_TABS = ShowSpec(ShowPlace.REPORTS_TABS, Destination.REPORTS)
+private val AT_REPORT_PROFIT = ShowSpec(ShowPlace.REPORTS_PROFIT, Destination.REPORTS)
+private val AT_REPORT_CASH = ShowSpec(ShowPlace.REPORTS_CASHFLOW, Destination.REPORTS)
+// Laporan: the BEP card left Beranda in U4 and lives on the Kelayakan tab.
+private val AT_REPORT_BEP = ShowSpec(ShowPlace.HOME_BEP, Destination.REPORTS)
 private val AT_DATA_IMPORT = ShowSpec(ShowPlace.IMPORT_FILE_PICKER, overlay = Overlay.DATA)
 private val AT_DATA_HISTORY = ShowSpec(ShowPlace.DATA_HISTORY, overlay = Overlay.DATA)
 private val AT_DATA_EXPORT = ShowSpec(ShowPlace.DATA_EXPORT, overlay = Overlay.DATA)
@@ -106,8 +105,8 @@ enum class HelpArticle(
 }
 
 /** Articles worth offering from the ? button on a page: those whose "Tunjukkan di aplikasi" lands on it. */
-fun articlesFor(destination: Destination, bookMode: BookMode, overlay: Overlay): List<HelpArticle> =
+fun articlesFor(destination: Destination, overlay: Overlay): List<HelpArticle> =
     HelpArticle.entries.filter {
         val spec = it.show
-        spec.overlay == overlay && (overlay != Overlay.NONE || (spec.destination == destination && (destination != Destination.ENTRY || spec.bookMode == bookMode)))
+        spec.overlay == overlay && (overlay != Overlay.NONE || spec.destination == destination)
     }

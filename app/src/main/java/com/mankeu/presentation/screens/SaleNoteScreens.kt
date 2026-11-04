@@ -565,24 +565,3 @@ fun SaleNoteDetailScreen(
         }
     }
 }
-
-/** Beranda's Tagihan card: what customers still owe, what is owed to suppliers, overdue notes. */
-@Composable
-fun BillsCard(receivableRupiah: Long, payableRupiah: Long, overdueCount: Int, onOpen: () -> Unit) {
-    val semantic = LocalMankeuSemanticColors.current
-    Card(
-        onClick = onOpen,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.home_bills_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            ReportRow(stringResource(R.string.profit_receivable), receivableRupiah, highlightNegative = false)
-            ReportRow(stringResource(R.string.profit_payable), payableRupiah, highlightNegative = false)
-            if (overdueCount > 0) {
-                Text(stringResource(R.string.home_bills_overdue, overdueCount), color = semantic.danger, fontWeight = FontWeight.Bold)
-            }
-            Text(stringResource(R.string.home_bills_open), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-        }
-    }
-}

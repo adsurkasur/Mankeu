@@ -1,19 +1,6 @@
 package com.mankeu.presentation.screens
 
-import com.mankeu.presentation.guide.HelpArticle
-import com.mankeu.presentation.components.MankeuTooltip
-
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,92 +8,66 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.foundation.shape.RoundedCornerShape
-import com.mankeu.domain.FinancialSummary
-import com.mankeu.domain.MonthlyCashFlow
-import com.mankeu.domain.MonthlyCashFlowCalculator
-import com.mankeu.domain.TransactionCalculation
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
-import com.mankeu.domain.BookMode
-import com.mankeu.domain.CategoryRole
+import com.mankeu.data.SaleRecord
 import com.mankeu.domain.FinancialEventType
+import com.mankeu.domain.MonthlySummary
 import com.mankeu.presentation.AppUiState
 import com.mankeu.presentation.Destination
 import com.mankeu.presentation.LocalMankeuSemanticColors
-import com.mankeu.presentation.isDarkScheme
+import com.mankeu.presentation.MankeuCard
+import com.mankeu.presentation.MankeuType
+import com.mankeu.presentation.Space
 import com.mankeu.presentation.components.EmptyCard
-import com.mankeu.presentation.components.ActualMonthCard
-import com.mankeu.presentation.components.ProfitDetailRows
-import com.mankeu.presentation.components.ReportCard
-import com.mankeu.presentation.components.PlanFeasibilityCard
-import com.mankeu.presentation.components.MetricTone
 import com.mankeu.presentation.components.NoticeCard
-import com.mankeu.presentation.components.SectionTitle
-import com.mankeu.presentation.components.SimpleMetric
-import com.mankeu.presentation.components.SimpleMetricGrid
 import com.mankeu.presentation.components.SkeletonHero
 import com.mankeu.presentation.components.SkeletonListItem
-import com.mankeu.presentation.components.SkeletonMetricGrid
-import com.mankeu.presentation.LocalMotion
-import com.mankeu.presentation.appLocale
+import com.mankeu.presentation.components.form.ListRowField
+import com.mankeu.presentation.guide.HelpArticle
 import com.mankeu.presentation.toRupiah
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 /**
- * The Beranda (home) destination: cash headline, the four key metrics, expense
- * distribution, stock, plan feasibility and this month's break-even status.
+ * Beranda (U4, plan ruling 4): answers "how is the business this month, and what do I do now".
+ *
+ * One main number (Untung bulan ini, tap for its four lines), the cash on hand, the three quick
+ * actions, who has not paid yet by name, supplier debt when there is any, real low-stock warnings
+ * and the way into Rencana usaha. Every money figure is this month's [MonthlySummary] (P7); the
+ * charts and reconciliation lines live in Laporan.
  */
 @Composable
 fun HomeScreen(
@@ -116,40 +77,32 @@ fun HomeScreen(
     onOpenPlan: () -> Unit = {},
     /** Opens the entry form for a kind; OWNER_CAPITAL presets money in with the capital category. */
     onQuickRecord: (FinancialEventType) -> Unit = {},
-    /** Opens the Catatan note list on a filter (Tagihan card, DEC-029 §12). */
+    /** Opens the Catatan note list on a filter. */
     onOpenBills: (NoteFilter) -> Unit = {},
+    onNewSale: () -> Unit = {},
+    /** Product picker, then the production sheet. */
+    onProduce: () -> Unit = {},
+    onNewProduct: () -> Unit = {},
+    /** Kontak, searched on this name ("" = the whole list). U5 replaces it with the customer page. */
+    onOpenContact: (String) -> Unit = {},
     expanded: Boolean = false,
 ) {
-    // Proyeksi reads the business plan (DEC-014) whenever the unit has one; postings otherwise.
-    // Both produce the same summary and schedule shapes, so every card below reads one code path.
-    val plan = state.plan.takeIf { state.selectedBookMode == BookMode.PROJECTION }
-    val summary = plan?.summary ?: state.summary
-    // Realisasi: every profit, money and bill figure below is this month's MonthlySummary (U2, P7).
-    val month = state.thisMonth.takeIf { state.selectedBookMode == BookMode.REALIZATION }
-    val monthlyCashFlow = remember(state.cashFlowRecords, plan) {
-        plan?.schedule ?: MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
-    }
-
+    val month = state.thisMonth
     LazyColumn(
         contentPadding = PaddingValues(
-            start = if (expanded) 24.dp else 16.dp,
-            end = if (expanded) 24.dp else 16.dp,
-            top = 12.dp,
-            // Clears the speed dial. Scaffold pads around a FAB for its own content slot, but the
-            // list scrolls under it, so without this the last card is permanently half-covered.
-            bottom = 96.dp,
+            start = if (expanded) Space.Section else Space.Edge,
+            end = if (expanded) Space.Section else Space.Edge,
+            top = Space.Edge,
+            bottom = Space.Section,
         ),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.Edge),
     ) {
-        if (state.isLoading) {
+        // Loading, or the month has not arrived yet (U2 re-review N-1): placeholders, never zeros.
+        if (state.isLoading || (state.projects.isNotEmpty() && month == null)) {
             item { SkeletonHero() }
-            item { SkeletonMetricGrid() }
             items(3) { SkeletonListItem() }
             return@LazyColumn
         }
-        // No business or field yet: the app used to quietly create "Usaha Saya"/"Umum" during
-        // startup, so a first-time owner met a dashboard for a farm they had never named. Now the
-        // first screen states plainly what is missing and offers the one action that fixes it.
         if (state.businesses.isEmpty()) {
             item {
                 EmptyCard(
@@ -162,7 +115,7 @@ fun HomeScreen(
             }
             return@LazyColumn
         }
-        if (state.projects.isEmpty()) {
+        if (state.projects.isEmpty() || month == null) {
             item {
                 EmptyCard(
                     stringResource(R.string.setup_project_title),
@@ -174,20 +127,23 @@ fun HomeScreen(
             }
             return@LazyColumn
         }
-        item {
-            HeroCard(
-                mode = state.selectedBookMode,
-                amount = month?.cashOnHandRupiah ?: summary.cashBalanceRupiah,
-                latestMonth = monthlyCashFlow.lastOrNull(),
-                projectId = state.selectedProjectId,
-                onClick = { onNavigate(Destination.REPORTS) },
-            )
+        // Nothing recorded yet: the first three steps instead of a column of Rp0.
+        val noData = state.sales.isEmpty() && state.eventCount == 0 &&
+            month.cashOnHandRupiah == 0L && month.moneyInRupiah == 0L && month.moneyOutRupiah == 0L
+        if (noData) {
+            item { FirstSteps(hasProduct = state.products.isNotEmpty(), onNewProduct = onNewProduct, onNewSale = onNewSale) }
+            item { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
+            return@LazyColumn
         }
-        // A first-time owner who records sales and restocking but not the money already in the
-        // drawer sees a red, negative balance and reads it as a loss (audit 2026-10-22). Say why
-        // and offer the one entry that fixes it, until capital is recorded or cash is positive.
-        // Same balance as the hero above it (month end), so the warning never contradicts the figure (U2 review M-1).
-        if (month != null && month.cashOnHandRupiah < 0 && summary.financingCashFlowRupiah <= 0) {
+
+        item {
+            val last = state.monthlySummaries.firstOrNull { it.month == month.month.minusMonths(1) }
+            ProfitCard(month, last)
+        }
+        item { ListRowField(stringResource(R.string.home_cash_on_hand), month.cashOnHandRupiah.toRupiah(), { onNavigate(Destination.REPORTS) }) }
+        // A first-time owner who records sales but not the money already in the drawer sees a negative
+        // balance and reads it as a loss (audit 2026-10-22): say why and offer the entry that fixes it.
+        if (month.cashOnHandRupiah < 0 && state.summary.financingCashFlowRupiah <= 0) {
             item {
                 EmptyCard(
                     stringResource(R.string.home_negative_cash_title),
@@ -199,444 +155,237 @@ fun HomeScreen(
             }
         }
         item {
-            Column(
-                modifier = Modifier.animateContentSize(tween(maxOf(LocalMotion.current.mediumMillis, 1), easing = FastOutSlowInEasing)),
-            ) {
-                val profitRupiah = month?.profitRupiah ?: summary.profitRupiah
-                val profitTone = when {
-                    profitRupiah < 0 -> MetricTone.DANGER
-                    profitRupiah > 0 -> MetricTone.SUCCESS
-                    else -> MetricTone.PRIMARY
-                }
-                val cashFlowTone = when {
-                    summary.operatingCashFlowRupiah < 0 -> MetricTone.DANGER
-                    summary.operatingCashFlowRupiah > 0 -> MetricTone.SUCCESS
-                    else -> MetricTone.PRIMARY
-                }
-                SimpleMetricGrid(
-                    if (month != null) {
-                        // This month only, no all-months figure (U2): profit leads; Beranda redesign is U4.
-                        listOf(
-                            SimpleMetric(stringResource(R.string.home_profit), month.profitRupiah, Icons.Default.Assessment, profitTone),
-                            SimpleMetric(stringResource(R.string.home_income_month), month.incomeRupiah, Icons.Default.Insights, MetricTone.SUCCESS),
-                            SimpleMetric(stringResource(R.string.home_money_in_month), month.moneyInRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
-                            SimpleMetric(stringResource(R.string.home_money_out_month), month.moneyOutRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
-                        )
-                    } else {
-                        // Proyeksi: the plan's whole period.
-                        listOf(
-                            SimpleMetric(stringResource(R.string.home_cash_flow), summary.operatingCashFlowRupiah, Icons.Default.SwapHoriz, cashFlowTone),
-                            SimpleMetric(stringResource(R.string.home_plan_profit), summary.profitRupiah, Icons.Default.Assessment, profitTone),
-                            SimpleMetric(stringResource(R.string.reports_operating_income), summary.operatingIncomeRupiah, Icons.Default.ArrowDownward, MetricTone.SUCCESS),
-                            SimpleMetric(stringResource(R.string.reports_operating_expense), summary.operatingExpenseRupiah, Icons.Default.ArrowUpward, MetricTone.DANGER),
-                        )
-                    },
-                )
-                // Cash basis: restocking is a cost the day it is paid, so a restock day reads as a loss.
-                // Said here, where a new owner sees the red figure (owner decision 2026-10-22).
-                if (month != null && month.profitRupiah < 0) {
-                    Text(
-                        stringResource(R.string.home_cash_loss_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp),
-                    )
-                }
-            }
-        }
-        // Tagihan (DEC-029 §12): the amounts are the summary's, the same as Laporan; the overdue count is per note.
-        val overdue = state.sales.count { it.overdue(LocalDate.now()) }
-        if (month != null && (month.receivableRupiah != 0L || month.payableRupiah != 0L || overdue > 0)) {
-            item {
-                BillsCard(month.receivableRupiah, month.payableRupiah, overdue) {
-                    onOpenBills(if (overdue > 0) NoteFilter.OVERDUE else NoteFilter.OPEN)
-                }
-            }
-        }
-        if (month != null && (month.hppRupiah != 0L || month.productionSpendRupiah != 0L)) {
-            item { ReportCard(stringResource(R.string.profit_detail_home_title)) { ProfitDetailRows(month, withBills = false) } }
-        }
-        item {
-            ExpenseDistributionCard(
-                state = state,
+            QuickActions(
+                onSell = onNewSale,
+                onBuy = { onQuickRecord(FinancialEventType.CASH_EXPENSE) },
+                onProduce = onProduce,
             )
         }
-        item {
-            StockCard(items = state.stockItems, onManage = { onNavigate(Destination.PRODUCTS) })
-        }
-        // Feasibility is the reason the plan exists, so it gets its own card with a meter rather
-        // than more figures in the grid. Realisasi asks the same question of this month.
-        if (state.selectedBookMode == BookMode.PROJECTION) {
+        val bills = customerBills(state.sales, LocalDate.now())
+        if (month.receivableRupiah != 0L || bills.isNotEmpty()) {
             item {
-                if (plan != null) {
-                    PlanFeasibilityCard(plan, onOpenPlan = onOpenPlan)
-                } else {
-                    EmptyCard(
-                        stringResource(R.string.plan_empty_title),
-                        stringResource(R.string.plan_empty_body),
-                        stringResource(R.string.plan_open),
-                        onOpenPlan,
-                        learn = HelpArticle.PLAN_CREATE,
-                    )
-                }
-            }
-        } else {
-            state.actualMonth?.let { actual -> item { ActualMonthCard(actual, state.products, month) } }
-        }
-        if (state.notices.isNotEmpty()) {
-            item {
-                SectionTitle(
-                    stringResource(R.string.home_import_notice_title),
-                    stringResource(R.string.home_import_notice_sub),
+                BillsCard(
+                    totalRupiah = month.receivableRupiah,
+                    bills = bills,
+                    onOpenContact = onOpenContact,
+                    onReceive = { onOpenBills(NoteFilter.OPEN) },
                 )
             }
-            items(state.notices.take(3), key = { it.id }) { notice ->
-                NoticeCard(notice.title, notice.explanation, Icons.Default.Info)
+        }
+        if (month.payableRupiah != 0L) {
+            item {
+                // Neutral: the warning colour is kept for what customers owe, so two brown figures do not compete.
+                MankeuCard(onClick = { onOpenContact("") }) {
+                    Column {
+                        Text(stringResource(R.string.home_payable_title), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(month.payableRupiah.toRupiah(), style = MankeuType.Figure)
+                    }
+                }
             }
+        }
+        val low = state.stockItems.filter { it.isLowStock }
+        items(low, key = { "low-" + it.id }) { item ->
+            WarningRow(stringResource(R.string.home_low_stock, item.name, item.currentStock.toQuantityText(), item.unit)) {
+                onNavigate(Destination.PRODUCTS)
+            }
+        }
+        item { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
+        items(state.notices.take(3), key = { it.id }) { notice ->
+            NoticeCard(notice.title, notice.explanation, Icons.Default.Info)
         }
     }
 }
 
-/**
- * Cash headline. Switching Proyeksi <-> Realisasi is not a different screen — it is the same
- * question asked of a different book — so the card stays put and only its wording and figure are
- * exchanged, sliding in the direction of travel. Previously the label and the number were swapped
- * in a single frame, which read as a glitch rather than as a deliberate change of scope.
- */
-@Composable
-private fun HeroCard(
-    mode: BookMode,
-    amount: Long,
-    latestMonth: MonthlyCashFlow?,
-    modifier: Modifier = Modifier,
-    projectId: String? = null,
-    onClick: (() -> Unit)? = null,
-) {
-    val motion = LocalMotion.current
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        // The hero is the one place the app fills a large area with an accent colour, so its text
-        // colour has to follow the fill. In light mode the deep primary/tertiary pair carries white
-        // text at 6.4:1; in dark mode those roles are *light* greens and blues, where white text
-        // would sit at about 2:1, so dark mode fills with the container tones and writes on them
-        // with onPrimaryContainer (7.2:1 at both ends of the gradient).
-        val dark = isDarkScheme()
-        val semantic = LocalMankeuSemanticColors.current
-        val isNegative = amount < 0
-        val targetHeroStart = when {
-            isNegative && dark -> semantic.dangerContainer
-            isNegative -> semantic.danger
-            dark -> MaterialTheme.colorScheme.primaryContainer
-            else -> MaterialTheme.colorScheme.primary
-        }
-        val targetHeroEnd = when {
-            isNegative && dark -> Color(0xFF5D1805)
-            isNegative -> Color(0xFF7C2E19)
-            dark -> MaterialTheme.colorScheme.tertiaryContainer
-            else -> MaterialTheme.colorScheme.tertiary
-        }
-        val targetOnHero = when {
-            isNegative && dark -> semantic.onDangerContainer
-            isNegative -> semantic.onDanger
-            dark -> MaterialTheme.colorScheme.onPrimaryContainer
-            else -> MaterialTheme.colorScheme.onPrimary
-        }
+/** What one customer still owes on open notes, and how long the oldest of them has been open. */
+internal data class CustomerBill(val name: String?, val outstandingRupiah: Long, val ageDays: Int)
 
-        val colorAnimationSpec = tween<Color>(
-            durationMillis = maxOf(motion.mediumMillis, 1),
-            easing = FastOutSlowInEasing,
-        )
-        val heroStart by animateColorAsState(targetHeroStart, colorAnimationSpec, label = "heroStart")
-        val heroEnd by animateColorAsState(targetHeroEnd, colorAnimationSpec, label = "heroEnd")
-        val onHero by animateColorAsState(targetOnHero, colorAnimationSpec, label = "onHero")
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.linearGradient(listOf(heroStart, heroEnd)),
-                    MaterialTheme.shapes.extraLarge,
-                )
-                .then(
-                    if (onClick != null) {
-                        Modifier.clickable(
-                            role = androidx.compose.ui.semantics.Role.Button,
-                            onClickLabel = stringResource(R.string.reports_cash_flow),
-                            onClick = onClick,
-                        )
-                    } else Modifier
-                )
-                .padding(20.dp)
-                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing)),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            AnimatedContent(
-                targetState = Pair(mode, projectId ?: ""),
-                transitionSpec = {
-                    val enterMillis = maxOf(motion.mediumMillis, 1)
-                    val exitMillis = maxOf(motion.fastMillis, 1)
-                    val downwards = targetState.first == BookMode.REALIZATION
-                    (slideInVertically(tween(enterMillis, easing = FastOutSlowInEasing)) { full ->
-                        if (downwards) full / 3 else -full / 3
-                    } + fadeIn(tween(enterMillis)))
-                        .togetherWith(
-                            slideOutVertically(tween(exitMillis, easing = FastOutSlowInEasing)) { full ->
-                                if (downwards) -full / 3 else full / 3
-                            } + fadeOut(tween(exitMillis)),
-                        )
+/** Open notes grouped by customer, largest debt first. Notes without a customer are one group. */
+internal fun customerBills(sales: List<SaleRecord>, today: LocalDate): List<CustomerBill> =
+    sales.filter { it.outstanding > 0 }
+        .groupBy { it.contact?.id }
+        .map { (_, notes) ->
+            val oldest = LocalDate.ofEpochDay(notes.minOf { it.sale.dateEpochDay })
+            CustomerBill(notes.first().contact?.name, notes.sumOf { it.outstanding }, ChronoUnit.DAYS.between(oldest, today).toInt().coerceAtLeast(0))
+        }
+        .sortedByDescending { it.outstandingRupiah }
+
+@Composable
+private fun ProfitCard(month: MonthlySummary, lastMonth: MonthlySummary?) {
+    val semantic = LocalMankeuSemanticColors.current
+    var open by rememberSaveable { mutableStateOf(false) }
+    val profit = month.profitRupiah
+    MankeuCard(onClick = { open = !open }) {
+        // Label, figure and comparison read as one block; the card's 12 dp gap separates blocks.
+        Column {
+            Text(stringResource(R.string.home_profit), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                profit.toRupiah(),
+                style = MankeuType.Figure,
+                color = when {
+                    profit > 0 -> semantic.success
+                    profit < 0 -> semantic.danger
+                    else -> MaterialTheme.colorScheme.onSurface
                 },
-                label = "heroBalance",
-            ) { (currentMode, _) ->
-                val projection = currentMode == BookMode.PROJECTION
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(if (projection) R.string.home_balance_plan else R.string.home_balance_actual),
-                        color = onHero.copy(alpha = 0.85f),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        amount.toRupiah(),
-                        color = onHero,
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Black,
-                    )
-                    Text(
-                        stringResource(if (projection) R.string.home_balance_sub_plan else R.string.home_balance_sub_actual),
-                        color = onHero.copy(alpha = 0.75f),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    // A balance on its own does not say which way the business is moving: a
-                    // healthy-looking figure can be last month's capital top-up sitting still. The trend
-                    // line names the direction of the most recent month in the same breath.
-                    val locale = appLocale()
-                    val trend = when {
-                        latestMonth == null || latestMonth.netRupiah == 0L -> stringResource(R.string.home_trend_flat)
-                        latestMonth.netRupiah > 0 -> stringResource(
-                            R.string.home_trend_surplus,
-                            latestMonth.netRupiah.toRupiah(),
-                            latestMonth.month.format(DateTimeFormatter.ofPattern("MMMM yyyy", locale)),
-                        )
-                        else -> stringResource(
-                            R.string.home_trend_deficit,
-                            (-latestMonth.netRupiah).toRupiah(),
-                            latestMonth.month.format(DateTimeFormatter.ofPattern("MMMM yyyy", locale)),
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        MankeuTooltip(stringResource(if (projection) R.string.tooltip_mode_plan else R.string.tooltip_mode_actual)) {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = onHero.copy(alpha = 0.16f),
-                            ) {
-                                Text(
-                                    stringResource(
-                                        if (projection) R.string.home_mode_badge_plan else R.string.home_mode_badge_actual,
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = onHero,
-                                    maxLines = 1,
-                                )
-                            }
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        // TrendingUp/Down, not the money-direction arrows used elsewhere: beside
-                        // the word "Surplus" a downward arrow reads as a decline, which is the
-                        // opposite of what the figure says.
-                        Icon(
-                            if ((latestMonth?.netRupiah ?: 0L) < 0) {
-                                Icons.AutoMirrored.Filled.TrendingDown
-                            } else {
-                                Icons.AutoMirrored.Filled.TrendingUp
-                            },
-                            contentDescription = null,
-                            tint = onHero.copy(alpha = 0.85f),
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            trend,
-                            color = onHero.copy(alpha = 0.85f),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                        )
-                    }
-                    if (onClick != null) {
-                        Spacer(Modifier.height(4.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                "Rincian Arus Kas \u2192",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = onHero.copy(alpha = 0.8f),
-                            )
-                        }
-                    }
-                }
+            )
+            val diff = lastMonth?.let { profit - it.profitRupiah }
+            Text(
+                when {
+                    diff == null -> stringResource(R.string.home_profit_tap)
+                    diff > 0 -> stringResource(R.string.home_vs_last_up, diff.toRupiah())
+                    diff < 0 -> stringResource(R.string.home_vs_last_down, (-diff).toRupiah())
+                    else -> stringResource(R.string.home_vs_last_same)
+                },
+                style = MankeuType.Caption,
+                color = when {
+                    diff != null && diff > 0 -> semantic.success
+                    diff != null && diff < 0 -> semantic.danger
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+        AnimatedVisibility(open) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.Small)) {
+                HorizontalDivider(Modifier.padding(bottom = Space.Small))
+                AmountLine(stringResource(R.string.home_breakdown_sales), month.salesRupiah)
+                if (month.otherIncomeRupiah != 0L) AmountLine(stringResource(R.string.home_breakdown_other_income), month.otherIncomeRupiah)
+                AmountLine(stringResource(R.string.home_breakdown_hpp), month.hppRupiah)
+                AmountLine(stringResource(R.string.home_breakdown_other_cost), month.otherCostRupiah)
+                HorizontalDivider()
+                AmountLine(stringResource(R.string.home_breakdown_profit), profit, bold = true)
             }
         }
     }
 }
 
 @Composable
-private fun ExpenseDistributionCard(
-    state: AppUiState,
-    modifier: Modifier = Modifier,
-) {
-    val motion = LocalMotion.current
-    val otherLabel = stringResource(R.string.category_other)
-    // Six category hues, harmonised toward the brand green and re-toned per theme; see
-    // MankeuSemanticColors.chart. The raw Material 2 hues that used to live here ignored the palette
-    // and stayed identical in dark mode, where they glared. Read outside the remember block: it is
-    // a composition-local read, and it has to re-run when the theme changes.
-    val palette = LocalMankeuSemanticColors.current.chart
-    val expenseCategories = remember(state.categoryTotals, state.budgetItems, state.selectedBookMode, otherLabel, palette) {
-        val categoryExpenses = mutableMapOf<String, Long>()
-        // Summed by the database (`observeCategoryTotals`). Doing it here meant holding every event in
-        // memory to add up a dozen slices, and it silently went wrong the moment the event list
-        // was capped for display.
-        state.categoryTotals.forEach { row ->
-            val cat = row.category.ifBlank { otherLabel }
-            categoryExpenses[cat] = (categoryExpenses[cat] ?: 0L) + row.totalRupiah
-        }
-        if (categoryExpenses.isEmpty() && state.selectedBookMode == BookMode.PROJECTION) {
-            val catMap = state.categories.associateBy { it.id }
-            state.budgetItems.forEach { item ->
-                val role = catMap[item.categoryId]?.role
-                if (role != CategoryRole.REVENUE.name) {
-                    val catName = catMap[item.categoryId]?.name ?: otherLabel
-                    categoryExpenses[catName] = (categoryExpenses[catName] ?: 0L) + item.plannedTotalRupiah
-                }
-            }
-        }
-        val total = categoryExpenses.values.sum()
-        if (total == 0L) emptyList()
-        else {
-            categoryExpenses.entries
-                .sortedByDescending { it.value }
-                .mapIndexed { index, entry ->
-                    ExpenseSlice(
-                        category = entry.key,
-                        amount = entry.value,
-                        percentage = (entry.value.toDouble() / total.toDouble()) * 100.0,
-                        color = palette[index % palette.size],
-                    )
-                }
-        }
+private fun AmountLine(label: String, amount: Long, bold: Boolean = false) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, style = MankeuType.Body, modifier = Modifier.weight(1f))
+        Text(amount.toRupiah(), style = MankeuType.Body, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
     }
+}
 
-    if (expenseCategories.isNotEmpty()) {
-        val totalExpense = expenseCategories.sumOf { it.amount }
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-            shape = MaterialTheme.shapes.large,
-            modifier = modifier
-                .fillMaxWidth()
-                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing)),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.home_expense_mix),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        totalExpense.toRupiah(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+@Composable
+private fun QuickActions(onSell: () -> Unit, onBuy: () -> Unit, onProduce: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+        QuickAction(stringResource(R.string.home_quick_sell), Icons.Default.PointOfSale, onSell, Modifier.weight(1f))
+        QuickAction(stringResource(R.string.home_quick_buy), Icons.Default.ShoppingCart, onBuy, Modifier.weight(1f))
+        QuickAction(stringResource(R.string.home_quick_produce), Icons.Default.Factory, onProduce, Modifier.weight(1f))
+    }
+}
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    // Donut Chart Canvas
-                    Box(
-                        modifier = Modifier.size(100.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Canvas(modifier = Modifier.size(90.dp)) {
-                            var startAngle = -90f
-                            val strokeWidth = 20.dp.toPx()
-                            expenseCategories.forEach { slice ->
-                                val sweep = (slice.percentage / 100.0 * 360.0).toFloat()
-                                drawArc(
-                                    color = slice.color,
-                                    startAngle = startAngle,
-                                    sweepAngle = sweep,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeWidth),
-                                )
-                                startAngle += sweep
-                            }
-                        }
-                        Text(
-                            stringResource(R.string.home_expense_mix_center, expenseCategories.size),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-
-                    // Legend
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        expenseCategories.take(4).forEach { slice ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .background(slice.color, CircleShape),
-                                )
-                                Text(
-                                    slice.category,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Text(
-                                    "${String.format(appLocale(), "%.1f", slice.percentage)}%",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+@Composable
+private fun QuickAction(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = Space.RowTwoLine),
+        shape = MaterialTheme.shapes.large,
+        contentPadding = PaddingValues(Space.Small),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Icon(icon, contentDescription = null)
+            Text(label, style = MankeuType.Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
     }
 }
 
-private data class ExpenseSlice(
-    val category: String,
-    val amount: Long,
-    val percentage: Double,
-    val color: Color,
-)
+@Composable
+private fun BillsCard(totalRupiah: Long, bills: List<CustomerBill>, onOpenContact: (String) -> Unit, onReceive: () -> Unit) {
+    val semantic = LocalMankeuSemanticColors.current
+    val noName = stringResource(R.string.home_bill_no_name)
+    MankeuCard {
+        Column {
+            Text(stringResource(R.string.home_receivable_title), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(totalRupiah.toRupiah(), style = MankeuType.Figure, color = semantic.warning)
+        }
+        Column {
+            bills.take(3).forEachIndexed { index, bill ->
+                if (index > 0) HorizontalDivider()
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Space.Row)
+                        .clickable(role = Role.Button) { if (bill.name != null) onOpenContact(bill.name) else onReceive() },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.Field),
+                ) {
+                    Text(bill.name ?: noName, style = MankeuType.Body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(
+                        stringResource(R.string.home_bill_age, bill.outstandingRupiah.toRupiah(), bill.ageDays),
+                        style = MankeuType.Caption,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (bills.size > 3) {
+                Text(
+                    stringResource(R.string.home_bills_more, bills.size - 3),
+                    style = MankeuType.Caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        TextButton(onClick = onReceive, contentPadding = PaddingValues(horizontal = 0.dp)) {
+            Text(stringResource(R.string.home_bills_receive), style = MankeuType.Body, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
 
+@Composable
+private fun WarningRow(text: String, onClick: () -> Unit) {
+    val semantic = LocalMankeuSemanticColors.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = Space.Row).clickable(role = Role.Button, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.Field),
+    ) {
+        Icon(Icons.Default.WarningAmber, contentDescription = null, tint = semantic.warning)
+        Text(text, style = MankeuType.Body, color = semantic.warning, modifier = Modifier.weight(1f))
+    }
+}
+
+/** No records yet: three steps, each a button, ticked once done (plan ruling 4). */
+@Composable
+private fun FirstSteps(hasProduct: Boolean, onNewProduct: () -> Unit, onNewSale: () -> Unit) {
+    MankeuCard {
+        Text(stringResource(R.string.home_steps_title), style = MankeuType.Title)
+        Column {
+            StepRow(1, stringResource(R.string.home_step_product), done = hasProduct, onClick = onNewProduct)
+            HorizontalDivider()
+            StepRow(2, stringResource(R.string.home_step_sale), done = false, onClick = onNewSale)
+            HorizontalDivider()
+            StepRow(3, stringResource(R.string.home_step_profit), done = false, onClick = null)
+        }
+    }
+}
+
+@Composable
+private fun StepRow(number: Int, text: String, done: Boolean, onClick: (() -> Unit)?) {
+    val semantic = LocalMankeuSemanticColors.current
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = Space.Row)
+            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.Field),
+    ) {
+        Box(
+            Modifier.size(32.dp).background(if (done) semantic.success else MaterialTheme.colorScheme.primary, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (done) {
+                Icon(Icons.Default.Check, contentDescription = stringResource(R.string.home_step_done), tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
+            } else {
+                Text(number.toString(), style = MankeuType.Body, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+        Text(
+            text,
+            style = MankeuType.Body,
+            color = if (onClick != null && !done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (onClick != null && !done) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}

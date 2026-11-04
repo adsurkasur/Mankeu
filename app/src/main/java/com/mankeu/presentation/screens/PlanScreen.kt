@@ -51,7 +51,6 @@ import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.PlanFeasibilityCard
 import com.mankeu.presentation.components.ReportCard
-import com.mankeu.presentation.components.SectionTitle
 import com.mankeu.presentation.toRupiah
 import java.time.LocalDate
 import java.time.YearMonth
@@ -110,7 +109,8 @@ fun PlanScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item { SectionTitle(stringResource(R.string.plan_title), stringResource(R.string.plan_subtitle)) }
+        // The page title is the top bar's "Rencana usaha" (U4); only the explanation stays here.
+        item { Text(stringResource(R.string.plan_subtitle), style = com.mankeu.presentation.MankeuType.Body, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (project == null) {
             item {
                 EmptyCard(

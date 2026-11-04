@@ -21,8 +21,6 @@
     <string name="scope_loading_project">Loading business unit…</string>
     <string name="scope_empty_business">No business yet</string>
     <string name="scope_empty_project">No branch / unit yet</string>
-    <string name="scope_mode_plan">Plan</string>
-    <string name="scope_mode_actual">Actual</string>
 
     <!-- Money direction -->
     <string name="money_in_short">In</string>
@@ -37,13 +35,39 @@
     <string name="role_drawing">Owner\'s drawing</string>
 
     <!-- Home -->
-    <string name="home_balance_actual">Cash on hand</string>
-    <string name="home_balance_plan">Planned cash</string>
-    <string name="home_balance_sub_actual">What is left from actual records on this unit</string>
-    <string name="home_balance_sub_plan">Estimated cash from the plan you made</string>
     <string name="home_profit">Profit this month</string>
-    <string name="home_cash_loss_note">Profit is counted when goods are sold: production cost spend reaches it through HPP, not on the day it is paid. Check month by month in Reports.</string>
-    <string name="home_cash_flow">Net money in</string>
+    <!-- Home U4 -->
+    <string name="home_vs_last_up">▲ %1$s more than last month</string>
+    <string name="home_vs_last_down">▼ %1$s less than last month</string>
+    <string name="home_vs_last_same">Same as last month</string>
+    <string name="home_profit_tap">Tap for the breakdown</string>
+    <string name="home_breakdown_sales">Sales</string>
+    <string name="home_breakdown_other_income">Other income</string>
+    <string name="home_breakdown_hpp">Cost of goods sold (HPP)</string>
+    <string name="home_breakdown_other_cost">Other costs</string>
+    <string name="home_breakdown_profit">Profit</string>
+    <string name="home_cash_on_hand">Cash on hand</string>
+    <string name="home_quick_sell">Sell</string>
+    <string name="home_quick_buy">Buy</string>
+    <string name="home_quick_produce">Produce</string>
+    <string name="home_receivable_title">Unpaid by customers</string>
+    <string name="home_bill_age">%1$s · %2$d days</string>
+    <string name="home_bill_no_name">No name</string>
+    <string name="home_bills_receive">Receive payment</string>
+    <string name="home_bills_more">and %1$d more customers</string>
+    <string name="home_payable_title">Owed to suppliers</string>
+    <string name="home_low_stock">%1$s down to %2$s %3$s</string>
+    <string name="home_plan_row">Business plan</string>
+    <string name="home_steps_title">Start here</string>
+    <string name="home_step_product">Create a product and its recipe</string>
+    <string name="home_step_sale">Record your first sale</string>
+    <string name="home_step_profit">See this month\'s profit on Home</string>
+    <string name="home_step_done">Done</string>
+    <string name="produce_pick_title">Produce what?</string>
+    <string name="header_more">More</string>
+    <string name="more_categories">Categories</string>
+    <string name="more_backup">Backup</string>
+    <string name="more_excel">Import from / export to Excel</string>
     <string name="home_search_hint">Search notes or category</string>
     <string name="account_drive_active">Google Drive active</string>
     <string name="sync_title">Sync between phones</string>
@@ -76,8 +100,6 @@
     <string name="home_empty_action">Record now</string>
     <string name="home_no_match_title">Nothing matches</string>
     <string name="home_no_match_body">Try a different search word or in/out filter.</string>
-    <string name="home_import_notice_title">What came in from Excel</string>
-    <string name="home_import_notice_sub">Every change the app made is always shown to you.</string>
     <string name="home_expense_mix">Cost breakdown</string>
     <string name="home_expense_mix_center">%1$d\nkinds</string>
     <string name="category_other">Other</string>
@@ -129,15 +151,12 @@
     <string name="reports_empty_title">Nothing to report yet</string>
     <string name="reports_empty_body">Reports are derived from your records. Add a first money-in or money-out, or import an Excel file, and the figures appear here.</string>
     <string name="reports_empty_action">Record a transaction</string>
-    <string name="reports_empty_plan_title">The plan book is empty</string>
-    <string name="reports_empty_plan_body">Fill in the budget on the Plan book, or import an Excel file that has one, to see break-even and feasibility.</string>
     <string name="reports_title">Reports and analysis</string>
     <string name="reports_subtitle">Worked out automatically from your records and budget.</string>
     <string name="reports_tab_financials">Profit, Loss and Cash Flow</string>
     <string name="reports_tab_feasibility">Feasibility &amp; BEP</string>
     <string name="reports_tab_comparison">Money vs plan</string>
     <string name="reports_net_profit">Profit / loss this month</string>
-    <string name="reports_income_statement">Profit and loss</string>
     <string name="reports_operating_income">Operating income</string>
     <string name="reports_operating_expense">Operating costs</string>
     <string name="reports_income_note">Income: sale notes after discount plus other money in. Costs: HPP of goods sold, spend outside production costs, and depreciation. Payments of notes and debts are not counted again.</string>
@@ -442,11 +461,6 @@
 
 
     <!-- Home: balance card, record shortcut, feasibility meters -->
-    <string name="home_mode_badge_plan">Plan mode</string>
-    <string name="home_mode_badge_actual">Actual mode</string>
-    <string name="home_trend_surplus">Surplus of %1$s in %2$s</string>
-    <string name="home_trend_deficit">Deficit of %1$s in %2$s</string>
-    <string name="home_trend_flat">No cash movement in the latest period</string>
     <string name="fab_record">Record</string>
     <string name="fab_record_income">Record money in</string>
     <string name="fab_record_expense">Record money out</string>
@@ -470,8 +484,6 @@
     <string name="reports_working_capital_note">The gap your own capital has to cover, based on operating and investing cash flow.</string>
 
     <!-- Records -->
-    <string name="tooltip_mode_actual">Actual book: transactions that really happened.</string>
-    <string name="tooltip_mode_plan">Plan book: business plan, products and costs. It does not change real cash.</string>
     <string name="tooltip_feasibility_status">From the B/C ratio: feasible when revenue covers every cost (B/C of 1 or more).</string>
     <string name="stock_title">Materials &amp; goods</string>
     <string name="stock_value">Total inventory value</string>
@@ -553,7 +565,7 @@
     <string name="msg_stock_entry_delete_failed">The stock entry could not be deleted.</string>
     <string name="production_title">Produce %1$s</string>
     <string name="production_batches">How many batches?</string>
-    <string name="production_result">= %1$s %2$s into stock</string>
+    <string name="production_result">%1$s %2$s into stock</string>
     <string name="production_materials">Materials used: %1$s</string>
     <string name="count_stock_title">Count stock of %1$s</string>
     <string name="count_stock_field">Quantity now (%1$s)</string>
@@ -599,8 +611,6 @@
     <!-- Business plan and break-even (DEC-014) -->
     <string name="import_ready_products">New products</string>
     <string name="plan_open">Open business plan</string>
-    <string name="plan_empty_title">The business plan is empty</string>
-    <string name="plan_empty_body">Open Records in Plan mode to add products and their recipes, monthly fixed costs, assets and capital contributions. Break-even and feasibility are calculated from those.</string>
     <string name="plan_bep_month">Break-even revenue per month</string>
     <string name="plan_target_above">The target revenue of %1$s per month is above break-even.</string>
     <string name="plan_target_below">The target revenue of %1$s per month is %2$s short of break-even.</string>
@@ -638,7 +648,6 @@
     <string name="cost_nature_fixed">Fixed</string>
     <string name="cost_nature_variable">Variable</string>
     <string name="cost_nature_inherit">From category</string>
-    <string name="plan_title">Business plan</string>
     <string name="plan_subtitle">Enter products, costs, assets and capital. Break-even and feasibility are calculated for you.</string>
     <string name="plan_period">Plan period</string>
     <string name="plan_period_value">%1$s – %2$s (%3$d months)</string>
@@ -766,10 +775,6 @@
     <string name="contact_owes">Owes %1$s</string>
     <string name="contact_owed">We owe %1$s</string>
     <string name="contact_archive">Archive contact</string>
-    <string name="home_bills_title">Bills</string>
-    <string name="home_bills_overdue">%1$d notes overdue</string>
-    <string name="home_bills_open">See notes</string>
-    <string name="profit_detail_home_title">Profit details</string>
     <string name="sale_discount_row">Discount</string>
     <string name="msg_sale_saved_hpp_recomputed">Note saved. HPP recalculated with current material prices.</string>
     <string name="sale_discount_too_high">Discount is more than the subtotal %1$s</string>
@@ -787,10 +792,6 @@
     <string name="stepper_decrease">Decrease</string>
     <string name="stepper_increase">Increase</string>
     <string name="line_delete_title">Delete this line?</string>
-    <string name="home_income_month">Income this month</string>
-    <string name="home_money_in_month">Money in this month</string>
-    <string name="home_money_out_month">Money out this month</string>
-    <string name="home_plan_profit">Planned profit</string>
     <string name="reports_income_statement_month">Profit and loss · %1$s</string>
     <string name="reports_money_in">Money in</string>
     <string name="reports_money_out">Money out</string>

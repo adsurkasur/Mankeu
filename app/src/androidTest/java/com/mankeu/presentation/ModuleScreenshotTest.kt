@@ -35,7 +35,6 @@ import com.mankeu.data.ProductDraft
 import com.mankeu.data.RecipeLineDraft
 import com.mankeu.data.SaleUnitDraft
 import com.mankeu.data.FinanceRepository
-import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.FinancialEventType
@@ -129,6 +128,8 @@ class ModuleScreenshotTest {
         shot("03_beranda_unit_baru")
 
         // --- 2. Modal awal lewat tombol Catat -----------------------------------------------------
+        // U4: the speed dial is on Catatan; Beranda has Jual / Belanja / Produksi.
+        click("Catatan")
         clickDescription("Catat")
         shot("07_tombol_catat")
         click("Catat Pemasukan")
@@ -139,8 +140,8 @@ class ModuleScreenshotTest {
         click("Simpan catatan")
 
         // --- 3. Rencana Usaha ---------------------------------------------------------------------
-        click("Rencana")
-        click("Catatan")
+        click("Lainnya")
+        click("Rencana usaha")
         shot("09_rencana_kosong")
         click("Ubah")
         shot("10_periode_rencana")
@@ -206,7 +207,7 @@ class ModuleScreenshotTest {
         shot("16_rencana_biaya")
 
         // --- 4. Mencatat harian ------------------------------------------------------------------
-        click("Realisasi")
+        clickDescription("Kembali")
         clickDescription("Catat")
         click("Catat Pemasukan")
         pick("Kategori", "Penjualan & Jasa")
@@ -284,7 +285,8 @@ class ModuleScreenshotTest {
         shot("31_laporan_target")
 
         // --- 7. Berkas dan Data ------------------------------------------------------------------
-        clickDescription("Berkas dan Data")
+        click("Lainnya")
+        click("Ambil dari / Simpan ke Excel")
         shot("32_berkas_data")
         val file = File(context.cacheDir, "kedai-kopi-senja.xlsx").apply {
             writeBytes(runBlocking { repository.exportProjectWorkbook(projectId(vm)) })
@@ -300,7 +302,8 @@ class ModuleScreenshotTest {
 
         // --- 8. Bantuan --------------------------------------------------------------------------
         click("Beranda")
-        clickDescription("Bantuan")
+        click("Lainnya")
+        click("Bantuan")
         shot("36_lembar_bantuan")
         click("Buka Pusat Bantuan")
         shot("37_pusat_bantuan")
@@ -310,7 +313,8 @@ class ModuleScreenshotTest {
         click("Tunjukkan di aplikasi")
         settle(1500)
         shot("39_tunjukkan")
-        clickDescription("Pengaturan")
+        click("Lainnya")
+        click("Pengaturan")
         scrollTo("Buka Pusat Bantuan")
         shot("40_pengaturan_panduan")
         scrollTo("Sinkronisasi antar-HP")
@@ -319,8 +323,8 @@ class ModuleScreenshotTest {
 
         // --- Lampiran A: usaha tani musiman ---------------------------------------------------------
         newBusiness(vm, "Kedai Kopi Senja", "Tani Cabai Makmur", "Kebun 1")
-        click("Rencana")
-        click("Catatan")
+        click("Lainnya")
+        click("Rencana usaha")
         vm.setPlanPeriod(month, month.plusMonths(11))
         settle()
         clickNear("Tambah", "Produk")
@@ -360,7 +364,7 @@ class ModuleScreenshotTest {
         click("Simpan")
         click("Pakai ini")
         closeScopeSheet()
-        click("Realisasi")
+        clickDescription("Kembali")
         click("Produk")
         addStock("Gula", "kg", "15500", "50", "10", shared = false)
         addStock("Kantong plastik", "pak", "12000", "30", "5", shared = true, shotName = "B1_form_barang_bersama")

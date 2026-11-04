@@ -143,15 +143,20 @@ class OneNumberTest {
         val gap = month.productionVarianceRupiah.toRupiah()
         val sentence = "lebih ${if (month.productionVarianceRupiah > 0) "besar" else "kecil"} ${kotlin.math.abs(month.productionVarianceRupiah).toRupiah()}"
 
-        // Beranda: the tile at the top, the profit detail card and the BEP card further down.
+        // Beranda (U4): one profit figure; tapping it shows its lines from the same summary. The
+        // reconciliation (selisih) and the BEP card are Laporan's, not Beranda's.
         assertBeside("Untung bulan ini", profit)
-        assertBeside("Pendapatan bulan ini", month.incomeRupiah.toRupiah())
         absent("Penjualan bulan ini")
+        absent("Pendapatan bulan ini")
         absent("semua bulan")
-        assertBeside("Selisih belanja produksi vs HPP", gap)
-        scrollTo("Status BEP")
-        assertBeside("Untung bulan ini", profit)
-        exists(sentence)
+        absent("Selisih")
+        absent("Status BEP")
+        click("Untung bulan ini")
+        assertBeside("Penjualan", month.salesRupiah.toRupiah())
+        assertBeside("Modal barang terjual (HPP)", month.hppRupiah.toRupiah())
+        assertBeside("Biaya lain", month.otherCostRupiah.toRupiah())
+        assertBeside("Untung", profit)
+        assertEquals(month.profitRupiah, month.salesRupiah + month.otherIncomeRupiah - month.hppRupiah - month.otherCostRupiah)
 
         // Laporan: the income statement names the month and shows the same profit, gap and bills.
         click("Laporan")
@@ -162,6 +167,7 @@ class OneNumberTest {
         assertBeside("Tagihan belum dibayar pelanggan", month.receivableRupiah.toRupiah())
         absent("semua bulan")
         click("Kelayakan & BEP")
+        scrollTo("Status BEP")
         assertBeside("Untung bulan ini", profit)
         exists(sentence)
     }

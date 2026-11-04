@@ -23,8 +23,6 @@
     <string name="scope_loading_project">Memuat unit usaha…</string>
     <string name="scope_empty_business">Belum ada usaha</string>
     <string name="scope_empty_project">Belum ada cabang / unit usaha</string>
-    <string name="scope_mode_plan">Rencana</string>
-    <string name="scope_mode_actual">Realisasi</string>
 
     <!-- Money direction, in the owner's workbook vocabulary -->
     <string name="money_in_short">Masuk</string>
@@ -39,13 +37,39 @@
     <string name="role_drawing">Ambil Pribadi (Prive)</string>
 
     <!-- Home -->
-    <string name="home_balance_actual">Uang kas realisasi</string>
-    <string name="home_balance_plan">Uang kas rencana</string>
-    <string name="home_balance_sub_actual">Sisa uang kas dari transaksi nyata pada unit usaha ini</string>
-    <string name="home_balance_sub_plan">Perkiraan saldo kas dari rencana usaha</string>
     <string name="home_profit">Untung bulan ini</string>
-    <string name="home_cash_loss_note">Untung dihitung saat barang terjual: belanja biaya produksi masuk lewat HPP, bukan pada hari dibayar. Lihat per bulan di Laporan.</string>
-    <string name="home_cash_flow">Uang masuk bersih</string>
+    <!-- Beranda U4 -->
+    <string name="home_vs_last_up">▲ %1$s dari bulan lalu</string>
+    <string name="home_vs_last_down">▼ %1$s dari bulan lalu</string>
+    <string name="home_vs_last_same">Sama dengan bulan lalu</string>
+    <string name="home_profit_tap">Ketuk untuk rinciannya</string>
+    <string name="home_breakdown_sales">Penjualan</string>
+    <string name="home_breakdown_other_income">Pemasukan lain</string>
+    <string name="home_breakdown_hpp">Modal barang terjual (HPP)</string>
+    <string name="home_breakdown_other_cost">Biaya lain</string>
+    <string name="home_breakdown_profit">Untung</string>
+    <string name="home_cash_on_hand">Uang di tangan</string>
+    <string name="home_quick_sell">Jual</string>
+    <string name="home_quick_buy">Belanja</string>
+    <string name="home_quick_produce">Produksi</string>
+    <string name="home_receivable_title">Belum dibayar pelanggan</string>
+    <string name="home_bill_age">%1$s · %2$d hari</string>
+    <string name="home_bill_no_name">Tanpa nama</string>
+    <string name="home_bills_receive">Terima bayar</string>
+    <string name="home_bills_more">dan %1$d pelanggan lain</string>
+    <string name="home_payable_title">Utang ke pemasok</string>
+    <string name="home_low_stock">%1$s tinggal %2$s %3$s</string>
+    <string name="home_plan_row">Rencana usaha</string>
+    <string name="home_steps_title">Mulai dari sini</string>
+    <string name="home_step_product">Buat produk dan resepnya</string>
+    <string name="home_step_sale">Catat penjualan pertama</string>
+    <string name="home_step_profit">Lihat untung bulan ini di Beranda</string>
+    <string name="home_step_done">Selesai</string>
+    <string name="produce_pick_title">Produksi apa?</string>
+    <string name="header_more">Lainnya</string>
+    <string name="more_categories">Kategori</string>
+    <string name="more_backup">Cadangan</string>
+    <string name="more_excel">Ambil dari / Simpan ke Excel</string>
     <string name="home_search_hint">Cari keterangan atau kategori</string>
     <string name="account_drive_active">Google Drive aktif</string>
     <string name="sync_title">Sinkronisasi antar-HP</string>
@@ -78,8 +102,6 @@
     <string name="home_empty_action">Catat sekarang</string>
     <string name="home_no_match_title">Tidak ada yang cocok</string>
     <string name="home_no_match_body">Coba ubah kata pencarian atau pilihan masuk/keluar.</string>
-    <string name="home_import_notice_title">Hasil pengambilan dari Excel</string>
-    <string name="home_import_notice_sub">Perubahan yang aplikasi lakukan selalu ditampilkan.</string>
     <string name="home_expense_mix">Komposisi Biaya</string>
     <string name="home_expense_mix_center">%1$d\nJenis</string>
     <string name="category_other">Lain-lain</string>
@@ -131,15 +153,12 @@
     <string name="reports_empty_title">Belum ada yang bisa dilaporkan</string>
     <string name="reports_empty_body">Laporan dihitung dari catatan transaksi. Catat pemasukan atau pengeluaran pertama, atau ambil dari berkas Excel, lalu angkanya muncul di sini.</string>
     <string name="reports_empty_action">Catat transaksi</string>
-    <string name="reports_empty_plan_title">Buku rencana masih kosong</string>
-    <string name="reports_empty_plan_body">Isi RAB pada buku Rencana, atau impor berkas Excel yang memuatnya, untuk melihat titik impas dan kelayakan usaha.</string>
     <string name="reports_title">Laporan dan Analisis</string>
     <string name="reports_subtitle">Dihitung otomatis dari catatan transaksi dan anggaran.</string>
     <string name="reports_tab_financials">Laba Rugi dan Arus Kas</string>
     <string name="reports_tab_feasibility">Kelayakan &amp; BEP</string>
     <string name="reports_tab_comparison">Uang vs rencana</string>
     <string name="reports_net_profit">Untung / Rugi bulan ini</string>
-    <string name="reports_income_statement">Laporan Laba Rugi</string>
     <string name="reports_operating_income">Pendapatan Operasional</string>
     <string name="reports_operating_expense">Biaya Operasional</string>
     <string name="reports_income_note">Pendapatan: nota penjualan setelah diskon dan uang masuk lain. Biaya: HPP barang terjual, belanja di luar biaya produksi, dan penyusutan. Pembayaran nota dan utang tidak dihitung lagi.</string>
@@ -444,11 +463,6 @@
 
 
     <!-- Beranda: kartu saldo, pintasan catat, dan meteran kelayakan -->
-    <string name="home_mode_badge_plan">Mode Rencana</string>
-    <string name="home_mode_badge_actual">Mode Aktual</string>
-    <string name="home_trend_surplus">Surplus %1$s pada %2$s</string>
-    <string name="home_trend_deficit">Defisit %1$s pada %2$s</string>
-    <string name="home_trend_flat">Belum ada pergerakan kas pada periode terakhir</string>
     <string name="fab_record">Catat</string>
     <string name="fab_record_income">Catat Pemasukan</string>
     <string name="fab_record_expense">Catat Pengeluaran</string>
@@ -472,8 +486,6 @@
     <string name="reports_working_capital_note">Selisih yang harus ditutup dengan modal sendiri, dihitung dari arus kas operasi dan investasi.</string>
 
     <!-- Catatan -->
-    <string name="tooltip_mode_actual">Buku Realisasi: transaksi yang benar-benar terjadi.</string>
-    <string name="tooltip_mode_plan">Buku Rencana: rencana usaha, produk, dan biaya. Tidak mengubah uang kas nyata.</string>
     <string name="tooltip_feasibility_status">Status kelayakan usaha: R/C 1,00 atau lebih dan B/C di atas 0,00 menandakan usaha menguntungkan.</string>
     <string name="stock_title">Bahan &amp; barang</string>
     <string name="stock_value">Total nilai persediaan</string>
@@ -555,7 +567,7 @@
     <string name="msg_stock_entry_delete_failed">Catatan stok tidak bisa dihapus.</string>
     <string name="production_title">Produksi %1$s</string>
     <string name="production_batches">Berapa batch?</string>
-    <string name="production_result">= %1$s %2$s masuk stok</string>
+    <string name="production_result">%1$s %2$s masuk stok</string>
     <string name="production_materials">Bahan berkurang: %1$s</string>
     <string name="count_stock_title">Hitung stok %1$s</string>
     <string name="count_stock_field">Jumlah sekarang (%1$s)</string>
@@ -601,8 +613,6 @@
     <!-- Business plan and break-even (DEC-014) -->
     <string name="import_ready_products">Produk baru</string>
     <string name="plan_open">Buka Rencana Usaha</string>
-    <string name="plan_empty_title">Rencana usaha masih kosong</string>
-    <string name="plan_empty_body">Buka Catatan dalam mode Rencana untuk mengisi produk dan resepnya, biaya tetap bulanan, aset, dan setoran modal. Titik impas dan kelayakan dihitung dari situ.</string>
     <string name="plan_bep_month">Omzet impas per bulan</string>
     <string name="plan_target_above">Target omzet %1$s per bulan sudah melewati titik impas.</string>
     <string name="plan_target_below">Target omzet %1$s per bulan, kurang %2$s dari titik impas.</string>
@@ -640,7 +650,6 @@
     <string name="cost_nature_fixed">Tetap</string>
     <string name="cost_nature_variable">Variabel</string>
     <string name="cost_nature_inherit">Ikut kategori</string>
-    <string name="plan_title">Rencana Usaha</string>
     <string name="plan_subtitle">Isi produk, biaya, aset, dan modal. Titik impas dan kelayakan dihitung otomatis.</string>
     <string name="plan_period">Periode rencana</string>
     <string name="plan_period_value">%1$s – %2$s (%3$d bulan)</string>
@@ -768,10 +777,6 @@
     <string name="contact_owes">Belum bayar %1$s</string>
     <string name="contact_owed">Utang kita %1$s</string>
     <string name="contact_archive">Arsipkan kontak</string>
-    <string name="home_bills_title">Tagihan</string>
-    <string name="home_bills_overdue">%1$d nota lewat jatuh tempo</string>
-    <string name="home_bills_open">Lihat nota</string>
-    <string name="profit_detail_home_title">Rincian untung</string>
     <string name="sale_discount_row">Diskon</string>
     <string name="msg_sale_saved_hpp_recomputed">Nota disimpan. HPP dihitung ulang dengan harga bahan sekarang.</string>
     <string name="sale_discount_too_high">Diskon lebih besar dari subtotal %1$s</string>
@@ -789,10 +794,6 @@
     <string name="stepper_decrease">Kurangi</string>
     <string name="stepper_increase">Tambah</string>
     <string name="line_delete_title">Hapus baris ini?</string>
-    <string name="home_income_month">Pendapatan bulan ini</string>
-    <string name="home_money_in_month">Uang masuk bulan ini</string>
-    <string name="home_money_out_month">Uang keluar bulan ini</string>
-    <string name="home_plan_profit">Untung rencana</string>
     <string name="reports_income_statement_month">Laporan Laba Rugi · %1$s</string>
     <string name="reports_money_in">Uang masuk</string>
     <string name="reports_money_out">Uang keluar</string>

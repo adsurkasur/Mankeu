@@ -29,7 +29,9 @@ komponen form baru. Status per tugas di bagian Status rencana itu. U1 (token des
 Beranda, Laporan, kartu BEP, Komparasi, PDF/xlsx) selesai, menunggu review
 (`.superpowers/sdd/2026-10-30-fase-ux/task-U2-report.md`). U3 (stok bahan nyata: belanja menambah, produksi memakai,
 "Catat juga uangnya?", template membawa gerakan bahan) selesai, menunggu review
-(`.superpowers/sdd/2026-10-30-fase-ux/task-U3-report.md`). Berikutnya: U4.
+(`.superpowers/sdd/2026-10-30-fase-ux/task-U3-report.md`). U4 (saklar Rencana/Realisasi dihapus, header "Lainnya",
+Beranda baru, Rencana usaha halaman sementara) selesai, menunggu review
+(`.superpowers/sdd/2026-10-30-fase-ux/task-U4-report.md`). Berikutnya: U5.
 
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di

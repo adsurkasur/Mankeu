@@ -106,6 +106,9 @@ private enum class BackupDialogMode {
     RESTORE_CLOUD,
 }
 
+/** What [DataScreen] opens on. */
+enum class DataFocus { NONE, CATEGORIES, BACKUP }
+
 /**
  * Berkas dan Data: bringing a season in from a spreadsheet, saving records out, encrypted backup,
  * plus the farm/field and category/unit administration those tasks depend on.
@@ -143,9 +146,11 @@ fun DataScreen(
     onSignInGoogle: () -> Unit,
     onResetImport: () -> Unit = {},
     onOpenContacts: () -> Unit = {},
+    /** Opened from Lainnya → Kategori or Cadangan (U4): that dialog is open on arrival. */
+    focus: DataFocus = DataFocus.NONE,
 ) {
-    var masterDataDialog by rememberSaveable { mutableStateOf(false) }
-    var backupDialog by rememberSaveable { mutableStateOf(false) }
+    var masterDataDialog by rememberSaveable { mutableStateOf(focus == DataFocus.CATEGORIES) }
+    var backupDialog by rememberSaveable { mutableStateOf(focus == DataFocus.BACKUP) }
     val transferWorking = transferState is TransferUiState.Working
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),

@@ -36,6 +36,7 @@ import com.mankeu.data.SaleLineDraft
 import com.mankeu.domain.MonthlySummary
 import com.mankeu.importer.FinanceWorkbookImporter
 import com.mankeu.presentation.screens.HomeScreen
+import com.mankeu.presentation.screens.PlanScreen
 import com.mankeu.presentation.screens.ReportsScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -112,6 +113,9 @@ class HomeScreenTest {
             owe("Toko B", "dus", "2", 300_000)
             owe("Warung C", "bungkus", "10", 8_000)
             owe("Pak D", "bungkus", "5", 8_000)
+            // Dated after today: not owed yet, so neither in the rows nor in the total (review I-1).
+            val tokoB = repository.contacts(ids.businessId).first().single { it.name == "Toko B" }.id
+            repository.saveSale(ids.projectId, null, SaleDraft(tokoB, LocalDate.now().plusDays(5), null, 0, "", listOf(SaleLineDraft(ids.keripik, "dus", "1", 300_000)), 0))
             repository.createStockItem(ids.businessId, ids.projectId, false, "Minyak", "liter", 26_000, BigDecimal(2), BigDecimal(5))
         }
         val month = runBlocking { repository.monthlySummary(ids.bookId).first() }
@@ -133,7 +137,9 @@ class HomeScreenTest {
         listOf("Toko B", "Toko A", "Warung C").forEach { assertTrue("$it not in Tagihan", it in texts) }
         assertTrue("Pak D is the fourth and not shown", "Pak D" !in texts)
         assertTrue("Terima bayar" in texts)
-        assertBeside("Belum dibayar pelanggan", month.receivableRupiah.toRupiah())
+        // One source: the total is the sum of every open note dated up to today (300.000 + 600.000 + 80.000 + 40.000).
+        assertBeside("Belum dibayar pelanggan", 1_020_000L.toRupiah())
+        assertTrue("Toko B's future note is not in its row: $texts", texts.any { it.startsWith("Rp600.000 · ") })
         // Real low-stock warning.
         assertTrue(texts.any { it.startsWith("Minyak tinggal") })
 
@@ -192,6 +198,54 @@ class HomeScreenTest {
         val texts = berandaTexts()
         listOf("Buat produk", "Catat penjualan", "Lihat untung").forEach { step -> assertTrue("$step missing: $texts", texts.any { it.contains(step) }) }
         assertTrue("no zero figures before any data: $texts", texts.none { it == "Rp0" || it == "Untung bulan ini" })
+        // Every step is a button that leads somewhere (review M-3, M-8).
+        click("Buat produk dan resepnya")
+        exists("Produk baru")
+        back()
+        click("Catat penjualan pertama")
+        exists("Nota penjualan baru")
+        back()
+        click("Lihat untung bulan ini")
+        exists("Laporan dan Analisis")
+    }
+
+    /** Review I-2: Lainnya → Kategori / Cadangan returns to Beranda when the dialog closes, and the focus does not stick. */
+    @Test
+    fun kategoriAndCadanganFromLainnyaReturnWhereTheyCameFrom() {
+        runBlocking { GoldenData.buSri(repository, database) }
+        start()
+        click("Lainnya")
+        click("Kategori")
+        exists("Tambah kategori")
+        click("Selesai")
+        exists("Untung bulan ini")
+        absent("Berkas dan Data")
+        click("Lainnya")
+        click("Cadangan")
+        exists("Cadangan terenkripsi")
+        click("Tutup")
+        exists("Untung bulan ini")
+        absent("Berkas dan Data")
+        // A later visit to Berkas dan Data opens on the page, not on a stale dialog.
+        click("Lainnya")
+        click("Ambil dari / Simpan ke Excel")
+        exists("Berkas dan Data")
+        absent("Tambah kategori")
+    }
+
+    /** Review M-4: Produksi with no product says why the product editor opens. */
+    @Test
+    fun produksiWithoutAProductSaysToCreateOneFirst() {
+        runBlocking {
+            val (b, p) = repository.createBusinessWithUnit("Warung Baru", "Umum")
+            val book = repository.books(p).first().single { it.mode == com.mankeu.domain.BookMode.REALIZATION.name }.id
+            val rent = database.financeDao().getCategories(b).single { it.name == "Sewa Tempat" }
+            repository.recordEvent(com.mankeu.data.EventDraft(b, p, book, com.mankeu.domain.FinancialEventType.CASH_EXPENSE, 100_000, LocalDate.of(2026, 10, 2), rent.name, rent.name, categoryId = rent.id))
+        }
+        start()
+        click("Produksi")
+        exists("Buat produk dulu")
+        exists("Produk baru")
     }
 
     /** U2 re-review N-1: before the month arrives there are no zeros under any label, on Beranda or Laporan. */
@@ -207,9 +261,14 @@ class HomeScreenTest {
             thisMonth = null,
         )
         var reports by mutableStateOf(false)
+        var plan by mutableStateOf(false)
         compose.setContent {
             MankeuTheme(darkTheme = false) {
-                if (reports) ReportsScreen(state = state) else HomeScreen(state = state, onNavigate = {}, onManageScope = {})
+                when {
+                    plan -> PlanScreen(AppUiState(isLoading = true), onOpenProduct = {}, onSavePlanLine = { _, _, _, _, _, _, _, _ -> }, onArchivePlanLine = {}, onSetPeriod = { _, _ -> }, onManageScope = {})
+                    reports -> ReportsScreen(state = state)
+                    else -> HomeScreen(state = state, onNavigate = {}, onManageScope = {})
+                }
             }
         }
         settle()
@@ -217,6 +276,10 @@ class HomeScreenTest {
         compose.runOnUiThread { reports = true }
         settle()
         assertTrue("Laporan shows Rp0 while loading", compose.onAllNodesWithText("Rp0", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        // Rencana usaha during the first load (review M-5).
+        compose.runOnUiThread { plan = true }
+        settle()
+        assertTrue("Rencana usaha shows a figure while loading", compose.onAllNodes(hasText("Rp", substring = true), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
     }
 
     // ---- helpers ------------------------------------------------------------------------------
@@ -275,6 +338,14 @@ class HomeScreenTest {
             assertEquals("\"$label\"", expected, value?.let(::text))
         }
     }
+
+    private fun back() {
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        settle()
+    }
+
+    private fun absent(text: String) =
+        assertTrue("\"$text\" is shown", compose.onAllNodesWithText(text, substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
 
     private fun settle() {
         compose.waitForIdle()

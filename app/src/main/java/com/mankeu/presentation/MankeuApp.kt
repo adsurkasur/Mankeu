@@ -422,7 +422,17 @@ fun MankeuApp(
             MoreItem.SETTINGS -> overlay = Overlay.SETTINGS
         }
     }
-    val onProduce: () -> Unit = { if (state.products.isEmpty()) openProduct(null) else overlay = Overlay.PICK_PRODUCT }
+    // No product yet: say why the product editor opens instead of the picker (U4 review M-4).
+    val onProduce: () -> Unit = {
+        if (state.products.isEmpty()) {
+            viewModel.message.value = UiText.of(R.string.produce_need_product)
+            openProduct(null)
+        } else {
+            overlay = Overlay.PICK_PRODUCT
+        }
+    }
+    // A Kategori/Cadangan focus belongs to one visit of Berkas dan Data, never a later one (U4 review I-2).
+    LaunchedEffect(overlay) { if (overlay != Overlay.DATA) dataFocus = DataFocus.NONE }
 
     val feedback = rememberFeedback(prefs.hapticsEnabled, prefs.soundEnabled)
     CompositionLocalProvider(
@@ -522,6 +532,7 @@ fun MankeuApp(
                                         onSignInGoogle = launchGoogleSignIn,
                                         onOpenContacts = { openContacts("") },
                                         focus = dataFocus,
+                                        onFocusDone = { dataFocus = DataFocus.NONE; overlay = Overlay.NONE },
                                     )
                                 }
 

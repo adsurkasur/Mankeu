@@ -148,9 +148,13 @@ fun DataScreen(
     onOpenContacts: () -> Unit = {},
     /** Opened from Lainnya → Kategori or Cadangan (U4): that dialog is open on arrival. */
     focus: DataFocus = DataFocus.NONE,
+    /** The focused dialog closed or finished: go back to where Lainnya was opened (U4 review I-2). */
+    onFocusDone: () -> Unit = {},
 ) {
     var masterDataDialog by rememberSaveable { mutableStateOf(focus == DataFocus.CATEGORIES) }
     var backupDialog by rememberSaveable { mutableStateOf(focus == DataFocus.BACKUP) }
+    val closeMaster = { masterDataDialog = false; if (focus == DataFocus.CATEGORIES) onFocusDone() }
+    val closeBackup = { backupDialog = false; if (focus == DataFocus.BACKUP) onFocusDone() }
     val transferWorking = transferState is TransferUiState.Working
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
@@ -268,24 +272,24 @@ fun DataScreen(
     }
     if (masterDataDialog) MasterDataDialog(
         categories = state.categories,
-        onDismiss = { masterDataDialog = false },
+        onDismiss = closeMaster,
         onCreateCategory = onCreateCategory,
         onArchiveCategory = onArchiveCategory,
         onSetCategoryCostNature = onSetCategoryCostNature,
         onSetCategoryIncludedInHpp = onSetCategoryIncludedInHpp,
     )
     if (backupDialog) BackupDialog(
-        onDismiss = { backupDialog = false },
-        onCreate = { password -> backupDialog = false; onCreateBackup(password) },
-        onRestore = { password -> backupDialog = false; onRestoreBackup(password) },
+        onDismiss = closeBackup,
+        onCreate = { password -> closeBackup(); onCreateBackup(password) },
+        onRestore = { password -> closeBackup(); onRestoreBackup(password) },
         recoveryAvailable = recoveryAvailable,
-        onExportRecovery = { backupDialog = false; onExportRecovery() },
+        onExportRecovery = { closeBackup(); onExportRecovery() },
         authUser = authUser,
         driveBackups = driveBackups,
         isDriveLoading = isDriveLoading,
         onFetchDriveBackups = onFetchDriveBackups,
-        onBackupToDrive = { password -> backupDialog = false; onBackupToDrive(password) },
-        onRestoreDriveBackup = { fileId, password -> backupDialog = false; onRestoreDriveBackup(fileId, password) },
+        onBackupToDrive = { password -> closeBackup(); onBackupToDrive(password) },
+        onRestoreDriveBackup = { fileId, password -> closeBackup(); onRestoreDriveBackup(fileId, password) },
         onSignInGoogle = onSignInGoogle,
     )
 }

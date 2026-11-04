@@ -131,7 +131,14 @@ fun HomeScreen(
         val noData = state.sales.isEmpty() && state.eventCount == 0 &&
             month.cashOnHandRupiah == 0L && month.moneyInRupiah == 0L && month.moneyOutRupiah == 0L
         if (noData) {
-            item { FirstSteps(hasProduct = state.products.isNotEmpty(), onNewProduct = onNewProduct, onNewSale = onNewSale) }
+            item {
+                FirstSteps(
+                    hasProduct = state.products.isNotEmpty(),
+                    onNewProduct = onNewProduct,
+                    onNewSale = onNewSale,
+                    onSeeProfit = { onNavigate(Destination.REPORTS) },
+                )
+            }
             item { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
             return@LazyColumn
         }
@@ -161,11 +168,13 @@ fun HomeScreen(
                 onProduce = onProduce,
             )
         }
+        // "Who owes me now" (U4 review I-1, controller ruling): rows and total from one source, the open
+        // notes dated up to today; Laporan keeps MonthlySummary's month-end receivable.
         val bills = customerBills(state.sales, LocalDate.now())
-        if (month.receivableRupiah != 0L || bills.isNotEmpty()) {
+        if (bills.isNotEmpty()) {
             item {
                 BillsCard(
-                    totalRupiah = month.receivableRupiah,
+                    totalRupiah = bills.sumOf { it.outstandingRupiah },
                     bills = bills,
                     onOpenContact = onOpenContact,
                     onReceive = { onOpenBills(NoteFilter.OPEN) },
@@ -196,12 +205,15 @@ fun HomeScreen(
     }
 }
 
-/** What one customer still owes on open notes, and how long the oldest of them has been open. */
+/** What one customer still owes on open notes, and how long the oldest of them has been open. [name] null = "Umum". */
 internal data class CustomerBill(val name: String?, val outstandingRupiah: Long, val ageDays: Int)
 
-/** Open notes grouped by customer, largest debt first. Notes without a customer are one group. */
+/**
+ * Open notes dated up to [today], grouped by customer, largest debt first. Notes without a customer are one
+ * group ("Umum"); notes dated in the future are not owed yet. The Tagihan card's total is the sum of these.
+ */
 internal fun customerBills(sales: List<SaleRecord>, today: LocalDate): List<CustomerBill> =
-    sales.filter { it.outstanding > 0 }
+    sales.filter { it.outstanding > 0 && it.sale.dateEpochDay <= today.toEpochDay() }
         .groupBy { it.contact?.id }
         .map { (_, notes) ->
             val oldest = LocalDate.ofEpochDay(notes.minOf { it.sale.dateEpochDay })
@@ -311,7 +323,11 @@ private fun BillsCard(totalRupiah: Long, bills: List<CustomerBill>, onOpenContac
                 ) {
                     Text(bill.name ?: noName, style = MankeuType.Body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Text(
-                        stringResource(R.string.home_bill_age, bill.outstandingRupiah.toRupiah(), bill.ageDays),
+                        when (bill.ageDays) {
+                            0 -> stringResource(R.string.home_bill_today, bill.outstandingRupiah.toRupiah())
+                            1 -> stringResource(R.string.home_bill_yesterday, bill.outstandingRupiah.toRupiah())
+                            else -> stringResource(R.string.home_bill_age, bill.outstandingRupiah.toRupiah(), bill.ageDays)
+                        },
                         style = MankeuType.Caption,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -346,7 +362,7 @@ private fun WarningRow(text: String, onClick: () -> Unit) {
 
 /** No records yet: three steps, each a button, ticked once done (plan ruling 4). */
 @Composable
-private fun FirstSteps(hasProduct: Boolean, onNewProduct: () -> Unit, onNewSale: () -> Unit) {
+private fun FirstSteps(hasProduct: Boolean, onNewProduct: () -> Unit, onNewSale: () -> Unit, onSeeProfit: () -> Unit) {
     MankeuCard {
         Text(stringResource(R.string.home_steps_title), style = MankeuType.Title)
         Column {
@@ -354,7 +370,7 @@ private fun FirstSteps(hasProduct: Boolean, onNewProduct: () -> Unit, onNewSale:
             HorizontalDivider()
             StepRow(2, stringResource(R.string.home_step_sale), done = false, onClick = onNewSale)
             HorizontalDivider()
-            StepRow(3, stringResource(R.string.home_step_profit), done = false, onClick = null)
+            StepRow(3, stringResource(R.string.home_step_profit), done = false, onClick = onSeeProfit)
         }
     }
 }

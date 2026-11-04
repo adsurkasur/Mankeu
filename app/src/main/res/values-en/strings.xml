@@ -52,7 +52,10 @@
     <string name="home_quick_produce">Produce</string>
     <string name="home_receivable_title">Unpaid by customers</string>
     <string name="home_bill_age">%1$s · %2$d days</string>
-    <string name="home_bill_no_name">No name</string>
+    <string name="home_bill_no_name">General</string>
+    <string name="home_bill_today">%1$s · today</string>
+    <string name="home_bill_yesterday">%1$s · yesterday</string>
+    <string name="produce_need_product">Create a product first, then record its production.</string>
     <string name="home_bills_receive">Receive payment</string>
     <string name="home_bills_more">and %1$d more customers</string>
     <string name="home_payable_title">Owed to suppliers</string>
@@ -61,7 +64,7 @@
     <string name="home_steps_title">Start here</string>
     <string name="home_step_product">Create a product and its recipe</string>
     <string name="home_step_sale">Record your first sale</string>
-    <string name="home_step_profit">See this month\'s profit on Home</string>
+    <string name="home_step_profit">See this month\'s profit</string>
     <string name="home_step_done">Done</string>
     <string name="produce_pick_title">Produce what?</string>
     <string name="header_more">More</string>

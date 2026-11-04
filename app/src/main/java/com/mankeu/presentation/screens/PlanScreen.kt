@@ -111,6 +111,11 @@ fun PlanScreen(
     ) {
         // The page title is the top bar's "Rencana usaha" (U4); only the explanation stays here.
         item { Text(stringResource(R.string.plan_subtitle), style = com.mankeu.presentation.MankeuType.Body, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        // First load (U4 review M-5): placeholders, not a plan of zeros.
+        if (state.isLoading) {
+            item { com.mankeu.presentation.components.SkeletonHero() }
+            return@LazyColumn
+        }
         if (project == null) {
             item {
                 EmptyCard(

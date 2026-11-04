@@ -54,7 +54,10 @@
     <string name="home_quick_produce">Produksi</string>
     <string name="home_receivable_title">Belum dibayar pelanggan</string>
     <string name="home_bill_age">%1$s · %2$d hari</string>
-    <string name="home_bill_no_name">Tanpa nama</string>
+    <string name="home_bill_no_name">Umum</string>
+    <string name="home_bill_today">%1$s · hari ini</string>
+    <string name="home_bill_yesterday">%1$s · kemarin</string>
+    <string name="produce_need_product">Buat produk dulu, lalu catat produksinya.</string>
     <string name="home_bills_receive">Terima bayar</string>
     <string name="home_bills_more">dan %1$d pelanggan lain</string>
     <string name="home_payable_title">Utang ke pemasok</string>
@@ -63,7 +66,7 @@
     <string name="home_steps_title">Mulai dari sini</string>
     <string name="home_step_product">Buat produk dan resepnya</string>
     <string name="home_step_sale">Catat penjualan pertama</string>
-    <string name="home_step_profit">Lihat untung bulan ini di Beranda</string>
+    <string name="home_step_profit">Lihat untung bulan ini</string>
     <string name="home_step_done">Selesai</string>
     <string name="produce_pick_title">Produksi apa?</string>
     <string name="header_more">Lainnya</string>

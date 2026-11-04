@@ -42,4 +42,24 @@ class CustomerBillsTest {
             bills,
         )
     }
+
+    /** U4 review I-1: "who owes me now". A note dated after today is not owed yet; customerless notes are one group. */
+    @Test
+    fun futureNotesAreLeftOutAndNotesWithoutACustomerFormOneGroup() {
+        val a = contact("Toko A")
+        val sales = listOf(
+            note("1", a, 30, 100_000),
+            note("2", null, 10, 40_000),
+            note("3", null, 20, 60_000),
+            SaleRecord(
+                sale = SaleEntity("9", "b", "p", a.id, today.plusDays(3).toEpochDay(), createdAtEpochMillis = 0),
+                lines = listOf(SaleLineEntity("9-1", "9", "k", "dus", "40", "1", 500_000, 500_000, 0)),
+                payments = emptyList(),
+                contact = a,
+            ),
+        )
+        val bills = customerBills(sales, today)
+        assertEquals(listOf(CustomerBill("Toko A", 100_000, 1), CustomerBill(null, 100_000, 21)), bills)
+        assertEquals("the card total is the sum of its rows", 200_000L, bills.sumOf { it.outstandingRupiah })
+    }
 }

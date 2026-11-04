@@ -636,6 +636,10 @@ class AppViewModel(
         usefulLifeMonths: Int? = null,
         /** Set when the form was opened with Ubah: the record is corrected in place (DEC-019). */
         editingEventId: String? = null,
+        /** Said instead of "Catatan disimpan" (U5: "Stok Minyak +10 liter"). */
+        savedMessage: UiText? = null,
+        /** Runs only once stored, so a refused page stays open with the owner's input. */
+        onSuccess: () -> Unit = {},
     ) = mutating {
         val state = uiState.value
         val businessId = state.selectedBusinessId
@@ -683,7 +687,8 @@ class AppViewModel(
                     priceAlert.value = PriceAlert(m.name, m.unit, m.basePriceRupiah, newPrice, changes)
                 }
             }
-            message.value = UiText.of(if (editingEventId != null) R.string.msg_event_updated else R.string.msg_event_saved)
+            message.value = savedMessage ?: UiText.of(if (editingEventId != null) R.string.msg_event_updated else R.string.msg_event_saved)
+            onSuccess()
         }.onFailure {
             message.value = UiText.fromError(it, R.string.msg_event_save_failed)
         }

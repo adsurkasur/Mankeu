@@ -467,8 +467,10 @@
 
     <!-- Beranda: kartu saldo, pintasan catat, dan meteran kelayakan -->
     <string name="fab_record">Catat</string>
-    <string name="fab_record_income">Catat Pemasukan</string>
-    <string name="fab_record_expense">Catat Pengeluaran</string>
+    <string name="fab_record_income">Uang masuk lain</string>
+    <string name="fab_record_expense">Belanja</string>
+    <string name="fab_other_out">Uang keluar lain</string>
+    <string name="fab_capital">Modal &amp; ambil pribadi</string>
     <string name="fab_close">Tutup pilihan catat</string>
 
     <string name="feasibility_title">Kelayakan &amp; Titik Impas (BEP)</string>
@@ -824,6 +826,26 @@
     <string name="sale_price_usual">Harga biasa</string>
     <string name="sale_delete_action">Hapus nota</string>
     <string name="customer_open">Lihat pelanggan</string>
+    <string name="money_title_purchase">Belanja</string>
+    <string name="money_title_in">Uang masuk lain</string>
+    <string name="money_title_out">Uang keluar lain</string>
+    <string name="money_title_capital">Modal &amp; ambil pribadi</string>
+    <string name="money_category">Untuk apa</string>
+    <string name="money_category_new">+ Baru</string>
+    <string name="money_more_details">+ Tambah detail (keterangan, tanggal)</string>
+    <string name="money_note_hint_in">mis. modal dari suami</string>
+    <string name="money_note_hint_out">mis. bayar listrik bulan ini</string>
+    <string name="purchase_what">Beli apa?</string>
+    <string name="purchase_not_material">Bukan bahan</string>
+    <string name="purchase_not_material_hint">Gas, gaji, listrik, transport, lain-lain</string>
+    <string name="purchase_material_detail">%1$s per %2$s</string>
+    <string name="purchase_quantity">Jumlah</string>
+    <string name="purchase_price">Harga per %1$s</string>
+    <string name="purchase_last_price">Harga terakhir</string>
+    <string name="purchase_stock_up">Stok %1$s +%2$s %3$s</string>
+    <string name="purchase_saved">Belanja dicatat. Stok %1$s +%2$s %3$s</string>
+    <string name="capital_in">Modal masuk</string>
+    <string name="capital_out">Ambil pribadi</string>
     <string name="customer_owes">Sisa tagihan</string>
     <string name="customer_receive">Terima bayar</string>
     <string name="customer_remind">Kirim pengingat</string>

@@ -1,5 +1,7 @@
 package com.mankeu.presentation.components
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,11 +26,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -36,7 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
-import com.mankeu.domain.FinancialEventType
+import com.mankeu.presentation.screens.MoneyFormMode
 import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.LocalMotion
 import com.mankeu.presentation.FeedbackEvent
@@ -57,7 +57,7 @@ import com.mankeu.presentation.LocalFeedback
  */
 @Composable
 fun RecordSpeedDial(
-    onRecord: (FinancialEventType) -> Unit,
+    onRecord: (MoneyFormMode) -> Unit,
     modifier: Modifier = Modifier,
     /** Fase 2 (DEC-029 §11 §12): product sales go through the note, from the same button. */
     onSaleNote: () -> Unit = {},
@@ -103,7 +103,7 @@ fun RecordSpeedDial(
             ExtendedFloatingActionButton(
                 onClick = {
                     expanded = false
-                    onRecord(FinancialEventType.CASH_INCOME)
+                    onRecord(MoneyFormMode.OTHER_IN)
                 },
                 containerColor = semantic.successContainer,
                 contentColor = semantic.onSuccessContainer,
@@ -117,7 +117,7 @@ fun RecordSpeedDial(
             ExtendedFloatingActionButton(
                 onClick = {
                     expanded = false
-                    onRecord(FinancialEventType.CASH_EXPENSE)
+                    onRecord(MoneyFormMode.PURCHASE)
                 },
                 containerColor = semantic.dangerContainer,
                 contentColor = semantic.onDangerContainer,
@@ -125,6 +125,21 @@ fun RecordSpeedDial(
                 Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
                 Text(stringResource(R.string.fab_record_expense), fontWeight = FontWeight.Bold)
+            }
+        }
+        // U5: the other two money pages, until U6 turns this into one + menu.
+        listOf(MoneyFormMode.OTHER_OUT to R.string.fab_other_out, MoneyFormMode.CAPITAL to R.string.fab_capital).forEach { (mode, label) ->
+            AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        expanded = false
+                        onRecord(mode)
+                    },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ) {
+                    Text(stringResource(label), fontWeight = FontWeight.Bold)
+                }
             }
         }
         MankeuTooltip(stringResource(if (expanded) R.string.fab_close else R.string.fab_record)) {

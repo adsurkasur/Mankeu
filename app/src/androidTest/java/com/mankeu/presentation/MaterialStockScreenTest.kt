@@ -99,11 +99,15 @@ class MaterialStockScreenTest {
         exists("Catat juga uangnya?")
         click("Ya, catat belanja")
 
-        // Belanja, filled: the material's hint, its unit and the amount 10 × Rp25.000.
-        exists("Jumlahnya menambah stok bahan ini")
-        exists("Dihitung otomatis: 10 liter × Rp")
+        // U5: the Belanja page, filled: Minyak, 10 liter at Rp25.000, the total and the stock it adds.
+        exists("Beli apa?")
+        exists("Total Rp250.000")
+        exists("Stok Minyak +10 liter")
         // Nothing is recorded until the purchase is saved: no stock-only movement as well.
         assertEquals("0", stock())
+        click("Simpan")
+        compose.waitUntil(5_000) { stock() == "10" }
+        exists("Belanja dicatat. Stok Minyak +10 liter")
     }
 
     @Test

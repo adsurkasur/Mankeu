@@ -76,7 +76,7 @@ fun HomeScreen(
     onManageScope: () -> Unit,
     onOpenPlan: () -> Unit = {},
     /** Opens the entry form for a kind; OWNER_CAPITAL presets money in with the capital category. */
-    onQuickRecord: (FinancialEventType) -> Unit = {},
+    onQuickRecord: (MoneyFormMode) -> Unit = {},
     /** Opens the Catatan note list on a filter. */
     onOpenBills: (NoteFilter) -> Unit = {},
     onNewSale: () -> Unit = {},
@@ -158,7 +158,7 @@ fun HomeScreen(
                     stringResource(R.string.home_negative_cash_title),
                     stringResource(R.string.home_negative_cash_body),
                     stringResource(R.string.home_negative_cash_action),
-                    { onQuickRecord(FinancialEventType.OWNER_CAPITAL) },
+                    { onQuickRecord(MoneyFormMode.CAPITAL) },
                     learn = HelpArticle.FAQ_CASH_NEGATIVE,
                 )
             }
@@ -166,7 +166,7 @@ fun HomeScreen(
         item {
             QuickActions(
                 onSell = onNewSale,
-                onBuy = { onQuickRecord(FinancialEventType.CASH_EXPENSE) },
+                onBuy = { onQuickRecord(MoneyFormMode.PURCHASE) },
                 onProduce = onProduce,
             )
         }

@@ -465,8 +465,10 @@
 
     <!-- Home: balance card, record shortcut, feasibility meters -->
     <string name="fab_record">Record</string>
-    <string name="fab_record_income">Record money in</string>
-    <string name="fab_record_expense">Record money out</string>
+    <string name="fab_record_income">Other money in</string>
+    <string name="fab_record_expense">Purchase</string>
+    <string name="fab_other_out">Other money out</string>
+    <string name="fab_capital">Capital &amp; personal use</string>
     <string name="fab_close">Close record options</string>
 
     <string name="feasibility_title">Feasibility &amp; Break-Even (BEP)</string>
@@ -822,6 +824,26 @@
     <string name="sale_price_usual">Usual price</string>
     <string name="sale_delete_action">Delete note</string>
     <string name="customer_open">View customer</string>
+    <string name="money_title_purchase">Purchase</string>
+    <string name="money_title_in">Other money in</string>
+    <string name="money_title_out">Other money out</string>
+    <string name="money_title_capital">Capital &amp; personal use</string>
+    <string name="money_category">What for</string>
+    <string name="money_category_new">+ New</string>
+    <string name="money_more_details">+ Add details (note, date)</string>
+    <string name="money_note_hint_in">e.g. capital from my husband</string>
+    <string name="money_note_hint_out">e.g. this month\'s electricity</string>
+    <string name="purchase_what">Buying what?</string>
+    <string name="purchase_not_material">Not a material</string>
+    <string name="purchase_not_material_hint">Gas, wages, electricity, transport, other</string>
+    <string name="purchase_material_detail">%1$s per %2$s</string>
+    <string name="purchase_quantity">Quantity</string>
+    <string name="purchase_price">Price per %1$s</string>
+    <string name="purchase_last_price">Last price</string>
+    <string name="purchase_stock_up">Stock %1$s +%2$s %3$s</string>
+    <string name="purchase_saved">Purchase saved. Stock %1$s +%2$s %3$s</string>
+    <string name="capital_in">Capital in</string>
+    <string name="capital_out">Personal use</string>
     <string name="customer_owes">Still owed</string>
     <string name="customer_receive">Receive payment</string>
     <string name="customer_remind">Send reminder</string>

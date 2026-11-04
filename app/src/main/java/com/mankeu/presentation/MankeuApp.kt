@@ -1,6 +1,7 @@
 package com.mankeu.presentation
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.mankeu.presentation.components.MankeuTooltip
 
 import android.app.Activity
@@ -8,35 +9,26 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.mankeu.auth.DriveTokenProvider
-import com.mankeu.auth.AuthUser
-import com.mankeu.backup.cloud.DriveBackupFile
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import com.mankeu.presentation.components.MankeuAppLogo
 import com.mankeu.presentation.components.RecordSpeedDial
-import com.mankeu.domain.FinancialEventType
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +53,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.FolderOpen
@@ -75,7 +66,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -87,9 +77,6 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -100,18 +87,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -125,6 +109,12 @@ import com.mankeu.presentation.guide.articlesFor
 import com.mankeu.presentation.guide.LocalOpenHelp
 import com.mankeu.presentation.screens.ContactsScreen
 import com.mankeu.presentation.screens.CustomerScreen
+import com.mankeu.presentation.screens.MoneyFormMode
+import com.mankeu.presentation.screens.MoneyFormScreen
+import com.mankeu.presentation.screens.moneyFormModeFor
+import com.mankeu.domain.MoneyEvent
+import com.mankeu.domain.CategoryRole
+import com.mankeu.data.PlanAssembly
 import com.mankeu.presentation.screens.DataFocus
 import com.mankeu.presentation.screens.ProductionSheet
 import com.mankeu.presentation.components.form.PickerPage
@@ -213,17 +203,11 @@ fun MankeuApp(
     val snackbarHost = remember { SnackbarHostState() }
     val context = LocalContext.current
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
-    // Set by the speed dial, consumed by EntryScreen, which opens its form on that kind. Kept
-    // here rather than inside EntryScreen because the dial can be pressed from Beranda, before
-    // EntryScreen exists.
-    var requestedEntryKind by rememberSaveable { mutableStateOf<FinancialEventType?>(null) }
-    // "Catat juga uangnya?" (U3): the material and quantity the Belanja form opens with, consumed with the kind.
-    var requestedPurchase by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
-    val buyMaterial: (String, java.math.BigDecimal) -> Unit = { id, quantity ->
-        requestedPurchase = id to quantity.stripTrailingZeros().toPlainString()
-        requestedEntryKind = FinancialEventType.CASH_EXPENSE
-        destination = Destination.ENTRY
-    }
+    // The money page (U5): Belanja / Uang masuk lain / Uang keluar lain / Modal & ambil pribadi, the
+    // record it corrects, and the material and quantity "Catat juga uangnya?" fills Belanja with (U3).
+    var moneyMode by rememberSaveable { mutableStateOf(MoneyFormMode.PURCHASE) }
+    var moneyEditId by rememberSaveable { mutableStateOf<String?>(null) }
+    var moneyPrefill by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     // A sheet, not a route: ModalBottomSheet handles its own back press and scrim.
     var manageScope by rememberSaveable { mutableStateOf(false) }
@@ -257,6 +241,17 @@ fun MankeuApp(
         overlay = Overlay.SALE_DETAIL
     }
     val openBills: (NoteFilter) -> Unit = { filter -> noteFilter = filter; destination = Destination.ENTRY }
+    val openMoneyForm: (MoneyFormMode, String?, Pair<String, String>?) -> Unit = { mode, editId, prefill ->
+        moneyMode = mode
+        moneyEditId = editId
+        moneyPrefill = prefill
+        overlay = Overlay.MONEY_FORM
+    }
+    val openMoney: (MoneyFormMode) -> Unit = { openMoneyForm(it, null, null) }
+    val editMoney: (MoneyEvent) -> Unit = { openMoneyForm(moneyFormModeFor(it, state.categories), it.id, null) }
+    val buyMaterial: (String, java.math.BigDecimal) -> Unit = { id, quantity ->
+        openMoneyForm(MoneyFormMode.PURCHASE, null, id to quantity.stripTrailingZeros().toPlainString())
+    }
     val businessName = state.businesses.firstOrNull { it.id == state.selectedBusinessId }?.name.orEmpty()
     // Kirim (U-3): the screens hand over text and, with a phone number, a wa.me link; only this layer builds Intents.
     val sendText: (String, String?) -> Unit = { text, link -> shareText(context, text, link) }
@@ -666,7 +661,38 @@ fun MankeuApp(
                                     }
                                 }
 
-                                Overlay.MONEY_FORM -> {}
+                                Overlay.MONEY_FORM -> key(moneyMode, moneyEditId, moneyPrefill) {
+                                    val existing = state.events.firstOrNull { it.id == moneyEditId }
+                                    MoneyFormScreen(
+                                        mode = moneyMode,
+                                        state = state,
+                                        existing = existing,
+                                        prefill = moneyPrefill,
+                                        onSave = { entry ->
+                                            val material = entry.stockItemId?.let { id -> state.stockItems.firstOrNull { it.id == id } }
+                                            val role = CategoryRole.parse(entry.category.role)
+                                            viewModel.record(
+                                                entry.type, entry.amountRupiah, entry.description, entry.category.id, entry.category.name, entry.date,
+                                                // What the page does not show is kept as it was (DEC-019 correction in place).
+                                                reference = existing?.reference,
+                                                quantityText = entry.quantityText,
+                                                unit = entry.unit,
+                                                unitPriceRupiah = entry.unitPriceRupiah,
+                                                budgetItemId = existing?.budgetItemId,
+                                                costNature = existing?.costNature.takeIf { role == CategoryRole.EXPENSE },
+                                                productId = existing?.productId.takeIf { role == CategoryRole.REVENUE },
+                                                stockItemId = entry.stockItemId,
+                                                usefulLifeMonths = (existing?.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS).takeIf { role == CategoryRole.ASSET },
+                                                editingEventId = existing?.id,
+                                                savedMessage = material?.let { UiText.of(R.string.purchase_saved, it.name, entry.quantityText.orEmpty(), it.unit) },
+                                                onSuccess = { overlay = Overlay.NONE },
+                                            )
+                                        },
+                                        onClose = { overlay = Overlay.NONE },
+                                        onCreateCategory = viewModel::createCategory,
+                                        snackbarHost = snackbarHost,
+                                    )
+                                }
 
                                 Overlay.SETTINGS -> OverlayScaffold(
                                     title = stringResource(R.string.settings_title),
@@ -773,10 +799,7 @@ fun MankeuApp(
                                                 onDestination = { destination = it },
                                                 onManageScope = { manageScope = true },
                                                 onMore = onMore,
-                                                onQuickRecord = { kind ->
-                                                    requestedEntryKind = kind
-                                                    destination = Destination.ENTRY
-                                                },
+                                                onQuickRecord = openMoney,
                                                 onSaleNote = { openSaleEditor(null) },
                                                 compact = false,
                                             ) { padding ->
@@ -788,7 +811,7 @@ fun MankeuApp(
                                                     isSaving = isSaving,
                                                     onNavigate = { destination = it },
                                                     onManageScope = { manageScope = true },
-                                                    onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
+                                                    onQuickRecord = openMoney,
                                                     onOpenProduct = openProduct,
                                                     onOpenStockHistory = openStockHistory,
                                                     onNewSale = { openSaleEditor(null) },
@@ -800,10 +823,8 @@ fun MankeuApp(
                                                     onProduce = onProduce,
                                                     onOpenContact = openContacts,
                                                     onOpenCustomer = openCustomer,
-                                                    requestedKind = requestedEntryKind,
-                                                    requestedPurchase = requestedPurchase,
+                                                    onEditMoney = editMoney,
                                                     onBuyMaterial = buyMaterial,
-                                                    onRequestedKindConsumed = { requestedEntryKind = null; requestedPurchase = null },
                                                     expanded = true,
                                                 )
                                             }
@@ -816,10 +837,7 @@ fun MankeuApp(
                                             onDestination = { destination = it },
                                             onManageScope = { manageScope = true },
                                             onMore = onMore,
-                                            onQuickRecord = { kind ->
-                                                requestedEntryKind = kind
-                                                destination = Destination.ENTRY
-                                            },
+                                            onQuickRecord = openMoney,
                                             onSaleNote = { openSaleEditor(null) },
                                             compact = true,
                                         ) { padding ->
@@ -831,7 +849,7 @@ fun MankeuApp(
                                                 isSaving = isSaving,
                                                 onNavigate = { destination = it },
                                                 onManageScope = { manageScope = true },
-                                                onQuickRecord = { kind -> requestedEntryKind = kind; destination = Destination.ENTRY },
+                                                onQuickRecord = openMoney,
                                                 onOpenProduct = openProduct,
                                                     onOpenStockHistory = openStockHistory,
                                                 onNewSale = { openSaleEditor(null) },
@@ -843,10 +861,8 @@ fun MankeuApp(
                                                 onProduce = onProduce,
                                                 onOpenContact = openContacts,
                                                 onOpenCustomer = openCustomer,
-                                                requestedKind = requestedEntryKind,
-                                                requestedPurchase = requestedPurchase,
+                                                onEditMoney = editMoney,
                                                 onBuyMaterial = buyMaterial,
-                                                onRequestedKindConsumed = { requestedEntryKind = null; requestedPurchase = null },
                                                 expanded = false,
                                             )
                                         }
@@ -998,7 +1014,7 @@ private fun MainScaffold(
     onDestination: (Destination) -> Unit,
     onManageScope: () -> Unit,
     onMore: (MoreItem) -> Unit,
-    onQuickRecord: (FinancialEventType) -> Unit,
+    onQuickRecord: (MoneyFormMode) -> Unit,
     onSaleNote: () -> Unit,
     compact: Boolean,
     content: @Composable (PaddingValues) -> Unit,
@@ -1330,7 +1346,7 @@ private fun ScreenContent(
     onNavigate: (Destination) -> Unit,
     /** Opens the Usaha dan Unit sheet: every empty state asking for a business or unit leads there. */
     onManageScope: () -> Unit,
-    onQuickRecord: (FinancialEventType) -> Unit,
+    onQuickRecord: (MoneyFormMode) -> Unit,
     onOpenProduct: (String?) -> Unit,
     onOpenStockHistory: (String) -> Unit,
     onNewSale: () -> Unit,
@@ -1342,10 +1358,8 @@ private fun ScreenContent(
     onProduce: () -> Unit,
     onOpenContact: (String) -> Unit,
     onOpenCustomer: (String) -> Unit,
-    requestedKind: FinancialEventType? = null,
-    requestedPurchase: Pair<String, String>? = null,
+    onEditMoney: (MoneyEvent) -> Unit,
     onBuyMaterial: (String, java.math.BigDecimal) -> Unit = { _, _ -> },
-    onRequestedKindConsumed: () -> Unit = {},
     expanded: Boolean,
 ) {
     val motion = LocalMotion.current
@@ -1394,15 +1408,10 @@ private fun ScreenContent(
                 )
                 Destination.ENTRY -> EntryScreen(
                     state = state,
-                    isSaving = isSaving,
-                    onRecord = viewModel::record,
+                    onEdit = onEditMoney,
                     onDelete = viewModel::deleteTransaction,
                     onManageScope = onManageScope,
-                    requestedKind = requestedKind,
-                    requestedPurchase = requestedPurchase,
-                    onRequestedKindConsumed = onRequestedKindConsumed,
-                    onCreateCategory = viewModel::createCategory,
-                    onNewSale = onNewSale,
+                    onNew = onQuickRecord,
                     onOpenSale = onOpenSale,
                     noteFilter = noteFilter,
                     onNoteFilter = onNoteFilter,

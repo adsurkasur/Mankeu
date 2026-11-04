@@ -201,17 +201,25 @@ interface StockDao {
     @Query("SELECT m.* FROM stock_movements m INNER JOIN stock_items i ON i.id = m.stockItemId WHERE i.businessId = :businessId AND m.movementType != 'CONSUME' ORDER BY m.dateEpochDay, m.createdAtEpochMillis")
     suspend fun getManualMovements(businessId: String): List<StockMovementEntity>
 
-    /** Production use by the active products of [projectId] (export, U3). */
+    /** Production use by the products of [projectId], archived ones included: their material was used (export, U3 review I-1). */
     @Query(
         """
         SELECT s.* FROM stock_movements s INNER JOIN product_movements m ON m.id = s.referenceEventId
-        INNER JOIN products p ON p.id = m.productId WHERE s.movementType = 'CONSUME' AND p.projectId = :projectId AND p.archived = 0
+        INNER JOIN products p ON p.id = m.productId WHERE s.movementType = 'CONSUME' AND p.projectId = :projectId
         """,
     )
     suspend fun getConsumptionOfProject(projectId: String): List<StockMovementEntity>
 
-    /** Every movement of the business's materials, for the derived stock. */
-    @Query("SELECT m.* FROM stock_movements m INNER JOIN stock_items i ON i.id = m.stockItemId WHERE i.businessId = :businessId")
+    /**
+     * Every movement of the business's materials, for the derived stock. Production use counts only while its
+     * production exists (review M-1), so a row the sweep has not reached yet (e.g. after sync) changes nothing.
+     */
+    @Query(
+        """
+        SELECT m.* FROM stock_movements m INNER JOIN stock_items i ON i.id = m.stockItemId WHERE i.businessId = :businessId
+          AND (m.movementType != 'CONSUME' OR m.referenceEventId IN (SELECT id FROM product_movements))
+        """,
+    )
     fun observeBusinessMovements(businessId: String): Flow<List<StockMovementEntity>>
 
     /**
@@ -272,7 +280,7 @@ fun StockItemEntity.toDomain(movements: List<StockMovement> = emptyList()): Stoc
 /** A stored movement as the stock reads it; null for a kind this version does not know (a newer phone or backup). */
 fun StockMovementEntity.toDomain(): StockMovement? = StockMovementType.entries.firstOrNull { it.name == movementType }?.let { type ->
     // parseQuantity returns null for "0", which a count may legitimately be.
-    StockMovement(id, stockItemId, type, quantityText.toBigDecimalOrNull() ?: BigDecimal.ZERO, LocalDate.ofEpochDay(dateEpochDay), notes, referenceEventId, createdAtEpochMillis)
+    StockMovement(id, stockItemId, type, quantityText.trim().replace(',', '.').toBigDecimalOrNull() ?: BigDecimal.ZERO, LocalDate.ofEpochDay(dateEpochDay), notes, referenceEventId, createdAtEpochMillis)
 }
 
 // -------------------------------------------------------------------------------------------------

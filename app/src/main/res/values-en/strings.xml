@@ -509,6 +509,8 @@
     <string name="stock_history_heading">History</string>
     <string name="stock_history_purchase">Purchase</string>
     <string name="stock_history_use">Used to make %1$s</string>
+    <string name="stock_derived_notice">Material stock is now worked out from purchases and production. Check it once with Recount stock.</string>
+    <string name="stock_derived_notice_ok">Got it</string>
     <string name="stock_qty">Quantity</string>
     <string name="stock_qty_adjust">Physically counted quantity</string>
     <string name="stock_notes">Note (optional)</string>

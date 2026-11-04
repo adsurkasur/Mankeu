@@ -229,6 +229,7 @@ class FinanceWorkbookExporter(
     private fun movements(products: List<ProductRecord>, materials: List<StockItemEntity>, stockMovements: List<StockMovementEntity>): WorkbookTable {
         val names = materials.associate { it.id to it.name }
         val uses = stockMovements.filter { it.movementType == StockMovementType.CONSUME.name }.groupBy { it.referenceEventId }
+        val written = products.flatMap { p -> p.movements.filter { it.movementType == ProductMovementType.PRODUCTION.name }.map { it.id } }.toSet()
         val productRows = products.flatMap { p ->
             p.movements.mapNotNull { m ->
                 val kind = when (m.movementType) {
@@ -248,6 +249,8 @@ class FinanceWorkbookExporter(
             val kind = when (m.movementType) {
                 StockMovementType.IN.name -> MankeuTemplate.MATERIAL_IN
                 StockMovementType.OUT.name -> MankeuTemplate.MATERIAL_OUT
+                // Use by a production not in the file (an archived product): the material still left (review I-1).
+                StockMovementType.CONSUME.name -> MankeuTemplate.MATERIAL_OUT.takeIf { m.referenceEventId !in written } ?: return@mapNotNull null
                 StockMovementType.ADJUSTMENT.name -> MankeuTemplate.MATERIAL_COUNT
                 else -> return@mapNotNull null
             }

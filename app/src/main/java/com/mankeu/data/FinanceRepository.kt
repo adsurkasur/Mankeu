@@ -940,7 +940,8 @@ class FinanceRepository(
         val latest = prices.associate { it.stockItemId to it.unitPriceRupiah }
         // Stock is derived on read (U3, DEC-030 §3): opening + purchases + manual moves + counts − production use.
         val bought = purchases.mapNotNull { p ->
-            p.quantityText.toBigDecimalOrNull()?.let { q ->
+            // As typed: the form writes "2,5" (review C-1); parseQuantity reads both separators.
+            TransactionCalculation.parseQuantity(p.quantityText)?.let { q ->
                 StockMovement(p.id, p.stockItemId, StockMovementType.PURCHASE, q, LocalDate.ofEpochDay(p.dateEpochDay), p.description, createdAtEpochMillis = p.createdAtEpochMillis)
             }
         }
@@ -1690,7 +1691,7 @@ class FinanceRepository(
             stockDao.insertStockMovements(
                 m.uses.map { u ->
                     consumption(
-                        "$batchId:${UUID.randomUUID()}", materialIds.getValue(normalize(u.materialName)), BigDecimal(u.quantityText), m.date,
+                        "$batchId:${UUID.randomUUID()}", materialIds.getValue(normalize(u.materialName)), requireNotNull(TransactionCalculation.parseQuantity(u.quantityText)), m.date,
                         product.name.trim(), productionId, if (u.order > 0) movementsFrom + u.order else createdAt,
                     )
                 },

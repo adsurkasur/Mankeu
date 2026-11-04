@@ -9,6 +9,9 @@ import com.mankeu.domain.StockCalculation
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockMovementType
 import com.mankeu.importer.FinanceWorkbookImporter
+import com.mankeu.importer.ImportStockItem
+import com.mankeu.importer.ImportTransaction
+import com.mankeu.importer.WorkbookImportPreview
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -150,6 +153,44 @@ class MaterialStockFlowTest {
 
         repo.undoImportBatch(db.financeDao().getImportBatches(unit).single().id)
         assertEquals(7, count("SELECT COUNT(*) FROM stock_movements"))
+    }
+
+    /** Review C-1: the form stores "2,5" and an imported text cell stays "2,5"; both add 2.5. */
+    @Test fun aDecimalPurchaseAddsItsQuantity() = runBlocking {
+        repo.recordEvent(buy(bookId, "2,5"))
+        assertEquals("2.5", stock(minyak))
+
+        val (other, unit) = repo.createBusinessWithUnit("Usaha Lain", "Pusat")
+        repo.commitImport(other, unit, WorkbookImportPreview(
+            sourceName = "x.xlsx", sourceSha256 = "x",
+            transactions = listOf(ImportTransaction("Transaksi!A2", day, "Minyak", "Bahan Baku & Stok", incoming = false, amountRupiah = 65_000, quantityText = "2,5", unit = "liter", materialName = "Minyak")),
+            stockItems = listOf(ImportStockItem("Stok Barang!A2", "Minyak", "liter", 26_000, "0", "0")),
+        ))
+        assertEquals("2.5", repo.stockItems(other, unit).first().single().currentStock.stripTrailingZeros().toPlainString())
+    }
+
+    /** Review I-1: an archived product's production still used the material; export and import keep that. */
+    @Test fun useByAnArchivedProductSurvivesExportAndImport() = runBlocking {
+        repo.recordEvent(buy(bookId, "10"))
+        repo.recordProduction(keripik, BigDecimal.ONE, day.plusDays(1), "")
+        repo.archiveProduct(keripik)
+        val before = repo.stockItems(businessId, projectId).first().associate { it.name to it.currentStock.stripTrailingZeros().toPlainString() }
+        assertEquals(mapOf("Minyak" to "-10", "Singkong" to "50"), before)
+
+        val preview = FinanceWorkbookImporter().preview("ekspor.xlsx", repo.exportProjectWorkbook(projectId))
+        assertEquals(emptyList<String>(), preview.errors)
+        val (other, unit) = repo.createBusinessWithUnit("Usaha Lain", "Pusat")
+        repo.commitImport(other, unit, preview)
+
+        assertEquals(before, repo.stockItems(other, unit).first().associate { it.name to it.currentStock.stripTrailingZeros().toPlainString() })
+    }
+
+    /** Review M-1: production use whose production is gone (not yet swept, e.g. after sync) does not count. */
+    @Test fun useWithoutItsProductionDoesNotCount() = runBlocking {
+        repo.recordProduction(keripik, BigDecimal.ONE, day, "")
+        assertEquals("50", stock(singkong))
+        db.openHelper.writableDatabase.execSQL("DELETE FROM product_movements")
+        assertEquals("100", stock(singkong))
     }
 
     private fun count(sql: String) = db.openHelper.writableDatabase.query(sql).use { it.moveToFirst(); it.getInt(0) }

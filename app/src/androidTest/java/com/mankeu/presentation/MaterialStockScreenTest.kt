@@ -124,6 +124,17 @@ class MaterialStockScreenTest {
         exists("Stok minus: catat belanja atau hitung ulang stok.")
     }
 
+    /** Controller ruling (U3 review): existing stock is not back-filled, so the Bahan section says once to check it. */
+    @Test
+    fun theOneTimeNoticeIsShownUntilDismissed() {
+        start()
+        click("Produk")
+        exists("Stok bahan sekarang dihitung otomatis")
+        click("Mengerti")
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Stok bahan sekarang dihitung otomatis", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty() }
+        assertEquals(true, context.getSharedPreferences("mankeu_ui_prefs", Context.MODE_PRIVATE).getBoolean("material_stock_notice_seen", false))
+    }
+
     private fun addTen() {
         click("Produk")
         click("Minyak")

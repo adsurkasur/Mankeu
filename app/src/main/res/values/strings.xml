@@ -511,6 +511,8 @@
     <string name="stock_history_heading">Riwayat</string>
     <string name="stock_history_purchase">Belanja</string>
     <string name="stock_history_use">Dipakai produksi %1$s</string>
+    <string name="stock_derived_notice">Stok bahan sekarang dihitung otomatis dari belanja dan produksi. Cek sekali dengan Hitung ulang stok.</string>
+    <string name="stock_derived_notice_ok">Mengerti</string>
     <string name="stock_qty">Jumlah</string>
     <string name="stock_qty_adjust">Jumlah fisik hasil hitung</string>
     <string name="stock_notes">Catatan (opsional)</string>

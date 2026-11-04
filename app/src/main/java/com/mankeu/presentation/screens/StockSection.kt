@@ -31,10 +31,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,6 +51,8 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.sanitizeDecimal
+import com.mankeu.presentation.markMaterialStockNoticeSeen
+import com.mankeu.presentation.materialStockNoticeSeen
 import com.mankeu.presentation.toDisplayDate
 import com.mankeu.presentation.toRupiah
 import java.math.BigDecimal
@@ -170,6 +174,7 @@ internal fun MaterialSheets(
  * (schema 10); never to a Proyeksi/Realisasi book. The sheets are [MaterialSheets].
  */
 internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -> Unit, onOpenItem: (String) -> Unit) {
+    if (items.isNotEmpty()) item { MaterialStockNotice() }
     item { StockCard(items = items, onManage = null) }
     item {
         Button(onClick = onAddItem, modifier = Modifier.fillMaxWidth()) {
@@ -219,6 +224,24 @@ internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Shown once after the update to derived material stock (U3 review ruling): old figures are not back-filled,
+ * so the owner is asked to check them once with Hitung ulang. Dismissed for good, remembered in preferences.
+ */
+@Composable
+private fun MaterialStockNotice() {
+    val context = LocalContext.current
+    var seen by remember { mutableStateOf(context.materialStockNoticeSeen()) }
+    if (seen) return
+    val semantic = LocalMankeuSemanticColors.current
+    Surface(shape = RoundedCornerShape(12.dp), color = semantic.warningContainer, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.stock_derived_notice), color = semantic.onWarningContainer)
+            TextButton(onClick = { context.markMaterialStockNoticeSeen(); seen = true }) { Text(stringResource(R.string.stock_derived_notice_ok)) }
         }
     }
 }

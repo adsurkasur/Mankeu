@@ -46,10 +46,16 @@ private const val KEY_HAPTICS = "haptics_enabled"
 private const val KEY_SOUND = "sound_enabled"
 private const val KEY_BUSINESS = "selected_business"
 private const val KEY_PROJECT = "selected_project"
+private const val KEY_MATERIAL_STOCK_NOTICE = "material_stock_notice_seen"
 
 private fun Context.prefs() = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
 /** The usaha and unit last open, so the app reopens where the owner left it. */
+/** U3 review ruling: the one-time "stok bahan sekarang dihitung otomatis" notice, once dismissed, stays away. */
+fun Context.materialStockNoticeSeen(): Boolean = prefs().getBoolean(KEY_MATERIAL_STOCK_NOTICE, false)
+
+fun Context.markMaterialStockNoticeSeen() = prefs().edit { putBoolean(KEY_MATERIAL_STOCK_NOTICE, true) }
+
 fun Context.readSelection() = WorkspaceSelection(prefs().getString(KEY_BUSINESS, null), prefs().getString(KEY_PROJECT, null))
 
 fun Context.writeSelection(selection: WorkspaceSelection) = prefs().edit {

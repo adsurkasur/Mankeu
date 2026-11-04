@@ -116,6 +116,37 @@ class MaterialStockScreenTest {
         compose.waitUntil(5_000) { stock() == "10" }
     }
 
+    /** U3 review M-6: going back from "Catat juga uangnya?" returns to the sheet with the typed quantity. */
+    @Test
+    fun goingBackFromTheMoneyQuestionKeepsTheTypedQuantity() {
+        start()
+        addTen()
+        exists("Catat juga uangnya?")
+        click("Kembali")
+        exists("Catat Stok: Minyak")
+        val field = compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0]
+        assertEquals("10", field.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text)
+        assertEquals("0", stock())
+    }
+
+    /** U5, audit L06: Tambah bahan shows name and price as boxes, the unit as chips; stock is behind a link. */
+    @Test
+    fun tambahBahanTypesTwoBoxesAndPicksTheUnit() {
+        start()
+        click("Produk")
+        click("Tambah Barang")
+        exists("Lainnya")
+        assertEquals(2, compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size)
+        compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0].performTextInput("Gula")
+        click("kg")
+        compose.onAllNodes(hasSetTextAction() and hasText("Harga beli per kg"))[0].performTextInput("15.000")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.stockItems(businessId, projectId).first() }.any { it.name == "Gula" } }
+        val gula = runBlocking { repository.stockItems(businessId, projectId).first() }.single { it.name == "Gula" }
+        assertEquals("kg", gula.unit)
+        assertEquals(15_000L, gula.basePriceRupiah)
+    }
+
     @Test
     fun minusStockSaysWhatToDo() {
         runBlocking { repository.recordStockMovement(minyak, StockMovementType.OUT, BigDecimal(3), LocalDate.now(), "") }

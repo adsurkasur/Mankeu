@@ -238,6 +238,42 @@ class FormComponentsTest {
         assertTrue(clicks == 1)
     }
 
+    /** U1 M5 (U5 must-fix): pasting "1.250.000,50" stored 125000050 (×100). The sen are dropped. */
+    @Test
+    fun pastedSenDoNotMultiplyTheAmountByAHundred() {
+        var value: Long? = null
+        compose.setContent {
+            MankeuTheme {
+                var current by remember { mutableStateOf<Long?>(null) }
+                MoneyInput(label = "Harga", value = current, onValueChange = { current = it; value = it })
+            }
+        }
+        field().performTextInput("1.250.000,50")
+        assertEquals(1_250_000L, value)
+        assertEquals("1.250.000", fieldText())
+    }
+
+    /**
+     * U1 / Task 5 carry: the date is a row TalkBack can activate. One node with role Button holds
+     * the label and "Hari ini"; its OnClick (what a TalkBack double-tap sends) opens the picker.
+     */
+    @Test
+    fun theDateRowIsAButtonThatOpensThePicker() {
+        var picked = ""
+        compose.setContent {
+            MankeuTheme {
+                com.mankeu.presentation.components.DateField(value = java.time.LocalDate.now().toString(), label = "Tanggal") { picked = it }
+            }
+        }
+        val row = compose.onNode(hasText("Tanggal") and hasClickAction())
+        row.assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        row.assert(hasText(text(R.string.date_today), substring = true))
+        row.performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithText(text(R.string.action_cancel)).assertExists()
+        compose.onNodeWithText(text(R.string.action_save)).performClick()
+        assertEquals(java.time.LocalDate.now().toString(), picked)
+    }
+
 
     private fun onAllNodesWithTextCount(value: String): Int =
         compose.onAllNodes(hasText(value)).fetchSemanticsNodes().size

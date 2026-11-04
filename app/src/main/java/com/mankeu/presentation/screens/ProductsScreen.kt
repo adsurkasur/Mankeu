@@ -71,6 +71,7 @@ fun ProductsScreen(
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
     onBuyMaterial: (String, BigDecimal) -> Unit = { _, _ -> },
     expanded: Boolean = false,
+    multiUnit: Boolean = false,
 ) {
     var produceId by rememberSaveable { mutableStateOf<String?>(null) }
     var countId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -90,6 +91,7 @@ fun ProductsScreen(
         onCreateStockItem = onCreateStockItem,
         onRecordStockMovement = onRecordStockMovement,
         onBuyMaterial = onBuyMaterial,
+        multiUnit = multiUnit,
     )
 
     LazyColumn(

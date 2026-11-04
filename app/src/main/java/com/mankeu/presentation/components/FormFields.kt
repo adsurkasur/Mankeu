@@ -1,13 +1,11 @@
 ﻿package com.mankeu.presentation.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -34,6 +32,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
+import com.mankeu.presentation.components.form.ListRowField
 import com.mankeu.presentation.toDisplayDate
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
@@ -66,7 +65,14 @@ private const val MAX_RUPIAH_DIGITS = 15
  * a pre-filled "0" used to leave `0500000` — it parses, but it reads as a different number.
  */
 fun sanitizeRupiah(raw: String): String =
-    raw.filter(Char::isDigit).dropWhile { it == '0' }.take(MAX_RUPIAH_DIGITS)
+    raw.replace(TRAILING_SEN, "").filter(Char::isDigit).dropWhile { it == '0' }.take(MAX_RUPIAH_DIGITS)
+
+/**
+ * ",50" or ".5" at the end is sen (U1 M5): a pasted "1.250.000,50" used to become 125000050.
+ * Rupiah are whole, so the sen are dropped. Three digits after a separator stay: that is a
+ * thousands group ("1.250", "1,250,000").
+ */
+private val TRAILING_SEN = Regex("[.,]\\d{1,2}\\D*$")
 
 /**
  * Digits plus at most one decimal separator, normalised to the comma an Indonesian keyboard
@@ -143,11 +149,12 @@ fun MoneyField(
 /**
  * Date entry through the Material 3 date picker rather than a typed `YYYY-MM-DD` field.
  *
- * The typed field demanded ISO format from people who write dates as `3/8`, offered no calendar to
- * check the day against, and surfaced a typo only after the whole form had been filled in. [value]
- * stays an ISO string so nothing downstream changes; the field displays the owner's own format.
+ * Shown as a [ListRowField] ("Tanggal … Hari ini ›", audit P2 §4), not a read-only text field: the
+ * old field opened its picker from a transparent layer that TalkBack could focus but not activate
+ * (Task 5 / U1 carry). The row is one clickable with role Button, so a double-tap opens the picker.
+ * [value] stays an ISO string so nothing downstream changes; the row shows "Hari ini" or the
+ * owner's own date format. With [clearable] a set date gets a small × beside the row.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateField(
     value: String,
@@ -158,58 +165,52 @@ fun DateField(
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
     val parsed = remember(value) { runCatching { LocalDate.parse(value) }.getOrNull() }
-    Box(modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = parsed?.toDisplayDate().orEmpty(),
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            label = { Text(label) },
-            trailingIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (clearable && value.isNotBlank()) {
-                        MankeuTooltip(stringResource(R.string.action_cancel)) {
-                            IconButton(onClick = { onValueChange("") }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_cancel))
-                            }
-                        }
-                    }
-                    Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.padding(end = 12.dp))
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        ListRowField(
+            label = label,
+            value = parsed?.let { dateWords(it) } ?: stringResource(R.string.date_none),
+            onClick = { open = true },
+            modifier = Modifier.weight(1f),
         )
-        // A read-only OutlinedTextField still consumes taps, so the opener is a transparent layer
-        // above it rather than a clickable on the field. The layer stops short of the trailing area
-        // when a clear button is present, so that button keeps its own hit target.
-        Box(
-            Modifier
-                .matchParentSize()
-                .padding(end = if (clearable && value.isNotBlank()) 96.dp else 0.dp)
-                .clickable { open = true },
-        )
+        if (clearable && parsed != null) {
+            IconButton(onClick = { onValueChange("") }) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.date_clear, label))
+            }
+        }
     }
     if (open) {
-        val initialMillis = (parsed ?: LocalDate.now()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        val pickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-        val feedback = LocalFeedback.current
-        // A tick per day picked, not for the initial selection the picker opens on.
-        LaunchedEffect(pickerState) {
-            snapshotFlow { pickerState.selectedDateMillis }.drop(1).collect { feedback(FeedbackEvent.TAP) }
-        }
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    pickerState.selectedDateMillis?.let { millis ->
-                        onValueChange(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString())
-                    }
-                    open = false
-                }) { Text(stringResource(R.string.action_save)) }
-            },
-            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.action_cancel)) } },
-        ) {
-            DatePicker(state = pickerState)
-        }
+        MankeuDatePicker(initial = parsed, onDismiss = { open = false }) { onValueChange(it.toString()); open = false }
+    }
+}
+
+/** "Hari ini", "Kemarin", else "30 Okt 2026". */
+@Composable
+fun dateWords(date: LocalDate): String = when (date) {
+    LocalDate.now() -> stringResource(R.string.date_today)
+    LocalDate.now().minusDays(1) -> stringResource(R.string.date_yesterday)
+    else -> date.toDisplayDate()
+}
+
+/** The Material 3 date dialog on [initial] (today when null); shared by [DateField] and "Pilih tanggal" chips. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MankeuDatePicker(initial: LocalDate?, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
+    val initialMillis = (initial ?: LocalDate.now()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+    val pickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+    val feedback = LocalFeedback.current
+    // A tick per day picked, not for the initial selection the picker opens on.
+    LaunchedEffect(pickerState) {
+        snapshotFlow { pickerState.selectedDateMillis }.drop(1).collect { feedback(FeedbackEvent.TAP) }
+    }
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                pickerState.selectedDateMillis?.let { millis -> onPick(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()) } ?: onDismiss()
+            }) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    ) {
+        DatePicker(state = pickerState)
     }
 }

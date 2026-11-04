@@ -58,4 +58,20 @@ class MoneyFieldInputTest {
             assertTrue(raw, clean.isEmpty() || clean.toLongOrNull() != null)
         }
     }
+
+    /** U1 M5 / U5: a pasted "1.250.000,50" used to become 125000050 (×100). Sen are dropped, rupiah stay whole. */
+    @Test
+    fun trailingSenAreDroppedNotGluedOnAsDigits() {
+        listOf(
+            "1.250.000,50" to "1250000",
+            "1.250.000,5" to "1250000",
+            "Rp 1.250.000,00" to "1250000",
+            "1250000.50" to "1250000",
+            "12,50 " to "12",
+            "Rp 1.250.000,-" to "1250000",
+            // Three digits after the separator are a thousands group, not sen.
+            "1,250,000" to "1250000",
+            "1.250" to "1250",
+        ).forEach { (raw, clean) -> assertEquals(raw, clean, sanitizeRupiah(raw)) }
+    }
 }

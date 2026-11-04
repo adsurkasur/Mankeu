@@ -1342,6 +1342,7 @@ private fun ScreenContent(
                     onRecordStockMovement = viewModel::recordStockMovement,
                     onBuyMaterial = onBuyMaterial,
                     expanded = expanded,
+                    multiUnit = state.projects.size >= 2,
                 )
                 Destination.ENTRY -> EntryScreen(
                     state = state,

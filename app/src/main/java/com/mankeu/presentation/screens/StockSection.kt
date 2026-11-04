@@ -2,6 +2,8 @@ package com.mankeu.presentation.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
@@ -48,8 +52,10 @@ import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.LocalMankeuSemanticColors
+import com.mankeu.presentation.MankeuType
+import com.mankeu.presentation.Space
+import com.mankeu.presentation.components.form.MoneyInput
 import com.mankeu.presentation.components.MankeuSheet
-import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.sanitizeDecimal
 import com.mankeu.presentation.markMaterialStockNoticeSeen
 import com.mankeu.presentation.materialStockNoticeSeen
@@ -120,6 +126,8 @@ internal fun MaterialSheets(
     onRecordStockMovement: (String, StockMovementType, BigDecimal, String) -> Unit,
     /** "Catat juga uangnya?" → Ya: opens Belanja filled with the material and quantity (U3, audit L07). */
     onBuyMaterial: (String, BigDecimal) -> Unit = { _, _ -> },
+    /** Two or more units: only then may an item belong to "Semua unit" (#15, hidden for one unit). */
+    multiUnit: Boolean = false,
 ) {
     // A Tambah waits for the answer: bought (the purchase adds the stock) or stock only (a manual move), never both.
     var pendingIn by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
@@ -127,6 +135,7 @@ internal fun MaterialSheets(
     if (adding) {
         AddStockItemSheet(
             unitName = unitName,
+            multiUnit = multiUnit,
             onDismiss = onCloseAdd,
             onSave = { name, unit, price, initial, minAlert, shared ->
                 onCreateStockItem(name, unit, price, initial, minAlert, shared)
@@ -140,12 +149,13 @@ internal fun MaterialSheets(
             onDismiss = onCloseMovement,
             onSave = { type, quantity, notes ->
                 if (type == StockMovementType.IN) {
+                    // The sheet stays open under the question, so going back keeps the typed quantity (U3 review M-6).
                     pendingIn = item.id to quantity.toPlainString()
                     pendingNotes = notes
                 } else {
                     onRecordStockMovement(item.id, type, quantity, notes)
+                    onCloseMovement()
                 }
-                onCloseMovement()
             },
         )
     }
@@ -157,13 +167,14 @@ internal fun MaterialSheets(
             title = { Text(stringResource(R.string.stock_money_title)) },
             text = { Text(stringResource(R.string.stock_money_body, quantity.toQuantityText(), item.unit, item.name)) },
             confirmButton = {
-                TextButton(onClick = { pendingIn = null; onBuyMaterial(id, quantity) }) { Text(stringResource(R.string.stock_money_buy)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingIn = null; onRecordStockMovement(id, StockMovementType.IN, quantity, pendingNotes) }) {
-                    Text(stringResource(R.string.stock_money_no))
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = { pendingIn = null; onCloseMovement(); onBuyMaterial(id, quantity) }) { Text(stringResource(R.string.stock_money_buy)) }
+                    TextButton(onClick = { pendingIn = null; onCloseMovement(); onRecordStockMovement(id, StockMovementType.IN, quantity, pendingNotes) }) {
+                        Text(stringResource(R.string.stock_money_no))
+                    }
                 }
             },
+            dismissButton = { TextButton(onClick = { pendingIn = null }) { Text(stringResource(R.string.action_back)) } },
         )
     }
 }
@@ -246,39 +257,68 @@ private fun MaterialStockNotice() {
     }
 }
 
+/** The units a material is usually bought in (audit L06): picked, not typed, so "Kg", "kg" and "kilo" stay one unit. */
+private val COMMON_UNITS = listOf("kg", "liter", "gram", "pcs", "bungkus", "ikat")
+
+/**
+ * Tambah bahan (U5, audit L06): name, unit as chips, price. Stok awal and the low-stock limit are
+ * behind one link, and who owns the item only appears with two or more units (#15).
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun AddStockItemSheet(
     unitName: String?,
     onDismiss: () -> Unit,
     onSave: (name: String, unit: String, priceRupiah: Long, initial: BigDecimal, minAlert: BigDecimal, shared: Boolean) -> Unit,
+    multiUnit: Boolean = false,
 ) {
     var shared by rememberSaveable { mutableStateOf(unitName == null) }
     var name by rememberSaveable { mutableStateOf("") }
-    var unit by rememberSaveable { mutableStateOf("") }
-    var price by rememberSaveable { mutableStateOf("") }
+    var unit by rememberSaveable { mutableStateOf(COMMON_UNITS.first()) }
+    var otherUnit by rememberSaveable { mutableStateOf(false) }
+    var price by rememberSaveable { mutableStateOf<Long?>(null) }
     var initial by rememberSaveable { mutableStateOf("") }
     var minAlert by rememberSaveable { mutableStateOf("") }
+    var stockOpen by rememberSaveable { mutableStateOf(false) }
     MankeuSheet(
         title = stringResource(R.string.stock_add_item),
         onDismiss = onDismiss,
         confirmEnabled = name.isNotBlank() && unit.isNotBlank(),
-        onConfirm = {
-            onSave(name, unit, price.toLongOrNull() ?: 0, initial.toQuantity(), minAlert.toQuantity(), shared)
-        },
+        onConfirm = { onSave(name.trim(), unit.trim(), price ?: 0, initial.toQuantity(), minAlert.toQuantity(), shared) },
     ) {
-        OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.stock_item_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(unit, { unit = it }, label = { Text(stringResource(R.string.stock_item_unit)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        MoneyField(stringResource(R.string.stock_item_price), price) { price = it }
-        QuantityField(stringResource(R.string.stock_item_initial), initial) { initial = it }
-        QuantityField(stringResource(R.string.stock_item_min), minAlert, hint = stringResource(R.string.stock_item_min_hint)) { minAlert = it }
-        Text(stringResource(R.string.stock_owner_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (unitName != null) {
-                FilterChip(selected = !shared, onClick = { shared = false }, label = { Text(stringResource(R.string.stock_owner_unit, unitName)) })
+        OutlinedTextField(
+            name, { name = it }, label = { Text(stringResource(R.string.stock_item_name)) }, singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text(stringResource(R.string.stock_item_unit_pick), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+            COMMON_UNITS.forEach { option ->
+                FilterChip(selected = !otherUnit && unit == option, onClick = { otherUnit = false; unit = option }, label = { Text(option) })
             }
-            FilterChip(selected = shared, onClick = { shared = true }, label = { Text(stringResource(R.string.stock_owner_shared)) })
+            FilterChip(selected = otherUnit, onClick = { otherUnit = true; unit = "" }, label = { Text(stringResource(R.string.stock_item_unit_other)) })
         }
-        Text(stringResource(R.string.stock_owner_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (otherUnit) {
+            OutlinedTextField(unit, { unit = it }, label = { Text(stringResource(R.string.stock_item_unit)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        }
+        MoneyInput(
+            label = stringResource(R.string.stock_item_price_per, unit.ifBlank { stringResource(R.string.editor_unit_fallback) }),
+            value = price,
+            onValueChange = { price = it },
+        )
+        if (!stockOpen) {
+            TextButton(onClick = { stockOpen = true }) { Text(stringResource(R.string.stock_item_more)) }
+        } else {
+            QuantityField(stringResource(R.string.stock_item_initial), initial) { initial = it }
+            QuantityField(stringResource(R.string.stock_item_min), minAlert, hint = stringResource(R.string.stock_item_min_hint)) { minAlert = it }
+        }
+        if (multiUnit && unitName != null) {
+            Text(stringResource(R.string.stock_owner_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = !shared, onClick = { shared = false }, label = { Text(stringResource(R.string.stock_owner_unit, unitName)) })
+                FilterChip(selected = shared, onClick = { shared = true }, label = { Text(stringResource(R.string.stock_owner_shared)) })
+            }
+        }
     }
 }
 

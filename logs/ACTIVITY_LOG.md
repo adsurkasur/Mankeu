@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-05 00:53] [Claude Code (Opus) — Fase UX U3: finish, verification, hand-check]
+- **Goal**: Finish U3 after the code landed in 087e66a (committed from this work by another session, whose entry below lists unit tests only).
+- **Actions**: Full connected run found the scale-simulation assets still had the old `Produksi & Stok` / `Stok Barang` headers (ScaleSimulationTest, ViewModelFlowsTest failed); `docs/evidence/2026-10-22_simulasi_skala_umkm/make_sims.py` updated (column Bahan, "Stok Awal") and rerun with its fixed seed (only file sizes in `expected.json` changed), assets copied to `app/src/androidTest/assets/simulasi/`. Docs: CHANGELOG (with release note on changed material stock), plan Status, WORK_IN_PROGRESS, PRODUCT_REQUIREMENTS FR-STK-002, README stock line. DEC-030 U3 implementation choices and DOMAIN_MODEL were already in 087e66a.
+- **Files**: `docs/evidence/2026-10-22_simulasi_skala_umkm/*`, `app/src/androidTest/assets/simulasi/*`, `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/WORK_IN_PROGRESS.md`, `docs/superpowers/plans/2026-10-30-fase-ux.md`, `logs/{ACTIVITY_LOG,CHANGELOG}.md`.
+- **Verification**: RED: StockManagementTest failed to compile before the domain change; mutations (purchases dropped from the derivation; Tambah recorded without the prompt) made 4 of 7 new connected tests fail. GREEN: unit 131/0, lintDebug 0 errors (80 warnings, unchanged), assembleDebug OK, focused connected 35/0, full connected 108/0/2. Emulator hand-check (data seeded by a temporary, uncommitted instrumentation test): Tambah 10 liter Minyak → "Catat juga uangnya?" → Belanja filled (Minyak, 10 liter × Rp25.000 = Rp250.000) → saved → Minyak "Stok 10 liter", no Menipis; Produksi 1 batch (sheet: "Bahan berkurang: Singkong 50 kg, Minyak 20 liter") → Singkong 50 kg, Minyak −10 liter with the minus hint and Menipis; history shows Belanja +10 and Dipakai produksi Keripik −20. Screenshots `.superpowers/sdd/2026-10-30-fase-ux/u3-1..7-*.png`.
+
 ### [2026-10-30 21:20] [Antigravity — Fase UX U3: stok bahan nyata dan pemakaian produksi]
 - **Goal**: Implementasi task U3 / keputusan U-2: stok bahan turunan dihitung dari stok awal, belanja bertaut (+), pemakaian produksi (−), tambah/pakai manual, dan hitung ulang.
 - **Actions**:

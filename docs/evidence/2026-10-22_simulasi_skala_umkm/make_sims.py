@@ -28,8 +28,8 @@ BUDGET = ["Bulan", "Kategori", "Item", "Jumlah", "Satuan", "Harga Satuan (Rp)", 
 PRODUCT = ["Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)"]
 SALE_UNIT = ["Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)"]
 RECIPE = ["Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)"]
-MOVEMENT = ["Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan"]
-STOCK = ["Nama", "Satuan", "Harga Beli (Rp)", "Jumlah Stok", "Batas Minimum", "Diarsipkan"]
+MOVEMENT = ["Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan", "Bahan"]
+STOCK = ["Nama", "Satuan", "Harga Beli (Rp)", "Stok Awal", "Batas Minimum", "Diarsipkan"]
 
 JUAL, LAIN = "Penjualan & Jasa", "Pendapatan Lain"
 BAHAN, GAJI, SEWA, LISTRIK, TRANSPORT, LAINLAIN = (

@@ -74,7 +74,7 @@ dengan kenyataan.
 
 ### Stok
 - Barang milik satu unit atau dipakai bersama seluruh unit usaha.
-- Barang masuk, keluar, dan opname, dengan peringatan stok menipis dan nilai persediaan.
+- Stok bahan nyata: belanja menambah, produksi memakai sesuai resep, tambah/pakai manual, dan hitung ulang; peringatan stok menipis dan nilai persediaan.
 
 ### Data dan keamanan
 - **Templat Excel Mankeu.** Templat kosong dan hasil ekspor memakai format yang sama, sehingga

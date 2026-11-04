@@ -52,7 +52,7 @@ Mankeu is a standalone Android application with a universal financial core and o
 ### Stock
 
 - **FR-STK-001:** Stock items belong to one unit or are shared by every unit of the business (DEC-017).
-- **FR-STK-002:** Stock in, stock out, and stock count (opname) are recorded atomically; stock out cannot exceed what is on hand, and low stock is flagged.
+- **FR-STK-002:** Material stock is derived (U-2, DEC-030 §3): opening stock, linked purchases (+), manual add and use, production use per recipe line (−, removed with its production), and a recount as a set point. Stock may go below zero (recorded after the fact) and then says what to do; low stock is flagged only when a minimum is set. Adding stock by hand offers to record the purchase instead.
 
 ### Import, export, and backup
 

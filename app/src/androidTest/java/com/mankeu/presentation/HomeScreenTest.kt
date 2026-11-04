@@ -165,9 +165,10 @@ class HomeScreenTest {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         settle()
 
-        // A customer's name opens Kontak on that customer.
+        // U5: a customer's name opens that customer's page: what is left, Terima bayar, Kirim pengingat.
         click("Toko B")
-        exists("Kontak")
+        exists("Sisa tagihan")
+        exists("Kirim pengingat")
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         settle()
 

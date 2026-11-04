@@ -1126,6 +1126,21 @@ class FinanceRepository(
         insertSalePayment(sale, amountRupiah, date)
     }
 
+    /**
+     * One payment from a customer over their open notes [saleIds], oldest first (U5 "Terima bayar"):
+     * each note gets at most what it still owes ([SalesMath.allocate]); notes dated after [date] are
+     * left out. Returns the payment ids. All or nothing.
+     */
+    suspend fun recordCustomerPayment(saleIds: List<String>, amountRupiah: Long, date: LocalDate): List<String> = database.withTransaction {
+        require(amountRupiah > 0) { "Nominal pembayaran harus lebih dari nol." }
+        val notes = saleIds.map { dao.getSale(it) ?: error("Nota tidak ditemukan.") }
+            .filter { it.dateEpochDay <= date.toEpochDay() }
+            .sortedWith(compareBy<SaleEntity>({ it.dateEpochDay }, { it.createdAtEpochMillis }))
+        val owed = notes.map { SalesMath.outstanding(saleTotal(it), dao.getSalePayments(it.id).sumOf { p -> p.amountRupiah }) }
+        require(amountRupiah <= owed.sum()) { "Pembayaran ${rupiah(amountRupiah)} melebihi sisa tagihan ${rupiah(owed.sum())}." }
+        notes.zip(SalesMath.allocate(owed, amountRupiah)).filter { it.second > 0 }.map { (sale, share) -> insertSalePayment(sale, share, date) }
+    }
+
     /** Deletes a note with its payments; returns how many payments went with it (the UI names them before). */
     suspend fun deleteSale(id: String): Int = database.withTransaction {
         val payments = dao.getSalePayments(id)

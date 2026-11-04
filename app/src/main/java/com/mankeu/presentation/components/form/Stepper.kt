@@ -26,6 +26,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import com.mankeu.R
+import com.mankeu.domain.TransactionCalculation
+import com.mankeu.presentation.components.sanitizeDecimal
+import java.math.BigDecimal
 import com.mankeu.presentation.MankeuType
 import com.mankeu.presentation.Space
 
@@ -77,6 +80,44 @@ fun Stepper(
                 .then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier),
         )
         FilledTonalIconButton(onClick = { onValueChange(value + 1) }, enabled = value < max) {
+            Icon(Icons.Default.Add, contentDescription = increase)
+        }
+    }
+}
+
+/** [text] plus [delta] as a quantity in the form's own format ("2,5"); null when the result would not be above zero. */
+fun stepQuantity(text: String, delta: Int): String? {
+    val next = (TransactionCalculation.parseQuantity(text) ?: BigDecimal.ZERO) + BigDecimal(delta)
+    return next.takeIf { it.signum() > 0 }?.stripTrailingZeros()?.toPlainString()?.replace('.', ',')
+}
+
+/**
+ * [Stepper] for a quantity kept as text (note lines, which may be "2,5 kg"): − and + step by one,
+ * the number between them stays typeable with a decimal comma, and − stops above zero.
+ */
+@Composable
+fun QuantityStepper(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    val decrease = stringResource(R.string.stepper_decrease) + " " + label
+    val increase = stringResource(R.string.stepper_increase) + " " + label
+    Row(modifier.heightIn(min = Space.Row), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+        Text(label, style = MankeuType.Body, modifier = Modifier.weight(1f))
+        FilledTonalIconButton(onClick = { stepQuantity(value, -1)?.let(onValueChange) }, enabled = stepQuantity(value, -1) != null) {
+            Icon(Icons.Default.Remove, contentDescription = decrease)
+        }
+        OutlinedTextField(
+            value = value,
+            onValueChange = { onValueChange(sanitizeDecimal(it)) },
+            singleLine = true,
+            textStyle = MankeuType.Body.copy(textAlign = TextAlign.Center),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.width(Space.NumberField).semantics { contentDescription = label },
+        )
+        FilledTonalIconButton(onClick = { stepQuantity(value, 1)?.let(onValueChange) }) {
             Icon(Icons.Default.Add, contentDescription = increase)
         }
     }

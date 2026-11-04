@@ -46,6 +46,18 @@ object SalesMath {
 
     fun outstanding(totalRupiah: Long, paidRupiah: Long): Long = maxOf(0L, totalRupiah - paidRupiah)
 
+    /**
+     * One payment from a customer over their open notes, oldest first (U5 "Terima bayar"): each note
+     * gets at most what it still owes, the shares sum to [amountRupiah]. More than everything owed
+     * is refused, as a single note's payment is.
+     */
+    fun allocate(outstandings: List<Long>, amountRupiah: Long): List<Long> {
+        require(amountRupiah > 0) { "payment $amountRupiah must be > 0" }
+        require(amountRupiah <= outstandings.sum()) { "payment $amountRupiah above ${outstandings.sum()} owed" }
+        var left = amountRupiah
+        return outstandings.map { owed -> minOf(owed, left).also { left -= it } }
+    }
+
     fun isOverdue(dueDate: LocalDate?, outstanding: Long, today: LocalDate): Boolean =
         dueDate != null && outstanding > 0 && dueDate.isBefore(today)
 }

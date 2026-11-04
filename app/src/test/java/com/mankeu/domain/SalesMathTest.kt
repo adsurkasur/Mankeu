@@ -9,6 +9,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SalesMathTest {
+    /** U5: one "Terima bayar" from a customer pays the oldest notes first; the shares sum to the amount. */
+    @Test fun aCustomerPaymentPaysOldestNotesFirst() {
+        assertEquals(listOf(300_000L, 100_000L, 0L), SalesMath.allocate(listOf(300_000, 600_000, 80_000), 400_000))
+        assertEquals(listOf(300_000L, 600_000L, 80_000L), SalesMath.allocate(listOf(300_000, 600_000, 80_000), 980_000))
+        assertEquals(listOf(0L, 50_000L), SalesMath.allocate(listOf(0, 80_000), 50_000))
+        assertThrows(IllegalArgumentException::class.java) { SalesMath.allocate(listOf(300_000), 300_001) }
+        assertThrows(IllegalArgumentException::class.java) { SalesMath.allocate(listOf(300_000), 0) }
+    }
+
     private fun line(price: Long, qty: String = "1") = SaleLineInput("p", BigDecimal(qty), price, 0)
 
     @Test fun noteATotalsFromGolden() {

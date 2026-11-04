@@ -777,6 +777,13 @@ class AppViewModel(
             .onFailure { UiText.fromError(it, R.string.msg_sale_failed).also { e -> message.value = e; onError(e) } }
     }
 
+    /** Terima bayar from a customer over their open notes, oldest first (U5). */
+    fun payCustomer(saleIds: List<String>, amountRupiah: Long, date: LocalDate, onDone: () -> Unit, onError: (UiText) -> Unit) = mutating {
+        runCatching { repository.recordCustomerPayment(saleIds, amountRupiah, date) }
+            .onSuccess { message.value = UiText.of(R.string.msg_sale_paid); onDone() }
+            .onFailure { UiText.fromError(it, R.string.msg_sale_failed).also { e -> message.value = e; onError(e) } }
+    }
+
     fun deleteSale(id: String, onDone: () -> Unit = {}) = mutating {
         runCatching { repository.deleteSale(id) }
             .onSuccess { message.value = UiText.of(R.string.msg_sale_deleted); onDone() }

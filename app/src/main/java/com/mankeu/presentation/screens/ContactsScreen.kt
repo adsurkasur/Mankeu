@@ -62,6 +62,8 @@ fun ContactsScreen(
     header: @Composable () -> Unit = {},
     /** Opens already searched on this name (Beranda's Tagihan rows, U4). */
     initialSearch: String = "",
+    /** Tapping a contact opens its page (U5, audit L21) rather than the edit form. */
+    onOpen: ((String) -> Unit)? = null,
 ) {
     var search by rememberSaveable { mutableStateOf(initialSearch) }
     // "" = a new contact, an id = that contact, null = no sheet.
@@ -94,7 +96,7 @@ fun ContactsScreen(
         }
         items(visible, key = { it.id }) { contact ->
             Card(
-                onClick = { if (onPick != null) onPick(contact.id) else editing = contact.id },
+                onClick = { if (onPick != null) onPick(contact.id) else if (onOpen != null) onOpen(contact.id) else editing = contact.id },
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
@@ -139,7 +141,7 @@ fun ContactsScreen(
 
 /** The contact form: short, so a sheet (#13). */
 @Composable
-private fun ContactSheet(
+internal fun ContactSheet(
     existing: ContactEntity?,
     /** The business's other active contacts: a name already in use is caught here, before saving. */
     others: List<ContactEntity>,

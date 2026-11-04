@@ -1,33 +1,36 @@
 package com.mankeu.presentation.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,10 +39,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,14 +56,14 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
 import com.mankeu.data.ContactDraft
 import com.mankeu.data.ContactEntity
-import com.mankeu.data.PayableRecord
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.SaleDraft
 import com.mankeu.data.SaleLineDraft
@@ -68,15 +73,28 @@ import com.mankeu.domain.SaleStatus
 import com.mankeu.domain.SalesMath
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.TransactionCalculation
-import com.mankeu.presentation.ChoiceMenu
 import com.mankeu.presentation.LocalMankeuSemanticColors
+import com.mankeu.presentation.MankeuType
+import com.mankeu.presentation.ShareLine
+import com.mankeu.presentation.ShareNote
+import com.mankeu.presentation.ShareText
+import com.mankeu.presentation.ShareWords
+import com.mankeu.presentation.Space
 import com.mankeu.presentation.UiText
 import com.mankeu.presentation.resolve
 import com.mankeu.presentation.components.DateField
+import com.mankeu.presentation.components.MankeuDatePicker
 import com.mankeu.presentation.components.MankeuSheet
-import com.mankeu.presentation.components.MoneyField
 import com.mankeu.presentation.components.ReportRow
-import com.mankeu.presentation.components.sanitizeDecimal
+import com.mankeu.presentation.components.form.FullPageForm
+import com.mankeu.presentation.components.form.LineEditSheet
+import com.mankeu.presentation.components.form.ListRowField
+import com.mankeu.presentation.components.form.MoneyChip
+import com.mankeu.presentation.components.form.MoneyInput
+import com.mankeu.presentation.components.form.PickerPage
+import com.mankeu.presentation.components.form.QuantityStepper
+import com.mankeu.presentation.components.form.ResultBar
+import com.mankeu.presentation.components.form.stepQuantity
 import com.mankeu.presentation.toDisplayDate
 import com.mankeu.presentation.toDisplayQuantity
 import com.mankeu.presentation.toRupiah
@@ -86,56 +104,90 @@ import java.time.LocalDate
 enum class NoteFilter { ALL, OPEN, OVERDUE }
 
 /** One product line while typed; text until saved, so "0", blank or "1," never reach the math. */
-private data class SaleLineInput(val productId: String?, val unit: String = "", val quantity: String = "", val price: String = "")
+private data class SaleLineInput(val productId: String, val unit: String, val quantity: String, val price: String)
 
 private val saleLineSaver = listSaver<SnapshotStateList<SaleLineInput>, String>(
-    save = { rows -> rows.flatMap { listOf(it.productId.orEmpty(), it.unit, it.quantity, it.price) } },
-    restore = { flat -> flat.chunked(4).map { SaleLineInput(it[0].ifEmpty { null }, it[1], it[2], it[3]) }.toMutableStateList() },
+    save = { rows -> rows.flatMap { listOf(it.productId, it.unit, it.quantity, it.price) } },
+    restore = { flat -> flat.chunked(4).map { SaleLineInput(it[0], it[1], it[2], it[3]) }.toMutableStateList() },
 )
 
 private enum class PaidChoice { FULL, NONE, PART }
+
+/** The quick due dates of U-3: days after the note's date. */
+private val DUE_DAYS = listOf(7L, 14L, 30L)
 
 /** A product's base unit and its sale units, the names a note line may use (repository rule). */
 private fun ProductRecord.unitNames() = (units.sortedBy { it.sortOrder }.map { it.name } + product.unit).distinctBy { it.lowercase() }
 
 private fun ProductRecord.priceOf(unit: String) = units.firstOrNull { it.name.equals(unit, ignoreCase = true) }?.priceRupiah
 
+/** Notes newest first, the order "last used" reads from. */
+private fun List<SaleRecord>.newestFirst() = sortedWith(compareByDescending<SaleRecord> { it.sale.dateEpochDay }.thenByDescending { it.sale.createdAtEpochMillis })
+
 /**
- * The sales note (spec #17, F2-3, F2-7): a full page with Simpan fixed at the bottom (#13). Line
- * totals, HPP and profit preview while typing with the same functions the repository stores with;
- * every rule is checked by `FinanceRepository.saveSale`, whose message the shell shows while this
- * page stays open.
+ * A new line of [record]: the unit it was last sold in (a wholesaler sells dus, audit L12), else its
+ * main sale unit; quantity 1 and that unit's price.
  */
+private fun newLine(record: ProductRecord, history: List<SaleRecord>): SaleLineInput {
+    val lastUnit = history.asSequence().flatMap { it.lines.asSequence() }.firstOrNull { it.productId == record.product.id }?.unitName
+        ?.takeIf { u -> record.unitNames().any { it.equals(u, ignoreCase = true) } }
+    val unit = lastUnit ?: record.mainUnit?.name ?: record.product.unit
+    return SaleLineInput(record.product.id, unit, "1", record.priceOf(unit)?.toString().orEmpty())
+}
+
+/**
+ * The sales note (spec #17, F2-3, U5): what → how much → who → payment → details, at most four
+ * things on screen. Product lines are compact rows ("2 dus Keripik · Rp600.000") with − and + for
+ * the count; tapping one opens a three-field sheet (unit, quantity, price). The customer is a chip
+ * (last customers, or search / add), payment a segment, the due date chips only while unpaid.
+ * Date, discount and note sit behind "+ Tambah detail". The live total and profit sit above Simpan.
+ * Every rule is still checked by `FinanceRepository.saveSale`, whose message shows while this page
+ * stays open.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SaleNoteEditorScreen(
+    title: String,
     existing: SaleRecord?,
     products: List<ProductRecord>,
     materials: List<StockItem>,
     contacts: List<ContactEntity>,
+    /** The notes "last used" comes from: last customers, last product and unit. */
     sales: List<SaleRecord>,
-    payables: List<PayableRecord>,
     onSave: (SaleDraft) -> Unit,
     onSaveContact: (String?, ContactDraft, (String) -> Unit, (UiText) -> Unit) -> Unit,
-    onArchiveContact: (String, () -> Unit, (UiText) -> Unit) -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHost: SnackbarHostState? = null,
 ) {
+    val history = remember(sales) { sales.newestFirst() }
     var contactId by rememberSaveable { mutableStateOf(existing?.sale?.contactId) }
     var date by rememberSaveable { mutableStateOf((existing?.sale?.dateEpochDay?.let(LocalDate::ofEpochDay) ?: LocalDate.now()).toString()) }
     var due by rememberSaveable { mutableStateOf(existing?.dueDate?.toString().orEmpty()) }
-    var discount by rememberSaveable { mutableStateOf(existing?.sale?.discountRupiah?.takeIf { it > 0 }?.toString().orEmpty()) }
+    var discount by rememberSaveable { mutableStateOf(existing?.sale?.discountRupiah?.takeIf { it > 0 }) }
     var notes by rememberSaveable { mutableStateOf(existing?.sale?.notes.orEmpty()) }
     var paidChoice by rememberSaveable { mutableStateOf(PaidChoice.FULL) }
-    var partAmount by rememberSaveable { mutableStateOf("") }
-    var picking by rememberSaveable { mutableStateOf(false) }
+    var partAmount by rememberSaveable { mutableStateOf<Long?>(null) }
+    var details by rememberSaveable { mutableStateOf(existing != null && (existing.sale.discountRupiah > 0 || existing.sale.notes.isNotBlank())) }
+    var pickingCustomer by rememberSaveable { mutableStateOf(false) }
+    var pickingProduct by rememberSaveable { mutableStateOf(false) }
+    var pickingDue by rememberSaveable { mutableStateOf(false) }
+    var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     val lines = rememberSaveable(saver = saleLineSaver) {
-        (existing?.lines.orEmpty().sortedBy { it.sortOrder }.map { SaleLineInput(it.productId, it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
-            .ifEmpty { listOf(SaleLineInput(null)) }).toMutableStateList()
+        val stored = existing?.lines.orEmpty().sortedBy { it.sortOrder }
+            .map { SaleLineInput(it.productId, it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
+        // A new note starts on the product last sold, so the common sale is one tap on +.
+        val first = history.asSequence().flatMap { it.lines.sortedBy { l -> l.sortOrder }.asSequence() }
+            .mapNotNull { l -> products.firstOrNull { it.product.id == l.productId } }.firstOrNull() ?: products.firstOrNull()
+        (if (existing != null) stored else listOfNotNull(first?.let { newLine(it, history) })).toMutableStateList()
     }
+    val snapshot = listOf(lines.toList(), contactId, date, due, discount, notes, paidChoice, partAmount)
+    val initial = rememberSaveable { snapshot.toString() }
 
     val semantic = LocalMankeuSemanticColors.current
     val prices = materials.associate { it.id to it.basePriceRupiah }
     val costs = products.associate { it.product.id to ProductCosting.cost(it.spec, prices) }
-    // Per line: (total, hpp) once product, quantity and price are valid; null shows no preview.
+    // Per line: (total, hpp) once product, quantity and price are valid; null = not countable yet.
     val results = lines.map { line ->
         val record = products.firstOrNull { it.product.id == line.productId }
         val quantity = TransactionCalculation.parseQuantity(line.quantity)
@@ -145,223 +197,266 @@ fun SaleNoteEditorScreen(
     }
     val subtotal = results.sumOf { it?.first ?: 0 }
     val hpp = results.sumOf { it?.second ?: 0 }
-    val discountRupiah = discount.toLongOrNull() ?: 0
+    val discountRupiah = discount ?: 0
     // Checked here only to explain and to keep Simpan off; saveSale stays the authority.
     val discountTooHigh = discountRupiah > subtotal
     val total = (subtotal - discountRupiah).coerceAtLeast(0)
-    val partRupiah = partAmount.toLongOrNull() ?: 0
     val paidNow = when (paidChoice) {
         PaidChoice.FULL -> total
         PaidChoice.NONE -> 0
-        PaidChoice.PART -> partRupiah
+        PaidChoice.PART -> partAmount ?: 0
     }
-    val partTooHigh = paidChoice == PaidChoice.PART && partRupiah > total
+    val partTooHigh = paidChoice == PaidChoice.PART && (partAmount ?: 0) > total
     // F2-3: a customer is needed while the note is not fully paid; shown before Simpan, not only after.
     val needsCustomer = contactId == null && (existing?.paid ?: paidNow) < total
     val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
     val showDue = if (existing == null) paidChoice != PaidChoice.FULL else existing.outstanding > 0 || due.isNotBlank()
+    val customer = contacts.firstOrNull { it.id == contactId } ?: existing?.contact?.takeIf { it.id == contactId }
+    val recent = (history.mapNotNull { it.contact }.filter { c -> contacts.any { it.id == c.id } }.distinctBy { it.id }.take(3) + listOfNotNull(customer))
+        .distinctBy { it.id }
 
     Box(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CustomerField(
-                            name = contacts.firstOrNull { it.id == contactId }?.name ?: existing?.contact?.takeIf { it.id == contactId }?.name,
-                            onOpen = { picking = true },
-                            onClear = { contactId = null },
-                            isError = needsCustomer,
-                        )
-                        DateField(value = date, label = stringResource(R.string.sale_date), onValueChange = { date = it })
-                        if (showDue) {
-                            DateField(value = due, label = stringResource(R.string.sale_due), clearable = true, onValueChange = { due = it })
-                        }
-                    }
-                }
-                item { Text(stringResource(R.string.sale_products), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black) }
-                if (products.isEmpty()) {
-                    item { Text(stringResource(R.string.sale_no_products), color = semantic.danger) }
-                }
-                itemsIndexed(lines) { index, line ->
-                    val record = products.firstOrNull { it.product.id == line.productId }
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-                        Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 12.dp), verticalAlignment = Alignment.Top) {
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                ChoiceMenu(
-                                    fieldLabel = stringResource(R.string.sale_product),
-                                    label = record?.product?.name ?: stringResource(R.string.sale_product_pick),
-                                    options = products.map { it.product.id to it.product.name },
-                                    onSelected = { id ->
-                                        val picked = products.first { it.product.id == id }
-                                        // The main sale unit and its price (DEC-028 §8); the base unit when it has none.
-                                        val unit = picked.mainUnit?.name ?: picked.product.unit
-                                        lines[index] = line.copy(productId = id, unit = unit, price = picked.priceOf(unit)?.toString().orEmpty())
-                                    },
-                                )
-                                if (record != null) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        ChoiceMenu(
-                                            modifier = Modifier.weight(1f),
-                                            fieldLabel = stringResource(R.string.sale_unit),
-                                            label = line.unit,
-                                            options = record.unitNames().map { it to it },
-                                            onSelected = { unit -> lines[index] = line.copy(unit = unit, price = record.priceOf(unit)?.toString() ?: line.price) },
-                                        )
-                                        OutlinedTextField(
-                                            value = line.quantity,
-                                            onValueChange = { lines[index] = line.copy(quantity = sanitizeDecimal(it)) },
-                                            label = { Text(stringResource(R.string.sale_quantity)) },
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                    }
-                                    MoneyField(stringResource(R.string.sale_price, line.unit), line.price) { lines[index] = line.copy(price = it) }
-                                    results[index]?.let { (lineTotal, lineHpp) ->
-                                        Text(
-                                            stringResource(R.string.sale_line_result, lineTotal.toRupiah(), lineHpp.toRupiah(), (lineTotal - lineHpp).toRupiah()),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (lineTotal - lineHpp <= 0) semantic.danger else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-                            }
-                            if (lines.size > 1) {
-                                IconButton(onClick = { lines.removeAt(index) }) {
-                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.sale_remove_line))
-                                }
-                            } else {
-                                Spacer(Modifier.width(12.dp))
-                            }
-                        }
-                    }
-                }
-                item {
-                    TextButton(onClick = { lines.add(SaleLineInput(null)) }, enabled = products.isNotEmpty()) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Text(stringResource(R.string.sale_add_line))
-                    }
-                }
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MoneyField(
-                            stringResource(R.string.sale_discount), discount,
-                            isError = discountTooHigh,
-                            supportingText = if (discountTooHigh) ({ Text(stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())) }) else null,
-                        ) { discount = it }
-                        ReportRow(stringResource(R.string.sale_subtotal), subtotal.toRupiah())
-                        if (discountRupiah > 0) ReportRow(stringResource(R.string.sale_discount_row), discountRupiah.toRupiah())
-                        ReportRow(stringResource(R.string.sale_total), total.toRupiah(), emphasized = true)
-                        ReportRow(stringResource(R.string.sale_profit), (total - hpp).toRupiah())
-                    }
-                }
-                item {
-                    if (existing == null) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.sale_paid_now), style = MaterialTheme.typography.labelLarge)
-                            val choices = listOf(
-                                PaidChoice.FULL to R.string.sale_paid_full,
-                                PaidChoice.NONE to R.string.sale_paid_none,
-                                PaidChoice.PART to R.string.sale_paid_part,
-                            )
-                            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                                choices.forEachIndexed { i, (choice, label) ->
-                                    SegmentedButton(
-                                        selected = paidChoice == choice,
-                                        onClick = { paidChoice = choice },
-                                        shape = SegmentedButtonDefaults.itemShape(i, choices.size),
-                                        label = { Text(stringResource(label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                                    )
-                                }
-                            }
-                            if (paidChoice == PaidChoice.PART) {
-                                MoneyField(
-                                    stringResource(R.string.sale_paid_amount), partAmount,
-                                    isError = partTooHigh,
-                                    supportingText = { Text(stringResource(R.string.sale_max_amount, total.toRupiah())) },
-                                ) { partAmount = it }
-                            }
-                        }
-                    } else {
-                        Text(stringResource(R.string.sale_already_paid, existing.paid.toRupiah()), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                item {
-                    OutlinedTextField(
-                        value = notes, onValueChange = { notes = it },
-                        label = { Text(stringResource(R.string.sale_notes)) }, modifier = Modifier.fillMaxWidth(),
+        FullPageForm(
+            title = title,
+            dirty = snapshot.toString() != initial,
+            onClose = onClose,
+            snackbarHost = snackbarHost,
+            saveEnabled = lines.isNotEmpty() && results.all { it != null } && !discountTooHigh && !partTooHigh && parsedDate != null,
+            onSave = {
+                onSave(
+                    SaleDraft(
+                        contactId = contactId,
+                        date = parsedDate ?: return@FullPageForm,
+                        dueDate = due.takeIf { showDue }?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+                        discountRupiah = discountRupiah,
+                        notes = notes,
+                        lines = lines.map { SaleLineDraft(it.productId, it.unit, it.quantity, it.price.toLongOrNull() ?: 0) },
+                        paidNowRupiah = paidNow,
+                    ),
+                )
+            },
+            result = if (total > 0) {
+                {
+                    ResultBar(
+                        text = stringResource(R.string.sale_result_total, total.toRupiah()),
+                        detail = stringResource(if (total - hpp < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(total - hpp).toRupiah()),
                     )
+                }
+            } else {
+                null
+            },
+        ) {
+            // What and how much.
+            FormLabel(stringResource(R.string.sale_products))
+            if (products.isEmpty()) Text(stringResource(R.string.sale_no_products), color = semantic.danger)
+            Column {
+                lines.forEachIndexed { index, line ->
+                    val record = products.firstOrNull { it.product.id == line.productId }
+                    NoteLineRow(
+                        title = stringResource(R.string.sale_line_title, line.quantity.ifBlank { "?" }, line.unit, record?.product?.name ?: "—"),
+                        amount = results[index]?.first?.toRupiah(),
+                        profit = results[index]?.let { (t, h) -> t - h },
+                        onClick = { editing = index },
+                        onMinus = stepQuantity(line.quantity, -1)?.let { q -> { lines[index] = line.copy(quantity = q) } },
+                        onPlus = { stepQuantity(line.quantity, 1)?.let { q -> lines[index] = line.copy(quantity = q) } },
+                    )
+                    HorizontalDivider()
                 }
             }
-            Button(
-                onClick = {
-                    onSave(
-                        SaleDraft(
-                            contactId = contactId,
-                            date = parsedDate ?: return@Button,
-                            dueDate = due.takeIf { showDue }?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
-                            discountRupiah = discountRupiah,
-                            notes = notes,
-                            // A line without a product is an untouched row, not an error.
-                            lines = lines.filter { it.productId != null }.map { SaleLineDraft(it.productId!!, it.unit, it.quantity, it.price.toLongOrNull() ?: 0) },
-                            paidNowRupiah = paidNow,
-                        ),
-                    )
-                },
-                enabled = products.isNotEmpty() && !discountTooHigh && !partTooHigh && parsedDate != null,
-                modifier = Modifier.fillMaxWidth().padding(16.dp).imePadding(),
-            ) { Text(stringResource(R.string.action_save)) }
-        }
+            if (products.isNotEmpty()) {
+                TextButton(onClick = { pickingProduct = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Text(stringResource(R.string.sale_add_line))
+                }
+            }
 
-        if (picking) {
-            BackHandler { picking = false }
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                ContactsScreen(
-                    contacts = contacts,
-                    sales = sales,
-                    payables = payables,
-                    onSave = onSaveContact,
-                    onArchive = onArchiveContact,
-                    onPick = { contactId = it; picking = false },
-                    header = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.contacts_pick_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
-                            IconButton(onClick = { picking = false }) { Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close)) }
-                        }
-                    },
+            // Who.
+            FormLabel(stringResource(R.string.sale_customer))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+                FilterChip(selected = contactId == null, onClick = { contactId = null }, label = { Text(stringResource(R.string.sale_customer_general)) })
+                recent.forEach { c ->
+                    FilterChip(selected = contactId == c.id, onClick = { contactId = c.id }, label = { Text(c.name) })
+                }
+                AssistChip(
+                    onClick = { pickingCustomer = true },
+                    label = { Text(stringResource(R.string.sale_customer_search)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                 )
             }
+            if (needsCustomer) Text(stringResource(R.string.sale_customer_needed), style = MankeuType.Caption, color = semantic.warning)
+
+            // Payment.
+            if (existing == null) {
+                val choices = listOf(PaidChoice.FULL to R.string.sale_paid_full, PaidChoice.NONE to R.string.sale_paid_none, PaidChoice.PART to R.string.sale_paid_part)
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    choices.forEachIndexed { i, (choice, label) ->
+                        SegmentedButton(
+                            selected = paidChoice == choice,
+                            onClick = { paidChoice = choice },
+                            shape = SegmentedButtonDefaults.itemShape(i, choices.size),
+                            label = { Text(stringResource(label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        )
+                    }
+                }
+                if (paidChoice == PaidChoice.PART) {
+                    MoneyInput(
+                        label = stringResource(R.string.sale_paid_amount),
+                        value = partAmount,
+                        onValueChange = { partAmount = it },
+                        isError = partTooHigh,
+                        supportingText = { Text(stringResource(R.string.sale_max_amount, total.toRupiah())) },
+                    )
+                }
+            } else {
+                Text(stringResource(R.string.sale_already_paid, existing.paid.toRupiah()), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (showDue && parsedDate != null) {
+                FormLabel(stringResource(R.string.sale_due))
+                val dueDate = runCatching { LocalDate.parse(due) }.getOrNull()
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+                    DUE_DAYS.forEach { days ->
+                        val target = parsedDate.plusDays(days)
+                        FilterChip(
+                            selected = dueDate == target,
+                            onClick = { due = if (dueDate == target) "" else target.toString() },
+                            label = { Text(stringResource(R.string.sale_due_days, days.toInt())) },
+                        )
+                    }
+                    val custom = dueDate != null && DUE_DAYS.none { parsedDate.plusDays(it) == dueDate }
+                    FilterChip(
+                        selected = custom,
+                        onClick = { pickingDue = true },
+                        label = { Text(if (custom) dueDate!!.toDisplayDate() else stringResource(R.string.sale_due_pick)) },
+                    )
+                }
+            }
+
+            // Details.
+            if (!details) {
+                TextButton(onClick = { details = true }) { Text(stringResource(R.string.form_more_details)) }
+            } else {
+                DateField(value = date, label = stringResource(R.string.sale_date), onValueChange = { date = it })
+                MoneyInput(
+                    label = stringResource(R.string.sale_discount),
+                    value = discount,
+                    onValueChange = { discount = it },
+                    isError = discountTooHigh,
+                    supportingText = if (discountTooHigh) ({ Text(stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())) }) else null,
+                )
+                OutlinedTextField(
+                    value = notes, onValueChange = { notes = it },
+                    label = { Text(stringResource(R.string.sale_notes)) }, modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
+        editing?.let { index ->
+            val line = lines.getOrNull(index) ?: return@let
+            val record = products.firstOrNull { it.product.id == line.productId } ?: return@let
+            LineSheet(
+                record = record,
+                line = line,
+                onDismiss = { editing = null },
+                onSave = { lines[index] = it; editing = null },
+                onDelete = { lines.removeAt(index); editing = null },
+            )
+        }
+        if (pickingDue) {
+            MankeuDatePicker(initial = runCatching { LocalDate.parse(due) }.getOrNull() ?: parsedDate, onDismiss = { pickingDue = false }) {
+                due = it.toString()
+                pickingDue = false
+            }
+        }
+        if (pickingProduct) {
+            PickerPage(
+                title = stringResource(R.string.sale_product_pick),
+                items = products,
+                itemLabel = { it.product.name },
+                itemDetail = { r -> r.units.sortedBy { it.sortOrder }.joinToString(" · ") { "${it.name} ${it.priceRupiah.toRupiah()}" }.ifBlank { null } },
+                onPick = { lines.add(newLine(it, history)); pickingProduct = false },
+                onClose = { pickingProduct = false },
+            )
+        }
+        if (pickingCustomer) {
+            PickerPage(
+                title = stringResource(R.string.contacts_pick_title),
+                items = contacts.filter { it.isCustomer || !it.isSupplier },
+                itemLabel = { it.name },
+                itemDetail = { it.phone },
+                onPick = { contactId = it.id; pickingCustomer = false },
+                onClose = { pickingCustomer = false },
+                // "Tambah 'Toko A'" creates the customer with that name and picks it (audit L13).
+                onAdd = { name -> onSaveContact(null, ContactDraft(name.trim()), { id -> contactId = id; pickingCustomer = false }, {}) },
+            )
         }
     }
 }
 
-/** The customer as a read-only field that opens the contact picker; "Umum" when none (F2-3). */
+/** A section label inside a form: the plain caption above chips or rows. */
 @Composable
-private fun CustomerField(name: String?, onOpen: () -> Unit, onClear: () -> Unit, isError: Boolean) {
-    Box(Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = name ?: stringResource(R.string.sale_customer_none),
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            label = { Text(stringResource(R.string.sale_customer)) },
-            supportingText = { Text(stringResource(R.string.sale_customer_hint)) },
-            isError = isError,
-            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-            trailingIcon = if (name != null) {
-                { IconButton(onClick = onClear) { Icon(Icons.Default.Close, contentDescription = stringResource(R.string.sale_customer_clear)) } }
-            } else {
-                null
-            },
-            modifier = Modifier.fillMaxWidth(),
+private fun FormLabel(text: String) {
+    Text(text, style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/**
+ * One note line as a compact row: "2 dus Keripik · Rp600.000" with its profit below; the text opens
+ * the line sheet, − and + change the count without opening anything.
+ */
+@Composable
+private fun NoteLineRow(title: String, amount: String?, profit: Long?, onClick: () -> Unit, onMinus: (() -> Unit)?, onPlus: () -> Unit) {
+    val semantic = LocalMankeuSemanticColors.current
+    Row(Modifier.fillMaxWidth().heightIn(min = Space.Row), verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            Modifier.weight(1f).clickable(role = Role.Button, onClick = onClick).padding(vertical = Space.Small),
+        ) {
+            Text(listOfNotNull(title, amount).joinToString(" · "), style = MankeuType.Body, fontWeight = FontWeight.SemiBold)
+            profit?.let {
+                Text(
+                    stringResource(if (it < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(it).toRupiah()),
+                    style = MankeuType.Caption,
+                    color = if (it <= 0) semantic.danger else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        IconButton(onClick = { onMinus?.invoke() }, enabled = onMinus != null) {
+            Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.sale_line_less, title))
+        }
+        IconButton(onClick = onPlus) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.sale_line_more, title))
+        }
+    }
+}
+
+/** The line sheet: unit (chips), quantity (stepper) and price (filled from the unit); Hapus removes the line. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () -> Unit, onSave: (SaleLineInput) -> Unit, onDelete: () -> Unit) {
+    var draft by remember(line) { mutableStateOf(line) }
+    LineEditSheet(
+        title = record.product.name,
+        onDismiss = onDismiss,
+        onSave = { onSave(draft) },
+        saveEnabled = TransactionCalculation.parseQuantity(draft.quantity) != null && (draft.price.toLongOrNull() ?: 0) > 0,
+        onDelete = onDelete,
+    ) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+            record.unitNames().forEach { unit ->
+                FilterChip(
+                    selected = draft.unit.equals(unit, ignoreCase = true),
+                    onClick = { draft = draft.copy(unit = unit, price = record.priceOf(unit)?.toString() ?: draft.price) },
+                    label = { Text(unit) },
+                )
+            }
+        }
+        QuantityStepper(value = draft.quantity, onValueChange = { draft = draft.copy(quantity = it) }, label = stringResource(R.string.sale_quantity))
+        val usual = record.priceOf(draft.unit)
+        MoneyInput(
+            label = stringResource(R.string.sale_price, draft.unit),
+            value = draft.price.toLongOrNull(),
+            onValueChange = { draft = draft.copy(price = it?.toString().orEmpty()) },
+            chips = listOfNotNull(usual?.takeIf { it.toString() != draft.price }?.let { MoneyChip(stringResource(R.string.sale_price_usual), it) }),
+            imeAction = ImeAction.Done,
         )
-        // Same reason as DateField: a read-only field eats taps, so the opener is a layer above it
-        // that stops short of the clear button.
-        Box(Modifier.matchParentSize().padding(end = if (name != null) 56.dp else 0.dp, bottom = 24.dp).clickable(onClick = onOpen))
     }
 }
 
@@ -450,7 +545,57 @@ private fun SaleNoteCard(record: SaleRecord, today: LocalDate, onClick: () -> Un
     }
 }
 
-/** A note with its lines and payments; Bayar (a short sheet), Ubah and Hapus fixed at the bottom. */
+/** The words of Kirim (U-3) from string resources. */
+@Composable
+fun shareWords() = ShareWords(
+    noteTitle = stringResource(R.string.share_note_title),
+    customer = stringResource(R.string.share_customer),
+    date = stringResource(R.string.share_date),
+    total = stringResource(R.string.share_total),
+    paid = stringResource(R.string.share_paid),
+    left = stringResource(R.string.share_left),
+    due = stringResource(R.string.share_due),
+    reminderTitle = stringResource(R.string.share_reminder_title),
+    reminderTotal = stringResource(R.string.share_reminder_total),
+    thanks = stringResource(R.string.share_thanks),
+)
+
+/** A stored note as the plain text of Kirim. */
+fun SaleRecord.toShareNote(products: List<ProductRecord>) = ShareNote(
+    date = LocalDate.ofEpochDay(sale.dateEpochDay),
+    lines = lines.sortedBy { it.sortOrder }.map { line ->
+        ShareLine(
+            product = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: "—",
+            quantity = TransactionCalculation.parseQuantity(line.quantityText)?.toDisplayQuantity() ?: line.quantityText,
+            unit = line.unitName,
+            unitPriceRupiah = line.unitPriceRupiah,
+            totalRupiah = line.totalRupiah,
+        )
+    },
+    total = total,
+    paid = paid,
+    due = dueDate,
+)
+
+/**
+ * Kirim: with a phone number, a choice between WhatsApp straight to that number and any other app;
+ * without one, straight to the share sheet. [onSend] gets the text and the WhatsApp link (null =
+ * the share sheet), so the screen never builds an Intent itself.
+ */
+@Composable
+fun SendChoice(text: String, phone: String?, onSend: (String, String?) -> Unit, onDismiss: () -> Unit) {
+    val link = ShareText.whatsAppLink(phone, text)
+    if (link == null) {
+        LaunchedEffect(text) { onSend(text, null); onDismiss() }
+        return
+    }
+    MankeuSheet(title = stringResource(R.string.share_title), onDismiss = onDismiss, confirmLabel = null) {
+        ListRowField(label = stringResource(R.string.share_whatsapp), value = phone.orEmpty(), onClick = { onSend(text, link); onDismiss() })
+        ListRowField(label = stringResource(R.string.share_other_app), value = "", onClick = { onSend(text, null); onDismiss() })
+    }
+}
+
+/** A note with its lines and payments; Kirim, Ubah and Bayar fixed at the bottom, Hapus at the end of the page. */
 @Composable
 fun SaleNoteDetailScreen(
     record: SaleRecord,
@@ -459,14 +604,25 @@ fun SaleNoteDetailScreen(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    businessName: String = "",
+    onSend: (text: String, whatsAppLink: String?) -> Unit = { _, _ -> },
+    onOpenCustomer: ((String) -> Unit)? = null,
 ) {
     var paying by rememberSaveable { mutableStateOf(false) }
+    var sending by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val words = shareWords()
     Column(modifier.fillMaxSize()) {
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(Space.Edge), verticalArrangement = Arrangement.spacedBy(Space.Field)) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(record.contact?.name ?: stringResource(R.string.sale_customer_none), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    val name = record.contact?.name ?: stringResource(R.string.sale_customer_none)
+                    val contactId = record.sale.contactId
+                    if (contactId != null && onOpenCustomer != null) {
+                        ListRowField(label = name, value = stringResource(R.string.customer_open), onClick = { onOpenCustomer(contactId) })
+                    } else {
+                        Text(name, style = MankeuType.Title)
+                    }
                     Text(
                         listOfNotNull(
                             LocalDate.ofEpochDay(record.sale.dateEpochDay).toDisplayDate(),
@@ -480,18 +636,18 @@ fun SaleNoteDetailScreen(
                     }
                 }
             }
-            item { Text(stringResource(R.string.sale_products), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black) }
+            item { Text(stringResource(R.string.sale_products), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             items(record.lines.sortedBy { it.sortOrder }, key = { it.id }) { line ->
                 val name = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: "—"
                 val quantity = TransactionCalculation.parseQuantity(line.quantityText)?.toDisplayQuantity() ?: line.quantityText
                 Column {
                     Row {
-                        Text("$name · $quantity ${line.unitName} × ${line.unitPriceRupiah.toRupiah()}", modifier = Modifier.weight(1f))
+                        Text("$quantity ${line.unitName} $name × ${line.unitPriceRupiah.toRupiah()}", modifier = Modifier.weight(1f))
                         Text(line.totalRupiah.toRupiah(), fontWeight = FontWeight.Bold)
                     }
                     Text(
                         stringResource(R.string.sale_line_result, line.totalRupiah.toRupiah(), line.hppRupiah.toRupiah(), (line.totalRupiah - line.hppRupiah).toRupiah()),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -504,51 +660,47 @@ fun SaleNoteDetailScreen(
                 }
             }
             if (record.sale.notes.isNotBlank()) item { Text(record.sale.notes) }
-            item { Text(stringResource(R.string.sale_payments), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black) }
+            item { Text(stringResource(R.string.sale_payments), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (record.payments.isEmpty()) {
                 item { Text(stringResource(R.string.sale_no_payments), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
             items(record.payments.sortedBy { it.date }, key = { it.id }) { payment ->
                 ReportRow(payment.date.toDisplayDate(), payment.amountRupiah.toRupiah())
             }
+            item {
+                TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.sale_delete_action), color = LocalMankeuSemanticColors.current.danger) }
+            }
         }
         Row(
-            Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.fillMaxWidth().padding(Space.Edge),
+            horizontalArrangement = Arrangement.spacedBy(Space.Small),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
-            Spacer(Modifier.weight(1f))
-            OutlinedButton(onClick = onEdit) { Text(stringResource(R.string.action_edit)) }
-            Button(onClick = { paying = true }, enabled = record.outstanding > 0) { Text(stringResource(R.string.sale_pay)) }
+            OutlinedButton(onClick = { sending = true }, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(Space.Small))
+                Text(stringResource(R.string.share_action))
+            }
+            OutlinedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_edit)) }
+            Button(onClick = { paying = true }, enabled = record.outstanding > 0, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.sale_pay)) }
         }
     }
 
+    if (sending) {
+        SendChoice(
+            text = ShareText.note(businessName, record.contact?.name, record.toShareNote(products), words),
+            phone = record.contact?.phone,
+            onSend = onSend,
+            onDismiss = { sending = false },
+        )
+    }
     if (paying) {
-        var amount by rememberSaveable { mutableStateOf(record.outstanding.toString()) }
-        var date by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
-        var error by remember { mutableStateOf<UiText?>(null) }
-        val value = amount.toLongOrNull() ?: 0
-        val parsed = runCatching { LocalDate.parse(date) }.getOrNull()
-        val amountOk = value in 1..record.outstanding
-        val dateOk = parsed != null && parsed.toEpochDay() >= record.sale.dateEpochDay
-        MankeuSheet(
-            title = stringResource(R.string.sale_pay_title),
+        PaySheet(
+            outstanding = record.outstanding,
+            earliest = LocalDate.ofEpochDay(record.sale.dateEpochDay),
             onDismiss = { paying = false },
-            confirmEnabled = amountOk && dateOk,
-            onConfirm = { error = null; onPay(value, parsed!!, { paying = false }, { error = it }) },
-        ) {
-            Text(stringResource(R.string.sale_left, record.outstanding.toRupiah()), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MoneyField(
-                stringResource(R.string.sale_pay_amount), amount,
-                isError = value > record.outstanding,
-                supportingText = { Text(stringResource(R.string.sale_max_amount, record.outstanding.toRupiah())) },
-            ) { amount = it }
-            DateField(value = date, label = stringResource(R.string.sale_pay_date), onValueChange = { date = it })
-            if (parsed != null && !dateOk) Text(stringResource(R.string.sale_pay_date_early), color = MaterialTheme.colorScheme.error)
-            // A refusal from the repository: the snackbar is behind this sheet.
-            error?.let { Text(it.resolve(), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
-        }
+            onPay = onPay,
+        )
     }
     if (confirmDelete) {
         MankeuSheet(
@@ -563,5 +715,46 @@ fun SaleNoteDetailScreen(
                 else stringResource(R.string.sale_delete_body, record.payments.size),
             )
         }
+    }
+}
+
+/**
+ * Terima bayar: the amount starts on what is left (with a "Lunas" chip to go back to it) and the
+ * date on today. Shared by a note's Bayar and the customer page.
+ */
+@Composable
+fun PaySheet(
+    outstanding: Long,
+    earliest: LocalDate,
+    onDismiss: () -> Unit,
+    onPay: (amountRupiah: Long, date: LocalDate, onDone: () -> Unit, onError: (UiText) -> Unit) -> Unit,
+    title: String = stringResource(R.string.sale_pay_title),
+) {
+    var amount by rememberSaveable { mutableStateOf<Long?>(outstanding) }
+    var date by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
+    var error by remember { mutableStateOf<UiText?>(null) }
+    val value = amount ?: 0
+    val parsed = runCatching { LocalDate.parse(date) }.getOrNull()
+    val amountOk = value in 1..outstanding
+    val dateOk = parsed != null && !parsed.isBefore(earliest)
+    MankeuSheet(
+        title = title,
+        onDismiss = onDismiss,
+        confirmEnabled = amountOk && dateOk,
+        onConfirm = { error = null; onPay(value, parsed!!, onDismiss, { error = it }) },
+    ) {
+        MoneyInput(
+            label = stringResource(R.string.sale_pay_amount),
+            value = amount,
+            onValueChange = { amount = it },
+            isError = value > outstanding,
+            supportingText = { Text(stringResource(R.string.sale_max_amount, outstanding.toRupiah())) },
+            chips = listOf(MoneyChip(stringResource(R.string.sale_paid_full), outstanding)),
+            imeAction = ImeAction.Done,
+        )
+        DateField(value = date, label = stringResource(R.string.sale_pay_date), onValueChange = { date = it })
+        if (parsed != null && !dateOk) Text(stringResource(R.string.sale_pay_date_early), color = MaterialTheme.colorScheme.error)
+        // A refusal from the repository: the snackbar is behind this sheet.
+        error?.let { Text(it.resolve(), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold) }
     }
 }

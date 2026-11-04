@@ -39,8 +39,10 @@ class CustomerBillsTest {
         )
         assertEquals(
             listOf(CustomerBill("Toko B", 500_000, 22), CustomerBill("Toko A", 300_000, 26), CustomerBill(null, 40_000, 1)),
-            bills,
+            bills.map { it.copy(contactId = null) },
         )
+        // U5: a named row carries its contact, so Beranda opens that customer's page.
+        assertEquals(listOf(true, true, false), bills.map { it.contactId != null })
     }
 
     /** U4 review I-1: "who owes me now". A note dated after today is not owed yet; customerless notes are one group. */
@@ -59,7 +61,7 @@ class CustomerBillsTest {
             ),
         )
         val bills = customerBills(sales, today)
-        assertEquals(listOf(CustomerBill("Toko A", 100_000, 1), CustomerBill(null, 100_000, 21)), bills)
+        assertEquals(listOf(CustomerBill("Toko A", 100_000, 1), CustomerBill(null, 100_000, 21)), bills.map { it.copy(contactId = null) })
         assertEquals("the card total is the sum of its rows", 200_000L, bills.sumOf { it.outstandingRupiah })
     }
 }

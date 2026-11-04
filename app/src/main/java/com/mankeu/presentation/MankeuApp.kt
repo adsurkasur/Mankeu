@@ -124,6 +124,7 @@ import com.mankeu.presentation.guide.HelpSheet
 import com.mankeu.presentation.guide.articlesFor
 import com.mankeu.presentation.guide.LocalOpenHelp
 import com.mankeu.presentation.screens.ContactsScreen
+import com.mankeu.presentation.screens.CustomerScreen
 import com.mankeu.presentation.screens.DataFocus
 import com.mankeu.presentation.screens.ProductionSheet
 import com.mankeu.presentation.components.form.PickerPage
@@ -166,7 +167,7 @@ enum class Destination(val labelRes: Int, val icon: ImageVector) {
 /** The speed dial lives on Catatan only; Beranda has its own Jual / Belanja / Produksi buttons (U4). */
 private val RECORDING_DESTINATIONS = setOf(Destination.ENTRY)
 
-enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY, CONTACTS, SALE_EDITOR, SALE_DETAIL, PLAN, PICK_PRODUCT }
+enum class Overlay { NONE, DATA, SETTINGS, HELP, PRODUCT, STOCK_HISTORY, CONTACTS, SALE_EDITOR, SALE_DETAIL, PLAN, PICK_PRODUCT, CUSTOMER, MONEY_FORM }
 
 /** The labelled Lainnya menu in the header (U4, plan ruling 5); replaces the three unlabelled icons. */
 enum class MoreItem(val labelRes: Int, val icon: ImageVector) {
@@ -248,8 +249,21 @@ fun MankeuApp(
     var saleDetailId by rememberSaveable { mutableStateOf<String?>(null) }
     var noteFilter by rememberSaveable { mutableStateOf(NoteFilter.OPEN) }
     val openSaleEditor: (String?) -> Unit = { id -> saleEditorId = id; overlay = Overlay.SALE_EDITOR }
-    val openSaleDetail: (String) -> Unit = { id -> saleDetailId = id; overlay = Overlay.SALE_DETAIL }
+    // A note opened from a customer's page returns there.
+    var saleDetailFrom by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    val openSaleDetail: (String) -> Unit = { id ->
+        saleDetailId = id
+        saleDetailFrom = if (overlay == Overlay.CUSTOMER) Overlay.CUSTOMER else Overlay.NONE
+        overlay = Overlay.SALE_DETAIL
+    }
     val openBills: (NoteFilter) -> Unit = { filter -> noteFilter = filter; destination = Destination.ENTRY }
+    val businessName = state.businesses.firstOrNull { it.id == state.selectedBusinessId }?.name.orEmpty()
+    // Kirim (U-3): the screens hand over text and, with a phone number, a wa.me link; only this layer builds Intents.
+    val sendText: (String, String?) -> Unit = { text, link -> shareText(context, text, link) }
+    // The customer page (U5): sisa tagihan, notes, Terima bayar, Kirim pengingat.
+    var customerId by rememberSaveable { mutableStateOf<String?>(null) }
+    var customerFrom by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    val openCustomer: (String) -> Unit = { id -> customerId = id; customerFrom = overlay; overlay = Overlay.CUSTOMER }
     // Set the instant the owner picks a language, cleared only by the Activity being rebuilt.
     // recreate() is not instantaneous — resources reload and the whole tree recomposes — and
     // without this the screen simply froze on the old language for a beat and then snapped.
@@ -405,6 +419,8 @@ fun MankeuApp(
             // Ubah from a note's detail returns to that detail; Kontak returns to Berkas dan Data.
             overlay == Overlay.SALE_EDITOR && saleEditorId != null -> overlay = Overlay.SALE_DETAIL
             overlay == Overlay.CONTACTS -> overlay = contactsFrom
+            overlay == Overlay.CUSTOMER -> overlay = customerFrom
+            overlay == Overlay.SALE_DETAIL -> overlay = saleDetailFrom
             overlay == Overlay.PRODUCT -> overlay = productFrom
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             else -> destination = Destination.HOME
@@ -549,6 +565,7 @@ fun MankeuApp(
                                             onSave = viewModel::saveContact,
                                             onArchive = viewModel::archiveContact,
                                             initialSearch = contactsSearch,
+                                            onOpen = openCustomer,
                                         )
                                     }
                                 }
@@ -578,29 +595,25 @@ fun MankeuApp(
                                     onClose = { overlay = Overlay.NONE },
                                 )
 
-                                Overlay.SALE_EDITOR -> OverlayScaffold(
-                                    title = stringResource(if (saleEditorId == null) R.string.sale_title_new else R.string.sale_title_edit),
-                                    onBack = { overlay = if (saleEditorId != null) Overlay.SALE_DETAIL else Overlay.NONE },
-                                    snackbarHost = snackbarHost,
-                                ) {
-                                    key(saleEditorId) {
-                                        SaleNoteEditorScreen(
-                                            existing = state.sales.firstOrNull { it.sale.id == saleEditorId },
-                                            products = state.products,
-                                            materials = state.stockItems,
-                                            contacts = state.contacts,
-                                            sales = state.businessSales,
-                                            payables = state.businessPayables,
-                                            // Closed only once saved: a refusal keeps the owner's input and shows why.
-                                            onSave = { draft ->
-                                                viewModel.saveSale(saleEditorId, draft) { id ->
-                                                    if (saleEditorId != null) openSaleDetail(id) else overlay = Overlay.NONE
-                                                }
-                                            },
-                                            onSaveContact = viewModel::saveContact,
-                                            onArchiveContact = viewModel::archiveContact,
-                                        )
-                                    }
+                                Overlay.SALE_EDITOR -> key(saleEditorId) {
+                                    val closeEditor = { overlay = if (saleEditorId != null) Overlay.SALE_DETAIL else Overlay.NONE }
+                                    SaleNoteEditorScreen(
+                                        title = stringResource(if (saleEditorId == null) R.string.sale_title_new else R.string.sale_title_edit),
+                                        existing = state.sales.firstOrNull { it.sale.id == saleEditorId },
+                                        products = state.products,
+                                        materials = state.stockItems,
+                                        contacts = state.contacts,
+                                        sales = state.sales,
+                                        // Closed only once saved: a refusal keeps the owner's input and shows why.
+                                        onSave = { draft ->
+                                            viewModel.saveSale(saleEditorId, draft) { id ->
+                                                if (saleEditorId != null) openSaleDetail(id) else overlay = Overlay.NONE
+                                            }
+                                        },
+                                        onSaveContact = viewModel::saveContact,
+                                        onClose = closeEditor,
+                                        snackbarHost = snackbarHost,
+                                    )
                                 }
 
                                 Overlay.SALE_DETAIL -> {
@@ -609,7 +622,7 @@ fun MankeuApp(
                                     LaunchedEffect(record == null) { if (record == null) overlay = Overlay.NONE }
                                     OverlayScaffold(
                                         title = stringResource(R.string.sale_detail_title),
-                                        onBack = { overlay = Overlay.NONE },
+                                        onBack = { overlay = saleDetailFrom },
                                         snackbarHost = snackbarHost,
                                     ) {
                                         record?.let {
@@ -619,10 +632,41 @@ fun MankeuApp(
                                                 onPay = { amount, date, onDone, onError -> viewModel.paySale(it.sale.id, amount, date, onDone, onError) },
                                                 onEdit = { openSaleEditor(it.sale.id) },
                                                 onDelete = { viewModel.deleteSale(it.sale.id) },
+                                                businessName = businessName,
+                                                onSend = sendText,
+                                                onOpenCustomer = openCustomer,
                                             )
                                         }
                                     }
                                 }
+
+                                Overlay.CUSTOMER -> {
+                                    val contact = state.contacts.firstOrNull { it.id == customerId }
+                                    // Archived here or synced away while open.
+                                    LaunchedEffect(contact == null) { if (contact == null) overlay = customerFrom }
+                                    OverlayScaffold(
+                                        title = contact?.name.orEmpty(),
+                                        onBack = { overlay = customerFrom },
+                                        snackbarHost = snackbarHost,
+                                    ) {
+                                        contact?.let { c ->
+                                            CustomerScreen(
+                                                contact = c,
+                                                sales = state.businessSales.filter { it.sale.contactId == c.id },
+                                                products = state.products,
+                                                others = state.contacts,
+                                                businessName = businessName,
+                                                onOpenNote = openSaleDetail,
+                                                onPay = viewModel::payCustomer,
+                                                onSend = sendText,
+                                                onSaveContact = viewModel::saveContact,
+                                                onArchiveContact = viewModel::archiveContact,
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Overlay.MONEY_FORM -> {}
 
                                 Overlay.SETTINGS -> OverlayScaffold(
                                     title = stringResource(R.string.settings_title),
@@ -755,6 +799,7 @@ fun MankeuApp(
                                                     onOpenPlan = { overlay = Overlay.PLAN },
                                                     onProduce = onProduce,
                                                     onOpenContact = openContacts,
+                                                    onOpenCustomer = openCustomer,
                                                     requestedKind = requestedEntryKind,
                                                     requestedPurchase = requestedPurchase,
                                                     onBuyMaterial = buyMaterial,
@@ -797,6 +842,7 @@ fun MankeuApp(
                                                 onOpenPlan = { overlay = Overlay.PLAN },
                                                 onProduce = onProduce,
                                                 onOpenContact = openContacts,
+                                                onOpenCustomer = openCustomer,
                                                 requestedKind = requestedEntryKind,
                                                 requestedPurchase = requestedPurchase,
                                                 onBuyMaterial = buyMaterial,
@@ -1295,6 +1341,7 @@ private fun ScreenContent(
     onOpenPlan: () -> Unit,
     onProduce: () -> Unit,
     onOpenContact: (String) -> Unit,
+    onOpenCustomer: (String) -> Unit,
     requestedKind: FinancialEventType? = null,
     requestedPurchase: Pair<String, String>? = null,
     onBuyMaterial: (String, java.math.BigDecimal) -> Unit = { _, _ -> },
@@ -1326,6 +1373,7 @@ private fun ScreenContent(
                     onProduce = onProduce,
                     onNewProduct = { onOpenProduct(null) },
                     onOpenContact = onOpenContact,
+                    onOpenCustomer = onOpenCustomer,
                     expanded = expanded,
                 )
                 Destination.PRODUCTS -> ProductsScreen(
@@ -1404,6 +1452,26 @@ private fun LanguageSwitchOverlay(visible: Boolean) {
             }
         }
     }
+}
+
+/**
+ * Kirim (U-3, DEC-030 §8): WhatsApp straight to [link] when there is one, falling back to the share
+ * sheet when WhatsApp is not installed; otherwise the share sheet with plain [text].
+ */
+private fun shareText(context: android.content.Context, text: String, link: String?) {
+    val chooser = android.content.Intent.createChooser(
+        android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text),
+        null,
+    )
+    if (link != null) {
+        try {
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link)))
+            return
+        } catch (_: android.content.ActivityNotFoundException) {
+            // No WhatsApp: any other app instead.
+        }
+    }
+    context.startActivity(chooser)
 }
 
 /** "Laundry Kiloan (Cab. 2)" → "laundry-kiloan-cab-2", safe in any file picker. */

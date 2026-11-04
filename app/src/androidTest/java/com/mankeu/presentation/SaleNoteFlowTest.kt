@@ -132,6 +132,42 @@ class SaleNoteFlowTest {
         settle()
     }
 
+    /**
+     * U5, audit table "jual 2 dus ke Toko A, belum bayar, jatuh tempo 14 hari": the note opens with
+     * no box to type in (product line, customer chips and payment segment only), starts on the last
+     * product and unit sold, and the whole sale is chip, +, segment, chip, Simpan.
+     */
+    @Test
+    fun theDailySaleIsFiveTapsWithNoTyping() {
+        runBlocking {
+            val tokoA = repository.saveContact(businessId, null, ContactDraft("Toko A"))
+            repository.saveSale(projectId, null, SaleDraft(tokoA, LocalDate.now().minusDays(3), null, 0, "", listOf(SaleLineDraft(keripik, "dus", "1", 300_000)), paidNowRupiah = 300_000))
+        }
+        start()
+        click("Jual")
+        exists("Nota penjualan baru")
+        // Field count on open (P2: at most 4 visible, outlined boxes only for typing).
+        assertEquals(0, compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size)
+        exists("1 dus Keripik · Rp300.000")
+        assertEquals(0, compose.onAllNodesWithText("Jatuh tempo", substring = true).fetchSemanticsNodes().size)
+
+        click("Toko A")
+        clickDescription("Tambah 1 dus Keripik")
+        exists("2 dus Keripik · Rp600.000")
+        click("Belum dibayar")
+        click("14 hari")
+        exists("Total Rp600.000")
+        exists("untung Rp120.000")
+        click("Simpan")
+
+        compose.waitUntil(5_000) { runBlocking { repository.sales(projectId).first() }.size == 2 }
+        val note = runBlocking { repository.sales(projectId).first() }.single { it.sale.dateEpochDay == LocalDate.now().toEpochDay() }
+        assertEquals("Toko A", note.contact?.name)
+        assertEquals(600_000L, note.total)
+        assertEquals(0L, note.paid)
+        assertEquals(LocalDate.now().plusDays(14), note.dueDate)
+    }
+
     @Test
     fun aNoteWithTwoProductsShowsTotalDiscountAndProfitAndAnUnpaidNoteNeedsACustomer() {
         start()
@@ -141,32 +177,36 @@ class SaleNoteFlowTest {
         click("Nota penjualan")
         exists("Nota penjualan baru")
 
-        pick("Produk", "Keripik")
-        pick("Satuan", "dus")
-        type("Jumlah", "2")
+        // No note yet: the first product, its main unit. The line sheet changes unit and quantity.
+        click("1 bungkus Keripik")
+        click("dus")
+        clickDescription("Tambah Jumlah")
+        click("Simpan")
         // 2 dus: Rp600.000, HPP 2 × 240.000.
-        exists("Rp600.000 · HPP Rp480.000 · untung Rp120.000")
+        exists("2 dus Keripik · Rp600.000")
+        exists("untung Rp120.000")
 
         click("Tambah produk")
-        pick("Produk", "Kopi", index = 1)
-        type("Jumlah", "3", index = 1)
-        exists("Rp30.000 · HPP Rp9.000 · untung Rp21.000")
+        click("Kopi")
+        clickDescription("Tambah 1 gelas Kopi")
+        clickDescription("Tambah 2 gelas Kopi")
+        exists("3 gelas Kopi · Rp30.000")
 
+        click("+ Tambah detail")
         type("Diskon", "30000")
-        exists("Rp630.000")
-        exists("Rp30.000")
         // Total 600.000; untung 600.000 − 489.000.
-        exists("Rp111.000")
+        exists("Total Rp600.000")
+        exists("untung Rp111.000")
 
         click("Belum dibayar")
+        exists("Belum lunas? Pilih pelanggannya.")
         click("Simpan")
         exists("Pilih pelanggan untuk nota yang belum lunas.")
         // Refused: the page stays open with the owner's input.
         exists("Nota penjualan baru")
-        exists("Rp111.000")
+        exists("untung Rp111.000")
         assertTrue(runBlocking { repository.sales(projectId).first() }.isEmpty())
     }
-
     @Test
     fun payingFromTheDetailChangesTheStatus() {
         runBlocking {
@@ -182,7 +222,7 @@ class SaleNoteFlowTest {
         exists("Belum dibayar")
         click("Bayar")
         exists("Bayar nota")
-        type("Nominal", "200000")
+        type("Jumlah dibayar", "200000")
         click("Simpan")
         exists("Sebagian")
         exists("Sisa Rp400.000")
@@ -223,30 +263,56 @@ class SaleNoteFlowTest {
         click("Catatan")
         click("Bu Sari")
         click("Bayar")
-        type("Nominal", "999999999")
+        type("Jumlah dibayar", "999999999")
         exists("Maks Rp600.000")
         saveButton().assertIsNotEnabled()
-        type("Nominal", "600000")
+        type("Jumlah dibayar", "600000")
         saveButton().assertIsEnabled()
     }
 
-    /** Review I-2: a name already in the business is caught in the contact sheet, not behind it. */
+    /** Review I-2 (U5): a name already in the business is offered, not added twice: no "Tambah" row for it. */
     @Test
-    fun aDuplicateContactNameIsShownInTheSheet() {
+    fun aDuplicateContactNameIsNotOfferedAsNew() {
         seedUnpaidNote()
         start()
-        // U4: the speed dial lives on Catatan.
-        click("Catatan")
-        clickDescription("Catat")
-        click("Nota penjualan")
-        // A touch, as the owner taps: the read-only field's own OnClick only focuses it.
-        settle()
-        compose.onAllNodesWithText("Umum (tanpa nama)", useUnmergedTree = true)[0].performClick()
-        settle()
-        click("Tambah kontak baru")
-        type("Nama", "bu sari")
-        exists("Kontak \"bu sari\" sudah ada.")
-        saveButton().assertIsNotEnabled()
+        click("Jual")
+        click("Cari / tambah")
+        exists("Pilih pelanggan")
+        search("bu sari")
+        exists("Bu Sari")
+        assertEquals(0, compose.onAllNodesWithText("Tambah 'bu sari'", substring = true).fetchSemanticsNodes().size)
+        search("Toko Baru")
+        click("Tambah 'Toko Baru'")
+        // Created and picked: the chip is selected on the note.
+        exists("Toko Baru")
+        compose.waitUntil(5_000) { runBlocking { repository.contacts(businessId).first() }.any { it.name == "Toko Baru" } }
+    }
+
+    /**
+     * U5, audit table "terima bayar dari Toko A": Beranda's Tagihan row opens the customer page;
+     * Terima bayar starts on everything left and pays the open notes oldest first.
+     */
+    @Test
+    fun terimaBayarFromTheCustomerPagePaysOldestNotesFirst() {
+        val (older, newer) = runBlocking {
+            val tokoA = repository.saveContact(businessId, null, ContactDraft("Toko A", phone = "0812 3456 789"))
+            val older = repository.saveSale(projectId, null, SaleDraft(tokoA, LocalDate.now().minusDays(5), null, 0, "", listOf(SaleLineDraft(keripik, "dus", "1", 300_000)), paidNowRupiah = 0))
+            val newer = repository.saveSale(projectId, null, SaleDraft(tokoA, LocalDate.now(), null, 0, "", listOf(SaleLineDraft(keripik, "dus", "2", 300_000)), paidNowRupiah = 0))
+            older to newer
+        }
+        start()
+        click("Toko A")
+        exists("Sisa tagihan")
+        exists("Rp900.000")
+        click("Terima bayar")
+        exists("Terima bayar dari Toko A")
+        type("Jumlah dibayar", "400000")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.sales(projectId).first() }.sumOf { it.paid } == 400_000L }
+        val sales = runBlocking { repository.sales(projectId).first() }
+        assertEquals(300_000L, sales.single { it.sale.id == older }.paid)
+        assertEquals(100_000L, sales.single { it.sale.id == newer }.paid)
+        exists("Rp500.000")
     }
 
     /** Review I-3: contacts are per business, so what a customer owes counts every unit. */
@@ -317,12 +383,11 @@ class SaleNoteFlowTest {
         settle()
     }
 
-    private fun pick(fieldLabel: String, option: String, index: Int = 0) {
+    /** The picker's search box: the only text field while the picker is open. */
+    private fun search(value: String) {
         settle()
-        scrollTo(fieldLabel)
-        compose.onAllNodes(hasText(fieldLabel, substring = true) and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))[index].performClick()
-        settle()
-        compose.onAllNodesWithText(option, useUnmergedTree = true).let { it[it.fetchSemanticsNodes().size - 1] }.performClick()
+        compose.onAllNodes(hasSetTextAction())[0].fetchSemanticsNode().config[SemanticsActions.SetText].action?.invoke(AnnotatedString(value))
         settle()
     }
+
 }

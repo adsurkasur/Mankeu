@@ -85,6 +85,8 @@ fun HomeScreen(
     onNewProduct: () -> Unit = {},
     /** Kontak, searched on this name ("" = the whole list). U5 replaces it with the customer page. */
     onOpenContact: (String) -> Unit = {},
+    /** A named Tagihan row opens that customer's page (U5). */
+    onOpenCustomer: (String) -> Unit = {},
     expanded: Boolean = false,
 ) {
     val month = state.thisMonth
@@ -176,7 +178,7 @@ fun HomeScreen(
                 BillsCard(
                     totalRupiah = bills.sumOf { it.outstandingRupiah },
                     bills = bills,
-                    onOpenContact = onOpenContact,
+                    onOpenCustomer = onOpenCustomer,
                     onReceive = { onOpenBills(NoteFilter.OPEN) },
                 )
             }
@@ -206,7 +208,7 @@ fun HomeScreen(
 }
 
 /** What one customer still owes on open notes, and how long the oldest of them has been open. [name] null = "Umum". */
-internal data class CustomerBill(val name: String?, val outstandingRupiah: Long, val ageDays: Int)
+internal data class CustomerBill(val name: String?, val outstandingRupiah: Long, val ageDays: Int, val contactId: String? = null)
 
 /**
  * Open notes dated up to [today], grouped by customer, largest debt first. Notes without a customer are one
@@ -217,7 +219,7 @@ internal fun customerBills(sales: List<SaleRecord>, today: LocalDate): List<Cust
         .groupBy { it.contact?.id }
         .map { (_, notes) ->
             val oldest = LocalDate.ofEpochDay(notes.minOf { it.sale.dateEpochDay })
-            CustomerBill(notes.first().contact?.name, notes.sumOf { it.outstanding }, ChronoUnit.DAYS.between(oldest, today).toInt().coerceAtLeast(0))
+            CustomerBill(notes.first().contact?.name, notes.sumOf { it.outstanding }, ChronoUnit.DAYS.between(oldest, today).toInt().coerceAtLeast(0), notes.first().contact?.id)
         }
         .sortedByDescending { it.outstandingRupiah }
 
@@ -302,7 +304,7 @@ private fun QuickAction(label: String, icon: ImageVector, onClick: () -> Unit, m
 }
 
 @Composable
-private fun BillsCard(totalRupiah: Long, bills: List<CustomerBill>, onOpenContact: (String) -> Unit, onReceive: () -> Unit) {
+private fun BillsCard(totalRupiah: Long, bills: List<CustomerBill>, onOpenCustomer: (String) -> Unit, onReceive: () -> Unit) {
     val semantic = LocalMankeuSemanticColors.current
     val noName = stringResource(R.string.home_bill_no_name)
     MankeuCard {
@@ -317,7 +319,7 @@ private fun BillsCard(totalRupiah: Long, bills: List<CustomerBill>, onOpenContac
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = Space.Row)
-                        .clickable(role = Role.Button) { if (bill.name != null) onOpenContact(bill.name) else onReceive() },
+                        .clickable(role = Role.Button) { if (bill.contactId != null) onOpenCustomer(bill.contactId) else onReceive() },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Space.Field),
                 ) {

@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -58,6 +60,8 @@ fun FullPageForm(
     modifier: Modifier = Modifier,
     saveEnabled: Boolean = true,
     result: (@Composable () -> Unit)? = null,
+    /** The shell's snackbar, so a refusal from the repository shows on this page (it stays open). */
+    snackbarHost: SnackbarHostState? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
@@ -66,6 +70,7 @@ fun FullPageForm(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = { PageTopBar(title, onBack = close) },
+        snackbarHost = { snackbarHost?.let { SnackbarHost(it) } },
         bottomBar = {
             Column(
                 Modifier

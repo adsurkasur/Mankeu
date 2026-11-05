@@ -754,20 +754,19 @@ fun MankeuApp(
                                     HelpCenter(article = helpArticle, onOpen = { helpArticle = it }, onShow = show)
                                 }
 
-                                Overlay.PRODUCT -> OverlayScaffold(
-                                    title = stringResource(if (productEditorId == null) R.string.editor_title_new else R.string.editor_title_edit),
-                                    onBack = { overlay = productFrom },
-                                    snackbarHost = snackbarHost,
-                                ) {
-                                    key(productEditorId) {
-                                        ProductEditorScreen(
-                                            existing = state.products.firstOrNull { it.product.id == productEditorId },
-                                            materials = state.stockItems,
-                                            // Closed only once saved: a refusal keeps the owner's input and shows why.
-                                            onSave = { viewModel.saveProduct(productEditorId, it) { overlay = productFrom } },
-                                            onDelete = productEditorId?.let { id -> { viewModel.archiveProduct(id); overlay = productFrom } },
-                                        )
-                                    }
+                                Overlay.PRODUCT -> key(productEditorId) {
+                                    ProductEditorScreen(
+                                        title = stringResource(if (productEditorId == null) R.string.editor_title_new else R.string.editor_title_edit),
+                                        existing = state.products.firstOrNull { it.product.id == productEditorId },
+                                        materials = state.stockItems,
+                                        // Closed only once saved: a refusal keeps the owner's input and shows why.
+                                        onSave = { viewModel.saveProduct(productEditorId, it) { overlay = productFrom } },
+                                        onDelete = productEditorId?.let { id -> { viewModel.archiveProduct(id); overlay = productFrom } },
+                                        onClose = { overlay = productFrom },
+                                        // Target and sell-from month belong to Rencana usaha (U5): shown only when opened from there.
+                                        showPlan = productFrom == Overlay.PLAN,
+                                        snackbarHost = snackbarHost,
+                                    )
                                 }
 
                                 Overlay.STOCK_HISTORY -> {

@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.mankeu.R
 import com.mankeu.data.CategoryEntity
 import com.mankeu.domain.CategoryRole
+import com.mankeu.domain.DefaultMasterData
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.MoneyEvent
 import com.mankeu.domain.StockItem
@@ -156,7 +157,16 @@ fun MoneyFormScreen(
         else -> allowed.firstOrNull { it.id == categoryId }
     }
     LaunchedEffect(mode, allowed.size, material == null) {
-        if (mode != MoneyFormMode.CAPITAL && material == null && allowed.none { it.id == categoryId }) categoryId = defaultCategoryId(allowed, state.events)
+        if (mode != MoneyFormMode.CAPITAL && material == null && allowed.none { it.id == categoryId }) {
+            categoryId = if (mode == MoneyFormMode.OTHER_IN && state.products.isNotEmpty()) {
+                // A business with products sells through notes (audit L16): money in here is "other",
+                // so it starts on the last such category used, else the last starting income category.
+                state.events.firstOrNull { e -> e.saleId == null && allowed.any { it.id == e.categoryId } }?.categoryId
+                    ?: allowed.maxByOrNull { c -> DefaultMasterData.categories.indexOfFirst { it.name == c.name } }?.id
+            } else {
+                defaultCategoryId(allowed, state.events)
+            }
+        }
     }
     LaunchedEffect(state.categories, pendingCategory) {
         pendingCategory?.let { name -> state.categories.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { categoryId = it.id; pendingCategory = null } }

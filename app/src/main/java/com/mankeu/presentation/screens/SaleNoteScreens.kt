@@ -135,6 +135,13 @@ private fun newLine(record: ProductRecord, history: List<SaleRecord>): SaleLineI
     return SaleLineInput(record.product.id, unit, "1", record.priceOf(unit)?.toString().orEmpty())
 }
 
+/** A new note's line: the product last sold in [history] (else the first product), in its last unit, quantity 1. */
+private fun startLines(products: List<ProductRecord>, history: List<SaleRecord>): List<SaleLineInput> {
+    val first = history.asSequence().flatMap { it.lines.sortedBy { l -> l.sortOrder }.asSequence() }
+        .mapNotNull { l -> products.firstOrNull { it.product.id == l.productId } }.firstOrNull() ?: products.firstOrNull()
+    return listOfNotNull(first?.let { newLine(it, history) })
+}
+
 /**
  * The sales note (spec #17, F2-3, U5): what → how much → who → payment → details, at most four
  * things on screen. Product lines are compact rows ("2 dus Keripik · Rp600.000") with − and + for
@@ -176,10 +183,18 @@ fun SaleNoteEditorScreen(
     val lines = rememberSaveable(saver = saleLineSaver) {
         val stored = existing?.lines.orEmpty().sortedBy { it.sortOrder }
             .map { SaleLineInput(it.productId, it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
-        // A new note starts on the product last sold, so the common sale is one tap on +.
-        val first = history.asSequence().flatMap { it.lines.sortedBy { l -> l.sortOrder }.asSequence() }
-            .mapNotNull { l -> products.firstOrNull { it.product.id == l.productId } }.firstOrNull() ?: products.firstOrNull()
-        (if (existing != null) stored else listOfNotNull(first?.let { newLine(it, history) })).toMutableStateList()
+        (if (existing != null) stored else startLines(products, history)).toMutableStateList()
+    }
+    // Until the owner touches the lines, picking a customer restarts them on what that customer
+    // last bought ("Toko A takes dus", audit L12): the untouched default follows the customer.
+    val untouched = existing == null && lines.toList() == startLines(products, history.filter { contactId != null && it.sale.contactId == contactId }.ifEmpty { history })
+    val pickCustomer = { id: String? ->
+        if (untouched) {
+            val next = startLines(products, history.filter { id != null && it.sale.contactId == id }.ifEmpty { history })
+            lines.clear()
+            lines.addAll(next)
+        }
+        contactId = id
     }
     val snapshot = listOf(lines.toList(), contactId, date, due, discount, notes, paidChoice, partAmount)
     val initial = rememberSaveable { snapshot.toString() }
@@ -273,9 +288,9 @@ fun SaleNoteEditorScreen(
             // Who.
             FormLabel(stringResource(R.string.sale_customer))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-                FilterChip(selected = contactId == null, onClick = { contactId = null }, label = { Text(stringResource(R.string.sale_customer_general)) })
+                FilterChip(selected = contactId == null, onClick = { pickCustomer(null) }, label = { Text(stringResource(R.string.sale_customer_general)) })
                 recent.forEach { c ->
-                    FilterChip(selected = contactId == c.id, onClick = { contactId = c.id }, label = { Text(c.name) })
+                    FilterChip(selected = contactId == c.id, onClick = { pickCustomer(c.id) }, label = { Text(c.name) })
                 }
                 AssistChip(
                     onClick = { pickingCustomer = true },
@@ -383,7 +398,7 @@ fun SaleNoteEditorScreen(
                 items = contacts.filter { it.isCustomer || !it.isSupplier },
                 itemLabel = { it.name },
                 itemDetail = { it.phone },
-                onPick = { contactId = it.id; pickingCustomer = false },
+                onPick = { pickCustomer(it.id); pickingCustomer = false },
                 onClose = { pickingCustomer = false },
                 // "Tambah 'Toko A'" creates the customer with that name and picks it (audit L13).
                 onAdd = { name -> onSaveContact(null, ContactDraft(name.trim()), { id -> contactId = id; pickingCustomer = false }, {}) },
@@ -749,7 +764,8 @@ fun PaySheet(
             onValueChange = { amount = it },
             isError = value > outstanding,
             supportingText = { Text(stringResource(R.string.sale_max_amount, outstanding.toRupiah())) },
-            chips = listOf(MoneyChip(stringResource(R.string.sale_paid_full), outstanding)),
+            // Only when the amount was changed: it starts on what is left.
+            chips = listOfNotNull(MoneyChip(stringResource(R.string.sale_paid_full), outstanding).takeIf { amount != outstanding }),
             imeAction = ImeAction.Done,
         )
         DateField(value = date, label = stringResource(R.string.sale_pay_date), onValueChange = { date = it })

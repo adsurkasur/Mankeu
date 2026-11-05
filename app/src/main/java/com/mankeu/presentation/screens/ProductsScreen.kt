@@ -45,6 +45,7 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.components.DateField
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.MankeuSheet
+import com.mankeu.presentation.components.form.QuantityStepper
 import com.mankeu.presentation.components.form.ResultBar
 import com.mankeu.presentation.components.sanitizeDecimal
 import com.mankeu.presentation.guide.HelpArticle
@@ -198,7 +199,8 @@ internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, 
         confirmEnabled = parsed != null,
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
-        QuantityInput(stringResource(R.string.production_batches), batches) { batches = it }
+        // − 1 + (audit L10): batches are nearly always 1–3; still typeable, decimals allowed.
+        QuantityStepper(value = batches, onValueChange = { batches = it }, label = stringResource(R.string.production_batches))
         DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
         // The live result above Simpan (P2 §7). U-2: the recipe's materials leave their stock (quantity per batch × batches).
         parsed?.let {

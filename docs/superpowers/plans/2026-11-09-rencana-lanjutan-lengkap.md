@@ -102,7 +102,7 @@ Pemilik berulang kali kena limit, jadi efisiensi adalah syarat kerja, bukan sara
 | Branch `fase2-nota-piutang` | 31 commit di atas main, HEAD `b1b865b`, sudah di-push sebagai cadangan. **Belum di-merge**, karena template Excel belum membawa nota/kontak/titip sehingga DEC-012 belum terpenuhi (paket G). |
 | Fase 2 | Task 1–5 selesai dan direview: matematika nota/untung/titip, schema 14 + migrasi 13→14 + BackupUpgrade, repository nota/bayar/tempo/titip, untung saat terjual (F2-8), layar Kontak/Nota/Tagihan. **Task 6–8 belum** (paket F, G, H). |
 | Fase UX (audit 2026-10-30) | U1 komponen form + token, U2 `MonthlySummary`, U3 stok bahan nyata, dan U4 Beranda + navigasi baru (saklar Rencana/Realisasi dihapus, menu "Lainnya") selesai dan direview. **U5 (semua form dirombak) selesai tetapi BELUM direview** (paket A). U6–U9 belum. |
-| Tes (dijalankan penyusun di HEAD `b1b865b`) | Unit **139 lulus, 0 gagal**. `lintDebug` dan `assembleDebug` hijau. Instrumented: lihat bagian 8 (dijalankan di latar saat dokumen ini ditulis). |
+| Tes (dijalankan penyusun di HEAD `b1b865b`) | Unit **139 lulus, 0 gagal**. `lintDebug` dan `assembleDebug` hijau. Instrumented **130 tes, 0 gagal, 2 dilewati**. Catatan: tes hijau tetapi pemilik masih menemukan banyak bug dan jitter saat memakai app (Paket N). |
 | Ukuran ketukan tugas harian (U5, emulator) | Jual 2 dus ke Toko A belum dibayar, jatuh tempo 14 hari: **6** (target 6–7). Belanja minyak 10 liter: **3** (harga sama) / **5** (harga baru). Terima bayar: **3**. Produksi: **3**. |
 
 Laporan agen sebelumnya ada di `.superpowers/sdd/2026-10-30-fase-ux/` dan `.superpowers/sdd/2026-10-29-fase2-nota-piutang/`.
@@ -503,4 +503,4 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 Format baris: `- YYYY-MM-DD HH:MM — Paket X — selesai/berhenti di … — commit — bukti tes — catatan`.
 
 - 2026-11-09 — Penyusun (read-only/test-only): dokumen ini ditulis. Di HEAD `b1b865b`: unit 139 lulus / 0 gagal,
-  lintDebug dan assembleDebug hijau. Hasil instrumented penuh: (diisi setelah run selesai, lihat baris berikut).
+  lintDebug dan assembleDebug hijau. Instrumented penuh: 130 tes, 0 gagal, 2 dilewati (Help/ModuleScreenshotTest, seperti biasa).

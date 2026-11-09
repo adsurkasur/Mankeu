@@ -502,6 +502,7 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 
 Format baris: `- YYYY-MM-DD HH:MM — Paket X — selesai/berhenti di … — commit — bukti tes — catatan`.
 
-- 2026-11-09 15:32 — Paket A — selesai — commit 9eec505 — unit 139/0, lintDebug hijau (0 error) — review U5 lengkap (docs/superpowers/reports/U5-review.md), 3 temuan (M-1 bobot judul OverlayScaffold, M-2 label isi satuan, M-3 jitter pergeseran segmen nota) diperbaiki.
+- 2026-11-09 17:18 — Paket N — selesai — commit 8d46fad — unit 139/0, lintDebug hijau (0 error), instrumented 132 tes (0 gagal) di Medium_Phone — eliminasi jitter bottom sheet & form bottom bar (insets windowing), ResultBar height stabil, key stabil pada semua LazyList (Beranda, Catatan, Rencana, Laporan, Produk, Kontak), komputasi berat di-remember; laporan docs/superpowers/reports/N-laporan.md, register audit docs/audit/2026-11-09_BUG_BASH.md.
+- 2026-11-09 15:32 — Paket A — selesai — commit 95d0062 — unit 139/0, lintDebug hijau (0 error) — review U5 lengkap (docs/superpowers/reports/U5-review.md), 3 temuan (M-1 bobot judul OverlayScaffold, M-2 label isi satuan, M-3 jitter pergeseran segmen nota) diperbaiki.
 - 2026-11-09 — Penyusun (read-only/test-only): dokumen ini ditulis. Di HEAD `b1b865b`: unit 139 lulus / 0 gagal,
   lintDebug dan assembleDebug hijau. Instrumented penuh: 130 tes, 0 gagal, 2 dilewati (Help/ModuleScreenshotTest, seperti biasa).

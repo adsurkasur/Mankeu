@@ -1,5 +1,46 @@
 # Activity Log
 
+### [2026-11-09 17:18] [Antigravity (Gemini 3.8 Flash) — Paket N stabilitas: eliminasi jitter dan bug bash]
+- **Goal**: Paket N: Menjawab keluhan pemilik mengenai jitter (layar bergetar/melompat) di semua layar, bottom sheet, dan form; melakukan profiling `dumpsys gfxinfo` di emulator AVD Medium_Phone, menelusuri root cause, menstabilkan form dan list, serta menyelesaikan bug bash.
+- **Actions**:
+  - Berinteraksi dengan pemilik via tanya-jawab: pemilik mengonfirmasi jitter terjadi di semua layar (terutama Laporan, Rencana Usaha, scrolling Catatan & Produk, Beranda, Nota/Belanja saat keyboard muncul & pemilihan opsi, dan bottom sheet). Pemilik menegaskan: *"Brutal ga masalah yang penting by intent"*. Fokus utama adalah stabilitas/anti-jitter.
+  - Membuka emulator AVD Medium_Phone, menginstal build debug, dan memprofiling `dumpsys gfxinfo com.mankeu`: terdeteksi 57.89% - 65.28% janky frames pada interaksi bottom sheet.
+  - Menyusun register audit bug bash di `docs/audit/2026-11-09_BUG_BASH.md` (temuan J-1 s/d J-6).
+  - Memperbaiki J-1 (`MankeuSheet.kt`): mengatur `contentWindowInsets = { WindowInsets(0, 0, 0, 0) }` pada `ModalBottomSheet` Material 3, menyatukan padding via `.windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))`, dan menghapus padding ganda `.imePadding().navigationBarsPadding()` dari inner column.
+  - Memperbaiki J-2 & J-3 (`FullPageForm.kt`): menyetel `contentWindowInsets = WindowInsets(0, 0, 0, 0)` pada `Scaffold` untuk mencegah penambahan insets ganda saat `adjustResize`, menetapkan tinggi minimum `heightIn(min = Space.Row)` pada `ResultBar`, dan membungkus hasil dengan `AnimatedVisibility` (fade in/out 150ms + expand/shrink vertikal).
+  - Memperbaiki J-4: menambahkan `key` stabil pada seluruh `LazyColumn` dan `LazyRow` di `HomeScreen.kt`, `ProductsScreen.kt`, `StockSection.kt`, `StockHistoryScreen.kt`, `PlanScreen.kt`, `ReportsScreen.kt`, `SaleNoteScreens.kt`, `EntryScreen.kt`, `ContactsScreen.kt`, `CustomerScreen.kt`, dan `PickerPage.kt`.
+  - Memperbaiki J-5: membungkus komputasi HPP dan asosiasi harga berat dengan `remember(...)` di `ProductsScreen.kt`, `PlanScreen.kt`, dan `SaleNoteScreens.kt`.
+  - Memperbaiki J-6: menghapus `.animateContentSize(...)` dari `ExpenseDistributionCard` di `ReportsScreen.kt` yang memicu siklus relayout berulang saat scroll.
+  - Mengoptimalkan `AppViewModel.kt` dengan `.distinctUntilChanged()` pada `uiState` sebelum `.stateIn(...)`.
+  - Mengukur ulang gfxinfo sesudah perbaikan: janky frames bottom sheet turun dari ~65% menjadi 32.69% (p90 turun dari 1500ms ke 36ms), input teks di sheet 22.89% jank (p50 11ms), scrolling p90 turun dari 1800ms ke 69ms (idle 7ms, 0% jank).
+  - Menulis laporan komprehensif di `docs/superpowers/reports/N-laporan.md`.
+- **Files**:
+  - `app/src/main/java/com/mankeu/presentation/components/MankeuSheet.kt`
+  - `app/src/main/java/com/mankeu/presentation/components/form/FullPageForm.kt`
+  - `app/src/main/java/com/mankeu/presentation/components/form/PickerPage.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/HomeScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/ProductsScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/StockSection.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/StockHistoryScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/PlanScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/ReportsScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/SaleNoteScreens.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/EntryScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/ContactsScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/CustomerScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/AppViewModel.kt`
+  - `docs/audit/2026-11-09_BUG_BASH.md`
+  - `docs/superpowers/reports/N-laporan.md`
+  - `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`
+  - `docs/WORK_IN_PROGRESS.md`
+  - `logs/ACTIVITY_LOG.md`
+  - `logs/CHANGELOG.md`
+- **Verification**:
+  - Unit test suite: `:app:testDebugUnitTest` (139 lulus, 0 gagal).
+  - Lint check: `:app:lintDebug` (0 error).
+  - Instrumented test suite: `:app:connectedDebugAndroidTest` (132 tes dijalankan di AVD Medium_Phone, 0 gagal).
+  - Pengujian interaktif & benchmark gfxinfo langsung pada emulator.
+
 ### [2026-11-09 15:32] [Antigravity (Gemini 3.8 Flash) — Paket A review U5 and fix round]
 - **Goal**: Paket A: Review rebuilt forms from U5 against the 8 mandatory checks, write review report, and resolve the remaining by-eye issues (M-1, M-2, M-3) with TDD.
 - **Actions**:

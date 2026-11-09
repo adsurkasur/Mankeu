@@ -412,6 +412,7 @@ class AppViewModel(
         .combine(salesContent) { state, c ->
             state.copy(contacts = c.contacts, sales = c.sales, payables = c.payables, businessSales = c.businessSales, businessPayables = c.businessPayables)
         }
+        .distinctUntilChanged()
         .stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
 
     init {

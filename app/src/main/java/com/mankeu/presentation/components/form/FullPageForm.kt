@@ -1,6 +1,14 @@
 package com.mankeu.presentation.components.form
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -69,6 +77,7 @@ fun FullPageForm(
     BackHandler(onBack = close)
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { PageTopBar(title, onBack = close) },
         snackbarHost = { snackbarHost?.let { SnackbarHost(it) } },
         bottomBar = {
@@ -79,7 +88,13 @@ fun FullPageForm(
                     .padding(horizontal = Space.Edge, vertical = Space.Small),
                 verticalArrangement = Arrangement.spacedBy(Space.Small),
             ) {
-                result?.invoke()
+                AnimatedVisibility(
+                    visible = result != null,
+                    enter = expandVertically(tween(150, easing = FastOutSlowInEasing)) + fadeIn(tween(150)),
+                    exit = shrinkVertically(tween(150, easing = FastOutSlowInEasing)) + fadeOut(tween(150)),
+                ) {
+                    result?.invoke()
+                }
                 // The label is always "Simpan" (P2 §8): one word for one action on every form.
                 Button(onClick = onSave, enabled = saveEnabled, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
                     Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold)
@@ -112,8 +127,15 @@ fun FullPageForm(
 /** The live result above Simpan (P2 §7): "Total Rp600.000" with "untung Rp120.000" beside it. */
 @Composable
 fun ResultBar(text: String, modifier: Modifier = Modifier, detail: String? = null) {
-    Surface(modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.extraSmall) {
-        Column(Modifier.padding(horizontal = Space.Edge, vertical = Space.Small)) {
+    Surface(
+        modifier = modifier.fillMaxWidth().heightIn(min = Space.Row),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.extraSmall,
+    ) {
+        Column(
+            Modifier.padding(horizontal = Space.Edge, vertical = Space.Small),
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(text, style = MankeuType.Body, fontWeight = FontWeight.SemiBold)
             if (detail != null) Text(detail, style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

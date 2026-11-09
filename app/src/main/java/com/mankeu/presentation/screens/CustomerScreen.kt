@@ -63,13 +63,13 @@ fun CustomerScreen(
     var sending by rememberSaveable { mutableStateOf(false) }
     var editing by rememberSaveable { mutableStateOf(false) }
     val semantic = LocalMankeuSemanticColors.current
-    val open = sales.filter { it.outstanding > 0 }.sortedWith(compareBy({ it.sale.dateEpochDay }, { it.sale.createdAtEpochMillis }))
-    val paid = sales.filter { it.outstanding == 0L }.sortedByDescending { it.sale.dateEpochDay }
-    val owed = open.sumOf { it.outstanding }
+    val open = remember(sales) { sales.filter { it.outstanding > 0 }.sortedWith(compareBy({ it.sale.dateEpochDay }, { it.sale.createdAtEpochMillis })) }
+    val paid = remember(sales) { sales.filter { it.outstanding == 0L }.sortedByDescending { it.sale.dateEpochDay } }
+    val owed = remember(open) { open.sumOf { it.outstanding } }
     val words = shareWords()
 
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(Space.Edge), verticalArrangement = Arrangement.spacedBy(Space.Field)) {
-        item {
+        item(key = "customer_card") {
             MankeuCard {
                 Column {
                     Text(stringResource(R.string.customer_owes), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -83,9 +83,9 @@ fun CustomerScreen(
                 }
             }
         }
-        item { Text(stringResource(R.string.customer_notes), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item(key = "customer_notes_label") { Text(stringResource(R.string.customer_notes), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (sales.isEmpty()) {
-            item { Text(stringResource(R.string.customer_no_notes), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item(key = "customer_no_notes") { Text(stringResource(R.string.customer_no_notes), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         items(open + paid, key = { it.sale.id }) { note ->
             Column {

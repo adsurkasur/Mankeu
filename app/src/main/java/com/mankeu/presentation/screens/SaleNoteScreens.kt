@@ -200,8 +200,8 @@ fun SaleNoteEditorScreen(
     val initial = rememberSaveable { snapshot.toString() }
 
     val semantic = LocalMankeuSemanticColors.current
-    val prices = materials.associate { it.id to it.basePriceRupiah }
-    val costs = products.associate { it.product.id to ProductCosting.cost(it.spec, prices) }
+    val prices = remember(materials) { materials.associate { it.id to it.basePriceRupiah } }
+    val costs = remember(products, prices) { products.associate { it.product.id to ProductCosting.cost(it.spec, prices) } }
     // Per line: (total, hpp) once product, quantity and price are valid; null = not countable yet.
     val results = lines.map { line ->
         val record = products.firstOrNull { it.product.id == line.productId }
@@ -354,7 +354,7 @@ fun SaleNoteEditorScreen(
                     FilterChip(
                         selected = custom,
                         onClick = { pickingDue = true },
-                        label = { Text(if (custom) dueDate!!.toDisplayDate() else stringResource(R.string.sale_due_pick)) },
+                        label = { Text(if (custom) dueDate.toDisplayDate() else stringResource(R.string.sale_due_pick)) },
                     )
                 }
             }
@@ -528,7 +528,7 @@ fun LazyListScope.saleNoteItems(
     item(key = "notes-filter") {
         val filters = listOf(NoteFilter.ALL to R.string.notes_filter_all, NoteFilter.OPEN to R.string.notes_filter_open, NoteFilter.OVERDUE to R.string.notes_filter_overdue)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(filters) { (value, label) ->
+            items(filters, key = { it.first.name }) { (value, label) ->
                 FilterChip(selected = filter == value, onClick = { onFilter(value) }, label = { Text(stringResource(label)) })
             }
         }
@@ -642,7 +642,7 @@ fun SaleNoteDetailScreen(
     val words = shareWords()
     Column(modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(Space.Edge), verticalArrangement = Arrangement.spacedBy(Space.Field)) {
-            item {
+            item(key = "sale_detail_header") {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     val name = record.contact?.name ?: stringResource(R.string.sale_customer_none)
                     val contactId = record.sale.contactId
@@ -664,7 +664,7 @@ fun SaleNoteDetailScreen(
                     }
                 }
             }
-            item { Text(stringResource(R.string.sale_products), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item(key = "sale_detail_products_label") { Text(stringResource(R.string.sale_products), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             items(record.lines.sortedBy { it.sortOrder }, key = { it.id }) { line ->
                 val name = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: "—"
                 val quantity = TransactionCalculation.parseQuantity(line.quantityText)?.toDisplayQuantity() ?: line.quantityText
@@ -679,7 +679,7 @@ fun SaleNoteDetailScreen(
                     )
                 }
             }
-            item {
+            item(key = "sale_detail_totals") {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     ReportRow(stringResource(R.string.sale_subtotal), record.subtotal.toRupiah())
                     if (record.sale.discountRupiah > 0) ReportRow(stringResource(R.string.sale_discount_row), record.sale.discountRupiah.toRupiah())
@@ -687,15 +687,15 @@ fun SaleNoteDetailScreen(
                     ReportRow(stringResource(R.string.sale_profit), (record.total - record.hpp).toRupiah())
                 }
             }
-            if (record.sale.notes.isNotBlank()) item { Text(record.sale.notes) }
-            item { Text(stringResource(R.string.sale_payments), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (record.sale.notes.isNotBlank()) item(key = "sale_detail_notes") { Text(record.sale.notes) }
+            item(key = "sale_detail_payments_label") { Text(stringResource(R.string.sale_payments), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (record.payments.isEmpty()) {
-                item { Text(stringResource(R.string.sale_no_payments), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item(key = "sale_detail_no_payments") { Text(stringResource(R.string.sale_no_payments), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
             items(record.payments.sortedBy { it.date }, key = { it.id }) { payment ->
                 ReportRow(payment.date.toDisplayDate(), payment.amountRupiah.toRupiah())
             }
-            item {
+            item(key = "sale_detail_delete") {
                 TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.sale_delete_action), color = LocalMankeuSemanticColors.current.danger) }
             }
         }

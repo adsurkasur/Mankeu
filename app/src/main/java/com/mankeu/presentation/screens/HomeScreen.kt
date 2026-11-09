@@ -101,12 +101,12 @@ fun HomeScreen(
     ) {
         // Loading, or the month has not arrived yet (U2 re-review N-1): placeholders, never zeros.
         if (state.isLoading || (state.projects.isNotEmpty() && month == null)) {
-            item { SkeletonHero() }
-            items(3) { SkeletonListItem() }
+            item(key = "skeleton_hero") { SkeletonHero() }
+            items(3, key = { "skeleton_$it" }) { SkeletonListItem() }
             return@LazyColumn
         }
         if (state.businesses.isEmpty()) {
-            item {
+            item(key = "empty_business") {
                 EmptyCard(
                     stringResource(R.string.setup_business_title),
                     stringResource(R.string.setup_business_body),
@@ -118,7 +118,7 @@ fun HomeScreen(
             return@LazyColumn
         }
         if (state.projects.isEmpty() || month == null) {
-            item {
+            item(key = "empty_project") {
                 EmptyCard(
                     stringResource(R.string.setup_project_title),
                     stringResource(R.string.setup_project_body),
@@ -133,7 +133,7 @@ fun HomeScreen(
         val noData = state.sales.isEmpty() && state.eventCount == 0 &&
             month.cashOnHandRupiah == 0L && month.moneyInRupiah == 0L && month.moneyOutRupiah == 0L
         if (noData) {
-            item {
+            item(key = "first_steps") {
                 FirstSteps(
                     hasProduct = state.products.isNotEmpty(),
                     onNewProduct = onNewProduct,
@@ -141,19 +141,19 @@ fun HomeScreen(
                     onSeeProfit = { onNavigate(Destination.REPORTS) },
                 )
             }
-            item { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
+            item(key = "plan_row_empty") { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
             return@LazyColumn
         }
 
-        item {
+        item(key = "profit_card") {
             val last = state.monthlySummaries.firstOrNull { it.month == month.month.minusMonths(1) }
             ProfitCard(month, last)
         }
-        item { ListRowField(stringResource(R.string.home_cash_on_hand), month.cashOnHandRupiah.toRupiah(), { onNavigate(Destination.REPORTS) }) }
+        item(key = "cash_on_hand") { ListRowField(stringResource(R.string.home_cash_on_hand), month.cashOnHandRupiah.toRupiah(), { onNavigate(Destination.REPORTS) }) }
         // A first-time owner who records sales but not the money already in the drawer sees a negative
         // balance and reads it as a loss (audit 2026-10-22): say why and offer the entry that fixes it.
         if (month.cashOnHandRupiah < 0 && state.summary.financingCashFlowRupiah <= 0) {
-            item {
+            item(key = "negative_cash") {
                 EmptyCard(
                     stringResource(R.string.home_negative_cash_title),
                     stringResource(R.string.home_negative_cash_body),
@@ -163,7 +163,7 @@ fun HomeScreen(
                 )
             }
         }
-        item {
+        item(key = "quick_actions") {
             QuickActions(
                 onSell = onNewSale,
                 onBuy = { onQuickRecord(MoneyFormMode.PURCHASE) },
@@ -174,7 +174,7 @@ fun HomeScreen(
         // notes dated up to today; Laporan keeps MonthlySummary's month-end receivable.
         val bills = customerBills(state.sales, LocalDate.now())
         if (bills.isNotEmpty()) {
-            item {
+            item(key = "bills_card") {
                 BillsCard(
                     totalRupiah = bills.sumOf { it.outstandingRupiah },
                     bills = bills,
@@ -184,7 +184,7 @@ fun HomeScreen(
             }
         }
         if (month.payableRupiah != 0L) {
-            item {
+            item(key = "payable_card") {
                 // Neutral: the warning colour is kept for what customers owe, so two brown figures do not compete.
                 MankeuCard(onClick = { onOpenContact("") }) {
                     Column {
@@ -200,7 +200,7 @@ fun HomeScreen(
                 onNavigate(Destination.PRODUCTS)
             }
         }
-        item { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
+        item(key = "plan_row") { ListRowField(stringResource(R.string.home_plan_row), "", onOpenPlan) }
         items(state.notices.take(3), key = { it.id }) { notice ->
             NoticeCard(notice.title, notice.explanation, Icons.Default.Info)
         }

@@ -185,9 +185,9 @@ internal fun MaterialSheets(
  * (schema 10); never to a Proyeksi/Realisasi book. The sheets are [MaterialSheets].
  */
 internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -> Unit, onOpenItem: (String) -> Unit) {
-    if (items.isNotEmpty()) item { MaterialStockNotice() }
-    item { StockCard(items = items, onManage = null) }
-    item {
+    if (items.isNotEmpty()) item(key = "material_notice") { MaterialStockNotice() }
+    item(key = "material_stock_card") { StockCard(items = items, onManage = null) }
+    item(key = "add_material_button") {
         Button(onClick = onAddItem, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(Modifier.width(6.dp))
@@ -195,7 +195,7 @@ internal fun LazyListScope.materialItems(items: List<StockItem>, onAddItem: () -
         }
     }
     if (items.isNotEmpty()) {
-        item {
+        item(key = "stock_tap_hint") {
             Text(stringResource(R.string.stock_tap_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

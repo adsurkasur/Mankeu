@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -102,7 +103,7 @@ fun PlanScreen(
     val categories = remember(state.categories) { state.categories.associateBy { it.id } }
     val project = state.projects.firstOrNull { it.id == state.selectedProjectId }
     val months = state.plan?.months ?: PlanAssembly.months(project, state.planItems, LocalDate.now())
-    val materialPrices = state.stockItems.associate { it.id to it.basePriceRupiah }
+    val materialPrices = remember(state.stockItems) { state.stockItems.associate { it.id to it.basePriceRupiah } }
     val lines = state.planItems.filterNot { it.archived }.groupBy { LineSection.of(it, categories) }
 
     LazyColumn(
@@ -110,14 +111,14 @@ fun PlanScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         // The page title is the top bar's "Rencana usaha" (U4); only the explanation stays here.
-        item { Text(stringResource(R.string.plan_subtitle), style = com.mankeu.presentation.MankeuType.Body, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item(key = "plan_subtitle") { Text(stringResource(R.string.plan_subtitle), style = com.mankeu.presentation.MankeuType.Body, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         // First load (U4 review M-5): placeholders, not a plan of zeros.
         if (state.isLoading) {
-            item { com.mankeu.presentation.components.SkeletonHero() }
+            item(key = "plan_skeleton") { com.mankeu.presentation.components.SkeletonHero() }
             return@LazyColumn
         }
         if (project == null) {
-            item {
+            item(key = "plan_empty_project") {
                 EmptyCard(
                     stringResource(R.string.setup_project_title),
                     stringResource(R.string.setup_project_body),
@@ -128,7 +129,7 @@ fun PlanScreen(
             }
             return@LazyColumn
         }
-        item {
+        item(key = "plan_period") {
             val locale = appLocale()
             val format = DateTimeFormatter.ofPattern("MMM yyyy", locale)
             ReportCard(stringResource(R.string.plan_period)) {
@@ -142,9 +143,9 @@ fun PlanScreen(
                 }
             }
         }
-        state.plan?.let { plan -> item { PlanFeasibilityCard(plan) } }
+        state.plan?.let { plan -> item(key = "plan_feasibility") { PlanFeasibilityCard(plan) } }
 
-        item {
+        item(key = "plan_products") {
             PlanSectionCard(
                 title = stringResource(R.string.plan_section_products),
                 hint = stringResource(R.string.plan_section_products_hint),
@@ -170,20 +171,18 @@ fun PlanScreen(
                 }
             }
         }
-        LineSection.entries.forEach { section ->
-            item {
-                PlanSectionCard(
-                    title = stringResource(section.titleRes),
-                    hint = stringResource(section.hintRes),
-                    onAdd = { editor = PlanEditor.Line(section, null) },
-                ) {
-                    lines[section].orEmpty().forEach { line ->
-                        PlanRow(
-                            title = line.name,
-                            subtitle = lineSubtitle(line, categories[line.categoryId]),
-                            onClick = { editor = PlanEditor.Line(section, line) },
-                        )
-                    }
+        items(LineSection.entries, key = { "plan_section_" + it.name }) { section ->
+            PlanSectionCard(
+                title = stringResource(section.titleRes),
+                hint = stringResource(section.hintRes),
+                onAdd = { editor = PlanEditor.Line(section, null) },
+            ) {
+                lines[section].orEmpty().forEach { line ->
+                    PlanRow(
+                        title = line.name,
+                        subtitle = lineSubtitle(line, categories[line.categoryId]),
+                        onClick = { editor = PlanEditor.Line(section, line) },
+                    )
                 }
             }
         }

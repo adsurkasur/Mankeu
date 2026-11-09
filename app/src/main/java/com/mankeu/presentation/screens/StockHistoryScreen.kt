@@ -67,7 +67,7 @@ fun StockHistoryScreen(record: ProductRecord, onDelete: (String) -> Unit, modifi
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        item {
+        item(key = "stock_history_header") {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.product_stock_line, record.stock.toQuantityText(), unit), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(

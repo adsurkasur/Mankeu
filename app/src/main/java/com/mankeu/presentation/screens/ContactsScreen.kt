@@ -69,30 +69,30 @@ fun ContactsScreen(
     // "" = a new contact, an id = that contact, null = no sheet.
     var editing by rememberSaveable { mutableStateOf<String?>(null) }
     val semantic = LocalMankeuSemanticColors.current
-    val owes = sales.groupBy { it.sale.contactId }.mapValues { (_, rows) -> rows.sumOf { it.outstanding } }
-    val owed = payables.groupBy { it.purchase.contactId }.mapValues { (_, rows) -> rows.sumOf { it.outstanding } }
-    val visible = contacts.filter { search.isBlank() || it.name.contains(search.trim(), ignoreCase = true) || it.phone.orEmpty().contains(search.trim()) }
+    val owes = remember(sales) { sales.groupBy { it.sale.contactId }.mapValues { (_, rows) -> rows.sumOf { it.outstanding } } }
+    val owed = remember(payables) { payables.groupBy { it.purchase.contactId }.mapValues { (_, rows) -> rows.sumOf { it.outstanding } } }
+    val visible = remember(contacts, search) { contacts.filter { search.isBlank() || it.name.contains(search.trim(), ignoreCase = true) || it.phone.orEmpty().contains(search.trim()) } }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        item { header() }
-        item {
+        item(key = "contacts_header") { header() }
+        item(key = "contacts_search") {
             OutlinedTextField(
                 value = search, onValueChange = { search = it }, singleLine = true,
                 label = { Text(stringResource(R.string.contacts_search)) }, modifier = Modifier.fillMaxWidth(),
             )
         }
-        item {
+        item(key = "contacts_add") {
             OutlinedButton(onClick = { editing = "" }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Text(" " + stringResource(R.string.contacts_add))
             }
         }
         if (visible.isEmpty()) {
-            item { Text(stringResource(R.string.contacts_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item(key = "contacts_empty") { Text(stringResource(R.string.contacts_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         items(visible, key = { it.id }) { contact ->
             Card(

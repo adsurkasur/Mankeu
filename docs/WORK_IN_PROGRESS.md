@@ -22,11 +22,11 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-**Mulai di sini (2026-11-09 15:32):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
-lengkap untuk semua sisa pekerjaan. Paket A (review U5 dan perbaikan temuan M-1..M-3) selesai. Pekerjaan aktif sekarang:
-**Paket N — Stabilitas: jitter dan bug bash**.
+**Mulai di sini (2026-11-09 17:18):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
+lengkap untuk semua sisa pekerjaan. Paket A (review U5) dan Paket N (stabilitas jitter + bug bash) selesai. Pekerjaan aktif sekarang:
+**Paket B — Fase UX U6: Daftar catatan terpadu**.
 
-**Riwayat Fase UX:** U1, U2, U3, U4 selesai. U5 (form dirombak) direview dan diperbaiki di Paket A. Berikutnya Paket N, lalu U6 (Paket B).
+**Riwayat Fase UX:** U1, U2, U3, U4 selesai. U5 (form dirombak) direview dan diperbaiki di Paket A. Paket N (stabilitas jitter & bug bash) selesai. Berikutnya U6 (Paket B).
 
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di

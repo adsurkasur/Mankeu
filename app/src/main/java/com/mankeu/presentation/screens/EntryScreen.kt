@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,16 +68,18 @@ fun EntryScreen(
     var direction by rememberSaveable { mutableStateOf("ALL") }
     val feedback = LocalFeedback.current
 
-    val visibleEvents = state.events.filter { event ->
-        val matchesText = search.isBlank() ||
-            listOf(event.description, event.category, event.reference)
-                .filterNotNull()
-                .any { it.contains(search, ignoreCase = true) }
-        val incoming = BusinessWords.isIncoming(event.type)
-        matchesText && when (direction) {
-            "IN" -> incoming == true
-            "OUT" -> incoming == false
-            else -> true
+    val visibleEvents = remember(state.events, search, direction) {
+        state.events.filter { event ->
+            val matchesText = search.isBlank() ||
+                listOf(event.description, event.category, event.reference)
+                    .filterNotNull()
+                    .any { it.contains(search, ignoreCase = true) }
+            val incoming = BusinessWords.isIncoming(event.type)
+            matchesText && when (direction) {
+                "IN" -> incoming == true
+                "OUT" -> incoming == false
+                else -> true
+            }
         }
     }
 
@@ -85,7 +88,7 @@ fun EntryScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item {
+        item(key = "entry_title") {
             SectionTitle(
                 title = stringResource(R.string.entry_title),
                 subtitle = stringResource(R.string.ledger_subtitle, state.eventCount),
@@ -93,7 +96,7 @@ fun EntryScreen(
         }
 
         if (state.selectedProjectId == null || state.projects.isEmpty()) {
-            item {
+            item(key = "entry_no_project") {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
@@ -136,7 +139,7 @@ fun EntryScreen(
         )
 
         if (state.eventCount > 0) {
-            item {
+            item(key = "entry_search") {
                 OutlinedTextField(
                     value = search,
                     onValueChange = { search = it },
@@ -145,14 +148,14 @@ fun EntryScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            item {
+            item(key = "entry_direction_filters") {
                 val filters = listOf(
                     "ALL" to stringResource(R.string.money_all),
                     "IN" to stringResource(R.string.money_in_short),
                     "OUT" to stringResource(R.string.money_out_short),
                 )
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(filters) { (value, label) ->
+                    items(filters, key = { it.first }) { (value, label) ->
                         FilterChip(
                             selected = direction == value,
                             onClick = { feedback(FeedbackEvent.TAP); direction = value },
@@ -164,7 +167,7 @@ fun EntryScreen(
         }
 
         when {
-            state.eventCount == 0 -> item {
+            state.eventCount == 0 -> item(key = "entry_empty") {
                 EmptyCard(
                     title = stringResource(R.string.home_empty_title),
                     body = stringResource(R.string.home_empty_body),
@@ -174,7 +177,7 @@ fun EntryScreen(
                 )
             }
 
-            visibleEvents.isEmpty() -> item {
+            visibleEvents.isEmpty() -> item(key = "entry_no_match") {
                 EmptyCard(
                     title = stringResource(R.string.home_no_match_title),
                     body = stringResource(R.string.home_no_match_body),
@@ -190,7 +193,7 @@ fun EntryScreen(
                     )
                 }
                 if (state.eventCount > state.events.size) {
-                    item {
+                    item(key = "entry_truncated") {
                         NoticeCard(
                             title = stringResource(R.string.ledger_truncated_title),
                             body = stringResource(

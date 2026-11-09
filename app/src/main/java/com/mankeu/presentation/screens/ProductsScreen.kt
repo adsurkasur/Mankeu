@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -100,7 +101,7 @@ fun ProductsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (!hasBusiness) {
-            item {
+            item(key = "empty_business") {
                 EmptyCard(
                     stringResource(R.string.setup_business_title),
                     stringResource(R.string.setup_business_body),
@@ -112,7 +113,7 @@ fun ProductsScreen(
             return@LazyColumn
         }
         if (products.isEmpty()) {
-            item {
+            item(key = "empty_products") {
                 EmptyCard(
                     stringResource(R.string.products_empty_title),
                     stringResource(R.string.products_empty_body),
@@ -121,7 +122,7 @@ fun ProductsScreen(
                 )
             }
         } else {
-            item {
+            item(key = "add_product_button") {
                 Button(onClick = { onOpenProduct(null) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
@@ -130,9 +131,10 @@ fun ProductsScreen(
             }
         }
         items(products, key = { it.product.id }) { record ->
+            val cost = remember(record.spec, prices) { ProductCosting.cost(record.spec, prices) }
             ProductCard(
                 record = record,
-                cost = ProductCosting.cost(record.spec, prices),
+                cost = cost,
                 onOpen = { onOpenProduct(record.product.id) },
                 onProduce = { produceId = record.product.id },
                 onCount = { countId = record.product.id },

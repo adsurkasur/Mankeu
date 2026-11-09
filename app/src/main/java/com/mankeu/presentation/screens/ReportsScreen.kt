@@ -122,13 +122,13 @@ fun ReportsScreen(
     // U4: no Rencana/Realisasi switch; Laporan reports the records. The plan is read only by
     // Kelayakan's empty state and by Uang vs rencana (projectionSummary).
     val summary = state.summary
-    val monthlyCashFlow = MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords)
+    val monthlyCashFlow = remember(state.cashFlowRecords) { MonthlyCashFlowCalculator.calculateFromRecords(state.cashFlowRecords) }
 
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item {
+        item(key = "reports_title") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,7 +141,7 @@ fun ReportsScreen(
                 )
             }
         }
-        item {
+        item(key = "reports_tabs") {
             val feedback = LocalFeedback.current
             PrimaryTabRow(
                 selectedTabIndex = ReportSection.entries.indexOf(section),
@@ -176,14 +176,14 @@ fun ReportsScreen(
 
         // The month has not arrived yet (U2 re-review N-1): placeholders, never a column of Rp0.
         if (state.isLoading || (state.selectedProjectId != null && state.thisMonth == null)) {
-            item { SkeletonHero() }
-            items(2) { SkeletonListItem() }
+            item(key = "reports_skeleton_hero") { SkeletonHero() }
+            items(2, key = { "reports_skeleton_$it" }) { SkeletonListItem() }
             return@LazyColumn
         }
         // Nothing recorded: every card below would render a column of Rp0, which reads as "your
         // business made nothing" rather than "you have not told me anything yet".
         if (state.eventCount == 0 && state.sales.isEmpty()) {
-            item {
+            item(key = "reports_empty") {
                 EmptyCard(
                     title = stringResource(R.string.reports_empty_title),
                     body = stringResource(R.string.reports_empty_body),
@@ -199,7 +199,7 @@ fun ReportsScreen(
         // items are emitted into the list scope and cannot themselves be wrapped in a transition.
         // The sections are short enough to compose eagerly; the ledger-length lists all live on
         // Beranda, not here.
-        item {
+        item(key = "reports_body") {
             val motion = LocalMotion.current
             AnimatedContent(
                 targetState = section,
@@ -400,9 +400,7 @@ private fun ExpenseDistributionCard(
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
             shape = MaterialTheme.shapes.large,
-            modifier = modifier
-                .fillMaxWidth()
-                .animateContentSize(tween(maxOf(motion.mediumMillis, 1), easing = FastOutSlowInEasing)),
+            modifier = modifier.fillMaxWidth(),
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),

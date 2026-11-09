@@ -52,6 +52,7 @@ fun <T> PickerPage(
     modifier: Modifier = Modifier,
     itemDetail: ((T) -> String?)? = null,
     onAdd: ((String) -> Unit)? = null,
+    itemKey: ((T) -> Any)? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     BackHandler(onBack = onClose)
@@ -70,15 +71,15 @@ fun <T> PickerPage(
             )
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = Space.Edge)) {
                 if (offerAdd) {
-                    item {
-                        PickerRow(onClick = { onAdd?.invoke(typed) }) {
+                    item(key = "picker_add") {
+                        PickerRow(onClick = { onAdd(typed) }) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Text(stringResource(R.string.picker_add, typed), style = MankeuType.Body, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                         }
                         HorizontalDivider()
                     }
                 }
-                items(shown) { item ->
+                items(shown, key = itemKey ?: { itemLabel(it) }) { item ->
                     PickerRow(onClick = { onPick(item) }) {
                         Column {
                             Text(itemLabel(item), style = MankeuType.Body)

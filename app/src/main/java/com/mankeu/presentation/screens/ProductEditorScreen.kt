@@ -407,7 +407,7 @@ private fun SaleUnitSheet(unit: UnitInput, baseUnit: String, onDismiss: () -> Un
         )
         OutlinedTextField(
             value = draft.content, onValueChange = { draft = draft.copy(content = sanitizeDecimal(it)) }, singleLine = true,
-            label = { Text(stringResource(R.string.editor_unit_content, baseUnit)) },
+            label = { Text(stringResource(R.string.editor_unit_content)) },
             suffix = { Text(baseUnit) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),

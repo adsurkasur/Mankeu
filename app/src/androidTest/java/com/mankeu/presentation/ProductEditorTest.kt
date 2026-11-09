@@ -96,8 +96,8 @@ class ProductEditorTest {
         click("Simpan")
         click("+ Satuan jual")
         box("Satuan").performTextInput("dus")
-        box("Isi (bungkus)").performTextClearance()
-        box("Isi (bungkus)").performTextInput("40")
+        box("Isi").performTextClearance()
+        box("Isi").performTextInput("40")
         box("Harga jual").performTextInput("300000")
         click("Simpan")
     }

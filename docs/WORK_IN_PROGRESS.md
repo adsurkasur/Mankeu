@@ -22,22 +22,11 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
-**Mulai di sini (2026-11-09 15:17):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
-lengkap untuk semua sisa pekerjaan (paket A–M, register temuan terbuka, matriks verifikasi, lingkungan). Atas permintaan
-pemilik, penyusun hanya membaca dan menguji; implementasi dan revisi dikerjakan agen lain mengikuti dokumen itu.
+**Mulai di sini (2026-11-09 15:32):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
+lengkap untuk semua sisa pekerjaan. Paket A (review U5 dan perbaikan temuan M-1..M-3) selesai. Pekerjaan aktif sekarang:
+**Paket N — Stabilitas: jitter dan bug bash**.
 
-**Sekarang (2026-10-30 11:29): Fase UX** (`docs/superpowers/plans/2026-10-30-fase-ux.md`, tugas U1–U9) setelah audit UI/UX
-(`docs/audit/2026-10-30_AUDIT_UI_UX.md`) dan keputusan pemilik U-1..U-4 (spec). Fase 2 Task 6–8 menyusul dengan
-komponen form baru. Status per tugas di bagian Status rencana itu. U1 (token desain, komponen form bersama di
-`presentation/components/form/`, DEC-030, investigasi Back) selesai. U2 (`MonthlySummary` satu angka per bulan untuk
-Beranda, Laporan, kartu BEP, Komparasi, PDF/xlsx) selesai, menunggu review
-(`.superpowers/sdd/2026-10-30-fase-ux/task-U2-report.md`). U3 (stok bahan nyata: belanja menambah, produksi memakai,
-"Catat juga uangnya?", template membawa gerakan bahan) selesai, menunggu review
-(`.superpowers/sdd/2026-10-30-fase-ux/task-U3-report.md`). U4 (saklar Rencana/Realisasi dihapus, header "Lainnya",
-Beranda baru, Rencana usaha halaman sementara) selesai, menunggu review
-(`.superpowers/sdd/2026-10-30-fase-ux/task-U4-report.md`). U5 (form dirombak: nota tanpa deretan kotak + Kirim, halaman
-pelanggan, Belanja dan uang lain halaman penuh, editor produk baris + lembar, Tambah bahan ringkas, tanggal jadi baris)
-selesai, menunggu review (`.superpowers/sdd/2026-10-30-fase-ux/task-U5-report.md`). Berikutnya: U6.
+**Riwayat Fase UX:** U1, U2, U3, U4 selesai. U5 (form dirombak) direview dan diperbaiki di Paket A. Berikutnya Paket N, lalu U6 (Paket B).
 
 **Sekarang (2026-10-29):** perapihan temuan Fase 1 (P1–P10) selesai, direview, dan sudah di main
 (`docs/superpowers/plans/2026-10-29-fase1-perapihan.md`, laporan `...-perapihan-laporan.md`). **Fase 2:** keputusan pemilik F2-1..F2-7 dicatat di spec (bagian "Keputusan Fase 2"); rencana tertulis di

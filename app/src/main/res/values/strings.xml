@@ -558,7 +558,7 @@
     <string name="editor_cost_amount">Biaya per batch</string>
     <string name="editor_units">Dijual per</string>
     <string name="editor_unit_name">Satuan</string>
-    <string name="editor_unit_content">Isi (%1$s)</string>
+    <string name="editor_unit_content">Isi</string>
     <string name="editor_unit_price">Harga jual</string>
     <string name="editor_plan_section">Untuk rencana usaha (boleh kosong)</string>
     <string name="editor_target">Target terjual per bulan (%1$s)</string>

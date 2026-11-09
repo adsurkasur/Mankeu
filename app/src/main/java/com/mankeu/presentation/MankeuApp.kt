@@ -973,7 +973,7 @@ private fun OverlayScaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(title, fontWeight = FontWeight.Black) },
+                title = { Text(title, style = MankeuType.Title) },
                 navigationIcon = {
                     MankeuTooltip(stringResource(R.string.action_back)) {
                         IconButton(onClick = onBack) {

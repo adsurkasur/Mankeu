@@ -556,7 +556,7 @@
     <string name="editor_cost_amount">Cost per batch</string>
     <string name="editor_units">Sold per</string>
     <string name="editor_unit_name">Unit</string>
-    <string name="editor_unit_content">Contains (%1$s)</string>
+    <string name="editor_unit_content">Contains</string>
     <string name="editor_unit_price">Selling price</string>
     <string name="editor_plan_section">For the business plan (optional)</string>
     <string name="editor_target">Sales target per month (%1$s)</string>

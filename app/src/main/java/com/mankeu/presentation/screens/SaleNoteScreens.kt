@@ -298,7 +298,20 @@ fun SaleNoteEditorScreen(
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                 )
             }
-            if (needsCustomer) Text(stringResource(R.string.sale_customer_needed), style = MankeuType.Caption, color = semantic.warning)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 20.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                if (needsCustomer) {
+                    Text(
+                        stringResource(R.string.sale_customer_needed),
+                        style = MankeuType.Caption,
+                        color = semantic.warning,
+                    )
+                }
+            }
 
             // Payment.
             if (existing == null) {

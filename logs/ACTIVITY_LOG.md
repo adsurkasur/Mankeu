@@ -1,5 +1,17 @@
 # Activity Log
 
+### [2026-11-09 15:32] [Antigravity (Gemini 3.8 Flash) — Paket A review U5 and fix round]
+- **Goal**: Paket A: Review rebuilt forms from U5 against the 8 mandatory checks, write review report, and resolve the remaining by-eye issues (M-1, M-2, M-3) with TDD.
+- **Actions**:
+  - Copied `.superpowers/sdd/2026-10-30-fase-ux/task-U5-report.md` to `docs/superpowers/reports/U5-laporan.md`.
+  - Thoroughly reviewed the diff `50b3c7e..b1b865b` across 8 mandatory checkpoints: form field counts (≤4), exact integer rupiah / sen stripping (`sanitizeRupiah`), customer payment allocation (`recordCustomerPayment`, `allocate`), note/reminder sharing (`ShareText`, `shareText`), preservation of hidden fields on edit, product plan field isolation, TalkBack date button semantics (`ListRowField`), and retired tests verification.
+  - Wrote formal review report `docs/superpowers/reports/U5-review.md`.
+  - Fixed M-1: Updated `OverlayScaffold` top bar title style to `MankeuType.Title` for typography consistency with `FullPageForm`.
+  - Fixed M-2: Simplified `editor_unit_content` label to "Isi" (EN: "Contains") so it does not repeat the `baseUnit` suffix inside the text box. Updated `ProductEditorTest` to match.
+  - Fixed M-3: Wrapped `sale_customer_needed` hint in `SaleNoteScreens` inside a reserved Box (`heightIn(min = 20.dp)` with `Alignment.CenterStart`) to eliminate layout jump/jitter on the payment segmented button row when toggling unpaid status or selecting customer.
+- **Files**: `docs/superpowers/reports/U5-laporan.md` (new), `docs/superpowers/reports/U5-review.md` (new), `app/src/main/java/com/mankeu/presentation/MankeuApp.kt`, `app/src/main/java/com/mankeu/presentation/screens/ProductEditorScreen.kt`, `app/src/main/java/com/mankeu/presentation/screens/SaleNoteScreens.kt`, `app/src/main/res/values/strings.xml`, `app/src/main/res/values-en/strings.xml`, `app/src/androidTest/java/com/mankeu/presentation/ProductEditorTest.kt`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Focused unit test passed in 10s. Full unit test suite `:app:testDebugUnitTest` passed (139/0, 43s). `:app:lintDebug` passed (0 errors, 1m 21s).
+
 ### [2026-11-09 15:21] [Claude Code (Opus) — prompt agen berikutnya + paket stabilitas]
 - **Goal**: Owner reported many bugs and jitter and found the redesign too abrupt; asked for a prompt the next AI agent can run, referring to the plan.
 - **Actions**: Added Paket N (stability: owner bug list, own bug bash with written repro steps, root-cause jitter with screenrecord/gfxinfo and known suspects, orientation help for the abrupt redesign, owner questions for direction changes) right after Paket A in the handoff plan. Wrote `docs/superpowers/PROMPT_AGEN_BERIKUTNYA.md`, a copy-paste prompt that points to the plan and repeats the rules that broke things before.

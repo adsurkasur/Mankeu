@@ -1,5 +1,24 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-031] Unified Catatan Timeline Ledger, Filter Chips, Single FAB Action Sheet, and Non-Cash Production Isolation (U6)
+- **Date**: 2026-11-09
+- **Status**: Accepted (Paket B in `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, decision U-4)
+- **Context**:
+  - The Catatan tab previously had two competing sections: `saleNoteItems` displayed above `visibleEvents`, each with its own filters and empty state logic.
+  - Same-day note payments risked double counting daily cash if both the sales note and its cash-in event were summed naively.
+  - Having only sales notes displayed the "Belum ada catatan" empty state (audit L14).
+  - The 5-item expanding speed dial FAB caused layout jumping and touch target crowding.
+  - Evaluated whether non-cash production batches should appear in Catatan.
+- **Decision**:
+  1. **Unified Ledger (`UnifiedLedger.kt`)**: Combines `sales` and `financial_events` into a single date-descending timeline with daily headers (`dateWords`) and clean daily net cash totals (`+Rp...`, `−Rp...`).
+  2. **Zero Double Counting via Same-Day Payment Absorption**: Note payments on the same date as note issuance are absorbed into `UnifiedLedgerItem.Sale` (`paidOnDateRupiah`), suppressing duplicate payment rows. Installments and subsequent payments appear as distinct `UnifiedLedgerItem.SalePayment` rows on their payment dates.
+  3. **Integrated Filter Chips**: `Semua` (`ALL`, default), `Belum lunas` (`UNPAID`), `Uang masuk` (`INCOME`), `Uang keluar` (`EXPENSE`).
+  4. **Single FAB `+` with Bottom Sheet**: Replaces the 5-item speed dial with a single FAB that opens `RecordChoiceSheet` (Jual/Nota penjualan, Belanja, Uang masuk lain, Uang keluar lain, Modal & ambil pribadi).
+  5. **Audit L14 Resolution**: `UnifiedLedger.hasAnyEntries` prevents false empty states when notes exist.
+  6. **Production Isolation**: Physical inventory batch creation and material consumption involve 0 cash flow and remain strictly in Products & Stock modules, keeping Catatan as a pure financial ledger.
+- **Affected components**:
+  `presentation/UnifiedLedger.kt` (new), `presentation/screens/EntryScreen.kt`, `presentation/components/RecordFab.kt`, `presentation/MankeuApp.kt`, `res/values/strings.xml`, `res/values-en/strings.xml`, `UnifiedLedgerTest.kt`, `CatatanUnifiedLedgerTest.kt`.
+
 ### [DEC-030] Fase UX: Shared Form Components, One Monthly Summary, Material Stock, New Beranda and Navigation
 - **Date**: 2026-10-30
 - **Status**: Accepted (plan `docs/superpowers/plans/2026-10-30-fase-ux.md`, "Keputusan rencana"). Ruling 1 implemented in Task U1; rulings 2 to 9 follow in U2 to U8.

@@ -445,6 +445,11 @@
     <string name="fab_other_out">Uang keluar lain</string>
     <string name="fab_capital">Modal &amp; ambil pribadi</string>
     <string name="fab_close">Tutup pilihan catat</string>
+    <string name="record_choice_sale_sub">Penjualan produk atau tagihan ke pelanggan</string>
+    <string name="record_choice_expense_sub">Bahan baku, stok barang, atau perlengkapan</string>
+    <string name="record_choice_in_sub">Pendapatan jasa, komisi, atau uang masuk lain</string>
+    <string name="record_choice_out_sub">Biaya operasional, sewa, listrik, bensin, dll.</string>
+    <string name="record_choice_capital_sub">Setor modal usaha atau penarikan pribadi</string>
 
     <string name="feasibility_title">Kelayakan &amp; Titik Impas (BEP)</string>
     <string name="feasibility_status_feasible">Layak</string>

@@ -1,5 +1,39 @@
 # Activity Log
 
+### [2026-11-09 20:30] [Antigravity (Gemini 3.8 Flash) — Paket B: Fase UX U6 Satu daftar Catatan]
+- **Goal**: Paket B (U6): Menyatukan tab Catatan menjadi satu linimasa kronologis menurut tanggal (nota penjualan + mutasi kas), menyerap pembayaran hari yang sama tanpa double-counting kas, menyediakan filter chip terpadu (Semua, Belum lunas, Uang masuk, Uang keluar), mengganti 5-item speed dial dengan satu FAB + dan bottom sheet pilihan aksi, menyelesaikan bug audit L14, dan membuktikan performa skala.
+- **Actions**:
+  - Merancang domain model linimasa terpadu murni di `UnifiedLedger.kt` (`CatatanFilter`, `UnifiedLedgerItem.Sale`, `UnifiedLedgerItem.SalePayment`, `UnifiedLedgerItem.Money`, `LedgerDayGroup`) dengan pengelompokan tanggal menurun dan total arus kas harian (`totalInRupiah`, `totalOutRupiah`).
+  - Mengimplementasikan penyerapan pembayaran nota pada tanggal yang sama ke dalam baris nota (`paidOnDateRupiah`), menekan duplikasi entri kas pada hari itu, dan mengalokasikan pembayaran tanggal berbeda ke tanggal pembayaran masing-masing sebagai `SalePayment`.
+  - Menerapkan TDD dengan membuat `UnifiedLedgerTest.kt` (9 unit test termasuk verifikasi pengurutan, filter chip, penyerapan pembayaran, audit L14, dan benchmark skala 1.000 entri diproses < 50ms).
+  - Merombak `EntryScreen.kt` dengan layout daftar datar ber-pemisah (`HorizontalDivider`), judul hari (`dateWords`) + total arus kas harian, baris pencarian terpadu, dan 4 filter chip (`Semua`, `Belum lunas`, `Uang masuk`, `Uang keluar`).
+  - Mengganti speed dial 5 entri di `RecordFab.kt` dengan satu tombol FAB `+` berlabel "Catat" yang membuka `RecordChoiceSheet` (pilihan: Nota penjualan, Belanja, Uang masuk lain, Uang keluar lain, Modal & ambil pribadi).
+  - Menyambungkan state `catatanFilter` di `MankeuApp.kt` secara dua arah dengan shortcut `Tagihan` di Beranda (`openBills` -> `CatatanFilter.UNPAID`).
+  - Mengisolasi mutasi produksi (pergerakan fisik stok tanpa kas) pada modul Produk & Stok (`DEC-031`).
+  - Menulis 4 instrumented Compose test di `CatatanUnifiedLedgerTest.kt` dan memverifikasi langsung di emulator nyata `Medium_Phone` (semua lulus).
+  - Menjalankan uji regresi alur nota `SaleNoteFlowTest.kt` (8/8 lulus di emulator `Medium_Phone`).
+  - Menjalankan `:app:lintDebug` (0 error) dan `:app:testDebugUnitTest` (140 lulus, 0 gagal).
+  - Menulis laporan pengerjaan di `docs/superpowers/reports/B-laporan.md` dan ADR di `logs/DECISION_LOG.md` (`DEC-031`).
+- **Files**:
+  - `app/src/main/java/com/mankeu/presentation/UnifiedLedger.kt`
+  - `app/src/main/java/com/mankeu/presentation/screens/EntryScreen.kt`
+  - `app/src/main/java/com/mankeu/presentation/components/RecordFab.kt`
+  - `app/src/main/java/com/mankeu/presentation/MankeuApp.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-en/strings.xml`
+  - `app/src/test/java/com/mankeu/presentation/UnifiedLedgerTest.kt`
+  - `app/src/androidTest/java/com/mankeu/presentation/CatatanUnifiedLedgerTest.kt`
+  - `docs/superpowers/reports/B-laporan.md`
+  - `logs/DECISION_LOG.md`
+  - `logs/CHANGELOG.md`
+  - `logs/ACTIVITY_LOG.md`
+  - `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`
+  - `docs/WORK_IN_PROGRESS.md`
+- **Verification**:
+  - `:app:testDebugUnitTest` (140 passed, 0 failed)
+  - `:app:lintDebug` (0 errors)
+  - `:app:connectedDebugAndroidTest` on `Medium_Phone` (CatatanUnifiedLedgerTest: 4 passed, SaleNoteFlowTest: 8 passed)
+
 ### [2026-11-09 17:18] [Antigravity (Gemini 3.8 Flash) — Paket N stabilitas: eliminasi jitter dan bug bash]
 - **Goal**: Paket N: Menjawab keluhan pemilik mengenai jitter (layar bergetar/melompat) di semua layar, bottom sheet, dan form; melakukan profiling `dumpsys gfxinfo` di emulator AVD Medium_Phone, menelusuri root cause, menstabilkan form dan list, serta menyelesaikan bug bash.
 - **Actions**:

@@ -1,59 +1,47 @@
 package com.mankeu.presentation.components
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
-import com.mankeu.presentation.screens.MoneyFormMode
-import com.mankeu.presentation.LocalMankeuSemanticColors
-import com.mankeu.presentation.LocalMotion
 import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
+import com.mankeu.presentation.LocalMankeuSemanticColors
+import com.mankeu.presentation.screens.MoneyFormMode
 
 /**
- * The two everyday actions, in the thumb zone.
- *
- * Recording money moving is the reason the app is opened, and until now it took two taps through
- * the bottom bar and then a choice halfway up a scrolling list — the top of the screen on a phone
- * held in one hand. A speed dial in the bottom-right corner puts "Catat Pemasukan" and "Catat
- * Pengeluaran" under the thumb from anywhere, and carries the same green/coral money direction the
- * entry form uses so the choice is recognisable before the label is read.
- *
- * Fase 2 adds "Nota penjualan" on top: a product sale is a note (DEC-029 §11). Otherwise: setoran modal, ambil pribadi and beli aset are money in or
- * out too, chosen by their category in the entry form (DEC-011 K-2), so they need no button of
- * their own.
+ * U6: Single record action button (+) that opens a clean choice sheet.
+ * Replaces the temporary 5-item expanding speed dial to prevent layout jitter and touch target crowding.
  */
 @Composable
 fun RecordSpeedDial(
@@ -62,98 +50,147 @@ fun RecordSpeedDial(
     /** Fase 2 (DEC-029 §11 §12): product sales go through the note, from the same button. */
     onSaleNote: () -> Unit = {},
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val motion = LocalMotion.current
-    val semantic = LocalMankeuSemanticColors.current
+    var showSheet by rememberSaveable { mutableStateOf(false) }
     val feedback = LocalFeedback.current
-    val rotation by animateFloatAsState(
-        targetValue = if (expanded) 45f else 0f,
-        animationSpec = tween(maxOf(motion.fastMillis, 1), easing = FastOutSlowInEasing),
-        label = "fabRotation",
-    )
-    val enter = remember(motion) {
-        scaleIn(tween(maxOf(motion.fastMillis, 1), easing = FastOutSlowInEasing)) +
-            fadeIn(tween(maxOf(motion.fastMillis, 1)))
-    }
-    val exit = remember(motion) {
-        scaleOut(tween(maxOf(motion.fastMillis, 1), easing = FastOutSlowInEasing)) +
-            fadeOut(tween(maxOf(motion.fastMillis, 1)))
+
+    MankeuTooltip(stringResource(R.string.fab_record)) {
+        FloatingActionButton(
+            onClick = {
+                feedback(FeedbackEvent.TAP)
+                showSheet = true
+            },
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = modifier,
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = stringResource(R.string.fab_record),
+            )
+        }
     }
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    if (showSheet) {
+        RecordChoiceSheet(
+            onDismiss = { showSheet = false },
+            onSaleNote = {
+                showSheet = false
+                onSaleNote()
+            },
+            onRecord = { mode ->
+                showSheet = false
+                onRecord(mode)
+            },
+        )
+    }
+}
+
+@Composable
+fun RecordChoiceSheet(
+    onDismiss: () -> Unit,
+    onSaleNote: () -> Unit,
+    onRecord: (MoneyFormMode) -> Unit,
+) {
+    val semantic = LocalMankeuSemanticColors.current
+    val feedback = LocalFeedback.current
+
+    MankeuSheet(
+        title = stringResource(R.string.fab_record),
+        onDismiss = onDismiss,
+        confirmLabel = null,
     ) {
-        AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
-            ExtendedFloatingActionButton(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            RecordChoiceRow(
+                title = stringResource(R.string.fab_sale_note),
+                subtitle = stringResource(R.string.record_choice_sale_sub),
+                icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                iconTint = MaterialTheme.colorScheme.secondary,
                 onClick = {
-                    expanded = false
+                    feedback(FeedbackEvent.TAP)
                     onSaleNote()
                 },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(R.string.fab_sale_note), fontWeight = FontWeight.Bold)
-            }
-        }
-        AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
-            ExtendedFloatingActionButton(
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            RecordChoiceRow(
+                title = stringResource(R.string.fab_record_expense),
+                subtitle = stringResource(R.string.record_choice_expense_sub),
+                icon = Icons.Default.ArrowUpward,
+                iconTint = semantic.danger,
                 onClick = {
-                    expanded = false
-                    onRecord(MoneyFormMode.OTHER_IN)
-                },
-                containerColor = semantic.successContainer,
-                contentColor = semantic.onSuccessContainer,
-            ) {
-                Icon(Icons.Default.ArrowDownward, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(R.string.fab_record_income), fontWeight = FontWeight.Bold)
-            }
-        }
-        AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    expanded = false
+                    feedback(FeedbackEvent.TAP)
                     onRecord(MoneyFormMode.PURCHASE)
                 },
-                containerColor = semantic.dangerContainer,
-                contentColor = semantic.onDangerContainer,
-            ) {
-                Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(R.string.fab_record_expense), fontWeight = FontWeight.Bold)
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            RecordChoiceRow(
+                title = stringResource(R.string.fab_record_income),
+                subtitle = stringResource(R.string.record_choice_in_sub),
+                icon = Icons.Default.ArrowDownward,
+                iconTint = semantic.success,
+                onClick = {
+                    feedback(FeedbackEvent.TAP)
+                    onRecord(MoneyFormMode.OTHER_IN)
+                },
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            RecordChoiceRow(
+                title = stringResource(R.string.fab_other_out),
+                subtitle = stringResource(R.string.record_choice_out_sub),
+                icon = Icons.Default.ArrowUpward,
+                iconTint = semantic.danger,
+                onClick = {
+                    feedback(FeedbackEvent.TAP)
+                    onRecord(MoneyFormMode.OTHER_OUT)
+                },
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            RecordChoiceRow(
+                title = stringResource(R.string.fab_capital),
+                subtitle = stringResource(R.string.record_choice_capital_sub),
+                icon = Icons.Default.AccountBalance,
+                iconTint = MaterialTheme.colorScheme.primary,
+                onClick = {
+                    feedback(FeedbackEvent.TAP)
+                    onRecord(MoneyFormMode.CAPITAL)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecordChoiceRow(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconTint: Color,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = iconTint.copy(alpha = 0.12f),
+            modifier = Modifier.size(40.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
             }
         }
-        // U5: the other two money pages, until U6 turns this into one + menu.
-        listOf(MoneyFormMode.OTHER_OUT to R.string.fab_other_out, MoneyFormMode.CAPITAL to R.string.fab_capital).forEach { (mode, label) ->
-            AnimatedVisibility(visible = expanded, enter = enter, exit = exit) {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        expanded = false
-                        onRecord(mode)
-                    },
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ) {
-                    Text(stringResource(label), fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-        MankeuTooltip(stringResource(if (expanded) R.string.fab_close else R.string.fab_record)) {
-            FloatingActionButton(
-                onClick = { feedback(FeedbackEvent.TAP); expanded = !expanded },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(if (expanded) R.string.fab_close else R.string.fab_record),
-                    modifier = Modifier.rotate(rotation),
-                )
-            }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

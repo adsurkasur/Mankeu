@@ -137,6 +137,7 @@ import com.mankeu.presentation.screens.StockHistoryScreen
 import com.mankeu.presentation.screens.ProductsScreen
 import com.mankeu.presentation.screens.RestorePreviewDialog
 import com.mankeu.presentation.screens.SettingsScreen
+import com.mankeu.presentation.CatatanFilter
 import java.time.LocalDate
 
 /**
@@ -231,7 +232,8 @@ fun MankeuApp(
     // and the Catatan note filter, which Beranda's Tagihan card sets.
     var saleEditorId by rememberSaveable { mutableStateOf<String?>(null) }
     var saleDetailId by rememberSaveable { mutableStateOf<String?>(null) }
-    var noteFilter by rememberSaveable { mutableStateOf(NoteFilter.OPEN) }
+    var noteFilter by rememberSaveable { mutableStateOf(NoteFilter.ALL) }
+    var catatanFilter by rememberSaveable { mutableStateOf(CatatanFilter.ALL) }
     val openSaleEditor: (String?) -> Unit = { id -> saleEditorId = id; overlay = Overlay.SALE_EDITOR }
     // A note opened from a customer's page returns there.
     var saleDetailFrom by rememberSaveable { mutableStateOf(Overlay.NONE) }
@@ -240,7 +242,14 @@ fun MankeuApp(
         saleDetailFrom = if (overlay == Overlay.CUSTOMER) Overlay.CUSTOMER else Overlay.NONE
         overlay = Overlay.SALE_DETAIL
     }
-    val openBills: (NoteFilter) -> Unit = { filter -> noteFilter = filter; destination = Destination.ENTRY }
+    val openBills: (NoteFilter) -> Unit = { filter ->
+        noteFilter = filter
+        catatanFilter = when (filter) {
+            NoteFilter.OPEN, NoteFilter.OVERDUE -> CatatanFilter.UNPAID
+            NoteFilter.ALL -> CatatanFilter.ALL
+        }
+        destination = Destination.ENTRY
+    }
     val openMoneyForm: (MoneyFormMode, String?, Pair<String, String>?) -> Unit = { mode, editId, prefill ->
         moneyMode = mode
         moneyEditId = editId
@@ -817,6 +826,8 @@ fun MankeuApp(
                                                     onOpenSale = openSaleDetail,
                                                     noteFilter = noteFilter,
                                                     onNoteFilter = { noteFilter = it },
+                                                    catatanFilter = catatanFilter,
+                                                    onCatatanFilter = { catatanFilter = it },
                                                     onOpenBills = openBills,
                                                     onOpenPlan = { overlay = Overlay.PLAN },
                                                     onProduce = onProduce,
@@ -855,6 +866,8 @@ fun MankeuApp(
                                                 onOpenSale = openSaleDetail,
                                                 noteFilter = noteFilter,
                                                 onNoteFilter = { noteFilter = it },
+                                                catatanFilter = catatanFilter,
+                                                onCatatanFilter = { catatanFilter = it },
                                                 onOpenBills = openBills,
                                                 onOpenPlan = { overlay = Overlay.PLAN },
                                                 onProduce = onProduce,
@@ -1352,6 +1365,8 @@ private fun ScreenContent(
     onOpenSale: (String) -> Unit,
     noteFilter: NoteFilter,
     onNoteFilter: (NoteFilter) -> Unit,
+    catatanFilter: CatatanFilter = CatatanFilter.ALL,
+    onCatatanFilter: (CatatanFilter) -> Unit = {},
     onOpenBills: (NoteFilter) -> Unit,
     onOpenPlan: () -> Unit,
     onProduce: () -> Unit,
@@ -1412,6 +1427,8 @@ private fun ScreenContent(
                     onManageScope = onManageScope,
                     onNew = onQuickRecord,
                     onOpenSale = onOpenSale,
+                    filter = catatanFilter,
+                    onFilter = onCatatanFilter,
                     noteFilter = noteFilter,
                     onNoteFilter = onNoteFilter,
                 )

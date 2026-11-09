@@ -443,6 +443,11 @@
     <string name="fab_other_out">Other money out</string>
     <string name="fab_capital">Capital &amp; personal use</string>
     <string name="fab_close">Close record options</string>
+    <string name="record_choice_sale_sub">Product sales or customer invoices</string>
+    <string name="record_choice_expense_sub">Raw materials, stock items, or supplies</string>
+    <string name="record_choice_in_sub">Service revenue, commissions, or other receipts</string>
+    <string name="record_choice_out_sub">Operational costs, rent, electricity, fuel, etc.</string>
+    <string name="record_choice_capital_sub">Owner capital contribution or personal drawings</string>
 
     <string name="feasibility_title">Feasibility &amp; Break-Even (BEP)</string>
     <string name="feasibility_status_feasible">Feasible</string>

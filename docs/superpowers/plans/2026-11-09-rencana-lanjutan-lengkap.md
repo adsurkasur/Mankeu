@@ -129,7 +129,7 @@ rencana masing-masing fase.
 ## 3. Urutan paket
 
 ```
-A (review U5) → B (U6 Catatan) → C (U7 Rencana) → D (U8 bahasa+bantuan) → F (F2 Task 6 titip+tempo)
+A (review U5) → N (stabilitas: jitter + bug bash) → B (U6 Catatan) → C (U7 Rencana) → D (U8 bahasa+bantuan) → F (F2 Task 6 titip+tempo)
 → G (F2 Task 7 template) → E (U9 uji ulang seluruh app) → H (review akhir branch, merge, rilis internal)
 → I (persiapan rilis oleh pemilik) → J (F4 laporan) → K (F6 kunci app + notifikasi) → L (F5 sisa) → M (F7 bantuan + rilis)
 ```
@@ -164,6 +164,46 @@ semua layar akhir.
   - label "Isi (bungkus)" berulang;
   - petunjuk "Belum lunas? Pilih pelanggannya." menggeser segmen.
 - **Selesai bila:** review tertulis, perbaikan dengan tes merah dulu, suite penuh hijau, Status diperbarui.
+
+### Paket N — Stabilitas: jitter dan bug bash (laporan pemilik 2026-11-09)
+
+Pemilik mencoba build ini dan menemukan bahwa masih banyak bug, banyak jitter (layar bergetar atau melompat), dan
+redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur baru (B dan seterusnya).
+
+1. **Kumpulkan bug nyata dulu.**
+   - Tanyakan ke pemilik daftar bug dan layar yang bergetar (screenshot atau rekaman layar bila ada).
+   - Jalankan sendiri semua tugas harian di emulator dengan data "Keripik Bu Sri" (§E), lalu catat setiap bug dan
+     jitter di `docs/audit/2026-11-XX_BUG_BASH.md`: langkah reproduksi, hasil, harapan, dan tingkat (Berat/Sedang/Ringan).
+   - Simpan setelah setiap temuan.
+2. **Jitter: telusuri penyebab dulu, jangan menebak.**
+   - Rekam layar: `adb shell screenrecord /sdcard/x.mp4`, lalu tarik.
+   - Ukur frame: `adb shell dumpsys gfxinfo com.mankeu reset`, jalankan aksinya, lalu `dumpsys gfxinfo com.mankeu`
+     (lihat janky frames).
+   - Hitung rekomposisi: Layout Inspector di Android Studio, bila tersedia untuk pemilik. Alternatifnya, log sementara
+     di composable yang dicurigai.
+   - Tersangka kuat yang sudah diketahui dari riwayat:
+     - pengecekan jam sekali per menit yang menyebabkan `MonthlySummary`/state memancarkan ulang (U2 M-4), sehingga
+       seluruh Beranda/Laporan berkomposisi ulang;
+     - `combine` flow yang memancarkan objek baru walaupun nilainya sama (perlu `distinctUntilChanged`);
+     - `LazyColumn` tanpa `key`;
+     - petunjuk yang muncul/hilang dan menggeser isi, misalnya "Belum lunas? Pilih pelanggannya." menggeser segmen;
+     - `animateContentSize` atau animasi warna di kartu besar;
+     - `imePadding` yang bertabrakan dengan inset lain (masalah lama sheet dan keyboard memantul);
+     - ResultBar yang tingginya berubah;
+     - Stepper atau MoneyInput yang memformat ulang saat mengetik.
+   - Perbaiki di akar (state stabil, `remember`/`derivedStateOf`, ruang dicadangkan untuk petunjuk, kunci daftar,
+     animasi dihapus bila tidak berguna).
+   - Bukti sebelum/sesudah: angka janky frames dan rekaman.
+3. **Redesain terasa "brutal".**
+   - Catat di bug bash bagian mana yang membuat pemilik kehilangan orientasi: fitur yang hilang, tempat yang pindah,
+     label yang berubah.
+   - Usulan perbaikannya bisa berupa jalan pintas ke tempat lama, teks pengantar satu kali "Yang baru", atau
+     mengembalikan sesuatu yang ternyata dibutuhkan.
+   - Keputusan yang mengubah arah produk ditanyakan ke pemilik dengan pertanyaan pilihan ganda, bukan diputuskan sendiri.
+4. Setiap bug Berat/Sedang diperbaiki dengan tes yang gagal dulu (bila bisa diuji otomatis) atau bukti emulator, dalam
+   commit kecil dengan log.
+5. **Selesai bila:** daftar bug bash berstatus beres atau dijadwalkan dengan alasan; jitter yang dilaporkan hilang
+   (dibuktikan dengan angka gfxinfo dan rekaman); suite penuh hijau.
 
 ### Paket B — U6: Satu daftar Catatan (keputusan U-4)
 

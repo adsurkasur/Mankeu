@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-09 15:21] [Claude Code (Opus) — prompt agen berikutnya + paket stabilitas]
+- **Goal**: Owner reported many bugs and jitter and found the redesign too abrupt; asked for a prompt the next AI agent can run, referring to the plan.
+- **Actions**: Added Paket N (stability: owner bug list, own bug bash with written repro steps, root-cause jitter with screenrecord/gfxinfo and known suspects, orientation help for the abrupt redesign, owner questions for direction changes) right after Paket A in the handoff plan. Wrote `docs/superpowers/PROMPT_AGEN_BERIKUTNYA.md`, a copy-paste prompt that points to the plan and repeats the rules that broke things before.
+- **Files**: `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `docs/superpowers/PROMPT_AGEN_BERIKUTNYA.md` (new), `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-11-09 15:17] [Claude Code (Opus) — rencana lanjutan lengkap (read-only/test-only)]
 - **Goal**: Owner asked for a complete plan for all remaining work, with the planner only reading and testing; other agents implement and revise.
 - **Actions**: Verified state at `b1b865b` (unit 139/0, lintDebug and assembleDebug green; full connected run started). Wrote `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`: working method and quota rules, proven environment notes, binding product rules, current status, document map, ordered packages A–M (U5 review, U6–U9, F2 Task 6–8, merge, release prep, F4, F6, F5, F7) with acceptance criteria and tests, a register of 20 open findings consolidated from the local-only SDD ledgers, a verification matrix and risks. WORK_IN_PROGRESS points to it.

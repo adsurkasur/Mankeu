@@ -22,6 +22,10 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Mulai di sini (2026-11-09 15:17):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
+lengkap untuk semua sisa pekerjaan (paket A–M, register temuan terbuka, matriks verifikasi, lingkungan). Atas permintaan
+pemilik, penyusun hanya membaca dan menguji; implementasi dan revisi dikerjakan agen lain mengikuti dokumen itu.
+
 **Sekarang (2026-10-30 11:29): Fase UX** (`docs/superpowers/plans/2026-10-30-fase-ux.md`, tugas U1–U9) setelah audit UI/UX
 (`docs/audit/2026-10-30_AUDIT_UI_UX.md`) dan keputusan pemilik U-1..U-4 (spec). Fase 2 Task 6–8 menyusul dengan
 komponen form baru. Status per tugas di bagian Status rencana itu. U1 (token desain, komponen form bersama di

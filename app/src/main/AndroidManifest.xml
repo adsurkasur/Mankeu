@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Drive backup and sync talk to Google over HttpURLConnection. The Firebase libraries used to add this
+         permission to the merged manifest; removing them (phase 0) silently removed it, so it is declared here. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MankeuApplication"
         android:enableOnBackInvokedCallback="true"

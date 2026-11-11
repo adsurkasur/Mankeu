@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:06] [Claude Code (Fable 5.2) — hotfix izin INTERNET di main (PK-0.1, PK-0.2)]
+- **Goal**: Owner decision K-15a = A: bring the INTERNET permission to `main` now instead of waiting for the MVP merge (audit 2026-11-12, T0).
+- **Actions**: Wrote `ManifestTest` first and saw it fail on `main`; declared `android.permission.INTERNET` in the app manifest (same lines as on `fase2-nota-piutang`).
+- **Files**: `app/src/main/AndroidManifest.xml`, `app/src/test/java/com/mankeu/ManifestTest.kt` (new), `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: `ManifestTest` red before the manifest change, green after. Unit tests 97 passed, 0 failed; `assembleDebug` green; the merged debug manifest lists INTERNET. Not verified: Google sign-in, Drive backup and sync on a real phone (still open, needs the owner's device).
+
 ### [2026-10-29 16:05] [Claude Code (Opus) — perapihan Fase 1 merge]
 - **Goal**: Merge the phase-1 cleanup (P1–P10) after review.
 - **Actions**: Branch review (merge after fixes: 0 Critical, 1 Important, 9 Minor); the fix round cd636ca handled I-1 (P10 claim narrowed, test pins the unit's own purchase) and M-5..M-9, M-1..M-4 written as known limits in DEC-028. Controller re-indented one line the fix round mis-indented in MankeuApp.kt; fast-forwarded main.

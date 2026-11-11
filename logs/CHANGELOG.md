@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+### Fixed
+- Drive backup and sync could not reach the network: the app manifest never declared `INTERNET` (it used to come from the Firebase libraries removed in phase 0). Declared now, with a test that fails if it disappears.
 ### Added
 - Riwayat stok per product: production, stock counts and sales with the stock after each; a wrong production or count can be deleted (then recorded again).
 - Catat penjualan per satuan jual (bungkus, dus); belanja bisa menautkan bahan dan memperingatkan dampak harga baru ke HPP dan untung (spec #20).

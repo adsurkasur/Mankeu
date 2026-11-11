@@ -391,7 +391,7 @@ private fun PeriodSheet(start: YearMonth, end: YearMonth, onDismiss: () -> Unit,
     MankeuSheet(
         title = stringResource(R.string.plan_period),
         onDismiss = onDismiss,
-        confirmEnabled = valid,
+        confirmBlockedReason = if (valid) null else stringResource(R.string.plan_period_invalid),
         onConfirm = { onSave(first, last) },
     ) {
         Text(stringResource(R.string.plan_period_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

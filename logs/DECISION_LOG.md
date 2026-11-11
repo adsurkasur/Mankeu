@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-034] Tombol utama form memakai alasan penghalang yang eksplisit
+- **Date**: 2026-11-12
+- **Status**: Implemented, sesuai PK-0.7 dan Lampiran A aturan S3.
+- **Context**: Boolean enabled pada form dan sheet dapat menonaktifkan Simpan tanpa menjelaskan cara melengkapinya.
+- **Decision**: FullPageForm.saveBlockedReason dan MankeuSheet.confirmBlockedReason menggantikan Boolean lama; null berarti dapat ditekan, teks nonkosong menjelaskan penghalang tepat di atas tombol utama. LineEditSheet meneruskan kontrak yang sama. Alasan kosong ditolak. Sheet informasional tanpa aksi konfirmasi tidak menampilkan alasan konfirmasi.
+- **Rationale / alternatives**: Kontrak tunggal mengikat keadaan tombol dengan penjelasannya dan memaksa seluruh pemanggil menyebut isian pertama yang kurang. Parameter Boolean tambahan tidak dipertahankan karena bisa kembali berbeda dengan alasan yang terlihat.
+- **Affected components**: FullPageForm, MankeuSheet, LineEditSheet, seluruh pemanggil form/sheet, resource Indonesia/Inggris, dan FormComponentsTest/MankeuSheetTest. Tidak mengubah dialog keluar yang menunggu PK-2.2.
+
 ### [DEC-033] Total harian Catatan mencakup seluruh kas; ringkasan operasional tetap terpisah
 - **Date**: 2026-11-12
 - **Status**: Accepted untuk implementasi PK-0.5; pilihan didelegasikan pemilik kepada agen dengan prinsip kebutuhan pengguna UMKM nyata.

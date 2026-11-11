@@ -148,8 +148,14 @@ fun ProductEditorScreen(
     }
     val cost = yieldQuantity?.let { ProductCosting.cost(ProductSpec("", name, baseUnit, it, validUnits.map { v -> v.second }, recipe), prices) }
     val unitCosts = cost?.let { c -> validUnits.map { it.first }.zip(c.perSaleUnit).toMap() }.orEmpty()
-    val canSave = name.isNotBlank() && baseUnit.isNotBlank() && yieldQuantity != null &&
-        units.any { it.name.isNotBlank() && (it.price.toLongOrNull() ?: 0) > 0 }
+    val saveBlockedReason = when {
+        name.isBlank() -> stringResource(R.string.form_need_name)
+        baseUnit.isBlank() -> stringResource(R.string.form_need_unit)
+        yieldQuantity == null -> stringResource(R.string.form_need_yield)
+        units.none { it.name.isNotBlank() } -> stringResource(R.string.form_need_sale_unit)
+        units.none { it.name.isNotBlank() && (it.price.toLongOrNull() ?: 0) > 0 } -> stringResource(R.string.form_need_sale_price)
+        else -> null
+    }
 
     if (confirmDelete && onDelete != null) {
         AlertDialog(
@@ -170,7 +176,7 @@ fun ProductEditorScreen(
         onClose = onClose,
         modifier = modifier,
         snackbarHost = snackbarHost,
-        saveEnabled = canSave,
+        saveBlockedReason = saveBlockedReason,
         onSave = {
             onSave(
                 ProductDraft(
@@ -353,7 +359,12 @@ private fun RecipeLineSheet(line: LineInput, materials: List<StockItem>, onDismi
         title = stringResource(if (line.materialId != null) R.string.editor_material else R.string.editor_cost_title),
         onDismiss = onDismiss,
         onSave = { onSave(draft) },
-        saveEnabled = if (draft.materialId != null) TransactionCalculation.parseQuantity(draft.quantity) != null else draft.name.isNotBlank() && (draft.amount.toLongOrNull() ?: 0) > 0,
+        saveBlockedReason = when {
+            draft.materialId != null && TransactionCalculation.parseQuantity(draft.quantity) == null -> stringResource(R.string.form_need_quantity)
+            draft.materialId == null && draft.name.isBlank() -> stringResource(R.string.form_need_name)
+            draft.materialId == null && (draft.amount.toLongOrNull() ?: 0) <= 0 -> stringResource(R.string.form_need_amount)
+            else -> null
+        },
         onDelete = onDelete,
     ) {
         if (draft.materialId != null) {
@@ -396,7 +407,12 @@ private fun SaleUnitSheet(unit: UnitInput, baseUnit: String, onDismiss: () -> Un
         title = stringResource(R.string.editor_unit_title),
         onDismiss = onDismiss,
         onSave = { onSave(draft) },
-        saveEnabled = draft.name.isNotBlank() && TransactionCalculation.parseQuantity(draft.content) != null && (draft.price.toLongOrNull() ?: 0) > 0,
+        saveBlockedReason = when {
+            draft.name.isBlank() -> stringResource(R.string.form_need_name)
+            TransactionCalculation.parseQuantity(draft.content) == null -> stringResource(R.string.form_need_content)
+            (draft.price.toLongOrNull() ?: 0) <= 0 -> stringResource(R.string.form_need_price)
+            else -> null
+        },
         onDelete = onDelete,
     ) {
         OutlinedTextField(

@@ -65,6 +65,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -470,9 +471,18 @@ private fun ImportCard(
                     }
                     review.conflicts.forEach { Text(it, color = semantic.danger, fontWeight = FontWeight.Bold) }
                     ReportRow(stringResource(R.string.import_target), target)
+                    val blockedReason = when {
+                        review.conflicts.isNotEmpty() -> review.conflicts.first()
+                        preview.errors.isNotEmpty() -> stringResource(R.string.form_import_errors)
+                        !preview.canCommit -> stringResource(R.string.form_import_empty)
+                        else -> null
+                    }
+                    if (blockedReason != null) {
+                        Text(blockedReason, modifier = Modifier.testTag("save_blocked_reason"), style = MaterialTheme.typography.bodySmall)
+                    }
                     Button(
                         onClick = onCommit,
-                        enabled = preview.canCommit && review.conflicts.isEmpty(),
+                        enabled = blockedReason == null,
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.import_commit, review.addedRowCount)) }
                     OutlinedButton(onClick = onChooseWorkbook, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.import_pick_another_workbook)) }
@@ -599,6 +609,9 @@ private fun MasterDataDialog(
             options = CategoryRole.entries.map { it.name to stringResource(BusinessWords.roleLabel(it)) },
             onSelected = { categoryRole = CategoryRole.valueOf(it) },
         )
+        if (categoryName.isBlank()) {
+            Text(stringResource(R.string.form_need_name), modifier = Modifier.testTag("save_blocked_reason"), style = MaterialTheme.typography.bodySmall)
+        }
         Button(
             onClick = { onCreateCategory(categoryName, categoryRole); categoryName = "" },
             enabled = categoryName.isNotBlank(),
@@ -734,7 +747,12 @@ private fun BackupDialog(
         title = sheetTitle,
         onDismiss = onDismiss,
         confirmLabel = confirmLabel,
-        confirmEnabled = if (mode == BackupDialogMode.RESTORE_CLOUD) selectedFileId.isNotBlank() && password.length >= 8 else true,
+        confirmBlockedReason = when {
+            mode != BackupDialogMode.RESTORE_CLOUD -> null
+            selectedFileId.isBlank() -> stringResource(R.string.form_need_backup)
+            password.length < 8 -> stringResource(R.string.form_need_password)
+            else -> null
+        },
         dismissLabel = stringResource(if (mode == BackupDialogMode.CHOOSE) R.string.action_close else R.string.action_back_step),
         onDismissClick = {
             if (mode == BackupDialogMode.CHOOSE) {
@@ -946,7 +964,7 @@ fun NameDialog(title: String, label: String, onDismiss: () -> Unit, initialValue
     MankeuSheet(
         title = title,
         onDismiss = onDismiss,
-        confirmEnabled = value.isNotBlank(),
+        confirmBlockedReason = if (value.isBlank()) stringResource(R.string.form_need_name) else null,
         onConfirm = { onSave(value) },
     ) {
         OutlinedTextField(

@@ -936,4 +936,26 @@
     <string name="help_faq_profit_body">Capital adds cash but is not profit. Personal withdrawals and equipment reduce cash but are not costs. Equipment depreciation reduces profit but is not money going out.</string>
     <string name="help_faq_profit_steps">Open Reports, the Profit, Loss and Cash Flow tab.\nCompare operating cash flow with investing and financing.\nThe difference between cash and profit is explained by the last two.</string>
     <!-- GUIDE:END -->
+    <!-- Reasons above blocked form actions (PK-0.7). -->
+    <string name="form_need_name">Enter a name first.</string>
+    <string name="form_need_unit">Enter the item measurement first.</string>
+    <string name="form_need_yield">Enter how much one recipe makes, greater than 0.</string>
+    <string name="form_need_sale_unit">Add a selling measure first.</string>
+    <string name="form_need_sale_price">Enter a selling price greater than Rp0 for one selling measure.</string>
+    <string name="form_need_quantity">Enter a quantity greater than 0 first.</string>
+    <string name="form_need_content">Enter contents greater than 0 first.</string>
+    <string name="form_need_count">Enter a quantity of 0 or more first.</string>
+    <string name="form_need_price">Enter a price greater than Rp0 first.</string>
+    <string name="form_need_amount">Enter an amount greater than Rp0 first.</string>
+    <string name="form_need_category">Choose a category first.</string>
+    <string name="form_need_date">Choose a valid date first.</string>
+    <string name="form_need_sale_line">Add an item to sell first.</string>
+    <string name="form_choose_item">Choose the missing item again.</string>
+    <string name="form_need_password">Enter a password with at least 8 characters first.</string>
+    <string name="form_password_mismatch">Repeat the same password.</string>
+    <string name="form_need_backup">Choose a backup to restore first.</string>
+    <string name="form_type_confirmation">Type %1$s first to continue.</string>
+    <string name="form_erasing">Wait for deletion to finish.</string>
+    <string name="form_import_empty">This file has no records to add yet.</string>
+    <string name="form_import_errors">Fix the file problems shown above first.</string>
 </resources>

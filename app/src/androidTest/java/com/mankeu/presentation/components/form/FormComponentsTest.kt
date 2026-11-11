@@ -12,6 +12,9 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -28,6 +31,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.mankeu.R
 import com.mankeu.presentation.MankeuTheme
+import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.toRupiah
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -48,6 +52,94 @@ class FormComponentsTest {
     private fun field() = compose.onNode(hasSetTextAction())
 
     private fun fieldText(): String = field().fetchSemanticsNode().config[SemanticsProperties.EditableText].text
+
+    @Test
+    fun fullPageFormExplainsBlockedSaveAndEnablesWhenReasonClears() {
+        var reason by mutableStateOf<String?>("Isi harganya dulu.")
+        var saved = 0
+        compose.setContent {
+            MankeuTheme {
+                FullPageForm(
+                    title = "Barang", dirty = false, onClose = {}, onSave = { saved++ },
+                    saveBlockedReason = reason,
+                ) { }
+            }
+        }
+        compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
+        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        reason = null
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
+        assertEquals(1, saved)
+    }
+
+    @Test
+    fun sheetExplainsBlockedConfirmAndEnablesWhenReasonClears() {
+        var reason by mutableStateOf<String?>("Isi harganya dulu.")
+        var saved = 0
+        compose.setContent {
+            MankeuTheme {
+                MankeuSheet(
+                    title = "Barang", onDismiss = {}, onConfirm = { saved++ },
+                    confirmBlockedReason = reason,
+                ) { }
+            }
+        }
+        compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
+        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        reason = null
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
+        assertEquals(1, saved)
+    }
+
+    @Test
+    fun lineEditSheetExplainsBlockedSaveAndEnablesWhenReasonClears() {
+        var reason by mutableStateOf<String?>("Isi harganya dulu.")
+        var saved = 0
+        compose.setContent {
+            MankeuTheme {
+                LineEditSheet(
+                    title = "Harga", onDismiss = {}, onSave = { saved++ },
+                    saveBlockedReason = reason,
+                ) { }
+            }
+        }
+        compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
+        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        reason = null
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
+        assertEquals(1, saved)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun fullPageFormRejectsBlankBlockedReason() {
+        compose.setContent {
+            MankeuTheme {
+                FullPageForm(title = "Barang", dirty = false, onClose = {}, onSave = {}, saveBlockedReason = " ") { }
+            }
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun sheetRejectsBlankBlockedReason() {
+        compose.setContent {
+            MankeuTheme {
+                MankeuSheet(title = "Barang", onDismiss = {}, onConfirm = {}, confirmBlockedReason = " ") { }
+            }
+        }
+    }
+
+    @Test
+    fun informationalSheetDoesNotShowAConfirmBlockedReason() {
+        compose.setContent {
+            MankeuTheme {
+                MankeuSheet(title = "Info", onDismiss = {}, confirmLabel = null, confirmBlockedReason = "Isi harganya dulu.") { }
+            }
+        }
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+    }
 
     @Test
     fun moneyInputGroupsThousandsWhileTypingAndYieldsALong() {

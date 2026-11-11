@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.mankeu.R
@@ -66,12 +67,13 @@ fun FullPageForm(
     onClose: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    saveEnabled: Boolean = true,
+    saveBlockedReason: String? = null,
     result: (@Composable () -> Unit)? = null,
     /** The shell's snackbar, so a refusal from the repository shows on this page (it stays open). */
     snackbarHost: SnackbarHostState? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    require(saveBlockedReason == null || saveBlockedReason.isNotBlank()) { "A blocked save needs a visible reason" }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     val close = { if (dirty) confirmDiscard = true else onClose() }
     BackHandler(onBack = close)
@@ -95,8 +97,11 @@ fun FullPageForm(
                 ) {
                     result?.invoke()
                 }
+                if (saveBlockedReason != null) {
+                    Text(saveBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), style = MankeuType.Caption)
+                }
                 // The label is always "Simpan" (P2 §8): one word for one action on every form.
-                Button(onClick = onSave, enabled = saveEnabled, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
+                Button(onClick = onSave, enabled = saveBlockedReason == null, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
                     Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold)
                 }
             }

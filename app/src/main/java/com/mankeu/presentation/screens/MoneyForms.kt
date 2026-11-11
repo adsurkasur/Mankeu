@@ -179,7 +179,14 @@ fun MoneyFormScreen(
         amount?.takeIf { it > 0 }
     }
     val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
-    val canSave = total != null && category != null && parsedDate != null
+    val saveBlockedReason = when {
+        material != null && parsedQuantity == null -> stringResource(R.string.form_need_quantity)
+        material != null && (unitPrice == null || unitPrice!! <= 0) -> stringResource(R.string.form_need_price)
+        total == null -> stringResource(R.string.form_need_amount)
+        category == null -> stringResource(R.string.form_need_category)
+        parsedDate == null -> stringResource(R.string.form_need_date)
+        else -> null
+    }
     val amountFocus = remember { FocusRequester() }
     val title = stringResource(
         when (mode) {
@@ -196,7 +203,7 @@ fun MoneyFormScreen(
             dirty = snapshot != initial,
             onClose = onClose,
             snackbarHost = snackbarHost,
-            saveEnabled = canSave,
+            saveBlockedReason = saveBlockedReason,
             onSave = {
                 val cat = category ?: return@FullPageForm
                 val t = total ?: return@FullPageForm
@@ -320,7 +327,7 @@ fun MoneyFormScreen(
             MankeuSheet(
                 title = stringResource(R.string.entry_new_category_title),
                 onDismiss = { newCategory = null },
-                confirmEnabled = name.isNotBlank(),
+                confirmBlockedReason = if (name.isBlank()) stringResource(R.string.form_need_name) else null,
                 onConfirm = {
                     val role = if (mode == MoneyFormMode.OTHER_IN) CategoryRole.REVENUE else CategoryRole.EXPENSE
                     onCreateCategory(name.trim(), role)

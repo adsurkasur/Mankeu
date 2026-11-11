@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:42] [Codex (GPT-6) — PK-0.7]
+- **Goal**: Menjelaskan sebab tombol utama belum dapat ditekan pada form dan sheet.
+- **Actions**: Mengganti Boolean saveEnabled/confirmEnabled dengan alasan nullable nonkosong, meneruskan lewat LineEditSheet, memperbarui semua pemanggil dan resource dua bahasa; menambah tes perilaku merah/hijau dan meninjau 12 enabled tersisa. Review independen menyetujui. Mengambil screenshot/XML produk sintetis dengan hasil kosong; memulihkan data emulator.
+- **Files**: FullPageForm.kt; MankeuSheet.kt; Rows.kt; 11 layar pemanggil; strings.xml dua bahasa; FormComponentsTest.kt; laporan PK-0.7; evidence/PK-0.7/product-empty-yield.png dan XML; logs/ACTIVITY_LOG.md, DECISION_LOG.md (DEC-034), CHANGELOG.md; rencana induk §8; WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] RED 3 perilaku + 2 alasan kosong; GREEN 16 tes komponen, 155 tes JVM, lint 0 error/89 peringatan. Screenshot/XML: alasan tampil di atas Simpan mati; pemulihan hash 4/4 sama.
+
 ### [2026-11-12 02:34] [Codex (GPT-6) — PK-0.4]
 - **Goal**: Review independen Paket N dan ukur ulang empat aksi pada emulator.
 - **Actions**: Membaca diff 95d0062..337dde4; menyiapkan fixture sintetis 200 event dengan jurnal seimbang; mengukur reset/aksi/gfxinfo masing-masing tiga kali; menelusuri fase frame; mereproduksi crash produk bernama sama; memulihkan data awal dengan hash 4/4 file identik. Menulis N1/N2 Important dan N3 Minor; merekam batas diagnosis tanpa menebak akar Kotlin.

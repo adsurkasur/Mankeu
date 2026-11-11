@@ -119,7 +119,7 @@ fun LineEditSheet(
     title: String,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
-    saveEnabled: Boolean = true,
+    saveBlockedReason: String? = null,
     onDelete: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -128,7 +128,7 @@ fun LineEditSheet(
     MankeuSheet(
         title = title,
         onDismiss = onDismiss,
-        confirmEnabled = saveEnabled,
+        confirmBlockedReason = saveBlockedReason,
         onConfirm = onSave,
         startAction = onDelete?.let {
             {

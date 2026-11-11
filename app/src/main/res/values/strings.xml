@@ -938,4 +938,26 @@
     <string name="help_faq_profit_body">Setoran modal menambah kas tetapi bukan laba. Ambil pribadi dan beli alat mengurangi kas tetapi bukan biaya. Penyusutan alat mengurangi laba tetapi bukan uang keluar.</string>
     <string name="help_faq_profit_steps">Buka Laporan, tab Laba Rugi dan Arus Kas.\nBandingkan Arus Kas Operasi dengan Investasi dan Pembiayaan.\nSelisih kas dan laba dijelaskan oleh dua bagian terakhir.</string>
     <!-- GUIDE:END -->
+    <!-- Reasons above blocked form actions (PK-0.7). -->
+    <string name="form_need_name">Isi namanya dulu.</string>
+    <string name="form_need_unit">Isi satuan barangnya dulu.</string>
+    <string name="form_need_yield">Isi hasil sekali buat lebih dari 0 dulu.</string>
+    <string name="form_need_sale_unit">Tambahkan satuan jual dulu.</string>
+    <string name="form_need_sale_price">Isi harga jual lebih dari Rp0 untuk satu satuan jual dulu.</string>
+    <string name="form_need_quantity">Isi jumlah lebih dari 0 dulu.</string>
+    <string name="form_need_content">Isi jumlah isi lebih dari 0 dulu.</string>
+    <string name="form_need_count">Isi jumlah 0 atau lebih dulu.</string>
+    <string name="form_need_price">Isi harga lebih dari Rp0 dulu.</string>
+    <string name="form_need_amount">Isi jumlah uang lebih dari Rp0 dulu.</string>
+    <string name="form_need_category">Pilih kategori dulu.</string>
+    <string name="form_need_date">Pilih tanggal yang benar dulu.</string>
+    <string name="form_need_sale_line">Tambahkan barang yang dijual dulu.</string>
+    <string name="form_choose_item">Pilih lagi barang yang belum ditemukan.</string>
+    <string name="form_need_password">Isi kata sandi minimal 8 karakter dulu.</string>
+    <string name="form_password_mismatch">Ulangi kata sandi yang sama.</string>
+    <string name="form_need_backup">Pilih cadangan yang mau dipulihkan dulu.</string>
+    <string name="form_type_confirmation">Ketik %1$s dulu untuk melanjutkan.</string>
+    <string name="form_erasing">Tunggu sampai penghapusan selesai.</string>
+    <string name="form_import_empty">Berkas ini belum berisi catatan untuk ditambahkan.</string>
+    <string name="form_import_errors">Perbaiki masalah pada berkas yang ditampilkan di atas dulu.</string>
 </resources>

@@ -283,7 +283,11 @@ internal fun AddStockItemSheet(
     MankeuSheet(
         title = stringResource(R.string.stock_add_item),
         onDismiss = onDismiss,
-        confirmEnabled = name.isNotBlank() && unit.isNotBlank(),
+        confirmBlockedReason = when {
+            name.isBlank() -> stringResource(R.string.form_need_name)
+            unit.isBlank() -> stringResource(R.string.form_need_unit)
+            else -> null
+        },
         onConfirm = { onSave(name.trim(), unit.trim(), price ?: 0, initial.toQuantity(), minAlert.toQuantity(), shared) },
     ) {
         OutlinedTextField(
@@ -336,7 +340,9 @@ internal fun StockMovementSheet(
     MankeuSheet(
         title = stringResource(R.string.stock_movement_title, item.name),
         onDismiss = onDismiss,
-        confirmEnabled = valid,
+        confirmBlockedReason = if (valid) null else stringResource(
+            if (type == StockMovementType.ADJUSTMENT) R.string.form_need_count else R.string.form_need_quantity,
+        ),
         onConfirm = { parsed?.let { onSave(type, it, notes.trim()) } },
     ) {
         Text(stringResource(R.string.stock_current, item.currentStock.toQuantityText(), item.unit), fontWeight = FontWeight.Bold)

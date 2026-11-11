@@ -198,7 +198,7 @@ internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, 
     MankeuSheet(
         title = stringResource(R.string.production_title, record.product.name),
         onDismiss = onDismiss,
-        confirmEnabled = parsed != null,
+        confirmBlockedReason = if (parsed == null) stringResource(R.string.form_need_quantity) else null,
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
         // − 1 + (audit L10): batches are nearly always 1–3; still typeable, decimals allowed.
@@ -227,7 +227,7 @@ private fun CountStockSheet(record: ProductRecord, onDismiss: () -> Unit, onSave
     MankeuSheet(
         title = stringResource(R.string.count_stock_title, record.product.name),
         onDismiss = onDismiss,
-        confirmEnabled = parsed != null,
+        confirmBlockedReason = if (parsed == null) stringResource(R.string.form_need_count) else null,
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
         QuantityInput(stringResource(R.string.count_stock_field, record.product.unit), counted) { counted = it }

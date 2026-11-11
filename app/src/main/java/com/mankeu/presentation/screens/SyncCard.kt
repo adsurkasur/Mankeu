@@ -92,12 +92,15 @@ fun SyncCard(
     if (askPassphrase) {
         var first by remember { mutableStateOf("") }
         var second by remember { mutableStateOf("") }
-        val valid = first.length >= 8 && first == second
         MankeuSheet(
             title = stringResource(R.string.sync_passphrase_title),
             onDismiss = { askPassphrase = false },
             confirmLabel = stringResource(R.string.sync_turn_on),
-            confirmEnabled = valid,
+            confirmBlockedReason = when {
+                first.length < 8 -> stringResource(R.string.form_need_password)
+                first != second -> stringResource(R.string.form_password_mismatch)
+                else -> null
+            },
             onConfirm = { askPassphrase = false; onEnable(first.toCharArray()) },
         ) {
             Text(stringResource(R.string.sync_passphrase_body))

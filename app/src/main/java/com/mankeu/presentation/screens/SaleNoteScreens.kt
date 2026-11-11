@@ -236,7 +236,21 @@ fun SaleNoteEditorScreen(
             dirty = snapshot.toString() != initial,
             onClose = onClose,
             snackbarHost = snackbarHost,
-            saveEnabled = lines.isNotEmpty() && results.all { it != null } && !discountTooHigh && !partTooHigh && parsedDate != null,
+            saveBlockedReason = when {
+                lines.isEmpty() -> stringResource(R.string.form_need_sale_line)
+                results.any { it == null } -> {
+                    val line = lines[results.indexOfFirst { it == null }]
+                    when {
+                        products.none { it.product.id == line.productId } -> stringResource(R.string.form_choose_item)
+                        TransactionCalculation.parseQuantity(line.quantity) == null -> stringResource(R.string.form_need_quantity)
+                        else -> stringResource(R.string.form_need_price)
+                    }
+                }
+                partTooHigh -> stringResource(R.string.sale_max_amount, total.toRupiah())
+                parsedDate == null -> stringResource(R.string.form_need_date)
+                discountTooHigh -> stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())
+                else -> null
+            },
             onSave = {
                 onSave(
                     SaleDraft(
@@ -464,7 +478,11 @@ private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () 
         title = record.product.name,
         onDismiss = onDismiss,
         onSave = { onSave(draft) },
-        saveEnabled = TransactionCalculation.parseQuantity(draft.quantity) != null && (draft.price.toLongOrNull() ?: 0) > 0,
+        saveBlockedReason = when {
+            TransactionCalculation.parseQuantity(draft.quantity) == null -> stringResource(R.string.form_need_quantity)
+            (draft.price.toLongOrNull() ?: 0) <= 0 -> stringResource(R.string.form_need_price)
+            else -> null
+        },
         onDelete = onDelete,
     ) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
@@ -768,7 +786,13 @@ fun PaySheet(
     MankeuSheet(
         title = title,
         onDismiss = onDismiss,
-        confirmEnabled = amountOk && dateOk,
+        confirmBlockedReason = when {
+            value <= 0 -> stringResource(R.string.form_need_amount)
+            !amountOk -> stringResource(R.string.sale_max_amount, outstanding.toRupiah())
+            parsed == null -> stringResource(R.string.form_need_date)
+            !dateOk -> stringResource(R.string.sale_pay_date_early)
+            else -> null
+        },
         onConfirm = { error = null; onPay(value, parsed!!, onDismiss, { error = it }) },
     ) {
         MoneyInput(

@@ -392,7 +392,7 @@ private fun ProjectDialog(
     MankeuSheet(
         title = stringResource(R.string.scope_project_edit_title),
         onDismiss = onDismiss,
-        confirmEnabled = name.isNotBlank(),
+        confirmBlockedReason = if (name.isBlank()) stringResource(R.string.form_need_name) else null,
         onConfirm = {
             onSave(
                 name,
@@ -441,7 +441,7 @@ private fun AddBusinessDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
     MankeuSheet(
         title = stringResource(R.string.dialog_add_business),
         onDismiss = onDismiss,
-        confirmEnabled = name.isNotBlank(),
+        confirmBlockedReason = if (name.isBlank()) stringResource(R.string.form_need_name) else null,
         onConfirm = { onSave(name.trim()) },
     ) {
         OutlinedTextField(

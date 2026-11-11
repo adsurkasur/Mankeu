@@ -162,7 +162,11 @@ internal fun ContactSheet(
     MankeuSheet(
         title = stringResource(if (existing == null) R.string.contact_new_title else R.string.contact_edit_title),
         onDismiss = onDismiss,
-        confirmEnabled = name.isNotBlank() && !duplicate,
+        confirmBlockedReason = when {
+            name.isBlank() -> stringResource(R.string.form_need_name)
+            duplicate -> stringResource(R.string.contact_duplicate, name.trim())
+            else -> null
+        },
         onConfirm = { onSave(ContactDraft(name, phone, address, notes, customer, supplier)) },
     ) {
         OutlinedTextField(

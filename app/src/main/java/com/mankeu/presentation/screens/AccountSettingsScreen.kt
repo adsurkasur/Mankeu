@@ -54,6 +54,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
@@ -335,6 +336,9 @@ private fun EraseAllDataCard(signedIn: Boolean, isErasing: Boolean, onErase: (Bo
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (isErasing) {
+                Text(stringResource(R.string.form_erasing), modifier = Modifier.testTag("save_blocked_reason"), style = MaterialTheme.typography.bodySmall)
+            }
             OutlinedButton(
                 onClick = { feedback(FeedbackEvent.WARN); confirming = true },
                 enabled = !isErasing,
@@ -355,7 +359,11 @@ private fun EraseAllDataCard(signedIn: Boolean, isErasing: Boolean, onErase: (Bo
             title = stringResource(R.string.dialog_erase_title),
             onDismiss = { confirming = false },
             confirmLabel = stringResource(R.string.action_erase),
-            confirmEnabled = typed.trim() == word && !isErasing,
+            confirmBlockedReason = when {
+                isErasing -> stringResource(R.string.form_erasing)
+                typed.trim() != word -> stringResource(R.string.form_type_confirmation, word)
+                else -> null
+            },
             destructive = true,
             onConfirm = {
                 onErase(signedIn && includeCloud)

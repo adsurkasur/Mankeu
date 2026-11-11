@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,7 +63,7 @@ fun MankeuSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     confirmLabel: String? = stringResource(R.string.action_save),
-    confirmEnabled: Boolean = true,
+    confirmBlockedReason: String? = null,
     destructive: Boolean = false,
     dismissLabel: String = stringResource(R.string.action_cancel),
     // Multi-step sheets need the dismiss button to step back while the scrim and back still close it.
@@ -72,6 +73,7 @@ fun MankeuSheet(
     startAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    require(confirmBlockedReason == null || confirmBlockedReason.isNotBlank()) { "A blocked confirmation needs a visible reason" }
     // Kept internal: `rememberModalBottomSheetState` is experimental, and as a default parameter it
     // is evaluated at every call site, which would force @OptIn on every caller.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -107,6 +109,9 @@ fun MankeuSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 content = content,
             )
+            if (confirmLabel != null && onConfirm != null && confirmBlockedReason != null) {
+                Text(confirmBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), style = MaterialTheme.typography.bodySmall)
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 startAction?.invoke()
                 Spacer(Modifier.weight(1f))
@@ -114,7 +119,7 @@ fun MankeuSheet(
                 if (confirmLabel != null && onConfirm != null) {
                     Button(
                         onClick = onConfirm,
-                        enabled = confirmEnabled,
+                        enabled = confirmBlockedReason == null,
                         colors = if (destructive) {
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,

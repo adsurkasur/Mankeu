@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:14] [Codex (GPT-6) — review independen PK-0.3]
+- **Goal**: Review Paket B tanpa mengubah kode.
+- **Actions**: Menyimpan diff 337dde4..b217794 di folder sementara; menelusuri penyerapan pembayaran, filter/pencarian, pemuatan 200 event, MonthlySummary, ubah tanggal dan hapus nota; menulis putusan lima skenario wajib serta empat temuan Important.
+- **Files**: docs/superpowers/reports/PK-0.3-review.md; docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md; docs/WORK_IN_PROGRESS.md; logs/ACTIVITY_LOG.md.
+- **Verification**: Bukti statis dengan lokasi dan contoh angka; Git awal bersih; berkas ledger/tes utama sama dengan b217794. Tidak menjalankan suite atau emulator. Konflik arti total kas versus kas operasional memerlukan pilihan pemilik; perbaikan untuk PK-0.5 sesudah PK-0.4.
+
 ### [2026-11-12 02:06] [Claude Code (Fable 5.2) — hotfix izin INTERNET di main (PK-0.1, PK-0.2)]
 - **Goal**: Owner decision K-15a = A: bring the INTERNET permission to `main` now instead of waiting for the MVP merge (audit 2026-11-12, T0).
 - **Actions**: Wrote `ManifestTest` first and saw it fail on `main`; declared `android.permission.INTERNET` in the app manifest (same lines as on `fase2-nota-piutang`).

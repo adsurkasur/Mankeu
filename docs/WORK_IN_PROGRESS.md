@@ -26,7 +26,7 @@ Merawat panduan penggunaan (`docs/panduan/`):
 (lampiran A spek layar, B paket kerja, C rencana uji, D prompt eksekusi). Rencana 2026-11-09 di bawah ini digantikan
 urutannya. Keadaan: rencana ditulis, belum ada paket yang dikerjakan. Menunggu pemilik: tabel 4.16 (K-1 sampai K-15);
 K-1 sampai K-4 menghalangi Tahap 1. Bisa dikerjakan tanpa jawaban: PK-0.3, PK-0.4, PK-0.6, PK-0.7, PK-0.8,
-PK-3.1. PK-0.1 dan PK-0.2 (hotfix INTERNET, `f8a9bee` di `main`) selesai; K-1 sampai K-4 dan K-15a sudah dijawab. Paket berikutnya: **PK-0.3 (review Paket B)**.
+PK-3.1. PK-0.1 dan PK-0.2 (hotfix INTERNET, `f8a9bee` di `main`) selesai; K-1 sampai K-4 dan K-15a sudah dijawab. PK-0.3 selesai ditinjau (2026-11-12 02:14): [terverifikasi] review statis di docs/superpowers/reports/PK-0.3-review.md, 4 Important; tanpa perubahan kode atau eksekusi tes. F2 menunggu pilihan pemilik tentang total kas nyata versus operasional. Paket berikutnya sesuai urutan: **PK-0.4**; perbaikan temuan B/N pada PK-0.5 setelah kedua review.
 
 **Mulai di sini (2026-11-09 20:30):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
 lengkap untuk semua sisa pekerjaan. Paket A (review U5), Paket N (stabilitas jitter + bug bash), dan Paket B (U6 Catatan terpadu) selesai. Pekerjaan aktif berikutnya:

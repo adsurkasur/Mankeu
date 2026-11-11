@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:44] [Claude Code (Sonnet 5.5) — impor Excel ketat masuk MVP]
+- **Goal**: Record the owner's decision on Excel in the MVP.
+- **Actions**: Owner: import is in the MVP, strict is fine, smart/fuzzy mapping later; flows are fill-the-template-then-import and export-edit-reimport; users must understand the template. Added V-6 to the spec including the consequence that import only adds rows (re-importing an edited export duplicates records) and the proposed two import modes (Tambahkan / Ganti data usaha ini dengan isi file, undoable); updated the Fable prompt (MVP line, decision question, V-1..V-6).
+- **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/superpowers/PROMPT_FABLE.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only. The duplicate-on-reimport behaviour is read from DEC-012 and AGENTS.md, not re-tested this session.
+
 ### [2026-11-12 01:41] [Claude Code (Sonnet 5.5) — MVP dan prompt Fable]
 - **Goal**: Define the MVP with the owner and write the planner prompt.
 - **Actions**: Owner confirmed the MVP and added: financial feasibility analysis and recipe/product costing belong in the MVP because partners want per-recipe (per batch) calculation. Recorded V-4 (simple means easy to use, no feature cuts) and V-5 (two doors on one foundation, pass criteria incl. matching a real practitioner recipe) in the spec. Wrote `docs/superpowers/PROMPT_FABLE.md` with reading order, binding direction, existing assets, required deliverables (master plan, screen specs, owner decision questions, small work packages, test plan, risks, execution prompts).

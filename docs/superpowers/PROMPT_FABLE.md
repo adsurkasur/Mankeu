@@ -16,7 +16,7 @@ KONTEKS YANG HARUS KAMU BACA (urut, ini bahan utama):
    rancangan "catat dulu, rapikan nanti", rencana uji pengguna)
 2. docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md  (10 persona, kebutuhan lintas bidang, usulan D1-D13)
 3. docs/audit/2026-11-12_AUDIT_MENYELURUH.md  (temuan teknis, T0 izin INTERNET, peta sisa pekerjaan, privasi)
-4. docs/superpowers/specs/2026-10-29-redesign-spec.md  (keputusan pemilik: #1-#20, F2-*, U-*, V-1..V-5 di bagian bawah)
+4. docs/superpowers/specs/2026-10-29-redesign-spec.md  (keputusan pemilik: #1-#20, F2-*, U-*, V-1..V-6 di bagian bawah)
 5. docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md  (rencana lama paket A-O; PERLU kamu susun ulang)
 6. AGENTS.md (repo) dan docs/WORK_IN_PROGRESS.md; logs/DECISION_LOG.md (DEC-026..030) bila perlu keputusan arsitektur.
 
@@ -31,7 +31,11 @@ ARAH PRODUK (keputusan pemilik, mengikat):
   Pintu B "Hitung": kalkulator resep (modal per resep, per bungkus/dus, harga jual yang disarankan, "kalau bahan naik
   10%", susut/gagal) dan analisis kelayakan usaha (modal awal, biaya tetap, titik impas, balik modal, layak/tidak).
   Pintu B bisa dipakai tanpa satu pun transaksi, dan hasilnya otomatis menjadi modal barang di Pintu A.
-  Fondasi: data aman di HP, cadangan dan pindah HP.
+  Fondasi: data aman di HP, cadangan dan pindah HP. Ekspor dan impor Excel (V-6): template ketat, tanpa tebakan
+  kolom; alur (a) unduh template, isi, impor dan (b) ekspor, edit manual, impor lagi. Impor pintar/fuzzy di luar MVP.
+  Catatan: impor sekarang hanya menambah baris, jadi alur (b) menggandakan data; usulkan dan minta keputusan pemilik
+  soal mode "Tambahkan" vs "Ganti data usaha ini dengan isi file" (dapat dibatalkan). Template harus bisa dipahami
+  pengguna awam (petunjuk bahasa sehari-hari, contoh, pesan kesalahan per sel).
 - Lulus MVP: 5 dari 6 pengguna awam mencatat penjualan pertama < 2 menit tanpa bantuan, lalu menjawab "untungku bulan
   ini?" dan "siapa belum bayar?"; dan seorang pembuat makanan memasukkan satu resep nyata dan angkanya cocok dengan
   hitungan manualnya.
@@ -47,7 +51,7 @@ HASIL YANG KAMU TULIS (satu berkas utama + lampiran bila perlu, di docs/superpow
    setelah rilis butuh schema 15 + migrasi + BackupUpgrade.
 2. SPEK LAYAR untuk alur awam: layar pertama, "Aku jual/Aku beli", kalkulator resep, kelayakan usaha, Beranda,
    dengan kosakata awam per jenis usaha, isian bernilai bawaan, pesan saat tombol mati, tidak ada jalan buntu.
-3. DAFTAR KEPUTUSAN untuk pemilik dalam bentuk pertanyaan pilihan ganda (retur, cara bayar, jaminan, siklus, dll.),
+3. DAFTAR KEPUTUSAN untuk pemilik dalam bentuk pertanyaan pilihan ganda (retur, cara bayar, jaminan, siklus, mode impor Tambahkan vs Ganti, dll.),
    masing-masing dengan rekomendasi dan akibatnya. Jangan memutuskan arah produk sendiri.
 4. PAKET KERJA kecil (target 1 sesi agen per paket): tiap paket berisi tujuan, berkas yang disentuh, langkah, tes yang
    harus ditulis dulu (TDD), kriteria selesai, risiko, perkiraan ukuran, dan dependensi. Sertakan paket review
@@ -67,7 +71,7 @@ PRINSIP RENCANA:
 - Setiap paket diverifikasi nyata (bukan hanya tes hijau): tes hijau pernah meloloskan cacat serius.
 - Fleksibel tetapi simpel: satu mesin di dalam, bentuk berbeda per jenis usaha (membuat sendiri, dagang, jasa/sewa).
 - Jujurlah tentang apa yang belum diverifikasi; tandai fakta (terverifikasi/dilaporkan/belum).
-- Bila ada konflik antar dokumen, spec adalah otoritas terakhir (V-1..V-5 terbaru), lalu audit pengguna awam.
+- Bila ada konflik antar dokumen, spec adalah otoritas terakhir (V-1..V-6 terbaru), lalu audit pengguna awam.
 
 SELESAI BILA: pemilik dapat membaca rencana induk dan memutuskan, dan agen pelaksana bisa mulai paket pertama hanya dari
 berkas rencana + prompt eksekusi, tanpa bertanya balik soal apa yang dikerjakan.

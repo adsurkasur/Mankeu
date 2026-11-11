@@ -35,9 +35,7 @@ Skor kecocokan sekarang: ★★★ cocok, ★★ bisa dengan akal-akalan, ★ ti
 - Tugas: menyewakan traktor per hektar atau per hari; biaya BBM dan upah sopir per pekerjaan; pelanggan petani membayar
   setelah panen (tagihan panjang); mencatat solar yang dibeli.
 - `[dicoba]` Membuka "Produk baru": layar langsung menampilkan "Resep 1 batch", "1 batch jadi", dan pill bungkus/pcs/
-  porsi/botol/kg. Untuk jasa, semua itu tidak bermakna. Satuan "hektar" harus lewat "Lainnya". Saat mengetik di kotak
-  satuan, fokus keyboard tetap di kolom nama sehingga teks tercampur ("Bajak sawahhektar"): **bug fokus** `[dicoba]`,
-  perlu direproduksi di HP nyata.
+  porsi/botol/kg. Untuk jasa, semua itu tidak bermakna. Satuan "hektar" harus lewat "Lainnya". Dugaan awalku adanya bug fokus keyboard (teks "Bajak sawahhektar") **salah**: itu artefak skrip uji. Yang nyata: setelah memilih "Lainnya", kotak satuan terisi nilai pilihan awal ("bungkus") sehingga mengetik menyisip di tengah. Lihat `2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` U5.
 - `[kode]` Produk jasa punya stok yang bisa minus; "Produksi" dan "Hitung stok" tampil percuma; peringatan stok menipis
   bisa muncul.
 - `[kode]` HPP jasa = biaya per kali kerja (BBM + upah), tetapi model memaksa "per batch" dengan hasil N satuan.

@@ -240,6 +240,10 @@ Aturan desain yang diusulkan untuk semua pilihan berdaftar (satuan, kategori, pe
 
 Lihat `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md`: 10 persona, 4 dari 10 hampir tidak bisa memakai app dengan wajar (jasa/sewa, kelontong), dan usulan desain G1–G3. Temuan tambahan dari uji tangan: kotak satuan di editor produk bisa kehilangan fokus keyboard sehingga teks tercampur ke kolom nama (perlu direproduksi di HP nyata).
 
+## 13. Audit bisnis dari sudut pengguna awam
+
+Lihat `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` (**dibaca pertama oleh perencana**): standar intuitif untuk pengguna awam, 14 skenario uji dengan bukti, akar masalah (urutan terbalik: struktur dulu baru catat), rancangan "catat dulu, rapikan nanti" dalam tiga tingkat, jalan keluar skala (mikro sampai besar), dan rencana uji dengan pengguna sungguhan. Dokumen itu mendahului prioritas teknis di sini.
+
 ## 8. Cara mengulang audit ini
 
 ```

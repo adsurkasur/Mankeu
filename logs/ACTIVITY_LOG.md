@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:36] [Claude Code (Sonnet 5.5) — audit bisnis pengguna awam]
+- **Goal**: Owner asked for a business-logic audit from the viewpoint of non-technical, non-finance users, then a design for what the app should be.
+- **Actions**: Ran novice-style trials on the emulator (fresh data): first run, creating a service product, custom unit, save, selling and recording spend without products, empty Catatan tab. Evidence: Simpan is disabled with no explanation; the product editor forces recipe/batch/unit vocabulary on a service; selling with no product is a dead end; the empty-state CTA opens the wrong form; the custom-unit box keeps the previous pill value. Wrote the audit with a 12-point novice checklist, 14 scenarios, root causes, a catat-dulu-rapikan-nanti three-tier design, scale honesty (micro to large), a field usability test plan and tasks for the planner. Corrected my earlier claim of a keyboard focus bug (script artifact).
+- **Files**: `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` (new), `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md`, `docs/audit/2026-11-12_AUDIT_MENYELURUH.md`, `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only. Trials were scripted adb runs on an empty database; personas are invented; real novice testing still required.
+
 ### [2026-11-12 01:29] [Claude Code (Sonnet 5.5) — persona UMKM dan usulan desain]
 - **Goal**: Owner asked me to role-play UMKM users from several fields, test the app, and propose a tailored design before handing to the planner.
 - **Actions**: Tried the product editor as a rental-service owner on the emulator (found service products forced into recipe/batch/stock vocabulary and a keyboard focus slip when typing a custom unit); verified from code that sale lines require a product, product stock ignores purchases, and there is no business-type onboarding, deposit or return concept. Wrote 10 personas, a fit table, 8 recurring needs, design proposals D1-D13 in three priority waves, a field-testing method and tasks for the planner; linked it from the audit (section 12) and Paket O.

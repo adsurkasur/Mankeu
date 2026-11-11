@@ -207,6 +207,8 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 
 ### Paket O — Fleksibilitas UMKM (permintaan pemilik 2026-11-12)
 
+> **PERINGATAN PRIORITAS (2026-11-12):** `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` menyimpulkan app gagal bagi pengguna awam karena alurnya meminta struktur (produk, resep, batch) sebelum bisa mencatat. Perencana harus **mengurutkan ulang seluruh paket** agar perombakan alur awal dan model ("catat dulu, rapikan nanti", jenis item, baris bebas) mendahului C, D, F, G, dan semua rilis. Paket di bawah ini berlaku sampai perencana menyusun ulang.
+
 > **Diperluas:** `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md` memuat 10 persona UMKM, hasil uji, dan usulan desain D1–D13 dengan prioritas G1–G3. Paket O mencakup G1 (jenis item, baris nota bebas, satuan milik usaha, belanja barang dagangan) dan harus selesai **sebelum Paket G (template) dan sebelum merge/rilis**, karena menyentuh schema 14 dan template v5 yang belum dirilis. G2 dan G3 dijadwalkan oleh perencana.
 
 Rujukan: audit `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` §11 (F1 sampai F5). Kerjakan sesudah Paket C dan sebelum Paket F (supaya titip dan tempo memakai pemilih baru).

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:10] [Claude Code (Sonnet 5.5, low effort) — audit menyeluruh read-only]
+- **Goal**: Audit the whole project and record it as input for the planner (Fable).
+- **Actions**: Ran unit, lint, debug and release builds and the full connected suite; scanned code for money floats, risky parsing, jargon strings, TODOs, mojibake, file sizes, form-box counts, stale docs; read the status of packages A, N, B. Wrote `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` (15 findings: 4 Berat, 6 Sedang, 5 Ringan; owner decisions pending; suggested order).
+- **Files**: `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` (new), `logs/ACTIVITY_LOG.md`.
+- **Verification**: Unit 148/0; lint 0 errors (89 warnings); assembleDebug and assembleRelease green; connected 134/0/2. No code changed.
+
 ### [2026-11-09 20:30] [Antigravity (Gemini 3.8 Flash) — Paket B: Fase UX U6 Satu daftar Catatan]
 - **Goal**: Paket B (U6): Menyatukan tab Catatan menjadi satu linimasa kronologis menurut tanggal (nota penjualan + mutasi kas), menyerap pembayaran hari yang sama tanpa double-counting kas, menyediakan filter chip terpadu (Semua, Belum lunas, Uang masuk, Uang keluar), mengganti 5-item speed dial dengan satu FAB + dan bottom sheet pilihan aksi, menyelesaikan bug audit L14, dan membuktikan performa skala.
 - **Actions**:

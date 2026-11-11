@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:25] [Claude Code (Sonnet 5.5) — fleksibilitas UMKM]
+- **Goal**: Owner asked whether unit choices are hardcoded and wants a flexible but simple system that does not limit UMKM.
+- **Actions**: Read the code: unit pills are hardcoded lists (ProductEditorScreen COMMON_BASE_UNITS, StockSection COMMON_UNITS) with a free-text Lainnya; stored units are free text so data is not limited, but custom units are not remembered and near-duplicate names split. Also checked: no stockless service products, no sales returns, one cash only; categories, recipe costs and sale units are already free. Added section 11 to the audit and Paket O to the handoff plan.
+- **Files**: `docs/audit/2026-11-12_AUDIT_MENYELURUH.md`, `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only; no code changed.
+
 ### [2026-11-12 01:23] [Claude Code (Sonnet 5.5) — T0 INTERNET, privasi, verifikasi Back]
 - **Goal**: Complete the audit for the planner: fix what it found, update privacy docs to match the app, re-verify Back now that Gboard works.
 - **Actions**: Found that the merged manifest declares no `INTERNET` (Firebase used to add it; removed in phase 0) while Drive uses `HttpURLConnection`: added the permission, confirmed it in debug and release merged manifests. Updated privacy policy ID/EN (no Firebase account, notes/customers/stock data, sharing notes, removed `ACCESS_NETWORK_STATE`, deletion text), store/Play guide text, Firebase mentions in README/PRODUCT_REQUIREMENTS/ROADMAP/diagrams, and a banner on CLOUD_SYNC_AND_AUTH. With the owner-updated Gboard, walked Back on the emulator (menu, stacked sheets, keyboard, product page): correct; found the stacked first-run sheets (L02). Extended the audit doc (T0, 4a, 4b, sections 9 and 10) and the plan register (R1 closed, R21, R22).

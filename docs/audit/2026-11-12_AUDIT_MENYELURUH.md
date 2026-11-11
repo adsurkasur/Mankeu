@@ -222,6 +222,20 @@ Sumber rinci: `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` (p
 Aturan kerja untuk agen pelaksana bereffort rendah: satu paket per sesi; tes terfokus dulu, suite penuh sekali di akhir;
 commit dan Status diperbarui di setiap langkah; laporan di `docs/superpowers/reports/`.
 
+## 11. Fleksibilitas untuk UMKM (permintaan pemilik 2026-11-12)
+
+> Prinsip pemilik: sistem fleksibel tetapi tetap simpel; jangan membatasi UMKM karena kenyataan di lapangan sangat beragam.
+
+| # | Temuan | Bukti | Usulan |
+|---|---|---|---|
+| F1 | Pilihan satuan adalah daftar tetap di kode (`COMMON_BASE_UNITS` di `ProductEditorScreen.kt:79`: bungkus, pcs, porsi, botol, kg; `COMMON_UNITS` di `StockSection.kt:261`: kg, liter, gram, pcs, bungkus, ikat) dengan satu tombol "Lainnya". Satuan yang disimpan teks bebas, jadi tidak ada batas data, tetapi satuan ketikan tidak diingat, harus diketik ulang di tiap produk/bahan, dan "karung"/"Karung"/"krg" menjadi tiga satuan (pencocokan stok dan penjualan memakai nama). | kode | **Satuan milik usaha**: pemilih dengan pencarian (komponen `PickerPage` U1) berisi satuan yang sudah dipakai di usaha itu (urut paling sering) + saran awal; "+ Tambah 'xyz'" bila belum ada; saran nama yang hampir sama (huruf besar/kecil, spasi) sebelum membuat satuan baru; tanpa tabel baru (dibaca dari data) atau tabel kecil `units` bila perlu penamaan resmi. Berlaku di editor produk, tambah bahan, satuan jual, form belanja, dan nota. |
+| F2 | Tidak ada produk jasa tanpa stok. Sewa alat/jasa membajak tetap dianggap punya stok dan bisa minus; tombol Produksi dan resep tidak relevan. | pencarian kode: tidak ada `trackStock`/`isService`; "Jasa" hanya nama kategori | Pilihan "Produk ini tidak punya stok (jasa/sewa)" di editor produk: stok, Produksi, dan peringatan menipis disembunyikan; HPP dari biaya per kali jasa (mis. BBM, upah) tetap bisa diisi. Spec awal mewajibkan inti mendukung jasa pertanian dan sewa mesin. |
+| F3 | Tidak ada retur penjualan (pelanggan mengembalikan barang). | pencarian kode kosong | Retur sebagai kebalikan nota: mengurangi piutang atau mengembalikan uang, mengembalikan stok (opsional), dan membalik untung. Perlu keputusan pemilik dan golden test. |
+| F4 | Cara bayar hanya "tunai" (satu kas). Transfer/QRIS tidak dibedakan. | kode, rencana Fase 2 ruling 1 | Opsional: label "Dibayar lewat" (tunai, transfer, lainnya) tanpa memecah saldo; atau beberapa "dompet". Perlu keputusan pemilik. |
+| F5 | Sudah fleksibel (jangan dibatasi): kategori bisa ditambah sendiri; komponen biaya resep bebas; jumlah produk dan satuan jual tidak dibatasi; kategori impor yang tidak dikenal menjadi kategori baru; kuantitas desimal. | kode | pertahankan |
+
+Aturan desain yang diusulkan untuk semua pilihan berdaftar (satuan, kategori, pelanggan, pemasok, bahan): **daftar milik usaha, belajar dari pemakaian, ada pencarian, ada "+ Tambah", deteksi nama mirip**, bukan daftar tetap dari pengembang.
+
 ## 8. Cara mengulang audit ini
 
 ```

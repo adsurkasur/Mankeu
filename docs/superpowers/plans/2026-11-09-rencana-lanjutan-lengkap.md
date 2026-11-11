@@ -205,6 +205,15 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 5. **Selesai bila:** daftar bug bash berstatus beres atau dijadwalkan dengan alasan; jitter yang dilaporkan hilang
    (dibuktikan dengan angka gfxinfo dan rekaman); suite penuh hijau.
 
+### Paket O — Fleksibilitas UMKM (permintaan pemilik 2026-11-12)
+
+Rujukan: audit `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` §11 (F1 sampai F5). Kerjakan sesudah Paket C dan sebelum Paket F (supaya titip dan tempo memakai pemilih baru).
+
+1. **F1 satuan milik usaha** (wajib): pemilih berpencarian + "+ Tambah" + saran nama mirip, dibaca dari satuan yang sudah dipakai usaha; ganti daftar tetap di editor produk, tambah bahan, satuan jual, belanja, nota. Tes: satuan ketikan muncul di produk berikutnya; "Karung" vs "karung" menawarkan satuan yang sudah ada; tanpa batas jumlah satuan; migrasi tidak perlu bila dibaca dari data.
+2. **F2 produk tanpa stok** (wajib): opsi di editor produk; sembunyikan stok, Produksi, dan peringatan menipis; stok tidak dihitung untuk produk itu; nota tidak memeriksa stok; ekspor/impor membawa opsi ini (DEC-012; kolom di lembar Produk). Perlu kolom di tabel `products` (schema 14 belum dirilis, ubah migrasi 13→14, `14.json`, `BackupUpgrade`, tes).
+3. **F3 retur** dan **F4 cara bayar**: tanyakan pemilik dengan pilihan ganda sebelum membangun; tulis keputusan di spec.
+4. Tes lintas jenis usaha: skenario warung (jual per porsi, bahan per kg/liter), jasa pertanian (tanpa stok, biaya BBM+upah), sewa mesin (tanpa stok, tagihan per sewa), dan keripik (produksi).
+
 ### Paket B — U6: Satu daftar Catatan (keputusan U-4)
 
 - **Tujuan:** tab Catatan menampilkan satu daftar menurut tanggal, dengan:

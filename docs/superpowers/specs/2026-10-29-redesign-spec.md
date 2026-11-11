@@ -87,6 +87,6 @@ Dasar: `docs/audit/2026-10-30_AUDIT_UI_UX.md` (32 layar, pola P1–P7).
 
 | # | Keputusan |
 |---|---|
-| V-1 | **Fokus UMKM dan usaha sederhana** (mikro sampai kecil). Mankeu **bukan ERP**: tidak ada multi-pengguna dan hak akses, akuntansi penuh, pajak PPN, faktur bernomor wajib, rekening bank, persetujuan, atau integrasi korporat. Jalur untuk usaha menengah/besar tidak direncanakan; bila nanti ada pengguna nyata yang memintanya, diputuskan terpisah. Ini menggantikan keinginan "juga untuk usaha besar". |
+| V-1 | **Fokus UMKM dan usaha sederhana** (mikro sampai kecil). Mankeu **bukan ERP kelas SAP** (sistem korporat besar): tidak ada multi-pengguna dan hak akses, akuntansi penuh, pajak PPN, faktur bernomor wajib, rekening bank, persetujuan, atau integrasi korporat. Jalur untuk usaha menengah/besar tidak direncanakan; bila nanti ada pengguna nyata yang memintanya, diputuskan terpisah. Ini menggantikan keinginan "juga untuk usaha besar". |
 | V-2 | **Intuitif diukur dari pengguna awam** (tidak mahir teknologi dan tidak paham istilah keuangan), bukan dari orang yang paham alur ekonomi, Excel, atau web. Standar: cek-lis 12 poin di `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` §2. |
 | V-3 | **Prinsip "catat dulu, rapikan nanti"** menjadi arah utama (rekomendasi audit; pemilik setuju arah fokus sederhana). Perincian tiga tingkat dikerjakan perencana. |

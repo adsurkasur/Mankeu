@@ -82,3 +82,11 @@ Dasar: `docs/audit/2026-10-30_AUDIT_UI_UX.md` (32 layar, pola P1–P7).
 | U-2 | **Stok bahan nyata:** belanja yang menautkan bahan menambah stok bahan; Produksi mengurangi bahan sesuai resep (jumlah per batch × batch). Koreksi lewat "Hitung ulang stok". Menggantikan spec #9 bagian "tidak dikurangi otomatis oleh produksi" dan DEC-028 §3. |
 | U-3 | **Kirim nota / pengingat tagihan** lewat menu bagikan Android (teks rapi, tanpa izin atau akun baru) dan **jatuh tempo cepat** (7 / 14 / 30 hari) saat nota belum lunas. |
 | U-4 | **Tab Catatan satu daftar per tanggal**: nota, pembayaran, belanja, uang masuk lain, dengan filter (Semua / Belum lunas / Uang masuk / Uang keluar). |
+
+## Keputusan arah produk (user-confirmed, 2026-11-12)
+
+| # | Keputusan |
+|---|---|
+| V-1 | **Fokus UMKM dan usaha sederhana** (mikro sampai kecil). Mankeu **bukan ERP**: tidak ada multi-pengguna dan hak akses, akuntansi penuh, pajak PPN, faktur bernomor wajib, rekening bank, persetujuan, atau integrasi korporat. Jalur untuk usaha menengah/besar tidak direncanakan; bila nanti ada pengguna nyata yang memintanya, diputuskan terpisah. Ini menggantikan keinginan "juga untuk usaha besar". |
+| V-2 | **Intuitif diukur dari pengguna awam** (tidak mahir teknologi dan tidak paham istilah keuangan), bukan dari orang yang paham alur ekonomi, Excel, atau web. Standar: cek-lis 12 poin di `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md` §2. |
+| V-3 | **Prinsip "catat dulu, rapikan nanti"** menjadi arah utama (rekomendasi audit; pemilik setuju arah fokus sederhana). Perincian tiga tingkat dikerjakan perencana. |

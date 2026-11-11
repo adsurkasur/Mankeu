@@ -135,6 +135,8 @@ keputusan arah produk yang perlu dipilih pemilik, bukan sesuatu yang bisa ditamb
 - Pilihan B: jalur kedua untuk menengah/besar (multi-pengguna, server opsional). Proyek terpisah dan jauh lebih besar.
 Rekomendasi: A dulu; catat B sebagai fase masa depan setelah ada pengguna nyata yang memintanya.
 
+> **KEPUTUSAN PEMILIK (2026-11-12): Pilihan A.** Fokus UMKM dan usaha sederhana; Mankeu bukan ERP (spec V-1). Tabel dan Pilihan B di atas tinggal sebagai konteks; jangan direncanakan.
+
 ## 7. Aspek teknis (ringkas; rinci di audit menyeluruh)
 
 Rujukan: `docs/audit/2026-11-12_AUDIT_MENYELURUH.md`. Intinya:

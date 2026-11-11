@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:37] [Claude Code (Sonnet 5.5) — keputusan arah produk]
+- **Goal**: Record the owner's product direction.
+- **Actions**: Owner decided: focus on UMKM and simple businesses, not an ERP. Added V-1..V-3 to the redesign spec (scope, novice-based intuitiveness, catat-dulu-rapikan-nanti), marked Pilihan A in the novice audit, and put the direction note at the top of the handoff plan's Paket O.
+- **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/audit/2026-11-12_AUDIT_BISNIS_PENGGUNA_AWAM.md`, `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-11-12 01:36] [Claude Code (Sonnet 5.5) — audit bisnis pengguna awam]
 - **Goal**: Owner asked for a business-logic audit from the viewpoint of non-technical, non-finance users, then a design for what the app should be.
 - **Actions**: Ran novice-style trials on the emulator (fresh data): first run, creating a service product, custom unit, save, selling and recording spend without products, empty Catatan tab. Evidence: Simpan is disabled with no explanation; the product editor forces recipe/batch/unit vocabulary on a service; selling with no product is a dead end; the empty-state CTA opens the wrong form; the custom-unit box keeps the previous pill value. Wrote the audit with a 12-point novice checklist, 14 scenarios, root causes, a catat-dulu-rapikan-nanti three-tier design, scale honesty (micro to large), a field usability test plan and tasks for the planner. Corrected my earlier claim of a keyboard focus bug (script artifact).

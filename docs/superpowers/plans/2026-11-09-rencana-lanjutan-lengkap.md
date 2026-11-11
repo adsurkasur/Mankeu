@@ -207,6 +207,8 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 
 ### Paket O — Fleksibilitas UMKM (permintaan pemilik 2026-11-12)
 
+> **Diperluas:** `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md` memuat 10 persona UMKM, hasil uji, dan usulan desain D1–D13 dengan prioritas G1–G3. Paket O mencakup G1 (jenis item, baris nota bebas, satuan milik usaha, belanja barang dagangan) dan harus selesai **sebelum Paket G (template) dan sebelum merge/rilis**, karena menyentuh schema 14 dan template v5 yang belum dirilis. G2 dan G3 dijadwalkan oleh perencana.
+
 Rujukan: audit `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` §11 (F1 sampai F5). Kerjakan sesudah Paket C dan sebelum Paket F (supaya titip dan tempo memakai pemilih baru).
 
 1. **F1 satuan milik usaha** (wajib): pemilih berpencarian + "+ Tambah" + saran nama mirip, dibaca dari satuan yang sudah dipakai usaha; ganti daftar tetap di editor produk, tambah bahan, satuan jual, belanja, nota. Tes: satuan ketikan muncul di produk berikutnya; "Karung" vs "karung" menawarkan satuan yang sudah ada; tanpa batas jumlah satuan; migrasi tidak perlu bila dibaca dari data.

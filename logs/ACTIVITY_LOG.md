@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:29] [Claude Code (Sonnet 5.5) — persona UMKM dan usulan desain]
+- **Goal**: Owner asked me to role-play UMKM users from several fields, test the app, and propose a tailored design before handing to the planner.
+- **Actions**: Tried the product editor as a rental-service owner on the emulator (found service products forced into recipe/batch/stock vocabulary and a keyboard focus slip when typing a custom unit); verified from code that sale lines require a product, product stock ignores purchases, and there is no business-type onboarding, deposit or return concept. Wrote 10 personas, a fit table, 8 recurring needs, design proposals D1-D13 in three priority waves, a field-testing method and tasks for the planner; linked it from the audit (section 12) and Paket O.
+- **Files**: `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md` (new), `docs/audit/2026-11-12_AUDIT_MENYELURUH.md`, `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only. Personas are invented by the author; findings are tagged tried / code / hunch.
+
 ### [2026-11-12 01:25] [Claude Code (Sonnet 5.5) — fleksibilitas UMKM]
 - **Goal**: Owner asked whether unit choices are hardcoded and wants a flexible but simple system that does not limit UMKM.
 - **Actions**: Read the code: unit pills are hardcoded lists (ProductEditorScreen COMMON_BASE_UNITS, StockSection COMMON_UNITS) with a free-text Lainnya; stored units are free text so data is not limited, but custom units are not remembered and near-duplicate names split. Also checked: no stockless service products, no sales returns, one cash only; categories, recipe costs and sale units are already free. Added section 11 to the audit and Paket O to the handoff plan.

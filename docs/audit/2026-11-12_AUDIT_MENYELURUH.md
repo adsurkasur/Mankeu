@@ -236,6 +236,10 @@ commit dan Status diperbarui di setiap langkah; laporan di `docs/superpowers/rep
 
 Aturan desain yang diusulkan untuk semua pilihan berdaftar (satuan, kategori, pelanggan, pemasok, bahan): **daftar milik usaha, belajar dari pemakaian, ada pencarian, ada "+ Tambah", deteksi nama mirip**, bukan daftar tetap dari pengembang.
 
+## 12. Uji persona UMKM
+
+Lihat `docs/audit/2026-11-12_PERSONA_DAN_DESAIN_UMKM.md`: 10 persona, 4 dari 10 hampir tidak bisa memakai app dengan wajar (jasa/sewa, kelontong), dan usulan desain G1–G3. Temuan tambahan dari uji tangan: kotak satuan di editor produk bisa kehilangan fokus keyboard sehingga teks tercampur ke kolom nama (perlu direproduksi di HP nyata).
+
 ## 8. Cara mengulang audit ini
 
 ```

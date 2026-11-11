@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:34] [Codex (GPT-6) — PK-0.4]
+- **Goal**: Review independen Paket N dan ukur ulang empat aksi pada emulator.
+- **Actions**: Membaca diff 95d0062..337dde4; menyiapkan fixture sintetis 200 event dengan jurnal seimbang; mengukur reset/aksi/gfxinfo masing-masing tiga kali; menelusuri fase frame; mereproduksi crash produk bernama sama; memulihkan data awal dengan hash 4/4 file identik. Menulis N1/N2 Important dan N3 Minor; merekam batas diagnosis tanpa menebak akar Kotlin.
+- **Files**: docs/superpowers/reports/PK-0.4-review.md; logs/ACTIVITY_LOG.md; rencana induk X3/§8; docs/WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] 12/12 sampel, jank 57,14–96,67 %, p90 25–53 ms; crash duplicate key direproduksi; hash pemulihan 4/4 sama. [belum] Akar tingkat fungsi dan HP nyata; bukan klaim kinerja lulus.
+
 ### [2026-11-12 02:30] [Codex (GPT-6) — Keputusan total kas (DEC-033)]
 - **Goal**: Menyelesaikan konflik kontrak F2 setelah pemilik mendelegasikan pilihan.
 - **Actions**: Memilih seluruh kas nyata pada total harian untuk pencocokan uang pengguna; mempertahankan arti kas operasional dan laba; menentukan dua field pembanding baru MonthlySummary; mengamandemen kriteria PK-0.3 butir 3 dan mencatat tindak lanjut review.

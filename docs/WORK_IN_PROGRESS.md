@@ -22,6 +22,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Progres otomatis (2026-11-12 02:34):** PK-0.4 selesai ditinjau. [terverifikasi] 12/12 sampel, jank 57,14–96,67 %, p90 25–53 ms; crash duplicate key direproduksi; hash pemulihan 4/4 sama. [belum] Akar tingkat fungsi dan HP nyata; bukan klaim kinerja lulus. PK-0.5 memperbaiki crash dan temuan B, membetulkan klaim N; PK-0.7 sedang dikerjakan. Kinerja tetap terbuka di X3/PK-5.4. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
+
 **Progres otomatis (2026-11-12 02:30):** Keputusan total kas (DEC-033) selesai. [terverifikasi] Dokumentasi kontrak; belum ada perubahan angka/kode pada keputusan ini. Implementasi serta tes rekonsiliasi pada PK-0.5; keputusan K lain yang kosong tetap terhalang. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
 
 **Progres otomatis (2026-11-12 02:27):** PK-0.6 selesai. [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna. PK-0.4 sedang mengukur emulator; PK-0.7 berikutnya. Daftar dasar 243 pasangan harus dikosongkan pada PK-5.1. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.

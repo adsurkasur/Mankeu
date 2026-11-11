@@ -452,7 +452,7 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 |---|---|---|---|
 | X1 | `main` tanpa izin INTERNET [kode] | Cadangan dan sinkron Drive gagal di HP nyata | PK-0.1, PK-0.2 |
 | X2 | Aturan "pembayaran hari yang sama diserap" (Paket B) belum ditinjau [audit T2] | Uang harian dihitung dua kali atau hilang dari daftar | PK-0.3 |
-| X3 | Jank sheet 32,69 % dan belum ada konfirmasi pemilik [audit T3] | App terasa bergetar di HP murah | PK-0.4, PK-5.3, PK-5.4 |
+| X3 | PK-0.4: 12 sampel emulator 57,14–96,67 % janky; akar tingkat fungsi belum terisolasi, HP nyata belum diuji | Ambang 15 % belum terpenuhi; klaim stabil belum dapat diterima | PK-0.5 membetulkan klaim bukti; method/system trace dan PK-5.3, PK-5.4 |
 | X4 | Tes hijau meloloskan cacat (sudah terjadi: INTERNET, alur awam) | Rasa aman palsu | Tiap paket punya "verifikasi nyata" di emulator; review independen tiap tahap |
 | X5 | Baris nota tanpa produk mengubah asumsi di banyak tempat (stok, ekspor, sinkron, migrasi lama) | Crash atau angka salah pada nota campuran | PK-1.3 mencari semua pemakai `productId`; golden lama harus tetap sama |
 | X6 | Dua cara hitung untung membingungkan atau dipakai tidak konsisten | Angka Beranda berbeda dari Laporan | Cara dibaca di satu tempat (`ProfitInputs`); `OneNumberTest` dijalankan untuk kedua cara |
@@ -505,3 +505,4 @@ Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · 
 - 2026-11-12 02:14 · PK-0.3 · selesai · commit docs(review) sesi ini · [terverifikasi] review statis lima skenario, 4 Important; lihat PK-0.3-review.md · F2 menunggu pilihan kontrak total kas; perbaikan PK-0.5 setelah PK-0.4, tes/emulator [belum].
 - 2026-11-12 02:27 · PK-0.6 · selesai · commit paket ini · [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna. · PK-0.4 sedang mengukur emulator; PK-0.7 berikutnya. Daftar dasar 243 pasangan harus dikosongkan pada PK-5.1.
 - 2026-11-12 02:30 · Keputusan total kas (DEC-033) · selesai · commit paket ini · [terverifikasi] Dokumentasi kontrak; belum ada perubahan angka/kode pada keputusan ini. · Implementasi serta tes rekonsiliasi pada PK-0.5; keputusan K lain yang kosong tetap terhalang.
+- 2026-11-12 02:34 · PK-0.4 · selesai ditinjau · commit paket ini · [terverifikasi] 12/12 sampel, jank 57,14–96,67 %, p90 25–53 ms; crash duplicate key direproduksi; hash pemulihan 4/4 sama. [belum] Akar tingkat fungsi dan HP nyata; bukan klaim kinerja lulus. · PK-0.5 memperbaiki crash dan temuan B, membetulkan klaim N; PK-0.7 sedang dikerjakan. Kinerja tetap terbuka di X3/PK-5.4.

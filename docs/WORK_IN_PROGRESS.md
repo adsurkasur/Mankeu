@@ -22,6 +22,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Progres otomatis (2026-11-12 02:27):** PK-0.6 selesai. [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna. PK-0.4 sedang mengukur emulator; PK-0.7 berikutnya. Daftar dasar 243 pasangan harus dikosongkan pada PK-5.1. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
+
 **Mulai di sini (2026-11-12 02:05):** rencana kerja sekarang `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`
 (lampiran A spek layar, B paket kerja, C rencana uji, D prompt eksekusi). Rencana 2026-11-09 di bawah ini digantikan
 urutannya. Keadaan: rencana ditulis, belum ada paket yang dikerjakan. Menunggu pemilik: tabel 4.16 (K-1 sampai K-15);

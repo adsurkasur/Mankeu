@@ -503,3 +503,4 @@ Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · 
 - 2026-11-12 02:06 · PK-0.1 dan PK-0.2 · selesai · `f8a9bee` di `main`, digabung ke branch kerja · `ManifestTest` merah lalu hijau; unit 97/0 dan `assembleDebug` hijau di `main`; manifest gabungan debug memuat INTERNET · masuk Google dan Drive di HP nyata masih [belum] (PK-5.4).
 
 - 2026-11-12 02:14 · PK-0.3 · selesai · commit docs(review) sesi ini · [terverifikasi] review statis lima skenario, 4 Important; lihat PK-0.3-review.md · F2 menunggu pilihan kontrak total kas; perbaikan PK-0.5 setelah PK-0.4, tes/emulator [belum].
+- 2026-11-12 02:27 · PK-0.6 · selesai · commit paket ini · [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna. · PK-0.4 sedang mengukur emulator; PK-0.7 berikutnya. Daftar dasar 243 pasangan harus dikosongkan pada PK-5.1.

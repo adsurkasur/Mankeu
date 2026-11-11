@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:27] [Codex (GPT-6) — PK-0.6]
+- **Goal**: Mencegah istilah terlarang bertambah dan memaksa daftar dasar menyusut.
+- **Actions**: Memperluas gate ke daftar Lampiran C §1.1, parsing XML, batas kata, pengecualian formal terarah; membuat daftar dasar 243 pasangan dari hasil merah; membuktikan probe piutang baru dan baris dasar usang ditolak lalu mengembalikan byte resource. Review independen menyetujui tanpa temuan.
+- **Files**: ScreenLanguageTest.kt; app/src/test/resources/kata_terlarang_dasar.txt; docs/superpowers/reports/PK-0.6-laporan.md; logs/ACTIVITY_LOG.md; rencana induk §8; docs/WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna.
+
 ### [2026-11-12 02:14] [Codex (GPT-6) — review independen PK-0.3]
 - **Goal**: Review Paket B tanpa mengubah kode.
 - **Actions**: Menyimpan diff 337dde4..b217794 di folder sementara; menelusuri penyerapan pembayaran, filter/pencarian, pemuatan 200 event, MonthlySummary, ubah tanggal dan hapus nota; menulis putusan lima skenario wajib serta empat temuan Important.

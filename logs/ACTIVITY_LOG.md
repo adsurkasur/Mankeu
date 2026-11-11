@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:41] [Claude Code (Sonnet 5.5) — MVP dan prompt Fable]
+- **Goal**: Define the MVP with the owner and write the planner prompt.
+- **Actions**: Owner confirmed the MVP and added: financial feasibility analysis and recipe/product costing belong in the MVP because partners want per-recipe (per batch) calculation. Recorded V-4 (simple means easy to use, no feature cuts) and V-5 (two doors on one foundation, pass criteria incl. matching a real practitioner recipe) in the spec. Wrote `docs/superpowers/PROMPT_FABLE.md` with reading order, binding direction, existing assets, required deliverables (master plan, screen specs, owner decision questions, small work packages, test plan, risks, execution prompts).
+- **Files**: `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `docs/superpowers/PROMPT_FABLE.md` (new), `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-11-12 01:37] [Claude Code (Sonnet 5.5) — keputusan arah produk]
 - **Goal**: Record the owner's product direction.
 - **Actions**: Owner decided: focus on UMKM and simple businesses, not an ERP. Added V-1..V-3 to the redesign spec (scope, novice-based intuitiveness, catat-dulu-rapikan-nanti), marked Pilihan A in the novice audit, and put the direction note at the top of the handoff plan's Paket O.

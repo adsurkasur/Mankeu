@@ -444,7 +444,9 @@ redesainnya terasa terlalu brutal. Paket ini menstabilkan dulu sebelum fitur bar
 
 | # | Temuan | Asal | Rencana |
 |---|---|---|---|
-| R1 | Tombol Back sistem di sheet Usaha dan Riwayat stok belum terbukti di keyboard nyata; emulator hanya punya keyboard suara | U1, DEC-030 | Uji di HP nyata (I); atau pemilik izinkan Gboard di emulator |
+| R1 | ~~Back sistem diabaikan~~ **Selesai 2026-11-12**: penyebabnya keyboard emulator yang rusak; setelah Gboard diperbarui Back terverifikasi baik (audit 4a) | U1, DEC-030 | selesai |
+| R21 | **Izin INTERNET hilang sejak Fase 0** (cadangan/sinkron Drive tidak bisa jalan di HP nyata); diperbaiki di branch; `main` terdampak | audit 2026-11-12 T0 | Hotfix ke main dan tes manifest otomatis (paket 0) |
+| R22 | Tombol "Tambah Usaha" pertama membuka dua sheet bertumpuk dengan kata unit/cabang (L02, spec #15) | audit 4a | Paket D |
 | R2 | Kategori: tanda "Biaya produksi" dan sifat biaya hilang saat ekspor → impor ulang | F2 T4 | G |
 | R3 | Nota dari form nota tidak terekspor (hanya pembayarannya) | F2 T3 | G |
 | R4 | Form uang lama bisa mengubah belanja tempo menjadi tunai; titip/tarik salah belum bisa dihapus | F2 T3 | F |
@@ -507,3 +509,5 @@ Format baris: `- YYYY-MM-DD HH:MM — Paket X — selesai/berhenti di … — co
 - 2026-11-09 15:32 — Paket A — selesai — commit 95d0062 — unit 139/0, lintDebug hijau (0 error) — review U5 lengkap (docs/superpowers/reports/U5-review.md), 3 temuan (M-1 bobot judul OverlayScaffold, M-2 label isi satuan, M-3 jitter pergeseran segmen nota) diperbaiki.
 - 2026-11-09 — Penyusun (read-only/test-only): dokumen ini ditulis. Di HEAD `b1b865b`: unit 139 lulus / 0 gagal,
   lintDebug dan assembleDebug hijau. Instrumented penuh: 130 tes, 0 gagal, 2 dilewati (Help/ModuleScreenshotTest, seperti biasa).
+
+- 2026-11-12 — Audit menyeluruh (`docs/audit/2026-11-12_AUDIT_MENYELURUH.md`) — selesai — temuan T0 INTERNET diperbaiki di manifest, privasi dan dokumen Firebase diperbarui, Back diverifikasi dengan Gboard berfungsi — unit 148/0, instrumented 134/0/2.

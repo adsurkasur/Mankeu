@@ -87,14 +87,14 @@ Fill in the Google Play Data Safety form with the following answers:
 * **Is all of the user data collected by your app encrypted in transit?**
   * Select **"Yes"** (HTTPS / OAuth 2.0).
 * **Do you provide a way for users to request that their data be deleted?**
-  * Select **"Yes"**. In the app: Pengaturan → **Hapus semua data** deletes all local data and, when signed in, every Mankeu file in the Drive app folder, the Firebase sign-in account, and the Drive grant (DEC-020). Outside the app: section 7 of the privacy policy (clear app storage, Drive "Delete hidden app data", or an email request).
-  * **Delete account URL** (asked because Google Sign-In creates a Firebase account): `https://adsurkasur.my.id/mankeu/privacy-policy` (section 7, "Penghapusan Data").
+  * Select **"Yes"**. In the app: Pengaturan → **Hapus semua data** deletes all local data and, when signed in, every Mankeu file in the Drive app folder and the Drive grant (DEC-020). Outside the app: section 7 of the privacy policy (clear app storage, Drive "Delete hidden app data", or an email request).
+  * **Delete account URL** (only if Play Console still asks: since Firebase Auth was removed (spec #8) Mankeu creates no developer-side account; the owner decides what to enter): `https://adsurkasur.my.id/mankeu/privacy-policy` (section 7, "Penghapusan Data").
 
 #### 2. Data Types & Purposes:
 * **Personal Info > Name & Email Address:**
   * **Collected?** Yes (Optional, collected only if the user explicitly signs in with Google).
   * **Shared?** No (Never shared with third parties or developer servers).
-  * **Ephemeral?** No (Cached locally by Firebase Auth on the device).
+  * **Ephemeral?** No (Held only on the device by Google Sign-In; never sent to developer servers).
   * **Required or Optional?** **Optional** (Users can use 100% of calculation/import features offline without signing in).
   * **Purpose:** **Account Management** & **App Functionality** (Drive backup sync identity).
 * **Financial Info (User payment info, Purchase history, Credit score):**

@@ -7,7 +7,7 @@ flowchart LR
     owner["Pemilik usaha kecil"]
     workbookFile["Berkas Excel templat Mankeu"]
     googleDrive["Google Drive appDataFolder"]
-    firebaseAuth["Firebase Auth"]
+    firebaseAuth["Akun Google"]
 
     subgraph mankeuSystem ["Aplikasi Mankeu"]
         subgraph scopeModule ["1. Lingkup dan buku"]
@@ -93,7 +93,7 @@ flowchart LR
     googleDrive -.->|"unduh"| ucRestore
     firebaseAuth -.->|"identitas untuk Drive"| ucBackup
     ucErase -.->|"hapus folder aplikasi"| googleDrive
-    ucErase -.->|"hapus akun"| firebaseAuth
+    ucErase -.->|"cabut izin"| firebaseAuth
 ```
 
 | Use case | Tujuan bagi pemilik usaha |

@@ -1,13 +1,17 @@
 # Audit Menyeluruh Mankeu (2026-11-12)
 
 > **Tujuan:** bahan serah terima ke agen perencana (Fable) untuk menyusun rencana berikutnya.
-> **Sifat:** read-only. Tidak ada kode yang diubah. Disusun oleh Sonnet 5.5 (effort rendah) atas permintaan pemilik.
+> **Sifat:** audit; satu perubahan kode kecil dilakukan karena menyangkut temuan T0 (izin INTERNET). Disusun oleh Sonnet 5.5 (effort rendah) atas permintaan pemilik.
+> **Pembaca berikutnya:** Fable menyusun rencana; agen lain (Sonnet, Gemini) menjalankannya. Dokumen ini sengaja lengkap
+> agar rencana bisa disusun sampai akhir (rilis internal testing) tanpa menebak.
 > **Status fakta:** `terverifikasi` = dijalankan atau dibaca langsung pada audit ini. `dilaporkan` = hanya dari laporan
 > agen sebelumnya. `belum diverifikasi` = tidak bisa dicek tanpa HP nyata atau tindakan pemilik.
 
 ## 1. Ringkasan
 
-Kondisi teknis **sehat**. Tes otomatis hijau, build release lulus, dan tidak ada utang teknis yang menonjol di kode baru.
+Kondisi teknis **sehat menurut tes**. Tes otomatis hijau, build release lulus, dan tidak ada utang teknis yang menonjol di kode baru.
+Namun audit ini menemukan **satu cacat serius yang lolos dari semua tes** (T0: izin INTERNET hilang sejak Fase 0, sehingga
+cadangan dan sinkron Google Drive tidak bisa berjalan di HP nyata). Itu menunjukkan batas tes yang dijalankan di emulator.
 Tetapi produk **belum bisa dirilis**: ada 37 commit di branch `fase2-nota-piutang` yang belum di-merge, Fase 2 belum
 lengkap (titip, belanja tempo, template Excel untuk nota), dan beberapa klaim kualitas lemah buktinya. Pemilik juga
 melaporkan bahwa app masih terasa penuh bug dan bergetar saat dipakai walaupun tes hijau. Tes yang ada belum menangkap
@@ -44,6 +48,17 @@ Tingkat: **Berat** = menghalangi rilis atau berisiko data/uang. **Sedang** = mer
 
 ### Berat
 
+**T0. Izin INTERNET hilang sejak Fase 0 (terverifikasi, sudah diperbaiki di branch).**
+Manifest app tidak pernah mendeklarasikan `INTERNET`; izin itu dulu ikut masuk lewat pustaka Firebase. Saat Firebase Auth
+dibuang di Fase 0 (spec #8), izin ikut hilang. Manifest hasil gabungan (debug dan release) hanya berisi `DUMP`. Padahal
+klien Drive memakai `HttpURLConnection`. Akibatnya masuk Google lalu cadangan dan sinkron Drive akan gagal di HP nyata.
+Ini ada di `main` juga (`6dfeacc`), bukan hanya di branch Fase 2. Tidak tertangkap karena emulator tidak punya akun Google
+uji dan tes Drive memakai tiruan; item "masuk Google dan token Drive" memang tercatat `belum diverifikasi` sejak DEC-027.
+Perbaikan: `<uses-permission android:name="android.permission.INTERNET" />` di `app/src/main/AndroidManifest.xml`
+(manifest hasil gabungan debug dan release kini berisi `INTERNET`). **Karena `main` terdampak, perbaikan ini perlu
+masuk ke main lebih cepat dari merge Fase 2** (cherry-pick satu commit) bila ada pengguna internal yang memakai build main.
+Pelajaran: perlu uji manifest otomatis (lihat §7) dan uji Drive sungguhan di HP.
+
 **T1. Branch besar belum di-merge dan belum utuh (DEC-012).**
 Template Excel belum membawa nota, kontak, titip, dan belanja tempo, serta tanda "Biaya produksi" pada kategori. Ekspor
 lalu impor ulang kehilangan data itu. Aturan repo menyatakan ekspor harus bisa diimpor ulang tanpa kehilangan.
@@ -62,10 +77,11 @@ buruk secara objektif. Ketik di sheet: 22,89 % janky. Pemilik melaporkan jitter 
 konfirmasi pemilik bahwa jitter hilang. Bug bash (`2026-11-09_BUG_BASH.md`) berisi satu tabel hasil dan analisis,
 tetapi tidak ada daftar bug dari pemilik sendiri yang dikonfirmasi. Status: `dilaporkan`, bukan terbukti pada HP nyata.
 
-**T4. Tidak ada bukti pada perangkat nyata.**
-Semua uji dijalankan di emulator dengan keyboard suara. Belum terverifikasi: tombol Back, Gboard, dropdown, Kirim ke
-WhatsApp, masuk Google dan token Drive, sinkron dua HP lintas versi schema, dan baterai/memori. Ini `belum diverifikasi`
-(register R1, R17).
+**T4. Masih tidak ada bukti pada perangkat nyata.**
+Semua uji dijalankan di emulator. Gboard di emulator sempat rusak (proses Gboard sendiri crash dengan
+`NullPointerException`); pemilik memperbaruinya lewat Play Store pada 2026-11-12, lalu **tombol Back terverifikasi baik**
+(lihat §4a). Masih `belum diverifikasi` (butuh HP nyata atau akun uji): masuk Google dan token Drive, sinkron dua HP
+lintas versi schema, Kirim ke WhatsApp (tidak terpasang di emulator), dan baterai/memori (register R17).
 
 ### Sedang
 
@@ -116,6 +132,28 @@ di pembaca Excel, backup (kolom REAL SQLite), grafik, dan persentase. Pembacaan 
 (koma diganti titik lebih dulu), tetapi pernah menjadi sumber bug (desimal "2,5"); satu fungsi parsing bersama akan
 lebih aman daripada tiga salinan.
 
+### 4a. Verifikasi tangan di emulator dengan Gboard berfungsi (2026-11-12, build `b217794` + manifest)
+
+| Skenario | Hasil |
+|---|---|
+| Menu "Lainnya" lalu Back | Menu menutup, kembali ke Beranda. Baik. |
+| Buat usaha: Back dengan keyboard terbuka | Back pertama menutup keyboard, kedua menutup sheet, ketiga menutup sheet di bawahnya. Berurutan dan benar. |
+| Halaman Produk baru dari langkah awal Beranda lalu Back | Kembali ke Beranda. Baik. |
+| Crash `com.mankeu` di log | Tidak ada. |
+| **Masalah L02 masih ada:** "Tambah Usaha" pertama membuka **dua sheet bertumpuk** ("Usaha dan Cabang / Unit" lalu "Tambah usaha"), dengan kata unit/cabang di layar pertama pengguna baru. Bertentangan dengan spec #15 (unit disembunyikan). | UX sedang-berat; masuk paket D. |
+
+Kesimpulan: dugaan "Back diabaikan" di audit 2026-10-30 (L04, L10) adalah **artefak keyboard emulator**, bukan bug app. Register R1 selesai.
+
+### 4b. Klarifikasi laporan pemilik (2026-11-12)
+
+- Layar "form1 sampai form12, belanja, singkong" yang tampak buruk dan menempel di pojok kiri atas adalah **fixture tes otomatis**
+  (komponen mentah tanpa tema, mis. `MankeuSheetTest`), bukan halaman produksi. Tidak ada halaman debug di app (kode utama
+  bersih dari `Form N`, `DebugScreen`, `playground`). Tes instrumented membuka, menutup, dan mereset app berulang kali,
+  sehingga layar putih dan app tertutup saat tes berjalan adalah normal.
+- **Tidak berarti UI produksi sudah siap.** Jawaban jujur untuk pertanyaan pemilik "apakah UI-nya production-ready":
+  **belum** (T3, T5 sampai T9).
+- Saran proses: jangan memakai emulator saat tes instrumented berjalan. Jalankan tes di AVD terpisah agar emulator pemakaian bersih.
+
 ## 5. Yang sudah baik (jangan dibuang)
 
 - Satu sumber angka (`MonthlySummary`) dan tes `OneNumberTest`; angka acuan Oktober keripik stabil.
@@ -126,13 +164,15 @@ lebih aman daripada tiga salinan.
 
 ## 6. Keputusan yang masih menunggu pemilik
 
-1. Izin menyalakan Gboard di emulator agar tombol Back dan keyboard bisa diuji (atau uji langsung di HP nyata).
+1. ~~Gboard di emulator~~ selesai (pemilik memperbarui; Back terverifikasi).
 2. Kapan merge branch Fase 2 ke main: sebelum atau sesudah Paket G (saran audit: **sesudah** G, karena DEC-012).
-3. Teks privasi, listing toko, Data Safety (masih menyebut Firebase).
+3. ~~Teks privasi dan dokumen listing~~ sudah diperbarui di repo (2026-11-12, lihat §9). Tersisa untuk pemilik: **isi di Play Console** (Data Safety, URL penghapusan akun bila diminta, hosting halaman kebijakan) dan membaca ulang `docs/privacy-policy/id.md` dan `en.md` sebelum dipublikasikan.
+3b. **Cherry-pick perbaikan INTERNET ke `main`** (T0) lebih awal, atau terima risiko bahwa build main tidak bisa cadangan/sinkron.
 4. Unggah AAB bertanda tangan ke internal testing (tindakan pemilik).
 
 ## 7. Saran urutan untuk perencana (bukan keputusan)
 
+0. **Kerjakan T0 dulu** (hotfix INTERNET dan tes manifest), karena memengaruhi `main`.
 1. **Konfirmasi dengan pemilik** di HP nyata: apakah jitter dan bug yang dilaporkan masih terjadi di build `b217794`?
    Ini menentukan apakah Paket N dianggap selesai. Minta daftar bug dan screenshot dari pemilik.
 2. **Review independen** Paket B dan N (read-only, model kuat), dengan fokus aturan serap pembayaran hari yang sama
@@ -142,8 +182,45 @@ lebih aman daripada tiga salinan.
 4. Pertimbangkan satu paket baru: **uji keterpakaian dengan pengusaha** (satu sesi 30 menit, tugas harian, direkam)
    karena sumber keluhan pemilik adalah rasa pakai, bukan hasil tes.
 5. Pertimbangkan satu paket baru: **pemecahan file besar** hanya setelah merge, bukan sebelum.
-6. Tambah pengaman kualitas yang bisa dijalankan agen murah: daftar kata terlarang di string layar non-laporan
+6. Tambah pengaman kualitas yang bisa dijalankan agen murah: tes manifest (izin INTERNET harus ada), daftar kata terlarang di string layar non-laporan
    (`ScreenLanguageTest`), batas lint peringatan, dan pemeriksaan `gfxinfo` otomatis pada alur utama.
+
+## 9. Privasi dan dokumen (diperbarui 2026-11-12)
+
+Diubah agar sesuai dengan app sekarang (tanpa Firebase, ada nota, pelanggan, stok, Kirim). Play Console tidak disentuh.
+
+| Berkas | Perubahan |
+|---|---|
+| `docs/privacy-policy/id.md`, `en.md` | Tanggal berlaku 12 Nov 2026; tidak lagi menyebut akun Firebase; daftar data mencakup nota, pelanggan dan pemasok (nama, HP, alamat, hanya di HP), titipan, stok bahan, resep; bagian baru tentang **Kirim nota/pengingat** (teks keluar HP hanya bila pengguna memilih aplikasi tujuan, nomor HP hanya untuk membuka WhatsApp); baris izin `ACCESS_NETWORK_STATE` dihapus (tidak ada di manifest); penghapusan data dan permintaan lewat email disesuaikan. |
+| `docs/STORE_LISTING_AND_POLICIES.md`, `docs/PLAY_CONSOLE_ENTRY_GUIDE.md` | Rujukan akun Firebase dibuang; URL penghapusan akun ditandai "hanya bila Play Console masih memintanya". |
+| `docs/CLOUD_SYNC_AND_AUTH.md` | Banner "dokumen desain lama, Firebase sudah dibuang". |
+| `docs/README.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP.md`, `docs/diagrams/02`, `03` | Rujukan Firebase diganti Google Sign-In / Akun Google. |
+| Tidak diubah (disengaja) | `AGENTS.md` (aturan jangan membuat proyek Firebase), `DECISION_LOG`/`CHANGELOG`/log (sejarah), `V1_IMPLEMENTATION_SPEC.md` (spec lama), `docs/diagrams/preview.html` (hasil render; buat ulang dari diagram bila dibutuhkan). |
+
+Catatan jujur: pernyataan "tidak ada data ke server pengembang" benar menurut kode, tetapi fitur Drive baru benar-benar bisa berjalan
+setelah T0. Pemilik perlu membaca ulang kedua berkas sebelum publikasi, karena ini dokumen hukum atas namanya.
+
+## 10. Peta lengkap sisa pekerjaan sampai rilis internal testing (untuk perencana)
+
+Sumber rinci: `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` (paket, kriteria, register R1 sampai R22) dan
+`docs/superpowers/PROMPT_AGEN_BERIKUTNYA.md`. Status paket: A, N, B selesai; sisanya di bawah.
+
+| Urutan | Paket | Isi | Syarat selesai singkat |
+|---|---|---|---|
+| 0 | **T0 hotfix** | INTERNET ke main (cherry-pick) + tes manifest otomatis | manifest hasil gabungan berisi INTERNET; tes gagal bila hilang |
+| 1 | Review B dan N | review independen (uang pembayaran hari yang sama; jank sheet 32,69 %) | review tertulis, perbaikan dengan tes merah dulu |
+| 2 | Konfirmasi pemilik di HP | bug dan jitter yang masih ada di build terbaru | daftar bug dari pemilik masuk bug bash |
+| 3 | C | Rencana Usaha tanpa periode | golden domain, "Layak" hanya bila biaya tetap terisi |
+| 4 | D | bahasa awam, bantuan, sheet pembuka usaha bertumpuk (L02), R/C keluar dari Beranda | `ScreenLanguageTest` diperluas; GuidesTest hijau; pengguna baru melihat satu form saja |
+| 5 | F | titip ke toko dan belanja tempo (UI) | golden F2 titip dan tempo |
+| 6 | G | template Excel lengkap (nota, kontak, titip, tempo, kategori) | round trip identik (DEC-012) |
+| 7 | E | uji ulang semua layar dan ketukan harian | tidak ada temuan Berat; target ketukan tercapai |
+| 8 | H | review akhir branch, merge ke main, push, pointer | matriks verifikasi hijau |
+| 9 | I | persiapan rilis internal (versi, catatan rilis, uji HP nyata, AAB oleh pemilik) | checklist HP nyata selesai |
+| 10+ | J, K, L, M | laporan per bulan dan Canvas, kunci app dan notifikasi, backup/sinkron sisa, bantuan dan rilis | kriteria F4, F6, F5, F7 di roadmap |
+
+Aturan kerja untuk agen pelaksana bereffort rendah: satu paket per sesi; tes terfokus dulu, suite penuh sekali di akhir;
+commit dan Status diperbarui di setiap langkah; laporan di `docs/superpowers/reports/`.
 
 ## 8. Cara mengulang audit ini
 

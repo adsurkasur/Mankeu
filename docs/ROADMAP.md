@@ -28,7 +28,7 @@ This roadmap is a dependency map, not a fixed queue. Independent tasks may proce
 | AAC-008 | Export and round trip | Template-format Excel export, PDF report, lossless reimport | implemented and tested | AAC-005, AAC-007 |
 | AAC-009 | Receivables/payables | — | dropped by owner decision DEC-011 (strict cash) | — |
 | AAC-010 | Backup/restore | Encrypted versioned local backup, restore, recovery copy | implemented; restores schemas 3–11 | AAC-005 |
-| AAC-011 | Drive/auth and sync | Optional Drive backup and Firebase auth; encrypted multi-device sync | Drive backup and auth implemented; sync offered as a release feature (DEC-024; real two-phone Drive test pending) (DEC-013) | AAC-010 |
+| AAC-011 | Drive/auth and sync | Optional Drive backup and Google sign-in; encrypted multi-device sync | Drive backup and auth implemented; sync offered as a release feature (DEC-024; real two-phone Drive test pending) (DEC-013) | AAC-010 |
 | AAC-012 | Beta readiness | Privacy, signing, target API, device matrix, release evidence, support/rollback | in progress (`docs/PLAY_STORE_DEPLOYMENT.md`) | core release scope complete |
 | AAC-013 | Research validation | Formative tests, pilot/workshop, SUS, DOI analysis, and publication-quality evidence | planned; protocol first | usable beta |
 

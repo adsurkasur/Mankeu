@@ -62,8 +62,8 @@ Buka menu: **Policy and programs** > **App content** (atau ikuti daftar tugas pa
 ### H. Keamanan Data (Data Safety Form)
 * **Apakah aplikasi mengumpulkan data:** **Yes** *(Hanya untuk metadata login opsional jika mencadangkan ke Google Drive pribadi)*.
 * **Apakah data dienkripsi in-transit:** **Yes** (HTTPS).
-* **Apakah pengguna dapat meminta penghapusan data:** **Yes**. Di aplikasi: Pengaturan → **Hapus semua data** (data di HP, dan bila masuk Google juga berkas Mankeu di Drive, akun masuk Firebase, dan izin Drive; DEC-020). Di luar aplikasi: bagian 7 kebijakan privasi.
-* **URL penghapusan akun** (diminta karena masuk Google membuat akun Firebase): `https://adsurkasur.my.id/mankeu/privacy-policy`, bagian 7.
+* **Apakah pengguna dapat meminta penghapusan data:** **Yes**. Di aplikasi: Pengaturan → **Hapus semua data** (data di HP, dan bila masuk Google juga berkas Mankeu di Drive dan izin Drive; DEC-020). Di luar aplikasi: bagian 7 kebijakan privasi.
+* **URL penghapusan akun** (hanya bila Play Console masih memintanya; sejak Firebase Auth dibuang (spec #8) Mankeu tidak membuat akun di sisi pengembang; isinya keputusan pemilik): `https://adsurkasur.my.id/mankeu/privacy-policy`, bagian 7.
 * **Rincian Data yang Dikumpulkan:**
   * **Personal Info > Name & Email:**
     * Dikumpulkan? **Yes** (Opsional, hanya jika pengguna memilih *Sign in with Google*).

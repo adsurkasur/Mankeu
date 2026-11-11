@@ -40,7 +40,7 @@ flowchart TB
         exporters["FinanceWorkbookExporter<br/>templat kosong sama dengan ekspor<br/>FinancePdfExporter"]
         backupManager["EncryptedBackupManager<br/>PBKDF2-HMAC-SHA256 dan AES-256-GCM"]
         driveClient["GoogleDriveBackupClient<br/>HttpURLConnection dan org.json"]
-        authManager["FirebaseAuthManager"]
+        authManager["GoogleIdentity"]
         syncFramework["SyncController, SyncEngine, SyncCoordinator<br/>trigger ke sync_outbox saat sync menyala<br/>otomatis + tombol (DEC-024)"]
     end
 

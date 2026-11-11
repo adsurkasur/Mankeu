@@ -30,7 +30,7 @@ Dokumen di folder ini menggambarkan aplikasi sebagaimana adanya (Room schema 12,
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Stack, lapisan, cadangan, sinkronisasi |
 | [`DATABASE_MIGRATIONS.md`](DATABASE_MIGRATIONS.md) | Riwayat skema dan kompatibilitas cadangan |
 | [`SYNC_ARCHITECTURE.md`](SYNC_ARCHITECTURE.md) | Sinkronisasi antar-HP (fitur rilis, DEC-024) |
-| [`CLOUD_SYNC_AND_AUTH.md`](CLOUD_SYNC_AND_AUTH.md) | Firebase Auth dan cadangan Google Drive |
+| [`CLOUD_SYNC_AND_AUTH.md`](CLOUD_SYNC_AND_AUTH.md) | Identitas Google (tanpa Firebase) dan cadangan Google Drive; dokumen desain lama |
 | [`QUALITY_GATES.md`](QUALITY_GATES.md) | Standar bukti dan pengujian |
 | [`MANUAL_TEST_GUIDE.md`](MANUAL_TEST_GUIDE.md) | Skenario uji manual dengan angka yang diharapkan |
 

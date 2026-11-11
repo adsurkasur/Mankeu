@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 01:23] [Claude Code (Sonnet 5.5) — T0 INTERNET, privasi, verifikasi Back]
+- **Goal**: Complete the audit for the planner: fix what it found, update privacy docs to match the app, re-verify Back now that Gboard works.
+- **Actions**: Found that the merged manifest declares no `INTERNET` (Firebase used to add it; removed in phase 0) while Drive uses `HttpURLConnection`: added the permission, confirmed it in debug and release merged manifests. Updated privacy policy ID/EN (no Firebase account, notes/customers/stock data, sharing notes, removed `ACCESS_NETWORK_STATE`, deletion text), store/Play guide text, Firebase mentions in README/PRODUCT_REQUIREMENTS/ROADMAP/diagrams, and a banner on CLOUD_SYNC_AND_AUTH. With the owner-updated Gboard, walked Back on the emulator (menu, stacked sheets, keyboard, product page): correct; found the stacked first-run sheets (L02). Extended the audit doc (T0, 4a, 4b, sections 9 and 10) and the plan register (R1 closed, R21, R22).
+- **Files**: `app/src/main/AndroidManifest.xml`, `docs/privacy-policy/id.md`, `docs/privacy-policy/en.md`, `docs/STORE_LISTING_AND_POLICIES.md`, `docs/PLAY_CONSOLE_ENTRY_GUIDE.md`, `docs/CLOUD_SYNC_AND_AUTH.md`, `docs/README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/ROADMAP.md`, `docs/diagrams/02_architecture_diagram.md`, `docs/diagrams/03_use_case_diagram.md`, `docs/audit/2026-11-12_AUDIT_MENYELURUH.md`, `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: assembleDebug and assembleRelease green; merged manifests list INTERNET; manual Back walk on the emulator with Gboard, no com.mankeu crash in the log. Unit and connected suites not re-run after the one-line manifest change (earlier: 148/0 and 134/0/2).
+
 ### [2026-11-12 01:10] [Claude Code (Sonnet 5.5, low effort) — audit menyeluruh read-only]
 - **Goal**: Audit the whole project and record it as input for the planner (Fable).
 - **Actions**: Ran unit, lint, debug and release builds and the full connected suite; scanned code for money floats, risky parsing, jargon strings, TODOs, mojibake, file sizes, form-box counts, stale docs; read the status of packages A, N, B. Wrote `docs/audit/2026-11-12_AUDIT_MENYELURUH.md` (15 findings: 4 Berat, 6 Sedang, 5 Ringan; owner decisions pending; suggested order).

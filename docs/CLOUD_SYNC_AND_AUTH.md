@@ -1,4 +1,8 @@
 ---
+
+> **Dokumen desain lama (2026-08).** Firebase Authentication sudah dibuang (spec #8, DEC-026/027): Mankeu memakai
+> Google Sign-In langsung untuk token Drive, tanpa akun di sisi pengembang. Bagian Firebase di bawah hanya riwayat
+> desain. Keadaan sekarang: `docs/ARCHITECTURE.md`, `docs/SYNC_ARCHITECTURE.md`, `docs/DATABASE_MIGRATIONS.md`.
 status: implemented (backup and auth); sync section superseded by docs/SYNC_ARCHITECTURE.md
 last_verified: 2026-08-28
 audience: human-and-ai

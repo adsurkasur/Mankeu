@@ -1,5 +1,20 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-032] MVP Master Plan Replaces Package Order A-O; Model Before Screens; Two Profit Bases Proposed
+- **Date**: 2026-11-12
+- **Status**: Proposed (plan written by the planner; owner answers pending in table 4.16 of `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`)
+- **Context**:
+  - The 2026-11-12 audits found the app fails novice users because it asks for structure (product, recipe, batch) before a single record, and 4 of 10 personas have no reasonable path. The owner set the direction in spec V-1..V-6 (UMKM focus, novice-measured, record first, two-door MVP, strict Excel).
+  - Schema 14 and template v5 are unreleased, so model changes are cheapest now.
+  - While planning, one logic gap surfaced: under F2-8 purchases in HPP-flagged categories do not reduce profit (HPP of what was sold stands for them). A "record first" user with no item cost would see profit equal to all sales.
+- **Decision**:
+  1. Work order is now six stages (0 safeguards, 1 model, 2 door A daily records, 3 door B calculators, 4 Excel and data safety, 5 test and release), in about 45 small packages `PK-x.y`. The A-O order of the 2026-11-09 plan is superseded; its environment section, register R1-R22 and the detail of packages F, J, K, L, M remain references.
+  2. Model changes land in schema 14 in place (no schema 15): item kind and stock tracking on products, a one-number manual cost, free sale lines (nullable product), a business kind used for vocabulary only.
+  3. Proposed, pending owner decision K-1: a per-business profit basis, `SIMPLE` (sales minus all spend, default for new businesses) or `ITEM_COST` (F2-8 as today, kept for existing businesses), read in one place so `MonthlySummary` stays the single source.
+  4. No architectural or product decision in the plan is final until the owner fills table 4.16; packages marked "Butuh K-n" must not start before that.
+- **Rationale / alternatives**: Keeping the A-O order would have shipped template v5 and schema 14 before the model the novice flow needs, forcing schema 15 later. Building screens before the model would have built them twice. A single always-`ITEM_COST` basis with a warning was considered and is offered to the owner as option B of K-1.
+- **Affected components**: none yet (documents only). Planned: `data/Entities.kt`, `data/Migration13To14.kt`, `backup/BackupUpgrade.kt`, `domain/ProductCosting.kt`, `domain/ProfitCalculator.kt`, `domain/MonthlySummary.kt`, `data/FinanceRepository.kt`, `importer/ImportModels.kt`, new screens under `presentation/screens/`.
+
 ### [DEC-031] Unified Catatan Timeline Ledger, Filter Chips, Single FAB Action Sheet, and Non-Cash Production Isolation (U6)
 - **Date**: 2026-11-09
 - **Status**: Accepted (Paket B in `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md`, decision U-4)

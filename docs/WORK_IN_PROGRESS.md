@@ -22,6 +22,12 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Mulai di sini (2026-11-12 02:05):** rencana kerja sekarang `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`
+(lampiran A spek layar, B paket kerja, C rencana uji, D prompt eksekusi). Rencana 2026-11-09 di bawah ini digantikan
+urutannya. Keadaan: rencana ditulis, belum ada paket yang dikerjakan. Menunggu pemilik: tabel 4.16 (K-1 sampai K-15);
+K-1 sampai K-4 menghalangi Tahap 1. Bisa dikerjakan tanpa jawaban: PK-0.1, PK-0.3, PK-0.4, PK-0.6, PK-0.7, PK-0.8,
+PK-3.1. Paket pertama: **PK-0.1 (tes manifest)**.
+
 **Mulai di sini (2026-11-09 20:30):** `docs/superpowers/plans/2026-11-09-rencana-lanjutan-lengkap.md` adalah rencana serah terima
 lengkap untuk semua sisa pekerjaan. Paket A (review U5), Paket N (stabilitas jitter + bug bash), dan Paket B (U6 Catatan terpadu) selesai. Pekerjaan aktif berikutnya:
 **Paket C — U7: Rencana Usaha tanpa periode (spec #14)**.

@@ -1,5 +1,9 @@
 # Rencana Lanjutan Lengkap Mankeu (serah terima, 2026-11-09)
 
+> **DIGANTIKAN (2026-11-12):** urutan paket A sampai O di berkas ini tidak berlaku lagi. Rencana kerja sekarang:
+> `2026-11-12-rencana-induk-mvp.md` beserta lampiran A sampai D. Berkas ini tetap dirujuk untuk §0.3 (lingkungan),
+> §5 (register R1 sampai R22), dan isi rinci paket F, J, K, L, M.
+
 > **Untuk siapa:** agen atau orang yang melanjutkan pekerjaan tanpa konteks percakapan sebelumnya.
 >
 > **Peran yang diminta pemilik (2026-11-09):** penyusun rencana bekerja *read-only dan test-only*. Implementasi,

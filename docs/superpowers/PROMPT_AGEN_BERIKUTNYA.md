@@ -1,5 +1,8 @@
 # Prompt untuk agen berikutnya
 
+> **DIGANTIKAN (2026-11-12):** pakai `docs/superpowers/plans/2026-11-12-lampiran-d-prompt-eksekusi.md`. Prompt di
+> bawah merujuk rencana 2026-11-09 yang urutannya sudah tidak berlaku.
+
 Salin blok di bawah ini ke agen AI baru (Claude Code, Antigravity, Gemini, Cursor, dan lain-lain). Ganti bagian
 `[PAKET]` bila ingin agen mengerjakan paket tertentu; bila dibiarkan, agen mengambil paket berikutnya yang belum
 selesai menurut bagian Status rencana.

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:03] [Claude Code (Fable 5.2) — jawaban pemilik K-1 sampai K-4]
+- **Goal**: Record the owner's answers to the four schema-affecting decisions of the MVP master plan.
+- **Actions**: Owner chose the recommendations: K-1 = A (two profit bases per business), K-2 = B (payment-method label, column now, screen after MVP), K-3 = A (order status deferred, no column), K-4 = A (material price per pack quantity). Filled table 4.16 and the Status section of the master plan; added V-7..V-10 to the spec. K-5..K-15 are still open.
+- **Files**: `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`, `docs/superpowers/specs/2026-10-29-redesign-spec.md`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: Documentation only.
+
 ### [2026-11-12 02:05] [Claude Code (Fable 5.2) — rencana induk MVP (perencana, read-only)]
 - **Goal**: Turn the three 2026-11-12 audits and spec V-1..V-6 into an executable plan for mid-capability agents: master plan, screen specs, owner decisions, small work packages, test plan, risks, execution prompts.
 - **Actions**: Read the audits, spec, the 2026-11-09 plan and the code they rely on (entities, `MankeuTemplate`, `ProductCosting`, `ProfitCalculator`, `MonthlySummary`, `saveSale`, `commitImport`, `FullPageForm`, manifests of both branches). Wrote the master plan (six stages, about 45 packages, 15 multiple-choice owner decisions with recommendations and consequences, risk register, deferred list) and four appendices. Flagged one logic gap found while planning: with F2-8, a record-first user without item cost sees profit equal to all sales; proposed a per-business profit basis as decision K-1. Marked the 2026-11-09 plan and the old agent prompt as superseded; pointed `WORK_IN_PROGRESS.md` at the new plan; recorded DEC-032 (Proposed).

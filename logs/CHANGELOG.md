@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+### Fixed
+- Drive backup and sync could not reach the network: the app manifest never declared `INTERNET` (it used to come from the Firebase libraries removed in phase 0). Declared now, with a test that fails if it disappears.
 - Satu daftar Catatan terintegrasi (Paket B / U6 / DEC-031): nota penjualan dan mutasi uang disatukan ke dalam satu linimasa kronologis per tanggal dengan judul hari ("Hari ini", "Kemarin", tanggal) dan total arus kas harian (+Rp... / −Rp...); pembayaran nota pada tanggal yang sama diserap ke dalam baris nota sehingga tidak ada baris ganda dan tidak ada double counting kas masuk; filter chip terpadu (Semua, Belum lunas, Uang masuk, Uang keluar); satu tombol FAB + dengan bottom sheet pilihan (Nota penjualan, Belanja, Uang masuk lain, Uang keluar lain, Modal & ambil pribadi) menggantikan speed dial 5 entri yang sebelumnya memicu jitter; bug audit L14 diperbaiki tuntas (unit yang hanya memiliki nota penjualan tidak lagi menampilkan kartu kosong 'Belum ada catatan').
 - Stabilitas antarmuka & eliminasi jitter (Paket N): penanganan insets keyboard terpadu pada `MankeuSheet` dan `FullPageForm` sehingga bottom sheet tidak lagi memantul/melompat dan tombol simpan tidak mengambang di tengah layar; tinggi `ResultBar` distabilkan dengan animasi halus; seluruh daftar scroll (`LazyColumn`/`LazyRow`) di Beranda, Catatan, Rencana Usaha, Laporan, Produk, dan Kontak diberi kunci (`key`) stabil; komputasi HPP dan pemetaan harga di-`remember` untuk mencegah lag/jank saat scrolling dan pengetikan form.
 - Penyempurnaan U5: judul overlay diselaraskan ke MankeuType.Title, label isi satuan jual tidak lagi mengulang akhiran satuan ("Isi" dengan suffix satuan), dan petunjuk pelanggan pada nota mencadangkan ruang vertikal sehingga segmen pembayaran tidak melompat.

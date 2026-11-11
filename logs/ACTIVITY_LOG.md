@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:06] [Claude Code (Fable 5.2) — hotfix izin INTERNET di main (PK-0.1, PK-0.2)]
+- **Goal**: Owner decision K-15a = A: bring the INTERNET permission to `main` now instead of waiting for the MVP merge (audit 2026-11-12, T0).
+- **Actions**: Wrote `ManifestTest` first and saw it fail on `main`; declared `android.permission.INTERNET` in the app manifest (same lines as on `fase2-nota-piutang`).
+- **Files**: `app/src/main/AndroidManifest.xml`, `app/src/test/java/com/mankeu/ManifestTest.kt` (new), `logs/ACTIVITY_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: `ManifestTest` red before the manifest change, green after. Unit tests 97 passed, 0 failed; `assembleDebug` green; the merged debug manifest lists INTERNET. Not verified: Google sign-in, Drive backup and sync on a real phone (still open, needs the owner's device). Merged into `fase2-nota-piutang` afterwards (log conflicts resolved by keeping both sides); `ManifestTest` green there too.
+
 ### [2026-11-12 02:03] [Claude Code (Fable 5.2) — jawaban pemilik K-1 sampai K-4]
 - **Goal**: Record the owner's answers to the four schema-affecting decisions of the MVP master plan.
 - **Actions**: Owner chose the recommendations: K-1 = A (two profit bases per business), K-2 = B (payment-method label, column now, screen after MVP), K-3 = A (order status deferred, no column), K-4 = A (material price per pack quantity). Filled table 4.16 and the Status section of the master plan; added V-7..V-10 to the spec. K-5..K-15 are still open.

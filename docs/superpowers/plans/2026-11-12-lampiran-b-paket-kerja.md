@@ -57,7 +57,7 @@ Reviewer menulis `docs/superpowers/reports/PK-x.y-review.md` dengan temuan Criti
      pelunasan hari lain; dua pembayaran pada hari yang sama dengan nota; pembayaran bertanggal sama tetapi nota
      diubah tanggalnya; nota dihapus sesudah dibayar.
   2. Tidak ada pembayaran yang hilang dari semua filter (diserap, tetapi notanya tersaring keluar).
-  3. Jumlah total harian seluruh daftar sama dengan `MonthlySummary.moneyInRupiah` dan `moneyOutRupiah` bulan itu.
+  3. Jumlah total harian seluruh daftar sama dengan `MonthlySummary.totalCashInRupiah` dan `totalCashOutRupiah` bulan itu (DEC-033, 2026-11-12: seluruh kas nyata; angka operasional lama tetap terpisah).
   4. Batas muat (`RECENT_EVENT_LIMIT`) tidak memotong separuh hari.
 - **Selesai bila:** `PK-0.3-review.md` tertulis; tiap skenario di butir 1 punya putusan benar atau salah dengan bukti.
 

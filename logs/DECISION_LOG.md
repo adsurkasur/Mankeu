@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-033] Total harian Catatan mencakup seluruh kas; ringkasan operasional tetap terpisah
+- **Date**: 2026-11-12
+- **Status**: Accepted untuk implementasi PK-0.5; pilihan didelegasikan pemilik kepada agen dengan prinsip kebutuhan pengguna UMKM nyata.
+- **Context**: PK-0.3 F2 membuktikan total harian Catatan mencakup modal, ambil pribadi, dan pembelian alat, sedangkan MonthlySummary.moneyInRupiah/moneyOutRupiah hanya operasional. Kedua total tidak dapat diwajibkan sama dengan arti yang sekarang.
+- **Decision**: Pertahankan seluruh kas nyata pada judul harian. Tambahkan MonthlySummary.totalCashInRupiah dan totalCashOutRupiah dari posting akun CASH seluruh peran arus kas. Rekonsiliasi seluruh hari dalam bulan memakai dua angka baru ini. moneyInRupiah/moneyOutRupiah, laba, dan klasifikasi modal/prive/aset tidak berubah. Hari yang ditampilkan harus lengkap; subset baris tidak boleh disebut total harian.
+- **Rationale / alternatives**: Pemilik usaha dapat mencocokkan Catatan dengan uang yang berpindah, termasuk modal dari kantong sendiri dan pembelian alat. Alternatif total hanya operasional membuat gerakan nyata itu tidak masuk angka harian. Pemisahan label dan sumber mencegah modal tampak sebagai pendapatan atau laba.
+- **Affected components**: domain/MonthlySummary.kt, agregasi kas, UnifiedLedger.kt, pemuatan Catatan dan tes rekonsiliasi; kriteria PK-0.3 butir 3 diamandemen. Tidak mengubah keputusan K lain yang masih kosong.
+
 ### [DEC-032] MVP Master Plan Replaces Package Order A-O; Model Before Screens; Two Profit Bases Proposed
 - **Date**: 2026-11-12
 - **Status**: Proposed (plan written by the planner; owner answers pending in table 4.16 of `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`)

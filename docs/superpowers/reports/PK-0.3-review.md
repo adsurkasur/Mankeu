@@ -91,3 +91,7 @@ Kedua pilihan [usulan], belum diputuskan reviewer. Jangan mengganti arti angka r
 [belum] Tidak menjalankan Gradle, unit test, lint, emulator, tes instrumented, suite penuh, pengukuran jank/FAB, ekspor/impor, migrasi, backup, sinkron, perangkat nyata, atau seluruh alur aplikasi. Tidak mengaudit paket lain. Lampiran A §13 dan Lampiran C yang dibaca mengatur pekerjaan lanjutan; perubahan bahasa/tombol untuk paket itu tidak dijadikan temuan PK-0.3.
 
 [terverifikasi] Tidak ada kode yang diubah. Review selesai dengan 4 temuan Important, 0 Critical, 0 Minor pada daftar temuan; kontradiksi kontrak F2 menunggu pemilik. Perbaikan diserahkan ke PK-0.5 setelah PK-0.4; paket tersebut tidak dikerjakan di sesi ini. Bukti penerimaan baru yang diperlukan sudah dirinci per temuan.
+
+## Tindak lanjut keputusan F2 (2026-11-12)
+
+[user-confirmed] Pemilik mendelegasikan pilihan kepada agen dengan prinsip kebutuhan pengguna UMKM nyata. Agen memilih A: seluruh kas nyata pada total harian, dengan totalCashInRupiah/totalCashOutRupiah baru di MonthlySummary; angka operasional dan laba tidak diubah (DEC-033). [belum] Implementasi dan pembuktian rekonsiliasi, ditangani PK-0.5. Temuan historis di atas tetap bukti keadaan saat review.

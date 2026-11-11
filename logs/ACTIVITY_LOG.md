@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 02:30] [Codex (GPT-6) — Keputusan total kas (DEC-033)]
+- **Goal**: Menyelesaikan konflik kontrak F2 setelah pemilik mendelegasikan pilihan.
+- **Actions**: Memilih seluruh kas nyata pada total harian untuk pencocokan uang pengguna; mempertahankan arti kas operasional dan laba; menentukan dua field pembanding baru MonthlySummary; mengamandemen kriteria PK-0.3 butir 3 dan mencatat tindak lanjut review.
+- **Files**: logs/DECISION_LOG.md; logs/ACTIVITY_LOG.md; lampiran B; laporan PK-0.3; rencana induk §8; WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] Dokumentasi kontrak; belum ada perubahan angka/kode pada keputusan ini.
+
 ### [2026-11-12 02:27] [Codex (GPT-6) — PK-0.6]
 - **Goal**: Mencegah istilah terlarang bertambah dan memaksa daftar dasar menyusut.
 - **Actions**: Memperluas gate ke daftar Lampiran C §1.1, parsing XML, batas kata, pengecualian formal terarah; membuat daftar dasar 243 pasangan dari hasil merah; membuktikan probe piutang baru dan baris dasar usang ditolak lalu mengembalikan byte resource. Review independen menyetujui tanpa temuan.

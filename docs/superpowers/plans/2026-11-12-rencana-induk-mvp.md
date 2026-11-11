@@ -504,3 +504,4 @@ Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · 
 
 - 2026-11-12 02:14 · PK-0.3 · selesai · commit docs(review) sesi ini · [terverifikasi] review statis lima skenario, 4 Important; lihat PK-0.3-review.md · F2 menunggu pilihan kontrak total kas; perbaikan PK-0.5 setelah PK-0.4, tes/emulator [belum].
 - 2026-11-12 02:27 · PK-0.6 · selesai · commit paket ini · [terverifikasi] RED/GREEN/probe; 155 tes JVM/0 gagal, assembleDebug dan diff --check hijau. Pemeriksaan XML tidak menggantikan uji pengguna. · PK-0.4 sedang mengukur emulator; PK-0.7 berikutnya. Daftar dasar 243 pasangan harus dikosongkan pada PK-5.1.
+- 2026-11-12 02:30 · Keputusan total kas (DEC-033) · selesai · commit paket ini · [terverifikasi] Dokumentasi kontrak; belum ada perubahan angka/kode pada keputusan ini. · Implementasi serta tes rekonsiliasi pada PK-0.5; keputusan K lain yang kosong tetap terhalang.

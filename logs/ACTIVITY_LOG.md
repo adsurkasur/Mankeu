@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 08:34] [Codex (GPT-6) — PK-0.8]
+- **Goal**: Menyediakan penghitung interaksi dan kontrak uji keadaan kosong tanpa menyatakan layar masa depan selesai.
+- **Actions**: Menambah TapCounter dan empat tes Compose nyata; menulis delapan perjalanan dengan assertion ke formulir penyelesaian. Membuktikan delapan kontrak masih gagal saat Ignore dilepas, lalu memberi alasan paket spesifik. Review independen menyetujui dan menandai ketergantungan gerbang PK-2.11 lintas tahap pada risiko X19.
+- **Files**: app/src/androidTest/java/com/mankeu/usability/TapCounter.kt, TapCounterTest.kt, NoDeadEndTest.kt; docs/superpowers/reports/PK-0.8-laporan.md; logs/ACTIVITY_LOG.md; rencana induk X19/§8; WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] RED penghitung4/3gagal dan diagnostik8/8gagal; GREEN paket12kasus=4lulus/8Ignore/0gagal, JVM164/164. Data emulator pulih4hash/noextras; diff --check lulus. Delapan perjalanan belum dinyatakan bekerja.
+
 ### [2026-11-12 08:24] [Codex (GPT-6) — PK-0.5]
 - **Goal**: Menutup temuan uang/filter B dan crash pemilih N sebelum membangun model MVP.
 - **Actions**: Membuat pembacaan LedgerWindow transaksi dengan hari batas lengkap, riwayat yang dapat dimuat dari filter kosong, state terkait unit, metadata pelunasan lengkap, dan ID edit asli; menambah CashTotals serta total seluruh kas MonthlySummary sesuai DEC-033/035; mempertahankan overdue dan pencarian pembayaran; mengganti kunci nama dengan ID pada empat pemilih. Memperbaiki F5 dari review ulang, membetulkan klaim N/benchmark B secara bertanggal, menghapus dua resource usang dan satu pasangan daftar dasar. Review independen + re-review menyetujui. Merapikan tabel risiko audit spacing.

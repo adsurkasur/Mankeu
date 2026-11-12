@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-036] Biaya satuan mengenali susut dan sumber modal
+- **Date**: 2026-11-12
+- **Status**: Implemented untuk domain PK-1.1; persistensi dan UI mengikuti paket berikutnya.
+- **Context**: Barang buatan, dagangan, dan jasa memerlukan aturan modal yang sama dan dapat menandai biaya yang belum diketahui.
+- **Decision**: ProductSpec menyimpan jenis, susut, dan modal manual opsional. UnitCost memilih resep, harga beli yang diberikan untuk TRADED, modal manual, lalu unknown. Resep tidak lengkap tetap unknown; nol eksplisit diketahui. Hasil bersih adalah hasil batch dikurangi susut; pembagian per satuan jual dibulatkan HALF_UP sekali di akhir.
+- **Rationale**: Urutan mengikuti rencana induk §3.1; menandai biaya tidak lengkap mencegah biaya parsial dianggap lengkap. Resolusi harga beli aktual menunggu K-8 dan paket stok.
+- **Affected components**: ProductCosting dan tes domain; tanpa perubahan penyimpanan atau UI.
+
 ### [DEC-035] Catatan membaca jendela hari lengkap dalam satu transaksi
 - **Date**: 2026-11-12
 - **Status**: Implemented; unit, Room, ViewModel, dan Compose terverifikasi pada PK-0.5.

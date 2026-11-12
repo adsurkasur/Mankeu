@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 13:10] [Codex (GPT-6) — PK-1.1]
+- **Goal**: Menambahkan jenis barang, sumber modal dan susut dalam domain murni.
+- **Actions**: Menambahkan ItemKind, input susut/modal manual, UnitCostResult dan urutan sumber; menghitung modal dari hasil bersih tanpa pembulatan per satuan antara. Menambahkan 15 tes; sepuluh tes lama dipertahankan.
+- **Files**: ProductCosting.kt; ProductCostingTest.kt; PK-1.1-laporan.md; DOMAIN_MODEL.md; logs/DECISION_LOG.md dan ACTIVITY_LOG.md; rencana induk; WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] RED perilaku 9/21 dan 13/25; GREEN 25/25 terfokus, 179/179 JVM dan assembleDebug lulus. UI, migrasi, sinkron dan perangkat belum diuji pada paket domain ini.
+
 ### [2026-11-12 08:34] [Codex (GPT-6) — PK-0.8]
 - **Goal**: Menyediakan penghitung interaksi dan kontrak uji keadaan kosong tanpa menyatakan layar masa depan selesai.
 - **Actions**: Menambah TapCounter dan empat tes Compose nyata; menulis delapan perjalanan dengan assertion ke formulir penyelesaian. Membuktikan delapan kontrak masih gagal saat Ignore dilepas, lalu memberi alasan paket spesifik. Review independen menyetujui dan menandai ketergantungan gerbang PK-2.11 lintas tahap pada risiko X19.

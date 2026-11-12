@@ -22,6 +22,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Progres otomatis (2026-11-12 13:10):** PK-1.1 selesai. [terverifikasi] RED perilaku 9/21 dan 13/25; GREEN 25/25 terfokus, 179/179 JVM dan assembleDebug lulus. UI, migrasi, sinkron dan perangkat belum diuji pada paket domain ini. Review independen dan PK-1.2 schema 14; K-8 tetap belum dijawab. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
+
 **Progres otomatis (2026-11-12 08:34):** PK-0.8 selesai. [terverifikasi] RED penghitung4/3gagal dan diagnostik8/8gagal; GREEN paket12kasus=4lulus/8Ignore/0gagal, JVM164/164. Data emulator pulih4hash/noextras; diff --check lulus. Delapan perjalanan belum dinyatakan bekerja. PK-1.1 model biaya barang; keputusan K kosong tetap penghalang. Selaraskan gerbang X19 sebelum PK-2.11. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
 
 **Progres otomatis (2026-11-12 08:24):** PK-0.5 selesai. [terverifikasi] RED tiap temuan lalu GREEN164 tes JVM/0 gagal;31 instrumented terfokus/0 gagal sebelum penghapusan label usang; setelah cleanup164 JVM+lint0error/87warning+assembleDebug lulus, diff --check lulus. APK akhir dipasang; data emulator pulih4/4hash identik. PK-0.8 kemudian PK-1.1 dan paket model yang tidak terhalang. Kinerja X3/HP nyata tetap belum; daftar dasar bahasa242. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.

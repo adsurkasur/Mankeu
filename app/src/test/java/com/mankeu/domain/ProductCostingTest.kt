@@ -28,6 +28,140 @@ class ProductCostingTest {
     )
     private val prices = mapOf("singkong" to 30_000L, "minyak" to 25_000L)
 
+    @Test fun `unit cost uses the recipe before purchase or manual cost for every item kind`() {
+        for (kind in ItemKind.entries) {
+            val result = ProductCosting.unitCost(keripik.copy(kind = kind, manualCostRupiah = 5_000), prices, 13_000)
+            assertEquals(UnitCostResult(6_000, true, UnitCostSource.RECIPE), result)
+        }
+    }
+
+    @Test fun `batch loss reduces net yield and each sale unit rounds only at the end`() {
+        val product = keripik.copy(batchLoss = qty("20"))
+        val cost = ProductCosting.cost(product, prices)
+        assertEquals(2_400_000L, cost.batchCostRupiah)
+        assertEquals(6_316L, cost.hppPerBaseUnitRupiah)
+        assertEquals(listOf(6_316L, 252_632L), cost.perSaleUnit.map { it.hppRupiah })
+        assertEquals(UnitCostResult(6_316, true, UnitCostSource.RECIPE), ProductCosting.unitCost(product, prices))
+    }
+
+    @Test fun `traded item uses last purchase cost before manual cost`() {
+        val product = keripik.copy(kind = ItemKind.TRADED, recipe = emptyList(), manualCostRupiah = 5_000)
+        assertEquals(UnitCostResult(13_000, true, UnitCostSource.LAST_PURCHASE), ProductCosting.unitCost(product, emptyMap(), 13_000))
+    }
+
+    @Test fun `manual unit cost is available for every kind without a recipe or eligible purchase`() {
+        for (kind in ItemKind.entries) {
+            val product = keripik.copy(kind = kind, recipe = emptyList(), manualCostRupiah = 5_000)
+            val purchase = if (kind == ItemKind.TRADED) null else 13_000L
+            assertEquals(UnitCostResult(5_000, true, UnitCostSource.MANUAL), ProductCosting.unitCost(product, emptyMap(), purchase))
+        }
+    }
+
+    @Test fun `no recipe purchase or manual cost means unknown rather than a known zero`() {
+        for (kind in ItemKind.entries) {
+            val product = keripik.copy(kind = kind, recipe = emptyList())
+            assertEquals(UnitCostResult(0, false, UnitCostSource.UNKNOWN), ProductCosting.unitCost(product, emptyMap()))
+        }
+    }
+
+    @Test fun `made and service items do not use the last purchase fallback`() {
+        for (kind in listOf(ItemKind.MADE, ItemKind.SERVICE)) {
+            val product = keripik.copy(kind = kind, recipe = emptyList())
+            assertEquals(UnitCostResult(0, false, UnitCostSource.UNKNOWN), ProductCosting.unitCost(product, emptyMap(), 13_000))
+        }
+    }
+
+    @Test fun `incomplete recipe keeps its partial cost unknown without falling back`() {
+        val product = keripik.copy(kind = ItemKind.TRADED, manualCostRupiah = 5_000)
+        val result = ProductCosting.unitCost(product, mapOf("singkong" to 30_000L), 13_000)
+        assertEquals(UnitCostResult(4_750, false, UnitCostSource.RECIPE), result)
+    }
+
+    @Test fun `entirely unpriced recipe is unknown even when a manual cost exists`() {
+        val product = keripik.copy(recipe = listOf(RecipeLine("Missing material", "missing", qty("1"))), manualCostRupiah = 5_000)
+        assertEquals(UnitCostResult(0, false, UnitCostSource.RECIPE), ProductCosting.unitCost(product, emptyMap()))
+    }
+
+    @Test fun `loss equal to or greater than batch yield is rejected with an explanation`() {
+        for (loss in listOf("400", "401")) {
+            val product = keripik.copy(batchLoss = qty(loss))
+            for (calculate in listOf<() -> Any>(
+                { ProductCosting.cost(product, prices) },
+                { ProductCosting.unitCost(product, prices) },
+            )) {
+                val failure = runCatching(calculate).exceptionOrNull()
+                assertTrue("Expected a validation error for loss $loss", failure is IllegalArgumentException)
+                assertTrue("Expected an explanation for loss $loss", !failure?.message.isNullOrBlank())
+            }
+        }
+    }
+
+    @Test fun `fractional net yield remains exact before per sale unit rounding`() {
+        val product = keripik.copy(
+            batchYield = qty("3.5"), batchLoss = qty("0.5"),
+            recipe = listOf(RecipeLine("Batch cost", amountRupiah = 1_000)),
+            saleUnits = listOf(SaleUnit("two", "pair", qty("2"), 2_000)),
+        )
+        val cost = ProductCosting.cost(product, emptyMap())
+        assertEquals(333L, cost.hppPerBaseUnitRupiah)
+        assertEquals(667L, cost.perSaleUnit.single().hppRupiah)
+        assertEquals(UnitCostResult(333, true, UnitCostSource.RECIPE), ProductCosting.unitCost(product, emptyMap()))
+    }
+
+    @Test fun `a positive net yield smaller than one base unit remains valid`() {
+        val product = keripik.copy(
+            batchYield = qty("0.02"), batchLoss = qty("0.01"),
+            recipe = listOf(RecipeLine("Batch cost", amountRupiah = 1)),
+        )
+        assertEquals(UnitCostResult(100, true, UnitCostSource.RECIPE), ProductCosting.unitCost(product, emptyMap()))
+    }
+
+    @Test fun `negative loss and nonpositive batch yield are rejected even without a recipe`() {
+        val invalid = listOf(
+            keripik.copy(batchLoss = qty("-1")),
+            keripik.copy(batchYield = BigDecimal.ZERO),
+            keripik.copy(batchYield = qty("-1")),
+            keripik.copy(recipe = emptyList(), batchLoss = qty("400"), manualCostRupiah = 5_000),
+        )
+        for (product in invalid) {
+            val failure = runCatching { ProductCosting.unitCost(product, prices) }.exceptionOrNull()
+            assertTrue("Expected a validation error for $product", failure is IllegalArgumentException)
+            assertTrue("Expected a validation explanation", !failure?.message.isNullOrBlank())
+        }
+        assertTrue(runCatching { ProductCosting.cost(keripik.copy(batchLoss = qty("-1")), prices) }.exceptionOrNull() is IllegalArgumentException)
+    }
+
+    @Test fun `explicit zero manual or purchase cost is known and retains its source`() {
+        val product = keripik.copy(kind = ItemKind.TRADED, recipe = emptyList(), manualCostRupiah = 0)
+        assertEquals(UnitCostResult(0, true, UnitCostSource.MANUAL), ProductCosting.unitCost(product, emptyMap()))
+        assertEquals(UnitCostResult(0, true, UnitCostSource.LAST_PURCHASE), ProductCosting.unitCost(product, emptyMap(), 0))
+    }
+
+    @Test fun `negative manual or purchase unit costs are rejected with an explanation`() {
+        val product = keripik.copy(kind = ItemKind.TRADED, recipe = emptyList())
+        for (calculate in listOf<() -> UnitCostResult>(
+            { ProductCosting.unitCost(product.copy(manualCostRupiah = -1), emptyMap()) },
+            { ProductCosting.unitCost(product, emptyMap(), -1) },
+        )) {
+            val failure = runCatching(calculate).exceptionOrNull()
+            assertTrue(failure is IllegalArgumentException)
+            assertTrue(!failure?.message.isNullOrBlank())
+        }
+    }
+
+    @Test fun `large integer rupiah costs keep exact precision through every source`() {
+        val amount = 9_007_199_254_740_993L
+        val product = keripik.copy(
+            kind = ItemKind.TRADED, batchYield = BigDecimal.ONE,
+            recipe = listOf(RecipeLine("Batch cost", amountRupiah = amount)),
+            saleUnits = listOf(SaleUnit("one", "one", BigDecimal.ONE, amount)),
+        )
+        assertEquals(UnitCostResult(amount, true, UnitCostSource.RECIPE), ProductCosting.unitCost(product, emptyMap()))
+        assertEquals(amount, ProductCosting.cost(product, emptyMap()).perSaleUnit.single().hppRupiah)
+        assertEquals(UnitCostResult(amount, true, UnitCostSource.LAST_PURCHASE), ProductCosting.unitCost(product.copy(recipe = emptyList()), emptyMap(), amount))
+        assertEquals(UnitCostResult(amount, true, UnitCostSource.MANUAL), ProductCosting.unitCost(product.copy(recipe = emptyList(), manualCostRupiah = amount), emptyMap()))
+    }
+
     @Test fun `keripik golden - HPP per bungkus and per dus without manual division`() {
         val cost = ProductCosting.cost(keripik, prices)
         assertEquals(2_400_000L, cost.batchCostRupiah)

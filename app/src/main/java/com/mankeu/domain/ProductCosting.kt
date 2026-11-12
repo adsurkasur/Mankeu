@@ -17,6 +17,8 @@ data class RecipeLine(
     val amountRupiah: Long? = null,
 )
 
+enum class ItemKind { MADE, TRADED, SERVICE }
+
 data class ProductSpec(
     val id: String,
     val name: String,
@@ -26,7 +28,17 @@ data class ProductSpec(
     /** In display order; the first is the main unit the plan and the sale form start from. */
     val saleUnits: List<SaleUnit>,
     val recipe: List<RecipeLine>,
+    val kind: ItemKind = ItemKind.MADE,
+    /** Base units lost from one batch; costing uses [batchYield] minus this quantity. */
+    val batchLoss: BigDecimal = BigDecimal.ZERO,
+    /** Cost per base unit; null means not supplied, while zero is an explicit known cost. */
+    val manualCostRupiah: Long? = null,
 )
+
+enum class UnitCostSource { RECIPE, LAST_PURCHASE, MANUAL, UNKNOWN }
+
+/** An incomplete recipe returns its cost floor with [known] false and [source] RECIPE. */
+data class UnitCostResult(val costRupiah: Long, val known: Boolean, val source: UnitCostSource)
 
 data class UnitCost(val unit: SaleUnit, val hppRupiah: Long) {
     val profitRupiah: Long get() = unit.priceRupiah - hppRupiah
@@ -46,6 +58,38 @@ data class ProductCost(
 data class HppChange(val product: ProductSpec, val before: ProductCost, val after: ProductCost)
 
 object ProductCosting {
+    /**
+     * Cost per base unit. A recipe takes precedence even when incomplete, then a traded item's
+     * supplied purchase price, then manual cost. Resolving the last purchase belongs to the caller.
+     */
+    fun unitCost(
+        spec: ProductSpec,
+        materialPrices: Map<String, Long>,
+        lastPurchaseCostRupiah: Long? = null,
+    ): UnitCostResult {
+        netYield(spec)
+        require(spec.manualCostRupiah == null || spec.manualCostRupiah >= 0) { "Modal per satuan tidak boleh negatif." }
+        require(lastPurchaseCostRupiah == null || lastPurchaseCostRupiah >= 0) { "Harga beli per satuan tidak boleh negatif." }
+        if (spec.recipe.isNotEmpty()) {
+            val recipeCost = cost(spec, materialPrices)
+            return UnitCostResult(recipeCost.hppPerBaseUnitRupiah, recipeCost.complete, UnitCostSource.RECIPE)
+        }
+        if (spec.kind == ItemKind.TRADED && lastPurchaseCostRupiah != null) {
+            return UnitCostResult(lastPurchaseCostRupiah, true, UnitCostSource.LAST_PURCHASE)
+        }
+        if (spec.manualCostRupiah != null) {
+            return UnitCostResult(spec.manualCostRupiah, true, UnitCostSource.MANUAL)
+        }
+        return UnitCostResult(0, false, UnitCostSource.UNKNOWN)
+    }
+
+    private fun netYield(product: ProductSpec): BigDecimal {
+        require(product.batchLoss >= BigDecimal.ZERO) { "Susut per batch tidak boleh negatif." }
+        val net = product.batchYield - product.batchLoss
+        require(net > BigDecimal.ZERO) { "Hasil per batch harus lebih besar daripada susut." }
+        return net
+    }
+
     fun lineCost(line: RecipeLine, materialPrices: Map<String, Long>): Long? = if (line.materialId != null) {
         val price = materialPrices[line.materialId]?.takeIf { it > 0 }
         val quantity = line.quantity
@@ -59,12 +103,13 @@ object ProductCosting {
         BigDecimal.valueOf(batchCostRupiah).multiply(content).divide(batchYield, 0, RoundingMode.HALF_UP).longValueExact()
 
     fun cost(product: ProductSpec, materialPrices: Map<String, Long>): ProductCost {
+        val yield = netYield(product)
         val costs = product.recipe.map { it to lineCost(it, materialPrices) }
         val batch = costs.sumOf { it.second ?: 0L }
         return ProductCost(
             batchCostRupiah = batch,
-            hppPerBaseUnitRupiah = hpp(batch, product.batchYield, BigDecimal.ONE),
-            perSaleUnit = product.saleUnits.map { UnitCost(it, hpp(batch, product.batchYield, it.content)) },
+            hppPerBaseUnitRupiah = hpp(batch, yield, BigDecimal.ONE),
+            perSaleUnit = product.saleUnits.map { UnitCost(it, hpp(batch, yield, it.content)) },
             unpricedLines = costs.filter { it.second == null }.map { it.first.name },
             hasRecipe = product.recipe.isNotEmpty(),
         )

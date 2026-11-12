@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 23:48] [Codex (GPT-6) — PK-1.2]
+- **Goal**: Menyiapkan schema 14 dan menjaga data lama untuk model MVP.
+- **Actions**: Menambah kolom entity dan migrasi 13→14, normalisasi backup lama, mempertahankan metadata dan snapshot saat edit, serta guard editor baris bebas. Menindaklanjuti review independen dan menguji migrasi, backup dan sync. Pemilik melaporkan jank tidak lagi terlihat pada pengalamannya; pengukuran emulator lama tetap historis.
+- **Files**: Entity, Migration13To14, schema14.json, BackupUpgrade, FinanceRepository/DAO, model dan editor terkait, tes migrasi/backup/sync/editor, PK-1.2-laporan.md; log, rencana dan WIP.
+- **Verification**: [terverifikasi] 37/37 tes instrumentasi terarah lulus; data emulator dipulihkan dengan 4 hash cocok. [belum] JVM/lint setelah perubahan terakhir, upgrade APK nyata, dan integrasi angka unknown/rencana/stok.
+
 ### [2026-11-12 13:10] [Codex (GPT-6) — PK-1.1]
 - **Goal**: Menambahkan jenis barang, sumber modal dan susut dalam domain murni.
 - **Actions**: Menambahkan ItemKind, input susut/modal manual, UnitCostResult dan urutan sumber; menghitung modal dari hasil bersih tanpa pembulatan per satuan antara. Menambahkan 15 tes; sepuluh tes lama dipertahankan.

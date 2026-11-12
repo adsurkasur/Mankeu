@@ -669,6 +669,10 @@
     <string name="fab_sale_note">Sales note</string>
     <string name="sale_title_new">New sales note</string>
     <string name="sale_title_edit">Edit note</string>
+    <string name="form_yield_above_loss">The output must exceed the saved loss.</string>
+    <string name="sale_edit_unsupported">This note has a free line. Changes cannot yet be saved; its data is safe.</string>
+    <string name="sale_trade_cost_unsupported">The cost of traded goods cannot yet be calculated. Data remains saved.</string>
+    <string name="sale_cost_unknown">Item cost is not known yet.</string>
     <string name="sale_detail_title">Sales note</string>
     <string name="sale_customer">Customer</string>
     <string name="sale_customer_none">Walk-in (no name)</string>

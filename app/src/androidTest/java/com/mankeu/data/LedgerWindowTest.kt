@@ -27,6 +27,51 @@ import java.time.LocalDate
 
 @RunWith(AndroidJUnit4::class)
 class LedgerWindowTest {
+    @Test fun saleSnapshotsLossAdjustedCostWithoutIntermediateRounding() = runBlocking {
+        val product = repository.saveProduct(project, null, ProductDraft("Keripik", "bungkus", "400",
+            listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 8000)),
+            listOf(RecipeLineDraft("Biaya", amountRupiah = 2_400_000))))
+        database.openHelper.writableDatabase.execSQL("UPDATE products SET batchLossText='20' WHERE id=?", arrayOf(product))
+        val draft = SaleDraft(null, date, null, 0, "", listOf(SaleLineDraft(product, "bungkus", "1", 8000)), 8000)
+        val id = repository.saveSale(project, null, draft)
+        assertEquals(6316L, database.financeDao().getSaleLines(id).single().hppRupiah)
+    }
+    @Test fun manualCostAndUnknownCostStayDistinct() = runBlocking {
+        val product = repository.saveProduct(project, null, ProductDraft("Jasa", "kali", "1",
+            listOf(SaleUnitDraft(name = "kali", contentText = "1", priceRupiah = 12000)), emptyList()))
+        val db = database.openHelper.writableDatabase
+        db.execSQL("UPDATE products SET kind='SERVICE', tracksStock=0, manualCostRupiah=5000 WHERE id=?", arrayOf(product))
+        val draft = SaleDraft(null, date, null, 0, "", listOf(SaleLineDraft(product, "kali", "2", 12000)), 24000)
+        val manualId = repository.saveSale(project, null, draft)
+        val manual = database.financeDao().getSaleLines(manualId).single()
+        assertEquals(10000L, manual.hppRupiah); assertTrue(manual.costKnown)
+        db.execSQL("UPDATE products SET manualCostRupiah=NULL WHERE id=?", arrayOf(product))
+        val unknownId = repository.saveSale(project, null, draft)
+        val unknown = database.financeDao().getSaleLines(unknownId).single()
+        assertEquals(0L, unknown.hppRupiah); assertFalse(unknown.costKnown)
+    }
+    @Test fun editingCashPreservesUnexposedSchema14Fields() = runBlocking {
+        val id = expense(date)
+        database.openHelper.writableDatabase.execSQL("UPDATE financial_events SET contentText='25', payMethod='TRANSFER' WHERE id=?", arrayOf(id))
+        repository.updateEvent(id, EventDraft(business, project, book, FinancialEventType.CASH_EXPENSE, 2000, date, "Diperbaiki", "Biaya"))
+        val row = database.financeDao().getEvent(id)!!
+        assertEquals("25", row.contentText); assertEquals("TRANSFER", row.payMethod)
+    }
+
+    @Test fun editingMixedFreeLineOrUnknownCostIsRefusedWithoutLosingData() = runBlocking {
+        val (id, draft) = sale(date)
+        val db = database.openHelper.writableDatabase
+        db.execSQL("INSERT INTO sale_lines (id,saleId,productId,unitName,contentText,quantityText,unitPriceRupiah,totalRupiah,hppRupiah,sortOrder,name,costKnown) VALUES ('free',?,NULL,'','1','1',1000,1000,0,1,'Jasa',0)", arrayOf(id))
+        val before = database.financeDao().getSaleLines(id)
+        val refused = runCatching { repository.saveSale(project, id, draft.copy(notes = "ubah")) }.exceptionOrNull()
+        assertTrue(refused is IllegalArgumentException)
+        assertEquals(before, database.financeDao().getSaleLines(id))
+        db.execSQL("DELETE FROM sale_lines WHERE id='free'")
+        db.execSQL("UPDATE sale_lines SET costKnown=0 WHERE saleId=?", arrayOf(id))
+        val unknown = database.financeDao().getSaleLines(id)
+        repository.saveSale(project, id, draft.copy(notes = "ubah"))
+        assertEquals(unknown, database.financeDao().getSaleLines(id))
+    }
     private lateinit var database: AppDatabase
     private lateinit var repository: FinanceRepository
     private lateinit var business: String

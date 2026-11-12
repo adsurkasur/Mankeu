@@ -30,6 +30,26 @@ import java.time.LocalDate
  */
 @RunWith(AndroidJUnit4::class)
 class SyncEngineTest {
+    @Test fun newSchema14FieldsAndFreeLineSyncWithoutLoss() = runBlocking {
+        val (business, project) = a.repository.createBusinessWithUnit("Usaha uji", "Utama")
+        val db = a.database.openHelper.writableDatabase
+        db.execSQL("UPDATE businesses SET kind = 'SERVICE', profitBasis = 'SIMPLE' WHERE id = ?", arrayOf(business))
+        val event = a.record(business, project, FinancialEventType.CASH_EXPENSE, 1000)
+        db.execSQL("UPDATE financial_events SET contentText='25', payMethod='TRANSFER' WHERE id=?", arrayOf(event))
+        val book = a.database.financeDao().getBooks(project).first { it.mode == BookMode.REALIZATION.name }.id
+        a.repository.updateEvent(event, EventDraft(business, project, book, FinancialEventType.CASH_EXPENSE, 2000, LocalDate.of(2026,10,20), "Diubah", ""))
+        db.execSQL("INSERT INTO sales (id,businessId,projectId,dateEpochDay,discountRupiah,notes,hppEstimated,createdAtEpochMillis,updatedAtEpochMillis) VALUES ('s',?,?,20000,0,'',0,1,1)", arrayOf(business, project))
+        db.execSQL("INSERT INTO sale_lines (id,saleId,productId,unitName,contentText,quantityText,unitPriceRupiah,totalRupiah,hppRupiah,sortOrder,name,costKnown) VALUES ('l','s',NULL,'','1','1',1000,1000,0,0,'Jasa',0)")
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val result = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        assertEquals(0, result.rejected)
+        b.database.openHelper.readableDatabase.query("SELECT productId,name,costKnown FROM sale_lines WHERE id='l'").use { c ->
+            assertTrue(c.moveToFirst()); assertTrue(c.isNull(0)); assertEquals("Jasa", c.getString(1)); assertEquals(0, c.getInt(2))
+        }
+        assertEquals("SERVICE", b.database.financeDao().getBusinesses().single().kind)
+        assertEquals("25", b.database.financeDao().getEvent(event)!!.contentText)
+        assertEquals("TRANSFER", b.database.financeDao().getEvent(event)!!.payMethod)
+    }
     private class Device {
         val database: AppDatabase = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .addCallback(SyncSchema.callback)

@@ -136,6 +136,7 @@ data class StockItemEntity(
     val importBatchId: String? = null,
     /** The business unit (branch) holding it; null means shared by every unit of the business. */
     val projectId: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "'1'") val priceQuantityText: String = "1",
 )
 
 @Entity(

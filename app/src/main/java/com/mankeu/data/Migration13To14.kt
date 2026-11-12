@@ -21,6 +21,15 @@ import com.mankeu.sync.SyncSchema
  */
 object Migration13To14 : Migration(13, 14) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE businesses ADD COLUMN kind TEXT")
+        db.execSQL("ALTER TABLE businesses ADD COLUMN profitBasis TEXT NOT NULL DEFAULT 'ITEM_COST'")
+        db.execSQL("ALTER TABLE products ADD COLUMN kind TEXT NOT NULL DEFAULT 'MADE'")
+        db.execSQL("ALTER TABLE products ADD COLUMN tracksStock INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE products ADD COLUMN manualCostRupiah INTEGER")
+        db.execSQL("ALTER TABLE products ADD COLUMN batchLossText TEXT NOT NULL DEFAULT '0'")
+        db.execSQL("ALTER TABLE stock_items ADD COLUMN priceQuantityText TEXT NOT NULL DEFAULT '1'")
+        db.execSQL("ALTER TABLE financial_events ADD COLUMN contentText TEXT")
+        db.execSQL("ALTER TABLE financial_events ADD COLUMN payMethod TEXT")
         db.execSQL("CREATE TABLE IF NOT EXISTS `contacts` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `name` TEXT NOT NULL, `normalizedName` TEXT NOT NULL, `phone` TEXT, `address` TEXT, `notes` TEXT, `isCustomer` INTEGER NOT NULL, `isSupplier` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `importBatchId` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_contacts_businessId` ON `contacts` (`businessId`)")
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_contacts_businessId_normalizedName` ON `contacts` (`businessId`, `normalizedName`)")
@@ -29,7 +38,7 @@ object Migration13To14 : Migration(13, 14) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sales_contactId` ON `sales` (`contactId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sales_consignmentId` ON `sales` (`consignmentId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sales_importBatchId` ON `sales` (`importBatchId`)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `sale_lines` (`id` TEXT NOT NULL, `saleId` TEXT NOT NULL, `productId` TEXT NOT NULL, `unitName` TEXT NOT NULL, `contentText` TEXT NOT NULL, `quantityText` TEXT NOT NULL, `unitPriceRupiah` INTEGER NOT NULL, `totalRupiah` INTEGER NOT NULL, `hppRupiah` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `sale_lines` (`id` TEXT NOT NULL, `saleId` TEXT NOT NULL, `productId` TEXT, `unitName` TEXT NOT NULL, `contentText` TEXT NOT NULL, `quantityText` TEXT NOT NULL, `unitPriceRupiah` INTEGER NOT NULL, `totalRupiah` INTEGER NOT NULL, `hppRupiah` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `name` TEXT NOT NULL DEFAULT '', `costKnown` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`id`), FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sale_lines_saleId` ON `sale_lines` (`saleId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sale_lines_productId` ON `sale_lines` (`productId`)")
         db.execSQL("CREATE TABLE IF NOT EXISTS `consignments` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `projectId` TEXT NOT NULL, `contactId` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `notes` TEXT NOT NULL, `importBatchId` TEXT, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
@@ -103,6 +112,7 @@ object Migration13To14 : Migration(13, 14) {
                 put("id", line.id); put("saleId", line.saleId); put("productId", line.productId); put("unitName", line.unitName)
                 put("contentText", line.contentText); put("quantityText", line.quantityText); put("unitPriceRupiah", line.unitPriceRupiah)
                 put("totalRupiah", line.totalRupiah); put("hppRupiah", line.hppRupiah); put("sortOrder", line.sortOrder)
+                put("name", line.name); put("costKnown", if (line.costKnown) 1 else 0)
             })
             db.execSQL("UPDATE financial_events SET saleId = ? WHERE id = ?", arrayOf<Any>(sale.id, old.eventId))
             val journalId = db.query("SELECT id FROM journal_entries WHERE sourceEventId = ?", arrayOf<Any>(old.eventId)).use { c ->

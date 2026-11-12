@@ -182,7 +182,7 @@ fun SaleNoteEditorScreen(
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     val lines = rememberSaveable(saver = saleLineSaver) {
         val stored = existing?.lines.orEmpty().sortedBy { it.sortOrder }
-            .map { SaleLineInput(it.productId, it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
+            .map { SaleLineInput(it.productId.orEmpty(), it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
         (if (existing != null) stored else startLines(products, history)).toMutableStateList()
     }
     // Until the owner touches the lines, picking a customer restarts them on what that customer
@@ -208,8 +208,13 @@ fun SaleNoteEditorScreen(
         val quantity = TransactionCalculation.parseQuantity(line.quantity)
         val price = line.price.toLongOrNull()?.takeIf { it > 0 }
         if (record == null || quantity == null || price == null) null
-        else SalesMath.lineTotal(quantity, price) to ProductCosting.hpp(costs.getValue(record.product.id).batchCostRupiah, record.spec.batchYield, record.contentOf(line.unit) * quantity)
+        else SalesMath.lineTotal(quantity, price) to (record.product.manualCostRupiah?.takeIf { record.recipe.isEmpty() && record.product.kind != "TRADED" }
+            ?.let { TransactionCalculation.computeTotalRupiah(record.contentOf(line.unit) * quantity, it) }
+            ?: ProductCosting.hpp(costs.getValue(record.product.id).batchCostRupiah, record.spec.batchYield - record.spec.batchLoss, record.contentOf(line.unit) * quantity))
     }
+    val unknownCost = lines.any { line -> products.firstOrNull { it.product.id == line.productId }?.let { record ->
+        !costs.getValue(record.product.id).complete && (record.recipe.isNotEmpty() || record.product.manualCostRupiah == null || record.product.kind == "TRADED")
+    } ?: false }
     val subtotal = results.sumOf { it?.first ?: 0 }
     val hpp = results.sumOf { it?.second ?: 0 }
     val discountRupiah = discount ?: 0
@@ -237,6 +242,8 @@ fun SaleNoteEditorScreen(
             onClose = onClose,
             snackbarHost = snackbarHost,
             saveBlockedReason = when {
+                existing?.lines?.any { it.productId == null } == true -> stringResource(R.string.sale_edit_unsupported)
+                lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> stringResource(R.string.sale_trade_cost_unsupported)
                 lines.isEmpty() -> stringResource(R.string.form_need_sale_line)
                 results.any { it == null } -> {
                     val line = lines[results.indexOfFirst { it == null }]
@@ -268,7 +275,7 @@ fun SaleNoteEditorScreen(
                 {
                     ResultBar(
                         text = stringResource(R.string.sale_result_total, total.toRupiah()),
-                        detail = stringResource(if (total - hpp < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(total - hpp).toRupiah()),
+                        detail = if (unknownCost) stringResource(R.string.sale_cost_unknown) else stringResource(if (total - hpp < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(total - hpp).toRupiah()),
                     )
                 }
             } else {
@@ -282,9 +289,9 @@ fun SaleNoteEditorScreen(
                 lines.forEachIndexed { index, line ->
                     val record = products.firstOrNull { it.product.id == line.productId }
                     NoteLineRow(
-                        title = stringResource(R.string.sale_line_title, line.quantity.ifBlank { "?" }, line.unit, record?.product?.name ?: "—"),
+                        title = stringResource(R.string.sale_line_title, line.quantity.ifBlank { "?" }, line.unit, record?.product?.name ?: existing?.lines?.sortedBy { it.sortOrder }?.getOrNull(index)?.name?.ifBlank { "—" } ?: "—"),
                         amount = results[index]?.first?.toRupiah(),
-                        profit = results[index]?.let { (t, h) -> t - h },
+                        profit = if (unknownCost) null else results[index]?.let { (t, h) -> t - h },
                         onClick = { editing = index },
                         onMinus = stepQuantity(line.quantity, -1)?.let { q -> { lines[index] = line.copy(quantity = q) } },
                         onPlus = { stepQuantity(line.quantity, 1)?.let { q -> lines[index] = line.copy(quantity = q) } },
@@ -613,7 +620,7 @@ fun SaleRecord.toShareNote(products: List<ProductRecord>) = ShareNote(
     date = LocalDate.ofEpochDay(sale.dateEpochDay),
     lines = lines.sortedBy { it.sortOrder }.map { line ->
         ShareLine(
-            product = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: "—",
+            product = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: line.name.ifBlank { "—" },
             quantity = TransactionCalculation.parseQuantity(line.quantityText)?.toDisplayQuantity() ?: line.quantityText,
             unit = line.unitName,
             unitPriceRupiah = line.unitPriceRupiah,
@@ -686,7 +693,7 @@ fun SaleNoteDetailScreen(
             }
             item(key = "sale_detail_products_label") { Text(stringResource(R.string.sale_products), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             items(record.lines.sortedBy { it.sortOrder }, key = { it.id }) { line ->
-                val name = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: "—"
+                val name = products.firstOrNull { it.product.id == line.productId }?.product?.name ?: line.name.ifBlank { "—" }
                 val quantity = TransactionCalculation.parseQuantity(line.quantityText)?.toDisplayQuantity() ?: line.quantityText
                 Column {
                     Row {
@@ -704,7 +711,7 @@ fun SaleNoteDetailScreen(
                     ReportRow(stringResource(R.string.sale_subtotal), record.subtotal.toRupiah())
                     if (record.sale.discountRupiah > 0) ReportRow(stringResource(R.string.sale_discount_row), record.sale.discountRupiah.toRupiah())
                     ReportRow(stringResource(R.string.sale_total), record.total.toRupiah(), emphasized = true)
-                    ReportRow(stringResource(R.string.sale_profit), (record.total - record.hpp).toRupiah())
+                    ReportRow(stringResource(R.string.sale_profit), if (record.lines.any { !it.costKnown }) stringResource(R.string.sale_cost_unknown) else (record.total - record.hpp).toRupiah())
                 }
             }
             if (record.sale.notes.isNotBlank()) item(key = "sale_detail_notes") { Text(record.sale.notes) }

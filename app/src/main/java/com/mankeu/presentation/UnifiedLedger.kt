@@ -104,7 +104,7 @@ object UnifiedLedger {
             val paidOnDate = CashTotals.fromEvents(paymentsOnSaleDate).incomingRupiah
 
             val productSummary = saleRecord.lines.sortedBy { it.sortOrder }.joinToString(", ") { line ->
-                val pName = productMap[line.productId]?.product?.name ?: "—"
+                val pName = productMap[line.productId]?.product?.name ?: line.name.ifBlank { "—" }
                 "${line.quantityText} ${line.unitName} $pName"
             }
 

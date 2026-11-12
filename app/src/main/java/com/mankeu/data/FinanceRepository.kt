@@ -413,6 +413,9 @@ class FinanceRepository(
         }
         val now = System.currentTimeMillis()
         val existing = id?.let { dao.getProduct(it) }
+        require(existing == null || batchYield > existing.batchLossText.replace(',', '.').toBigDecimal()) {
+            "Hasil sekali buat harus lebih besar daripada susut yang tersimpan."
+        }
         val productId = existing?.id ?: UUID.randomUUID().toString()
         val yieldText = batchYield.stripTrailingZeros().toPlainString()
         if (existing == null) {
@@ -489,7 +492,8 @@ class FinanceRepository(
     suspend fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
         require(batches.signum() > 0) { "Jumlah batch harus lebih dari nol." }
         val product = dao.getProduct(productId) ?: error("Produk tidak ditemukan.")
-        val yield = TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE
+        val yield = (TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE) - product.batchLossText.replace(',', '.').toBigDecimal()
+        require(yield > BigDecimal.ZERO) { "Hasil produksi harus lebih besar daripada susut." }
         val now = System.currentTimeMillis()
         val productionId = UUID.randomUUID().toString()
         dao.insertProductMovement(
@@ -607,7 +611,7 @@ class FinanceRepository(
     suspend fun createBusiness(name: String): String = database.withTransaction {
         val cleanName = name.trim().also { require(it.isNotBlank()) { "Nama usaha wajib diisi." } }
         val now = System.currentTimeMillis()
-        val business = BusinessEntity(UUID.randomUUID().toString(), cleanName, createdAtEpochMillis = now)
+        val business = BusinessEntity(UUID.randomUUID().toString(), cleanName, createdAtEpochMillis = now, profitBasis = "SIMPLE")
         dao.insertBusiness(business)
         ensureDefaultCategories(business.id)
         business.id
@@ -856,6 +860,8 @@ class FinanceRepository(
             contactId = draft.contactId ?: old.contactId,
             dueDate = if (draft.type == FinancialEventType.CREDIT_PURCHASE) draft.dueDate else old.dueDateEpochDay?.let(LocalDate::ofEpochDay),
             settlesEventId = old.settlesEventId,
+            contentText = old.contentText,
+            payMethod = old.payMethod,
         )
         if (old.type == FinancialEventType.CREDIT_PURCHASE.name) {
             val paid = dao.getSupplierPayments(old.id).sumOf { it.amountRupiah }
@@ -1117,6 +1123,11 @@ class FinanceRepository(
         val existing = id?.let { dao.getSale(it) ?: error("Nota tidak ditemukan.") }
         require(existing == null || existing.projectId == projectId) { "Nota berasal dari unit usaha lain." }
         require(draft.lines.isNotEmpty()) { "Isi minimal satu baris produk." }
+        if (existing != null) {
+            require(dao.getSaleLines(existing.id).none { it.productId == null }) {
+                "Nota ini memiliki baris bebas dan belum dapat diubah. Data tetap tersimpan."
+            }
+        }
         existing?.let { sale ->
             val firstPaid = dao.getSalePayments(sale.id).minOfOrNull { it.dateEpochDay }
             require(firstPaid == null || draft.date.toEpochDay() <= firstPaid) { "Tanggal bayar tidak boleh sebelum tanggal nota. Ubah atau hapus pembayarannya dulu." }
@@ -1214,6 +1225,11 @@ class FinanceRepository(
         require(draft.dueDate == null || !draft.dueDate.isBefore(draft.date)) { "Jatuh tempo tidak boleh sebelum tanggal nota." }
 
         val prices = materialPrices(project.businessId)
+        val previousLines = existing?.let { dao.getSaleLines(it.id).sortedBy { line -> line.sortOrder } }.orEmpty()
+        val unchangedLines = existing != null && previousLines.size == lines.size && previousLines.zip(lines).all { (before, after) ->
+            before.productId == after.productId && before.unitName.equals(after.unitName, ignoreCase = true) &&
+                TransactionCalculation.parseQuantity(before.quantityText)?.compareTo(after.quantity) == 0 && before.unitPriceRupiah == after.unitPriceRupiah
+        }
         val now = System.currentTimeMillis()
         val saleId = existing?.id ?: UUID.randomUUID().toString()
         val sale = SaleEntity(
@@ -1227,16 +1243,20 @@ class FinanceRepository(
             notes = draft.notes.trim(),
             consignmentId = consignmentId,
             // An edit recomputes HPP at today's cost, so it is no longer the migration's estimate (§7).
-            hppEstimated = false,
+            hppEstimated = if (unchangedLines) existing?.hppEstimated ?: false else false,
             importBatchId = existing?.importBatchId,
             createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
             updatedAtEpochMillis = now,
         )
         val costs = mutableMapOf<String, Pair<Long, BigDecimal>>()
-        val entities = lines.mapIndexed { index, l ->
+        val entities = if (unchangedLines) previousLines else lines.mapIndexed { index, l ->
+            val record = requireNotNull(productRecord(l.productId))
+            require(record.product.kind != "TRADED" || record.recipe.isNotEmpty()) { "Modal barang dagangan belum dapat dihitung. Data tetap tersimpan." }
+            val productCost = ProductCosting.cost(record.spec, prices)
+            val manual = record.product.manualCostRupiah.takeIf { record.recipe.isEmpty() }
             val (batchCost, batchYield) = costs.getOrPut(l.productId) {
-                val spec = requireNotNull(productRecord(l.productId)).spec
-                ProductCosting.cost(spec, prices).batchCostRupiah to spec.batchYield
+                val spec = record.spec
+                ProductCosting.cost(spec, prices).batchCostRupiah to (spec.batchYield - spec.batchLoss)
             }
             SaleLineEntity(
                 id = UUID.randomUUID().toString(),
@@ -1247,20 +1267,22 @@ class FinanceRepository(
                 quantityText = l.quantity.stripTrailingZeros().toPlainString(),
                 unitPriceRupiah = l.unitPriceRupiah,
                 totalRupiah = SalesMath.lineTotal(l.quantity, l.unitPriceRupiah),
-                hppRupiah = ProductCosting.hpp(batchCost, batchYield, l.content * l.quantity),
+                hppRupiah = if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(batchCost, batchYield, l.content * l.quantity),
                 sortOrder = index,
+                name = productName(l.productId),
+                costKnown = if (manual != null) true else productCost.complete,
             )
         }
         if (existing == null) {
             dao.insertSale(sale)
         } else {
             dao.updateSale(sale)
-            dao.deleteSaleLines(saleId)
+            if (!unchangedLines) dao.deleteSaleLines(saleId)
             // Edited here, its payments are plain payments: an old-form product sale (DEC-029 M4) stops
             // following its payment, and the payment no longer claims one product and quantity.
-            dao.clearSaleFieldsOfPayments(saleId)
+            if (!unchangedLines) dao.clearSaleFieldsOfPayments(saleId)
         }
-        dao.insertSaleLines(entities)
+        if (!unchangedLines) dao.insertSaleLines(entities)
         if (existing == null && draft.paidNowRupiah > 0) insertSalePayment(sale, draft.paidNowRupiah, draft.date)
         return saleId
     }
@@ -1488,7 +1510,10 @@ class FinanceRepository(
     /** Base units still at the store per product of [consignment]: sent − sold − returned; [exceptSaleId] is not counted as sold. */
     private suspend fun consignmentLeft(consignment: ConsignmentEntity, exceptSaleId: String): Map<String, BigDecimal> {
         val left = dao.getConsignmentLines(consignment.id).associate { it.productId to base(it.quantityText, it.contentText) }.toMutableMap()
-        dao.getConsignmentSoldLines(consignment.id, exceptSaleId).forEach { left[it.productId] = left.getOrDefault(it.productId, BigDecimal.ZERO) - base(it.quantityText, it.contentText) }
+        dao.getConsignmentSoldLines(consignment.id, exceptSaleId).forEach {
+            val productId = requireNotNull(it.productId) { "Baris nota titip harus memiliki produk." }
+            left[productId] = left.getOrDefault(productId, BigDecimal.ZERO) - base(it.quantityText, it.contentText)
+        }
         dao.getConsignmentReturns(consignment.id).forEach { m -> left[m.productId] = left.getOrDefault(m.productId, BigDecimal.ZERO) - (TransactionCalculation.parseQuantity(m.quantityText) ?: BigDecimal.ZERO) }
         return left
     }
@@ -2079,6 +2104,8 @@ class FinanceRepository(
         contactId = contactId,
         dueDate = dueDateEpochDay?.let(LocalDate::ofEpochDay),
         settlesEventId = settlesEventId,
+        contentText = contentText,
+        payMethod = payMethod,
     )
 
     private fun MoneyEvent.toEntity(createdAtEpochMillis: Long = System.currentTimeMillis()) = FinancialEventEntity(
@@ -2108,6 +2135,8 @@ class FinanceRepository(
         contactId = contactId,
         dueDateEpochDay = dueDate?.toEpochDay(),
         settlesEventId = settlesEventId,
+        contentText = contentText,
+        payMethod = payMethod,
     )
 
     private fun calculateFormulaTotal(quantityText: String?, unitPriceRupiah: Long?): Long? {

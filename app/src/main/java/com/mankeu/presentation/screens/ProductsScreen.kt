@@ -211,7 +211,7 @@ internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, 
                 line.quantity?.let { q -> "${material.name} ${(q * it).toQuantityText()} ${material.unit}" }
             }
             ResultBar(
-                text = stringResource(R.string.production_result, (it * record.spec.batchYield).toQuantityText(), record.product.unit),
+                text = stringResource(R.string.production_result, (it * (record.spec.batchYield - record.spec.batchLoss)).toQuantityText(), record.product.unit),
                 detail = used.takeIf { u -> u.isNotEmpty() }?.let { u -> stringResource(R.string.production_materials, u.joinToString(", ")) },
             )
         }

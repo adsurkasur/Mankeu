@@ -6,6 +6,26 @@ import org.junit.Assert.assertSame
 import org.junit.Test
 
 class BackupUpgradeTest {
+    @Test fun `old schema 14 snapshot gains new fields without losing product name`() {
+        val snapshot = PortableBackup(14, 0, listOf(
+            table("businesses", listOf("id"), listOf(listOf(t("b")))),
+            table("products", listOf("id", "name"), listOf(listOf(t("p"), t("Keripik")))),
+            table("sale_lines", listOf("id", "productId"), listOf(listOf(t("l"), t("p")))),
+        ))
+        val result = BackupUpgrade.toCurrent(snapshot).tables.associateBy { it.name }
+        val business = result.getValue("businesses")
+        val line = result.getValue("sale_lines")
+        assertEquals(t("ITEM_COST"), business.rows.single()[business.columns.indexOf("profitBasis")])
+        assertEquals(t("Keripik"), line.rows.single()[line.columns.indexOf("name")])
+        assertEquals(i(1), line.rows.single()[line.columns.indexOf("costKnown")])
+        assertEquals(BackupUpgrade.toCurrent(snapshot), BackupUpgrade.toCurrent(BackupUpgrade.toCurrent(snapshot)))
+    }
+    @Test fun `current snapshot keeps explicit free line and cost status`() {
+        val line = table("sale_lines", listOf("id", "productId", "name", "costKnown"),
+            listOf(listOf(t("l"), nul, t("Jasa"), i(0))))
+        val snapshot = PortableBackup(14, 0, listOf(line))
+        assertEquals(snapshot, BackupUpgrade.toCurrent(snapshot))
+    }
     private fun table(name: String, columns: List<String> = listOf("id"), rows: List<List<BackupValue>> = emptyList()) = BackupTable(name, columns, rows)
     private fun t(value: String) = BackupValue.Text(value)
     private fun i(value: Long) = BackupValue.Integer(value)
@@ -111,6 +131,7 @@ class BackupUpgradeTest {
         assertEquals(listOf(t("batch-1"), i(4_321), i(4_321)), listOf(sale["importBatchId"], sale["createdAtEpochMillis"], sale["updatedAtEpochMillis"]))
         assertEquals(nul, rows("sales").single { it["id"] == t("bks-s") }["importBatchId"])
         val lines = rows("sale_lines").associateBy { it["id"] }
+        assertEquals(i(0), lines.getValue(t("gone-l"))["costKnown"])
         fun summary(id: String) = listOf("unitName", "contentText", "unitPriceRupiah", "hppRupiah").map { lines.getValue(t(id)).getValue(it) }
         assertEquals(listOf(t("bungkus"), t("1"), i(9_000), i(18_000)), summary("bks-l"))
         assertEquals(listOf(t("pak"), t("1"), i(33_333), i(0)), summary("gone-l"))
@@ -119,7 +140,8 @@ class BackupUpgradeTest {
         // Batch 2 × 25.000 + 10.000 = 60.000 for 10 bungkus; 2 dus = 80 bungkus → 480.000.
         assertEquals(
             mapOf("id" to t("sale-l"), "saleId" to t("sale-s"), "productId" to t("krp"), "unitName" to t("dus"), "contentText" to t("40"), "quantityText" to t("2"),
-                "unitPriceRupiah" to i(300_000), "totalRupiah" to i(600_000), "hppRupiah" to i(480_000), "sortOrder" to i(0)),
+            "unitPriceRupiah" to i(300_000), "totalRupiah" to i(600_000), "hppRupiah" to i(480_000), "sortOrder" to i(0),
+            "name" to t("Keripik"), "costKnown" to i(1)),
             line,
         )
         val saleIds = rows("financial_events").associate { it["id"] to it["saleId"] }

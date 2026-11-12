@@ -14,6 +14,8 @@ data class BusinessEntity(
     val archived: Boolean = false,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long = createdAtEpochMillis,
+    val kind: String? = null,
+    @ColumnInfo(defaultValue = "'ITEM_COST'") val profitBasis: String = "ITEM_COST",
 )
 
 @Entity(
@@ -170,6 +172,8 @@ data class FinancialEventEntity(
     val dueDateEpochDay: Long? = null,
     /** The credit purchase this cash expense pays (DEC-029 §3): Utang / Kas. */
     val settlesEventId: String? = null,
+    val contentText: String? = null,
+    val payMethod: String? = null,
 )
 
 @Entity(
@@ -221,6 +225,10 @@ data class ProductEntity(
     val importBatchId: String? = null,
     /** Month of the plan period (1 = first) from which it sells; seasonal products start later. */
     @ColumnInfo(defaultValue = "1") val sellFromMonth: Int = 1,
+    @ColumnInfo(defaultValue = "'MADE'") val kind: String = "MADE",
+    @ColumnInfo(defaultValue = "1") val tracksStock: Boolean = true,
+    val manualCostRupiah: Long? = null,
+    @ColumnInfo(defaultValue = "'0'") val batchLossText: String = "0",
 )
 
 /** A way a product is sold (spec #5): [contentText] base units per one, at its own price. */
@@ -337,7 +345,7 @@ data class SaleEntity(
 data class SaleLineEntity(
     @PrimaryKey val id: String,
     val saleId: String,
-    val productId: String,
+    val productId: String?,
     val unitName: String,
     val contentText: String,
     val quantityText: String,
@@ -346,6 +354,8 @@ data class SaleLineEntity(
     /** HPP of this line when sold (spec #6). */
     val hppRupiah: Long,
     val sortOrder: Int = 0,
+    @ColumnInfo(defaultValue = "''") val name: String = "",
+    @ColumnInfo(defaultValue = "1") val costKnown: Boolean = true,
 )
 
 @Entity(

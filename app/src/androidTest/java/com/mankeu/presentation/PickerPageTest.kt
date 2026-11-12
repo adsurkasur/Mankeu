@@ -2,6 +2,7 @@ package com.mankeu.presentation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -26,6 +27,20 @@ import org.junit.Test
 class PickerPageTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private data class Choice(val id: String, val name: String)
+
+    @Test fun freeLineNoteShowsExplicitReasonAndCannotBeSaved() {
+        val record = SaleRecord(SaleEntity("s", "b", "p", null, 20000, createdAtEpochMillis = 0),
+            listOf(SaleLineEntity("l", "s", null, "", "1", "1", 1000, 1000, 0, name = "Jasa", costKnown = false)),
+            emptyList(), null)
+        var saves = 0
+        compose.setContent { MankeuTheme {
+            SaleNoteEditorScreen("Nota", record, emptyList(), emptyList(), emptyList(), emptyList(),
+                onSave = { saves++ }, onSaveContact = { _, _, _, _ -> }, onClose = {})
+        } }
+        compose.onNodeWithText(compose.activity.getString(R.string.sale_edit_unsupported)).assertExists()
+        compose.onNodeWithText(compose.activity.getString(R.string.action_save)).assertIsNotEnabled()
+        assertEquals(0, saves)
+    }
 
     @Test fun duplicateLabelsRenderAndSelectByIdentity() {
         var selected = ""

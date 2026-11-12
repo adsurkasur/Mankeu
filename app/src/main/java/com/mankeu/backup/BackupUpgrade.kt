@@ -22,7 +22,39 @@ object BackupUpgrade {
         var upgraded = snapshot
         if (upgraded.schemaVersion == 12) upgraded = from12(upgraded)
         if (upgraded.schemaVersion == 13) upgraded = from13(upgraded)
-        return upgraded
+        return normalize14(upgraded)
+    }
+
+    /** Older debug builds also used version 14; add only absent columns, never overwrite values. */
+    private fun normalize14(snapshot: PortableBackup): PortableBackup {
+        if (snapshot.schemaVersion != 14) return snapshot
+        val products = snapshot.tables.firstOrNull { it.name == "products" }
+        val names = products?.rows?.associate { row ->
+            products.text(row, "id") to products.text(row, "name")
+        }.orEmpty()
+        var changed = false
+        val tables = snapshot.tables.map { table ->
+            if (table.rows.isEmpty()) return@map table
+            val defaults: List<Pair<String, (List<BackupValue>) -> BackupValue>> = when (table.name) {
+                "businesses" -> listOf("kind" to { BackupValue.Null }, "profitBasis" to { BackupValue.Text("ITEM_COST") })
+                "products" -> listOf("kind" to { BackupValue.Text("MADE") }, "tracksStock" to { BackupValue.Integer(1) },
+                    "manualCostRupiah" to { BackupValue.Null }, "batchLossText" to { BackupValue.Text("0") })
+                "financial_events" -> listOf("contentText" to { BackupValue.Null }, "payMethod" to { BackupValue.Null })
+                "stock_items" -> listOf("priceQuantityText" to { BackupValue.Text("1") })
+                "sale_lines" -> listOf(
+                    "name" to { row -> BackupValue.Text(names[table.text(row, "productId")].orEmpty()) },
+                    "costKnown" to { row -> BackupValue.Integer(if (names[table.text(row, "productId")] != null) 1 else 0) },
+                )
+                else -> emptyList()
+            }
+            val missing = defaults.filter { it.first !in table.columns }
+            if (missing.isEmpty()) table else {
+                changed = true
+                table.copy(columns = table.columns + missing.map { it.first },
+                    rows = table.rows.map { row -> row + missing.map { it.second(row) } })
+            }
+        }
+        return if (changed) snapshot.copy(tables = tables) else snapshot
     }
 
     private fun BackupTable.text(row: List<BackupValue>, column: String) = columns.indexOf(column).takeIf { it >= 0 }?.let { (row[it] as? BackupValue.Text)?.value }
@@ -113,13 +145,13 @@ object BackupUpgrade {
         )
         val saleLines = BackupTable(
             name = "sale_lines",
-            columns = listOf("id", "saleId", "productId", "unitName", "contentText", "quantityText", "unitPriceRupiah", "totalRupiah", "hppRupiah", "sortOrder"),
+            columns = listOf("id", "saleId", "productId", "unitName", "contentText", "quantityText", "unitPriceRupiah", "totalRupiah", "hppRupiah", "sortOrder", "name", "costKnown"),
             rows = converted.map { (_, pair) ->
                 val l = pair.second
                 listOf(
-                    BackupValue.Text(l.id), BackupValue.Text(l.saleId), BackupValue.Text(l.productId), BackupValue.Text(l.unitName), BackupValue.Text(l.contentText),
+                    BackupValue.Text(l.id), BackupValue.Text(l.saleId), text(l.productId), BackupValue.Text(l.unitName), BackupValue.Text(l.contentText),
                     BackupValue.Text(l.quantityText), BackupValue.Integer(l.unitPriceRupiah), BackupValue.Integer(l.totalRupiah), BackupValue.Integer(l.hppRupiah),
-                    BackupValue.Integer(l.sortOrder.toLong()),
+                    BackupValue.Integer(l.sortOrder.toLong()), BackupValue.Text(l.name), BackupValue.Integer(if (l.costKnown) 1 else 0),
                 )
             },
         )

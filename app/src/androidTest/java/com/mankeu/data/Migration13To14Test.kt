@@ -60,6 +60,15 @@ class Migration13To14Test {
         }
 
         helper.runMigrationsAndValidate(DB, 14, true, Migration13To14).use { db ->
+            db.query("SELECT profitBasis, kind FROM businesses WHERE id = 'b'").use { c ->
+                assertTrue(c.moveToFirst()); assertEquals("ITEM_COST", c.getString(0)); assertTrue(c.isNull(1))
+            }
+            db.query("SELECT kind, tracksStock, batchLossText, manualCostRupiah FROM products WHERE id = 'krp'").use { c ->
+                assertTrue(c.moveToFirst()); assertEquals("MADE", c.getString(0)); assertEquals(1, c.getInt(1)); assertEquals("0", c.getString(2)); assertTrue(c.isNull(3))
+            }
+            db.query("SELECT name, costKnown FROM sale_lines WHERE id = 'sale-l'").use { c ->
+                assertTrue(c.moveToFirst()); assertEquals("Keripik", c.getString(0)); assertEquals(1, c.getInt(1))
+            }
             db.query("SELECT id, includedInHpp FROM categories ORDER BY id").use { c ->
                 assertEquals(listOf("c-bahan" to 1, "c-trans" to 0), buildList { while (c.moveToNext()) add(c.getString(0) to c.getInt(1)) })
             }

@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-037] Checkpoint schema 14 untuk model MVP
+- **Date**: 2026-11-12
+- **Status**: In progress; PK-1.2 belum selesai atau siap dirilis.
+- **Context**: Schema 14 belum dirilis dan perlu kolom jenis, biaya, susut, pembayaran, serta baris nota bebas. Backup lama schema 14 harus tetap dapat dipulihkan.
+- **Decision**: Tambahkan kolom pada entity dan migrasi 13→14 tanpa schema 15; normalisasi backup schema 14 lama tanpa menimpa nilai eksplisit. Pertahankan snapshot dan metadata saat edit; editor lama menolak perubahan nota berbaris bebas sampai PK-1.3.
+- **Rationale**: Mencegah kehilangan data dan menjaga migrasi dalam versi yang belum dirilis. Semantik modal unknown, rencana, stok SERVICE/TRADED dan K-8 masih memerlukan integrasi; angka belum boleh dianggap lengkap.
+- **Affected components**: entity, migrasi, backup, sync, repository, editor, schema Room dan tes. Bukti upgrade APK nyata masih belum ada.
+
 ### [DEC-036] Biaya satuan mengenali susut dan sumber modal
 - **Date**: 2026-11-12
 - **Status**: Implemented untuk domain PK-1.1; persistensi dan UI mengikuti paket berikutnya.

@@ -1,6 +1,7 @@
 package com.mankeu.data
 
 import com.mankeu.domain.ProductMovement
+import com.mankeu.domain.ItemKind
 import com.mankeu.domain.ProductMovementType
 import com.mankeu.domain.ProductSpec
 import com.mankeu.domain.ProductStock
@@ -26,6 +27,9 @@ data class ProductRecord(
             name = product.name,
             baseUnit = product.unit,
             batchYield = TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE,
+            kind = ItemKind.valueOf(product.kind),
+            batchLoss = product.batchLossText.replace(',', '.').toBigDecimal(),
+            manualCostRupiah = product.manualCostRupiah,
             saleUnits = units.sortedBy { it.sortOrder }.map {
                 SaleUnit(it.id, it.name, TransactionCalculation.parseQuantity(it.contentText) ?: BigDecimal.ONE, it.priceRupiah)
             },

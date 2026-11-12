@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 14,
-    "identityHash": "7ea1a6d0cfc10e852299eeea9613c843",
+    "identityHash": "0067605410ff8929de5f5cb8746ea658",
     "entities": [
       {
         "tableName": "businesses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `currency` TEXT NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `currency` TEXT NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `kind` TEXT, `profitBasis` TEXT NOT NULL DEFAULT 'ITEM_COST', PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -43,6 +43,18 @@
             "columnName": "updatedAtEpochMillis",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "profitBasis",
+            "columnName": "profitBasis",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'ITEM_COST'"
           }
         ],
         "primaryKey": {
@@ -520,7 +532,7 @@
       },
       {
         "tableName": "financial_events",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `projectId` TEXT NOT NULL, `bookId` TEXT NOT NULL, `type` TEXT NOT NULL, `amountRupiah` INTEGER NOT NULL, `dateEpochDay` INTEGER NOT NULL, `description` TEXT NOT NULL, `category` TEXT NOT NULL, `categoryId` TEXT, `reference` TEXT, `quantityText` TEXT, `unit` TEXT, `unitPriceRupiah` INTEGER, `budgetItemId` TEXT, `importBatchId` TEXT, `cashFlowRole` TEXT NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `costNature` TEXT, `productId` TEXT, `usefulLifeMonths` INTEGER, `stockItemId` TEXT, `saleId` TEXT, `contactId` TEXT, `dueDateEpochDay` INTEGER, `settlesEventId` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`bookId`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `projectId` TEXT NOT NULL, `bookId` TEXT NOT NULL, `type` TEXT NOT NULL, `amountRupiah` INTEGER NOT NULL, `dateEpochDay` INTEGER NOT NULL, `description` TEXT NOT NULL, `category` TEXT NOT NULL, `categoryId` TEXT, `reference` TEXT, `quantityText` TEXT, `unit` TEXT, `unitPriceRupiah` INTEGER, `budgetItemId` TEXT, `importBatchId` TEXT, `cashFlowRole` TEXT NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `costNature` TEXT, `productId` TEXT, `usefulLifeMonths` INTEGER, `stockItemId` TEXT, `saleId` TEXT, `contactId` TEXT, `dueDateEpochDay` INTEGER, `settlesEventId` TEXT, `contentText` TEXT, `payMethod` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`bookId`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -661,6 +673,16 @@
           {
             "fieldPath": "settlesEventId",
             "columnName": "settlesEventId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentText",
+            "columnName": "contentText",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payMethod",
+            "columnName": "payMethod",
             "affinity": "TEXT"
           }
         ],
@@ -944,7 +966,7 @@
       },
       {
         "tableName": "products",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `projectId` TEXT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `batchYieldText` TEXT NOT NULL DEFAULT '1', `targetPerMonthText` TEXT, `sortOrder` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `importBatchId` TEXT, `sellFromMonth` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`id`), FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `projectId` TEXT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `batchYieldText` TEXT NOT NULL DEFAULT '1', `targetPerMonthText` TEXT, `sortOrder` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `importBatchId` TEXT, `sellFromMonth` INTEGER NOT NULL DEFAULT 1, `kind` TEXT NOT NULL DEFAULT 'MADE', `tracksStock` INTEGER NOT NULL DEFAULT 1, `manualCostRupiah` INTEGER, `batchLossText` TEXT NOT NULL DEFAULT '0', PRIMARY KEY(`id`), FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1017,6 +1039,32 @@
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "1"
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'MADE'"
+          },
+          {
+            "fieldPath": "tracksStock",
+            "columnName": "tracksStock",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "manualCostRupiah",
+            "columnName": "manualCostRupiah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "batchLossText",
+            "columnName": "batchLossText",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'0'"
           }
         ],
         "primaryKey": {
@@ -1553,7 +1601,7 @@
       },
       {
         "tableName": "sale_lines",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `saleId` TEXT NOT NULL, `productId` TEXT NOT NULL, `unitName` TEXT NOT NULL, `contentText` TEXT NOT NULL, `quantityText` TEXT NOT NULL, `unitPriceRupiah` INTEGER NOT NULL, `totalRupiah` INTEGER NOT NULL, `hppRupiah` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `saleId` TEXT NOT NULL, `productId` TEXT, `unitName` TEXT NOT NULL, `contentText` TEXT NOT NULL, `quantityText` TEXT NOT NULL, `unitPriceRupiah` INTEGER NOT NULL, `totalRupiah` INTEGER NOT NULL, `hppRupiah` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `name` TEXT NOT NULL DEFAULT '', `costKnown` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`id`), FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1570,8 +1618,7 @@
           {
             "fieldPath": "productId",
             "columnName": "productId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "unitName",
@@ -1614,6 +1661,20 @@
             "columnName": "sortOrder",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "costKnown",
+            "columnName": "costKnown",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
           }
         ],
         "primaryKey": {
@@ -2193,7 +2254,7 @@
       },
       {
         "tableName": "stock_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `basePriceRupiah` INTEGER NOT NULL, `initialStockText` TEXT NOT NULL, `currentStockText` TEXT NOT NULL, `minAlertStockText` TEXT NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `importBatchId` TEXT, `projectId` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `businessId` TEXT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `basePriceRupiah` INTEGER NOT NULL, `initialStockText` TEXT NOT NULL, `currentStockText` TEXT NOT NULL, `minAlertStockText` TEXT NOT NULL, `archived` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `importBatchId` TEXT, `projectId` TEXT, `priceQuantityText` TEXT NOT NULL DEFAULT '1', PRIMARY KEY(`id`), FOREIGN KEY(`businessId`) REFERENCES `businesses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -2270,6 +2331,13 @@
             "fieldPath": "projectId",
             "columnName": "projectId",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "priceQuantityText",
+            "columnName": "priceQuantityText",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'1'"
           }
         ],
         "primaryKey": {
@@ -2496,7 +2564,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7ea1a6d0cfc10e852299eeea9613c843')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0067605410ff8929de5f5cb8746ea658')"
     ]
   }
 }

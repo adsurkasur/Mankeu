@@ -91,6 +91,8 @@ data class MoneyEvent(
     val dueDate: LocalDate? = null,
     /** The credit purchase this expense pays (DEC-029 §3). */
     val settlesEventId: String? = null,
+    val contentText: String? = null,
+    val payMethod: String? = null,
 ) {
     init {
         require(amountRupiah > 0) { "Amount must be a positive integer rupiah value." }

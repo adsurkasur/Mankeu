@@ -36,6 +36,26 @@ import java.time.LocalDate
  */
 @RunWith(AndroidJUnit4::class)
 class LedgerIntegrityTest {
+    @Test fun oldShape14EncryptedBackupRestoresWithDefaultsAndCash() = runBlocking {
+        record(CASH_INCOME, 750_000)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val manager = EncryptedBackupManager(database, File(context.cacheDir, "old14-recovery.aabk"))
+        val password = "sandi-uji-123".toCharArray()
+        val current = PortableBackupCodec.decode(PasswordBackupCipher.decrypt(manager.create(password), password))
+        val added = mapOf("businesses" to setOf("kind", "profitBasis"),
+            "products" to setOf("kind", "tracksStock", "manualCostRupiah", "batchLossText"),
+            "sale_lines" to setOf("name", "costKnown"), "financial_events" to setOf("contentText", "payMethod"),
+            "stock_items" to setOf("priceQuantityText"))
+        val old = current.copy(tables = current.tables.map { table ->
+            val indices = table.columns.indices.filter { table.columns[it] !in added[table.name].orEmpty() }
+            table.copy(columns = indices.map { table.columns[it] }, rows = table.rows.map { row -> indices.map { row[it] } })
+        })
+        record(CASH_EXPENSE, 50_000)
+        val envelope = PasswordBackupCipher.encrypt(PortableBackupCodec.encode(old), password)
+        manager.restore(manager.prepareRestore(envelope, password), password)
+        assertEquals(750_000, summary().cashBalanceRupiah)
+        assertEquals("ITEM_COST", dao.getBusinesses().single().profitBasis)
+    }
     private lateinit var database: AppDatabase
     private lateinit var repository: FinanceRepository
     private lateinit var businessId: String

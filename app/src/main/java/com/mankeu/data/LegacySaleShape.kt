@@ -51,7 +51,7 @@ object LegacySaleShape {
         }
         val content = product?.contentOf(old.unit) ?: BigDecimal.ONE
         val hpp = product?.let { p ->
-            ProductCosting.hpp(ProductCosting.cost(p.spec, materialPrices).batchCostRupiah, p.spec.batchYield, content * quantity)
+            ProductCosting.hpp(ProductCosting.cost(p.spec, materialPrices).batchCostRupiah, p.spec.batchYield - p.spec.batchLoss, content * quantity)
         } ?: 0L
         val sale = SaleEntity(
             id = saleId(old.eventId),
@@ -72,6 +72,8 @@ object LegacySaleShape {
             unitPriceRupiah = old.unitPriceRupiah ?: TransactionCalculation.computeUnitPriceRupiah(old.amountRupiah, quantity),
             totalRupiah = old.amountRupiah,
             hppRupiah = hpp,
+            name = product?.product?.name.orEmpty(),
+            costKnown = product?.let { ProductCosting.cost(it.spec, materialPrices).complete } ?: false,
         )
         return sale to line
     }

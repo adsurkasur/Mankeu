@@ -146,12 +146,14 @@ fun ProductEditorScreen(
     val validUnits = units.withIndex().mapNotNull { (index, u) ->
         TransactionCalculation.parseQuantity(u.content)?.let { index to SaleUnit(u.id.orEmpty(), u.name, it, u.price.toLongOrNull() ?: 0) }
     }
-    val cost = yieldQuantity?.let { ProductCosting.cost(ProductSpec("", name, baseUnit, it, validUnits.map { v -> v.second }, recipe), prices) }
+    val existingLoss = existing?.product?.batchLossText?.replace(',', '.')?.toBigDecimal() ?: java.math.BigDecimal.ZERO
+    val cost = yieldQuantity?.takeIf { it > existingLoss }?.let { ProductCosting.cost(ProductSpec("", name, baseUnit, it, validUnits.map { v -> v.second }, recipe, batchLoss = existingLoss), prices) }
     val unitCosts = cost?.let { c -> validUnits.map { it.first }.zip(c.perSaleUnit).toMap() }.orEmpty()
     val saveBlockedReason = when {
         name.isBlank() -> stringResource(R.string.form_need_name)
         baseUnit.isBlank() -> stringResource(R.string.form_need_unit)
         yieldQuantity == null -> stringResource(R.string.form_need_yield)
+        yieldQuantity <= existingLoss -> stringResource(R.string.form_yield_above_loss)
         units.none { it.name.isNotBlank() } -> stringResource(R.string.form_need_sale_unit)
         units.none { it.name.isNotBlank() && (it.price.toLongOrNull() ?: 0) > 0 } -> stringResource(R.string.form_need_sale_price)
         else -> null

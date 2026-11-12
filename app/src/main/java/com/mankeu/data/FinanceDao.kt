@@ -516,7 +516,7 @@ interface FinanceDao {
         """
         SELECT l.id, l.productId, l.quantityText, l.unitName AS unit, s.dateEpochDay, s.createdAtEpochMillis, l.contentText, s.consignmentId
         FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId
-        WHERE s.projectId = :projectId
+        WHERE s.projectId = :projectId AND l.productId IS NOT NULL
         """,
     )
     fun observeProductSaleLines(projectId: String): Flow<List<ProductSaleRow>>

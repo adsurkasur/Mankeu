@@ -664,6 +664,7 @@
     <string name="price_alert_title">%1$s price changed</string>
     <string name="price_alert_body">%1$s → %2$s per %3$s. Effect:</string>
     <string name="price_alert_row">%1$s: cost %2$s → %3$s per %4$s, profit %5$s → %6$s</string>
+    <string name="price_alert_incomplete">Cost before or after the change is not yet known.</string>
     <string name="price_alert_open_products">View products</string>
     <!-- Fase 2 Task 5: contacts, sales notes, bills -->
     <string name="fab_sale_note">Sales note</string>
@@ -805,6 +806,7 @@
     <string name="capital_out">Personal use</string>
     <string name="editor_result_hpp">Cost %1$s per %2$s</string>
     <string name="editor_result_batch">One batch costs %1$s</string>
+    <string name="editor_rounding_explanation">The total is calculated before rounding each ingredient; row amounts are rounded.</string>
     <string name="editor_add_material_row">+ Material</string>
     <string name="editor_add_cost_row">+ Other cost</string>
     <string name="editor_add_unit_row">+ Sale unit</string>

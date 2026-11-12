@@ -148,6 +148,9 @@ fun ProductEditorScreen(
     }
     val existingLoss = existing?.product?.batchLossText?.replace(',', '.')?.toBigDecimal() ?: java.math.BigDecimal.ZERO
     val cost = yieldQuantity?.takeIf { it > existingLoss }?.let { ProductCosting.cost(ProductSpec("", name, baseUnit, it, validUnits.map { v -> v.second }, recipe, batchLoss = existingLoss), prices) }
+    val roundedRows = recipe.mapNotNull { ProductCosting.lineCost(it, prices) }
+        .fold(java.math.BigDecimal.ZERO) { sum, value -> sum + java.math.BigDecimal.valueOf(value) }
+    val roundingDifference = cost?.hasRecipe == true && roundedRows.compareTo(java.math.BigDecimal.valueOf(cost.batchCostRupiah)) != 0
     val unitCosts = cost?.let { c -> validUnits.map { it.first }.zip(c.perSaleUnit).toMap() }.orEmpty()
     val saveBlockedReason = when {
         name.isBlank() -> stringResource(R.string.form_need_name)
@@ -228,6 +231,9 @@ fun ProductEditorScreen(
                 )
                 HorizontalDivider()
             }
+        }
+        if (roundingDifference) {
+            Text(stringResource(R.string.editor_rounding_explanation), style = MankeuType.Caption)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
             if (materials.isNotEmpty()) {

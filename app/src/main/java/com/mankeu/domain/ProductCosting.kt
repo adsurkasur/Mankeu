@@ -58,6 +58,15 @@ data class ProductCost(
 data class HppChange(val product: ProductSpec, val before: ProductCost, val after: ProductCost)
 
 object ProductCosting {
+    /** Unrounded rupiah for aggregation. Missing/zero prices keep the line unknown. */
+    internal fun exactLineCost(line: RecipeLine, materialPrices: Map<String, Long>): BigDecimal? =
+        if (line.materialId != null) {
+            val price = materialPrices[line.materialId]?.takeIf { it > 0 }
+            if (price == null || line.quantity == null) null
+            else if (line.quantity <= BigDecimal.ZERO) BigDecimal.ZERO
+            else BigDecimal.valueOf(price).multiply(line.quantity)
+        } else line.amountRupiah?.takeIf { it > 0 }?.let(BigDecimal::valueOf)
+
     /**
      * Cost per base unit. A recipe takes precedence even when incomplete, then a traded item's
      * supplied purchase price, then manual cost. Resolving the last purchase belongs to the caller.
@@ -102,14 +111,21 @@ object ProductCosting {
     fun hpp(batchCostRupiah: Long, batchYield: BigDecimal, content: BigDecimal): Long =
         BigDecimal.valueOf(batchCostRupiah).multiply(content).divide(batchYield, 0, RoundingMode.HALF_UP).longValueExact()
 
+    /** Cost of a quantity, retaining fractional ingredient costs until the final rupiah. */
+    fun hpp(product: ProductSpec, materialPrices: Map<String, Long>, content: BigDecimal): Long {
+        val batch = product.recipe.fold(BigDecimal.ZERO) { sum, line -> sum + (exactLineCost(line, materialPrices) ?: BigDecimal.ZERO) }
+        return batch.multiply(content).divide(netYield(product), 0, RoundingMode.HALF_UP).longValueExact()
+    }
+
     fun cost(product: ProductSpec, materialPrices: Map<String, Long>): ProductCost {
         val yield = netYield(product)
-        val costs = product.recipe.map { it to lineCost(it, materialPrices) }
-        val batch = costs.sumOf { it.second ?: 0L }
+        val costs = product.recipe.map { it to exactLineCost(it, materialPrices) }
+        val batch = costs.fold(BigDecimal.ZERO) { total, line -> total + (line.second ?: BigDecimal.ZERO) }
+        fun perUnit(content: BigDecimal) = batch.multiply(content).divide(yield, 0, RoundingMode.HALF_UP).longValueExact()
         return ProductCost(
-            batchCostRupiah = batch,
-            hppPerBaseUnitRupiah = hpp(batch, yield, BigDecimal.ONE),
-            perSaleUnit = product.saleUnits.map { UnitCost(it, hpp(batch, yield, it.content)) },
+            batchCostRupiah = batch.setScale(0, RoundingMode.HALF_UP).longValueExact(),
+            hppPerBaseUnitRupiah = perUnit(BigDecimal.ONE),
+            perSaleUnit = product.saleUnits.map { UnitCost(it, perUnit(it.content)) },
             unpricedLines = costs.filter { it.second == null }.map { it.first.name },
             hasRecipe = product.recipe.isNotEmpty(),
         )
@@ -125,7 +141,7 @@ object ProductCosting {
         val after = materialPrices + (materialId to newPriceRupiah)
         return products.filter { product -> product.recipe.any { it.materialId == materialId } }
             .map { HppChange(it, cost(it, materialPrices), cost(it, after)) }
-            .filter { it.before.batchCostRupiah != it.after.batchCostRupiah }
+            .filter { it.before != it.after }
     }
 
     /** Schema 12 / template v4 said "Rp [amountRupiah] covers [yieldQuantity] units"; see `LegacyProductShape`. */

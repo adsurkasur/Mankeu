@@ -22,6 +22,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Progres otomatis (2026-11-13 00:14):** PK-3.1 selesai. [terverifikasi] RED pecahan/status/konversi lalu GREEN 189 tes JVM, 6 instrumented, lint 0 error/87 warning, assembleDebug. Data emulator pulih 4 hash. [belum] Seluruh MVP dan PK-1.2 tetap checkpoint. Lanjut pekerjaan yang tidak terhalang; selesaikan integrasi PK-1.2/1.3/1.6 sebelum klaim finansial lengkap. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
+
 **Progres otomatis (2026-11-12 23:48):** PK-1.2 berhenti di checkpoint schema. [terverifikasi] 37/37 tes instrumentasi terarah lulus; data emulator dipulihkan dengan 4 hash cocok. [belum] JVM/lint setelah perubahan terakhir, upgrade APK nyata, dan integrasi angka unknown/rencana/stok. Lanjut PK-3.1 yang independen; selesaikan PK-1.2/1.3/1.6 dan jawab K-8 sebelum klaim finansial lengkap atau rilis. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
 
 **Progres otomatis (2026-11-12 13:10):** PK-1.1 selesai. [terverifikasi] RED perilaku 9/21 dan 13/25; GREEN 25/25 terfokus, 179/179 JVM dan assembleDebug lulus. UI, migrasi, sinkron dan perangkat belum diuji pada paket domain ini. Review independen dan PK-1.2 schema 14; K-8 tetap belum dijawab. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.

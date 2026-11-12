@@ -939,19 +939,7 @@ fun MankeuApp(
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(stringResource(R.string.price_alert_body, alert.oldPriceRupiah.toRupiah(), alert.newPriceRupiah.toRupiah(), alert.unit))
                                 alert.changes.forEach { change ->
-                                    change.before.perSaleUnit.zip(change.after.perSaleUnit).forEach { (before, after) ->
-                                        Text(
-                                            stringResource(
-                                                R.string.price_alert_row,
-                                                change.product.name,
-                                                before.hppRupiah.toRupiah(),
-                                                after.hppRupiah.toRupiah(),
-                                                after.unit.name,
-                                                before.profitRupiah.toRupiah(),
-                                                after.profitRupiah.toRupiah(),
-                                            ),
-                                        )
-                                    }
+                                    PriceImpactRows(change)
                                 }
                             }
                         },

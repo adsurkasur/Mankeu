@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-038] Presisi resep dipertahankan sampai hasil akhir
+- **Date**: 2026-11-13
+- **Status**: Implemented untuk PK-3.1; schema dan integrasi MVP lain masih dalam pengerjaan.
+- **Context**: Pembulatan per bahan sebelum penjumlahan atau simulasi menghasilkan selisih; dua biaya Rp1,5 menjadi Rp4 alih-alih Rp3.
+- **Decision**: Jumlahkan biaya desimal tepat dan hitung HPP/simulasi dari nilai tersebut, lalu bulatkan HALF_UP pada hasil rupiah akhir. Biaya per baris tetap boleh ditampilkan bulat; editor menjelaskan ketika jumlah tampilan berbeda dari total. Dampak harga mencakup perubahan kelengkapan dan tidak menyajikan biaya belum diketahui sebagai pasti.
+- **Rationale**: Memenuhi aturan satu pembulatan dan menjelaskan selisih yang terlihat. Konversi satuan identik mempertahankan jumlah, termasuk satuan kustom.
+- **Affected components**: ProductCosting, RecipeCalculator, UnitConversion, snapshot nota, migrasi lama, preview dan notifikasi dampak harga; tes domain, Room dan Compose.
+
 ### [DEC-037] Checkpoint schema 14 untuk model MVP
 - **Date**: 2026-11-12
 - **Status**: In progress; PK-1.2 belum selesai atau siap dirilis.

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 00:14] [Codex (GPT-6) — PK-3.1]
+- **Goal**: Membangun kalkulator resep dan memastikan presisi biaya sampai hasil akhir.
+- **Actions**: Menambahkan konversi satuan dan kalkulator harga/simulasi; memperbaiki akar pembulatan per bahan serta snapshot nota/migrasi/preview; menjaga status biaya tidak lengkap dan menjelaskan selisih pembulatan pada editor. Review independen dan review ulang disetujui.
+- **Files**: RecipeCalculator.kt, UnitConversion.kt, ProductCosting.kt, pemakai snapshot dan UI terkait, resource dua bahasa, tes unit/Room/Compose, laporan PK-3.1, DOMAIN_MODEL, log, rencana dan WIP.
+- **Verification**: [terverifikasi] RED pecahan/status/konversi lalu GREEN 189 tes JVM, 6 instrumented, lint 0 error/87 warning, assembleDebug. Data emulator pulih 4 hash. [belum] Seluruh MVP dan PK-1.2 tetap checkpoint.
+
 ### [2026-11-12 23:48] [Codex (GPT-6) — PK-1.2]
 - **Goal**: Menyiapkan schema 14 dan menjaga data lama untuk model MVP.
 - **Actions**: Menambah kolom entity dan migrasi 13→14, normalisasi backup lama, mempertahankan metadata dan snapshot saat edit, serta guard editor baris bebas. Menindaklanjuti review independen dan menguji migrasi, backup dan sync. Pemilik melaporkan jank tidak lagi terlihat pada pengalamannya; pengukuran emulator lama tetap historis.

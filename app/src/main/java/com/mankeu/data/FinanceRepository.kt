@@ -1248,16 +1248,11 @@ class FinanceRepository(
             createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
             updatedAtEpochMillis = now,
         )
-        val costs = mutableMapOf<String, Pair<Long, BigDecimal>>()
         val entities = if (unchangedLines) previousLines else lines.mapIndexed { index, l ->
             val record = requireNotNull(productRecord(l.productId))
             require(record.product.kind != "TRADED" || record.recipe.isNotEmpty()) { "Modal barang dagangan belum dapat dihitung. Data tetap tersimpan." }
             val productCost = ProductCosting.cost(record.spec, prices)
             val manual = record.product.manualCostRupiah.takeIf { record.recipe.isEmpty() }
-            val (batchCost, batchYield) = costs.getOrPut(l.productId) {
-                val spec = record.spec
-                ProductCosting.cost(spec, prices).batchCostRupiah to (spec.batchYield - spec.batchLoss)
-            }
             SaleLineEntity(
                 id = UUID.randomUUID().toString(),
                 saleId = saleId,
@@ -1267,7 +1262,7 @@ class FinanceRepository(
                 quantityText = l.quantity.stripTrailingZeros().toPlainString(),
                 unitPriceRupiah = l.unitPriceRupiah,
                 totalRupiah = SalesMath.lineTotal(l.quantity, l.unitPriceRupiah),
-                hppRupiah = if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(batchCost, batchYield, l.content * l.quantity),
+                hppRupiah = if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
                 sortOrder = index,
                 name = productName(l.productId),
                 costKnown = if (manual != null) true else productCost.complete,

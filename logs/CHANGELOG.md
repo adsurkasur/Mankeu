@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- Biaya resep pecahan kini dijumlahkan sebelum pembulatan akhir pada modal satuan, snapshot nota, dan simulasi; editor menjelaskan selisih angka baris yang dibulatkan. Peringatan harga membedakan modal yang belum diketahui (PK-3.1, DEC-038).
 - Checkpoint belum dirilis: migrasi schema 14 dan pemulihan backup lama menyiapkan kolom model baru; integrasi modal unknown, stok dan laporan masih belum lengkap (PK-1.2, DEC-037).
 - Catatan memuat hari secara utuh, menyediakan riwayat lebih awal walau filter kosong, mempertahankan filter lewat tempo dan pencarian pembayaran terserap, serta tidak lagi menampilkan belanja tempo lunas sebagai belum lunas. Total kas harian dibandingkan dengan angka seluruh kas di MonthlySummary; modal, ambil pribadi, dan alat tetap berbeda dari pendapatan/biaya operasional (PK-0.5, DEC-033/035).
 - Pemilih produk, pembeli, dan bahan memakai ID stabil sehingga nama yang sama tidak lagi menyebabkan tabrakan kunci baris (PK-0.5).

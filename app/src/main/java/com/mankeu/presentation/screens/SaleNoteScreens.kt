@@ -210,7 +210,7 @@ fun SaleNoteEditorScreen(
         if (record == null || quantity == null || price == null) null
         else SalesMath.lineTotal(quantity, price) to (record.product.manualCostRupiah?.takeIf { record.recipe.isEmpty() && record.product.kind != "TRADED" }
             ?.let { TransactionCalculation.computeTotalRupiah(record.contentOf(line.unit) * quantity, it) }
-            ?: ProductCosting.hpp(costs.getValue(record.product.id).batchCostRupiah, record.spec.batchYield - record.spec.batchLoss, record.contentOf(line.unit) * quantity))
+            ?: ProductCosting.hpp(record.spec, prices, record.contentOf(line.unit) * quantity))
     }
     val unknownCost = lines.any { line -> products.firstOrNull { it.product.id == line.productId }?.let { record ->
         !costs.getValue(record.product.id).complete && (record.recipe.isNotEmpty() || record.product.manualCostRupiah == null || record.product.kind == "TRADED")

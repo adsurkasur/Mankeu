@@ -666,6 +666,7 @@
     <string name="price_alert_title">Harga %1$s berubah</string>
     <string name="price_alert_body">%1$s → %2$s per %3$s. Dampaknya:</string>
     <string name="price_alert_row">%1$s: HPP %2$s → %3$s per %4$s, untung %5$s → %6$s</string>
+    <string name="price_alert_incomplete">Modal sebelum atau sesudah perubahan belum diketahui.</string>
     <string name="price_alert_open_products">Lihat produk</string>
     <!-- Fase 2 Task 5: contacts, sales notes, bills -->
     <string name="fab_sale_note">Nota penjualan</string>
@@ -807,6 +808,7 @@
     <string name="capital_out">Ambil pribadi</string>
     <string name="editor_result_hpp">HPP %1$s per %2$s</string>
     <string name="editor_result_batch">Biaya 1 batch %1$s</string>
+    <string name="editor_rounding_explanation">Total dihitung sebelum pembulatan tiap bahan; angka baris dibulatkan.</string>
     <string name="editor_add_material_row">+ Bahan</string>
     <string name="editor_add_cost_row">+ Biaya lain</string>
     <string name="editor_add_unit_row">+ Satuan jual</string>

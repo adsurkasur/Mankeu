@@ -593,6 +593,9 @@ interface FinanceDao {
     @Query("SELECT * FROM sale_lines WHERE saleId = :saleId ORDER BY sortOrder")
     suspend fun getSaleLines(saleId: String): List<SaleLineEntity>
 
+    @Query("SELECT COUNT(*) FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.projectId = :projectId AND l.productId IS NULL")
+    suspend fun countFreeSaleLines(projectId: String): Int
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSaleLines(lines: List<SaleLineEntity>)
 

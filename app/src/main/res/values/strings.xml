@@ -355,6 +355,7 @@
     <string name="work_restoring_backup">Menyimpan salinan data sekarang dan memulihkan cadangan…</string>
     <string name="work_copying_recovery">Menyalin pemulihan otomatis…</string>
     <string name="msg_export_xlsx_ok">Workbook Excel berhasil diekspor (%1$d KB).</string>
+    <string name="msg_export_xlsx_ok_free_lines">Workbook dibuat (%1$d KB), tetapi ada baris nota bebas yang belum ikut. Baris itu tetap tersimpan di Mankeu.</string>
     <string name="msg_export_xlsx_failed">Workbook tidak dapat diekspor.</string>
     <string name="msg_template_export_ok">Template Excel UMKM berhasil disimpan (%1$d KB).</string>
     <string name="msg_export_pdf_ok">Laporan PDF offline berhasil diekspor (%1$d KB).</string>

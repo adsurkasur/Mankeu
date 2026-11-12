@@ -353,6 +353,7 @@
     <string name="work_restoring_backup">Saving a copy of the current data and restoring the backup…</string>
     <string name="work_copying_recovery">Copying the automatic recovery file…</string>
     <string name="msg_export_xlsx_ok">Excel workbook exported (%1$d KB).</string>
+    <string name="msg_export_xlsx_ok_free_lines">Workbook created (%1$d KB), but some free note lines were not included. Those notes are still saved in Mankeu.</string>
     <string name="msg_export_xlsx_failed">The workbook could not be exported.</string>
     <string name="msg_template_export_ok">MSME Excel template saved (%1$d KB).</string>
     <string name="msg_export_pdf_ok">Offline PDF report exported (%1$d KB).</string>

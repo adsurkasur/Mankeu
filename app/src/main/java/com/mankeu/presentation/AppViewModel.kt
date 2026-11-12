@@ -975,16 +975,20 @@ class AppViewModel(
         transferState.value = TransferUiState.Working(UiText.of(R.string.work_building_workbook))
         val result = runCatching {
             withContext(Dispatchers.IO) {
-                val bytes = repository.exportProjectWorkbook(projectId)
+                val workbook = repository.exportProjectWorkbookWithNotice(projectId)
                 contentResolver.openOutputStream(uri, "w")?.use { output ->
-                    output.write(bytes)
+                    output.write(workbook.bytes)
                     output.flush()
                 } ?: error("Tujuan ekspor tidak dapat dibuka.")
-                bytes.size
+                workbook.bytes.size to workbook.omittedFreeSaleLineCount
             }
         }
         transferState.value = result.fold(
-            onSuccess = { TransferUiState.Success(UiText.of(R.string.msg_export_xlsx_ok, it / 1024)) },
+            onSuccess = { (bytes, omittedFreeSaleLineCount) ->
+                val message = if (omittedFreeSaleLineCount > 0) R.string.msg_export_xlsx_ok_free_lines else R.string.msg_export_xlsx_ok
+                val args = arrayOf(bytes / 1024)
+                TransferUiState.Success(UiText.of(message, *args))
+            },
             onFailure = { TransferUiState.Failure(UiText.fromError(it, R.string.msg_export_xlsx_failed)) },
         )
     }

@@ -329,6 +329,7 @@ class FinanceRepository(
                 stockMovements = stockDao.getManualMovements(business.id) + stockDao.getConsumptionOfProject(project.id),
                 products = products,
                 plan = plan,
+                omittedFreeSaleLineCount = dao.countFreeSaleLines(project.id),
             )
         }
 
@@ -345,8 +346,14 @@ class FinanceRepository(
         return (visible + missing).map { it.copy(basePriceRupiah = dao.latestPurchasePrice(it.id) ?: it.basePriceRupiah) }
     }
 
-    suspend fun exportProjectWorkbook(projectId: String): ByteArray =
-        FinanceWorkbookExporter().export(buildProjectExportBundle(projectId))
+    data class WorkbookExport(val bytes: ByteArray, val omittedFreeSaleLineCount: Int)
+
+    suspend fun exportProjectWorkbookWithNotice(projectId: String): WorkbookExport {
+        val bundle = buildProjectExportBundle(projectId)
+        return WorkbookExport(FinanceWorkbookExporter().export(bundle), bundle.omittedFreeSaleLineCount)
+    }
+
+    suspend fun exportProjectWorkbook(projectId: String): ByteArray = exportProjectWorkbookWithNotice(projectId).bytes
 
     /** The blank template, listing this business's active categories (or the defaults). */
     suspend fun exportTemplate(businessId: String?): ByteArray {
@@ -1139,11 +1146,12 @@ class FinanceRepository(
             require(draft.contactId == consignment.contactId) { "Nota titip tetap atas nama toko yang dititipi." }
             val byProduct = dao.getConsignmentLines(consignment.id).associateBy { it.productId }
             draft.lines.map { l ->
-                val sent = byProduct[l.productId] ?: error("Produk ini tidak ada di titipan toko tersebut.")
+                val productId = requireNotNull(l.productId) { "Baris bebas tidak dapat dicatat sebagai penjualan titipan." }
+                val sent = byProduct[productId] ?: error("Produk ini tidak ada di titipan toko tersebut.")
                 require(l.unitName.trim().equals(sent.unitName, ignoreCase = true)) { "Nota titip memakai satuan titipan: ${sent.unitName}." }
-                val quantity = requireNotNull(TransactionCalculation.parseQuantity(l.quantityText)) { "Jumlah ${productName(l.productId)} harus angka lebih dari nol." }
-                require(l.unitPriceRupiah > 0) { "Harga ${productName(l.productId)} per ${sent.unitName} harus lebih dari nol." }
-                NoteLine(l.productId, sent.unitName, contentOf(sent.contentText), quantity, l.unitPriceRupiah)
+                val quantity = requireNotNull(TransactionCalculation.parseQuantity(l.quantityText)) { "Jumlah ${productName(productId)} harus angka lebih dari nol." }
+                require(l.unitPriceRupiah > 0) { "Harga ${productName(productId)} per ${sent.unitName} harus lebih dari nol." }
+                NoteLine(productId, productName(productId), sent.unitName, contentOf(sent.contentText), quantity, l.unitPriceRupiah)
             }.also { requireWithinConsignment(consignment, it, exceptSaleId = existing.id) }
         }
         writeSale(project, existing, draft, consignment?.id, lines)
@@ -1183,7 +1191,7 @@ class FinanceRepository(
         payments.size
     }
 
-    private data class NoteLine(val productId: String, val unitName: String, val content: BigDecimal, val quantity: BigDecimal, val unitPriceRupiah: Long)
+    private data class NoteLine(val productId: String?, val name: String, val unitName: String, val content: BigDecimal, val quantity: BigDecimal, val unitPriceRupiah: Long)
 
     private suspend fun productName(productId: String) = dao.getProduct(productId)?.name ?: "produk"
 
@@ -1191,7 +1199,16 @@ class FinanceRepository(
 
     /** A line of a regular note: a product of this unit, sold by its base unit or one of its sale units. */
     private suspend fun noteLine(project: ProjectEntity, line: SaleLineDraft): NoteLine {
-        val record = productRecord(line.productId)
+        val productId = line.productId
+        val name = line.name.trim()
+        if (productId == null) {
+            require(name.isNotBlank()) { "Nama baris harus diisi." }
+            val quantity = requireNotNull(TransactionCalculation.parseQuantity(line.quantityText)) { "Jumlah $name harus angka lebih dari nol." }
+            require(quantity > BigDecimal.ZERO) { "Jumlah $name harus lebih dari nol." }
+            require(line.unitPriceRupiah > 0) { "Harga $name harus lebih dari nol." }
+            return NoteLine(null, name, line.unitName.trim(), BigDecimal.ONE, quantity, line.unitPriceRupiah)
+        }
+        val record = productRecord(productId)
         require(record != null && record.product.projectId == project.id) { "Produk tidak ditemukan di unit usaha ini." }
         val product = record.product
         val known = (listOf(product.unit) + record.units.sortedBy { it.sortOrder }.map { it.name }).distinct()
@@ -1199,7 +1216,7 @@ class FinanceRepository(
             ?: throw IllegalArgumentException("\"${line.unitName.trim()}\" bukan satuan jual ${product.name}. Pilih: ${known.joinToString()}.")
         val quantity = requireNotNull(TransactionCalculation.parseQuantity(line.quantityText)) { "Jumlah ${product.name} harus angka lebih dari nol." }
         require(line.unitPriceRupiah > 0) { "Harga ${product.name} per $unit harus lebih dari nol." }
-        return NoteLine(product.id, unit, record.contentOf(unit), quantity, line.unitPriceRupiah)
+        return NoteLine(product.id, product.name, unit, record.contentOf(unit), quantity, line.unitPriceRupiah)
     }
 
     private suspend fun productRecord(productId: String): ProductRecord? =
@@ -1227,7 +1244,7 @@ class FinanceRepository(
         val prices = materialPrices(project.businessId)
         val previousLines = existing?.let { dao.getSaleLines(it.id).sortedBy { line -> line.sortOrder } }.orEmpty()
         val unchangedLines = existing != null && previousLines.size == lines.size && previousLines.zip(lines).all { (before, after) ->
-            before.productId == after.productId && before.unitName.equals(after.unitName, ignoreCase = true) &&
+            before.productId == after.productId && (after.productId != null || before.name == after.name) && before.unitName.equals(after.unitName, ignoreCase = true) &&
                 TransactionCalculation.parseQuantity(before.quantityText)?.compareTo(after.quantity) == 0 && before.unitPriceRupiah == after.unitPriceRupiah
         }
         val now = System.currentTimeMillis()
@@ -1249,10 +1266,11 @@ class FinanceRepository(
             updatedAtEpochMillis = now,
         )
         val entities = if (unchangedLines) previousLines else lines.mapIndexed { index, l ->
-            val record = requireNotNull(productRecord(l.productId))
-            require(record.product.kind != "TRADED" || record.recipe.isNotEmpty()) { "Modal barang dagangan belum dapat dihitung. Data tetap tersimpan." }
-            val productCost = ProductCosting.cost(record.spec, prices)
-            val manual = record.product.manualCostRupiah.takeIf { record.recipe.isEmpty() }
+            val record = l.productId?.let { productRecord(it) }
+            require(l.productId == null || record != null && record.product.projectId == project.id) { "Produk tidak ditemukan di unit usaha ini." }
+            require(record == null || record.product.kind != "TRADED" || record.recipe.isNotEmpty()) { "Modal barang dagangan belum dapat dihitung. Data tetap tersimpan." }
+            val productCost = record?.let { ProductCosting.cost(it.spec, prices) }
+            val manual = record?.product?.manualCostRupiah?.takeIf { record.recipe.isEmpty() }
             SaleLineEntity(
                 id = UUID.randomUUID().toString(),
                 saleId = saleId,
@@ -1262,10 +1280,10 @@ class FinanceRepository(
                 quantityText = l.quantity.stripTrailingZeros().toPlainString(),
                 unitPriceRupiah = l.unitPriceRupiah,
                 totalRupiah = SalesMath.lineTotal(l.quantity, l.unitPriceRupiah),
-                hppRupiah = if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
+                hppRupiah = if (record == null) 0 else if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
                 sortOrder = index,
-                name = productName(l.productId),
-                costKnown = if (manual != null) true else productCost.complete,
+                name = record?.product?.name ?: l.name,
+                costKnown = productCost?.complete ?: true,
             )
         }
         if (existing == null) {
@@ -1446,7 +1464,7 @@ class FinanceRepository(
                 ConsignmentLineEntity(
                     id = UUID.randomUUID().toString(),
                     consignmentId = id,
-                    productId = l.productId,
+                    productId = requireNotNull(l.productId),
                     unitName = l.unitName,
                     contentText = l.content.stripTrailingZeros().toPlainString(),
                     quantityText = l.quantity.stripTrailingZeros().toPlainString(),
@@ -1471,7 +1489,7 @@ class FinanceRepository(
         val lines = wanted.map { (lineId, quantityText) ->
             val line = sent[lineId] ?: error("Baris titipan tidak ditemukan.")
             val quantity = requireNotNull(TransactionCalculation.parseQuantity(quantityText)) { "Jumlah laku ${productName(line.productId)} harus angka lebih dari nol." }
-            NoteLine(line.productId, line.unitName, contentOf(line.contentText), quantity, line.priceRupiah)
+            NoteLine(line.productId, productName(line.productId), line.unitName, contentOf(line.contentText), quantity, line.priceRupiah)
         }
         requireWithinConsignment(consignment, lines, exceptSaleId = "")
         val draft = SaleDraft(consignment.contactId, date, null, 0, "", emptyList(), paidNowRupiah)
@@ -1515,7 +1533,7 @@ class FinanceRepository(
 
     private suspend fun requireWithinConsignment(consignment: ConsignmentEntity, lines: List<NoteLine>, exceptSaleId: String) {
         val left = consignmentLeft(consignment, exceptSaleId)
-        lines.groupBy { it.productId }.forEach { (productId, own) ->
+        lines.groupBy { requireNotNull(it.productId) }.forEach { (productId, own) ->
             val wanted = own.fold(BigDecimal.ZERO) { sum, l -> sum + l.quantity * l.content }
             val available = left[productId] ?: BigDecimal.ZERO
             val unit = own.first()

@@ -19,8 +19,14 @@ data class ContactDraft(
     val isSupplier: Boolean = false,
 )
 
-/** One product line of a note: [quantityText] of [unitName] (the base unit or a sale unit of the product). */
-data class SaleLineDraft(val productId: String, val unitName: String, val quantityText: String, val unitPriceRupiah: Long)
+/** One named note line: a product ([productId] set) or a free-text item ([productId] null). */
+data class SaleLineDraft(
+    val productId: String?,
+    val unitName: String,
+    val quantityText: String,
+    val unitPriceRupiah: Long,
+    val name: String = "",
+)
 
 /** A sale note as the note form edits it (spec #17, F2-3, F2-7). [paidNowRupiah] only applies when creating. */
 data class SaleDraft(

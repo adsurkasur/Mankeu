@@ -65,6 +65,7 @@ is created on the user's behalf since D-015.
 | `ProductMovement` | product id, PRODUCTION (with batches) or ADJUSTMENT (a count), quantity in base units, date | Stock = these plus sales in date order; may go negative (spec #9). |
 | `StockItem` / `StockMovement` | business, optional unit, levels; IN/OUT/ADJUSTMENT with quantity | Stock out never exceeds stock on hand; movement and level change in one transaction. |
 | `FinancialEvent` | business/unit/book, type (CASH_INCOME, CASH_EXPENSE, OWNER_CAPITAL, OWNER_DRAWING, ASSET_PURCHASE_CASH), date, amount, description, category, optional reference/quantity/budget/product/import links | User-facing record; must produce a balanced journal. Corrected in place or deleted (DEC-019). |
+| `Sale` / `SaleLine` | unit, optional customer, date, discount, named rows, payment links; a row may reference a product or have a null product id | Product rows snapshot their name, quantity, price and HPP; a free row snapshots its name/quantity/price, has HPP Rp0 known, and never changes product stock. The current Excel contract omits free rows and the app warns after export until PK-4.1 adds them. |
 | `JournalEntry` | source event id (unique), date, description | Total postings must balance before writing. |
 | `Posting` | journal id, account id, side, amount | Integer rupiah; debit total equals credit total. |
 | `ImportBatch` | source hash, importer version, state COMMITTED/REVERSED (shown as dibatalkan), counts, applied plan period | Commit is atomic; undo is batch-addressable. |

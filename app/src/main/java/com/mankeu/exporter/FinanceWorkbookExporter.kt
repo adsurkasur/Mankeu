@@ -52,6 +52,8 @@ data class FinanceExportBundle(
     val products: List<ProductRecord> = emptyList(),
     /** The business plan's BEP (DEC-014), computed by the repository from the same rows. */
     val plan: PlanAnalysis? = null,
+    /** Free note lines are not in the current workbook contract (PK-4.1) and must be disclosed. */
+    val omittedFreeSaleLineCount: Int = 0,
     val generatedAtEpochMillis: Long = System.currentTimeMillis(),
 )
 

@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 05:32] [Codex (GPT-6) — PK-1.3]
+- **Goal**: Mendukung baris nota bebas dan campuran di repository tanpa mengganggu HPP, stok, pembayaran atau data lama.
+- **Actions**: Mengubah draft/domain agar menerima productId nullable dan nama snapshot; memvalidasi nama/jumlah/harga; mencatat HPP 0 yang diketahui; menjaga filter stok dan menolak baris bebas dalam titipan; melindungi edit nota yang belum didukung; menambahkan penghitung omission workbook dan peringatan ekspor; mendokumentasikan batas UI dan ekspor.
+- **Files**: app/src/main/java/com/mankeu/data/FinanceDao.kt, FinanceRepository.kt, SalesRecord.kt; app/src/main/java/com/mankeu/domain/SalesMath.kt; app/src/main/java/com/mankeu/exporter/FinanceWorkbookExporter.kt; app/src/main/java/com/mankeu/presentation/AppViewModel.kt; app/src/main/res/values/strings.xml dan values-en/strings.xml; app/src/androidTest/java/com/mankeu/data/FreeLineSaleTest.kt; docs/superpowers/reports/PK-1.3-laporan.md; docs/DOMAIN_MODEL.md; logs/CHANGELOG.md dan DECISION_LOG.md; logs/ACTIVITY_LOG.md; rencana induk §8; docs/WORK_IN_PROGRESS.md
+- **Verification**: [terverifikasi] RED API tidak mendukung nullable ID/nama. GREEN FreeLineSaleTest 4/4, SalesFlowTest 9/9 dan ImportCommitTest 20/20 instrumentasi di AVD terpisah; MonthlySummaryTest 4/4, SalesMathTest 8/8, BackupUpgradeTest 5/5 JVM. Lint 0 error/87 warning dan assembleDebug berhasil; sesudah satu tes guard ditambahkan, FreeLineSaleTest diulang 4/4. git diff --check bersih. [belum] Suite penuh, layar input, editor nota bebas, dan ekspor lossless PK-4.1.
+
 ### [2026-11-13 05:09] [Codex (GPT-6) — PK-1.2 (bukti upgrade lanjutan)]
 - **Goal**: Mencatat hasil pemasangan APK schema 14 di atas schema 13 tanpa menandai paket selesai.
 - **Actions**: Menguji dua seed sintetis di AVD terpisah. Seed dengan kategori bawaan mempertahankan angka Rp30.000; seed kontrol tanpa categoryId berubah dari Rp30.000 menjadi -Rp20.000 karena biaya belanja dan HPP sama-sama dihitung. Medium_Phone tidak disentuh.

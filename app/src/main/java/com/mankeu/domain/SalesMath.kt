@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 
-data class SaleLineInput(val productId: String, val quantity: BigDecimal, val unitPriceRupiah: Long, val hppRupiah: Long)
+data class SaleLineInput(val productId: String?, val quantity: BigDecimal, val unitPriceRupiah: Long, val hppRupiah: Long)
 
 enum class SaleStatus { PAID, PARTIAL, UNPAID }
 

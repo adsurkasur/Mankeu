@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 05:09] [Codex (GPT-6) — PK-1.2 (bukti upgrade lanjutan)]
+- **Goal**: Mencatat hasil pemasangan APK schema 14 di atas schema 13 tanpa menandai paket selesai.
+- **Actions**: Menguji dua seed sintetis di AVD terpisah. Seed dengan kategori bawaan mempertahankan angka Rp30.000; seed kontrol tanpa categoryId berubah dari Rp30.000 menjadi -Rp20.000 karena biaya belanja dan HPP sama-sama dihitung. Medium_Phone tidak disentuh.
+- **Files**: docs/superpowers/reports/PK-1.2-laporan.md; logs/ACTIVITY_LOG.md; docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md §8; docs/WORK_IN_PROGRESS.md
+- **Verification**: [terverifikasi] Upgrade install -r schema 13→14 lulus untuk seed kategori baku; integrity_check lulus, foreign_key_check kosong, Beranda Rp30.000 sebelum/sesudah. [terverifikasi] Kontrol tanpa categoryId menghasilkan Rp30.000→-Rp20.000 dan dicatat sebagai batas yang belum dijelaskan terhadap perilaku produk. [belum] Sync dengan APK lama, suite JVM/lint terbaru, dan jalur data tanpa kategori belum beres.
+
 ### [2026-11-13 00:14] [Codex (GPT-6) — PK-3.1]
 - **Goal**: Membangun kalkulator resep dan memastikan presisi biaya sampai hasil akhir.
 - **Actions**: Menambahkan konversi satuan dan kalkulator harga/simulasi; memperbaiki akar pembulatan per bahan serta snapshot nota/migrasi/preview; menjaga status biaya tidak lengkap dan menjelaskan selisih pembulatan pada editor. Review independen dan review ulang disetujui.

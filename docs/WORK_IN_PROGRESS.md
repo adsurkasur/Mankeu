@@ -22,6 +22,8 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Progres otomatis (2026-11-12 07:59):** Audit ruang kosong (permintaan tambahan pemilik) selesai. [terverifikasi] Skrip bukti PASS; celah form 202–413 dp terutama akibat footer tetap; ruang pesan sekitar44 dp, sela resep berlebih12 dp. [belum] Uji pengguna, tablet, font besar, mode gelap; kode layout tidak diubah. PK-0.5 terus berjalan; pertimbangkan temuan spacing pada paket layar yang dirujuk laporan, jangan mengecilkan target sentuh. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
+
 **Progres otomatis (2026-11-12 02:42):** PK-0.7 selesai. [terverifikasi] RED 3 perilaku + 2 alasan kosong; GREEN 16 tes komponen, 155 tes JVM, lint 0 error/89 peringatan. Screenshot/XML: alasan tampil di atas Simpan mati; pemulihan hash 4/4 sama. PK-0.5 berikutnya; audit ruang kosong tambahan diminta pemilik, tanpa mengubah batas kapabilitas. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.
 
 **Progres otomatis (2026-11-12 02:34):** PK-0.4 selesai ditinjau. [terverifikasi] 12/12 sampel, jank 57,14–96,67 %, p90 25–53 ms; crash duplicate key direproduksi; hash pemulihan 4/4 sama. [belum] Akar tingkat fungsi dan HP nyata; bukan klaim kinerja lulus. PK-0.5 memperbaiki crash dan temuan B, membetulkan klaim N; PK-0.7 sedang dikerjakan. Kinerja tetap terbuka di X3/PK-5.4. Lingkup pemilik: lanjut seluruh paket MVP yang tidak terhalang keputusan; tetap di fase2-nota-piutang, tanpa main/superproject.

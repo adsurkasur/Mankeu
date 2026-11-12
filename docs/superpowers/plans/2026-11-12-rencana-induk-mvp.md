@@ -468,6 +468,8 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 | X16 | Berkas besar (`FinanceRepository.kt` 2.129 baris) menghabiskan konteks agen [kode] | Agen membaca ulang ribuan baris tiap paket | Paket menyebut fungsi dan rentang baris; pemecahan berkas sesudah MVP |
 | X17 | Bantuan dan panduan menjelaskan app lama [audit T6] | Pengguna dibimbing ke layar yang tidak ada | PK-5.2; sampai saat itu tombol bantuan di layar baru tidak menaut artikel lama |
 
+| X18 | Pemilik merasa banyak ruang kosong; audit 2026-11-12 mengukur celah form pendek 202–413 dp serta ruang pesan tersembunyi dan daftar kosong | Hubungan isian dan aksi dapat terasa jauh [inferred]; perubahan sembarang berisiko merusak jangkauan tombol/keyboard | Laporan audit ruang kosong; tinjau pada PK-2.3/2.4/2.5/2.8, pertahankan target 48 dp |
+
 ### Yang sengaja ditunda, dengan alasan
 
 | Hal | Alasan | Kapan |
@@ -507,3 +509,4 @@ Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · 
 - 2026-11-12 02:30 · Keputusan total kas (DEC-033) · selesai · commit paket ini · [terverifikasi] Dokumentasi kontrak; belum ada perubahan angka/kode pada keputusan ini. · Implementasi serta tes rekonsiliasi pada PK-0.5; keputusan K lain yang kosong tetap terhalang.
 - 2026-11-12 02:34 · PK-0.4 · selesai ditinjau · commit paket ini · [terverifikasi] 12/12 sampel, jank 57,14–96,67 %, p90 25–53 ms; crash duplicate key direproduksi; hash pemulihan 4/4 sama. [belum] Akar tingkat fungsi dan HP nyata; bukan klaim kinerja lulus. · PK-0.5 memperbaiki crash dan temuan B, membetulkan klaim N; PK-0.7 sedang dikerjakan. Kinerja tetap terbuka di X3/PK-5.4.
 - 2026-11-12 02:42 · PK-0.7 · selesai · commit paket ini · [terverifikasi] RED 3 perilaku + 2 alasan kosong; GREEN 16 tes komponen, 155 tes JVM, lint 0 error/89 peringatan. Screenshot/XML: alasan tampil di atas Simpan mati; pemulihan hash 4/4 sama. · PK-0.5 berikutnya; audit ruang kosong tambahan diminta pemilik, tanpa mengubah batas kapabilitas.
+- 2026-11-12 07:59 · Audit ruang kosong (permintaan tambahan pemilik) · selesai · commit paket ini · [terverifikasi] Skrip bukti PASS; celah form 202–413 dp terutama akibat footer tetap; ruang pesan sekitar44 dp, sela resep berlebih12 dp. [belum] Uji pengguna, tablet, font besar, mode gelap; kode layout tidak diubah. · PK-0.5 terus berjalan; pertimbangkan temuan spacing pada paket layar yang dirujuk laporan, jangan mengecilkan target sentuh.

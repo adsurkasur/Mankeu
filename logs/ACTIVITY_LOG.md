@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 07:59] [Codex (GPT-6) — Audit ruang kosong (permintaan tambahan pemilik)]
+- **Goal**: Menelusuri persepsi banyak ruang kosong pada layar Android tanpa mengubah layout secara spekulatif.
+- **Actions**: Membaca sumber layout dan memeriksa 15 pasangan screenshot/XML data sintetis. Mengukur celah footer saat keyboard buka/tutup, pesan pelanggan tersembunyi, serta kolom resep kosong. Membedakan sisa viewport dari padding/inset; memetakan tindak lanjut ke paket layar. Data emulator dipulihkan dengan hash empat berkas cocok.
+- **Files**: docs/superpowers/reports/2026-11-12-audit-ruang-kosong.md; docs/superpowers/evidence/spacing (15 PNG/XML dan verify_measurements.py); logs/ACTIVITY_LOG.md; rencana induk X18/§8; WORK_IN_PROGRESS.md.
+- **Verification**: [terverifikasi] Skrip bukti PASS; celah form 202–413 dp terutama akibat footer tetap; ruang pesan sekitar44 dp, sela resep berlebih12 dp. [belum] Uji pengguna, tablet, font besar, mode gelap; kode layout tidak diubah.
+
 ### [2026-11-12 02:42] [Codex (GPT-6) — PK-0.7]
 - **Goal**: Menjelaskan sebab tombol utama belum dapat ditekan pada form dan sheet.
 - **Actions**: Mengganti Boolean saveEnabled/confirmEnabled dengan alasan nullable nonkosong, meneruskan lewat LineEditSheet, memperbarui semua pemanggil dan resource dua bahasa; menambah tes perilaku merah/hijau dan meninjau 12 enabled tersisa. Review independen menyetujui. Mengambil screenshot/XML produk sintetis dengan hasil kosong; memulihkan data emulator.

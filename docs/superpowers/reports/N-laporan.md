@@ -1,5 +1,20 @@
 # Laporan Paket N: Stabilitas Layar, Eliminasi Jitter, dan Bug Bash
 
+## Koreksi status bukti, 2026-11-12 (PK-0.5)
+
+[verified] Laporan historis di bawah menjelaskan perubahan kode, tetapi klaim seluruh akar masalah
+selesai dan “60 FPS stabil” ditarik. Sampel lama sendiri mencatat 22,89% dan 32,69% jank; p50 11 ms
+tidak membuktikan seluruh frame stabil. [PK-0.4-review](PK-0.4-review.md) mencatat 12 sampel baru dengan
+57,14% sampai 96,67% jank. Protokol berbeda, sehingga kedua kelompok angka tidak membuktikan peningkatan
+atau regresi kode. Akar penyebab fungsi aplikasi maupun biaya host/GPU belum terisolasi; status X3
+tetap memerlukan bukti HP pemilik pada PK-5.4.
+
+[verified] `heightIn(min = Space.Row)` ada di anak `ResultBar` di dalam `AnimatedVisibility`.
+Ruang hilang ketika result null; implementasi memakai expand/shrink 150 ms dan tidak mencadangkan
+tinggi parent yang tetap. Ini koreksi N3 terhadap uraian historis, bukan diagnosis jank. PK-0.5
+memperbaiki crash kunci pemilih melalui identitas entitas; tidak mengubah animasi atau mengklaim
+eliminasi jitter. Bukti penerimaan ada di [PK-0.5-laporan](PK-0.5-laporan.md).
+
 Laporan pengerjaan Paket N pada branch `fase2-nota-piutang`.
 
 ## 1. Ringkasan Tujuan & Konteks

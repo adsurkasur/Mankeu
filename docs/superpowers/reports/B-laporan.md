@@ -1,5 +1,13 @@
 # Laporan Paket B: Fase UX U6 — Satu Daftar Catatan Terintegrasi
 
+## Koreksi bukti, 2026-11-12 (PK-0.5)
+
+[verified] Uraian dan hasil di bawah disimpan sebagai laporan historis. Klaim benchmark kurang dari
+50 ms pada tabel tidak didukung assertion tes: batas tes sebenarnya 500 ms. Nama tes diperbaiki menjadi
+`buildsScaleLedgerUnderFiveHundredMilliseconds`; tes ini pemeriksaan batas kasar JVM, bukan benchmark
+frame perangkat. PK-0.3 menemukan F1 sampai F4 pada versi yang ditinjau. Perbaikan dan hasil penerimaan
+baru dicatat terpisah di [PK-0.5-laporan](PK-0.5-laporan.md), dengan kontrak kas DEC-033.
+
 Laporan pengerjaan Paket B (U6) pada branch `fase2-nota-piutang`.
 
 ## 1. Ringkasan & Tujuan

@@ -95,3 +95,7 @@ Kedua pilihan [usulan], belum diputuskan reviewer. Jangan mengganti arti angka r
 ## Tindak lanjut keputusan F2 (2026-11-12)
 
 [user-confirmed] Pemilik mendelegasikan pilihan kepada agen dengan prinsip kebutuhan pengguna UMKM nyata. Agen memilih A: seluruh kas nyata pada total harian, dengan totalCashInRupiah/totalCashOutRupiah baru di MonthlySummary; angka operasional dan laba tidak diubah (DEC-033). [belum] Implementasi dan pembuktian rekonsiliasi, ditangani PK-0.5. Temuan historis di atas tetap bukti keadaan saat review.
+
+## Penyelesaian PK-0.5 (2026-11-12)
+
+[terverifikasi] F1–F4 diperbaiki dan diperiksa melalui 164 tes JVM serta 31 tes instrumented terfokus; daftar penerimaan dan batas klaim ada di PK-0.5-laporan.md. DEC-033 diimplementasikan dengan totalCashInRupiah/totalCashOutRupiah; angka operasional dan laba tetap. Temuan tambahan status belanja tempo lunas (F5) memakai total pembayaran lengkap dan sudah direview ulang independen. Hasil ini tidak mengganti bukti historis review di atas atau menyatakan seluruh MVP selesai.

@@ -1,5 +1,15 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-035] Catatan membaca jendela hari lengkap dalam satu transaksi
+- **Date**: 2026-11-12
+- **Status**: Implemented; unit, Room, ViewModel, dan Compose terverifikasi pada PK-0.5.
+- **Context**: Batas 200 baris memotong hari, pembayaran nota dan event dapat berasal dari emisi Flow berbeda, dan kunci berdasarkan nama bertabrakan untuk entitas berbeda.
+- **Decision**: Gunakan LedgerWindow per unit dengan pembacaan transaksi: cutoff berasal dari anggaran sekitar 200 baris gabungan nota/event, lalu muat seluruh tanggal batas. Tambah riwayat secara eksplisit, termasuk saat filter tidak menemukan baris. Nota lengkap tetap tersedia untuk menautkan pembayaran baru ke nota lama; baris yang ditampilkan dibatasi tanggal jendela. Jendela dan permintaan riwayat terkait unit, diperbarui saat data/kontak berubah, serta tidak mematikan Flow bila unit/buku menghilang.
+- **Decision**: Jumlah kas memakai CashTotals dari posting akun CASH yang sama dengan MonthlySummary (DEC-033); pembayaran digabung berdasarkan ID event, bukan kemiripan tanggal/nama. Penyerapan hanya mengubah representasi baris. Pencarian mencakup metadata pembayaran yang diwakili. Filter lewat tempo dipertahankan. Belanja tempo yang telah dibayar penuh keluar dari filter belum lunas. Status itu memakai total seluruh pembayaran terkait dalam snapshot transaksi yang sama, terpisah dari batas tanggal kas; tanggal belanja lama yang pernah diubah tidak boleh membuat status bergantung pada halaman.
+- **Decision**: PickerPage mewajibkan kunci identitas String; empat pemanggil memakai ID produk, kontak, atau bahan, dengan namespace terpisah dari aksi tambah.
+- **Rationale / alternatives**: Batas baris murni merusak total hari; seluruh riwayat sekaligus menambah beban yang tidak diperlukan. Snapshot transaksi mencegah gabungan pembayaran dan event yang berbeda saat ubah/hapus. Identitas domain tetap stabil saat nama berubah atau sama.
+- **Affected components**: FinanceDao, FinanceRepository, LedgerWindow, AppViewModel, UnifiedLedger, CashTotals, MonthlySummary, EntryScreen, PickerPage dan pemanggilnya, tes unit/Room/Compose. Tanpa perubahan schema/dependensi; angka operasional dan laba tetap.
+
 ### [DEC-034] Tombol utama form memakai alasan penghalang yang eksplisit
 - **Date**: 2026-11-12
 - **Status**: Implemented, sesuai PK-0.7 dan Lampiran A aturan S3.

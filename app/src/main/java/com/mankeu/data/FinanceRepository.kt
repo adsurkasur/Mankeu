@@ -176,11 +176,34 @@ class FinanceRepository(
     suspend fun <T> inTransaction(block: suspend () -> T): T = database.withTransaction(block)
 
     /**
-     * The newest [RECENT_EVENT_LIMIT] rows of a book, for the ledger and the recent list.
+     * The newest [RECENT_EVENT_LIMIT] rows, extended to finish the boundary date, for recent lists.
+     * Catatan's pageable transaction-coherent input is [ledgerWindow].
      * Aggregates never read this — see [cashFlowRecords] and [categoryTotals].
      */
     fun eventsForBook(bookId: String): Flow<List<MoneyEvent>> =
         dao.observeEventsForBook(bookId, RECENT_EVENT_LIMIT).map { entities -> entities.map { it.toDomain() } }
+
+    /** Initial budget is rows, extended to finish its boundary date, including note-only days. */
+    fun ledgerWindow(projectId: String, rowLimit: Int = RECENT_EVENT_LIMIT): Flow<LedgerWindow> {
+        require(rowLimit > 0)
+        return onDataChange().map {
+            database.withTransaction {
+                val book = dao.getBooks(projectId).firstOrNull { it.mode == BookMode.REALIZATION.name }
+                    ?: return@withTransaction LedgerWindow(projectId, "", null, emptyList(), emptyList(), false)
+                val cutoff = dao.getLedgerCutoff(book.id, rowLimit)
+                val events = cutoff?.let { dao.getLedgerEvents(book.id, it).map { row -> row.toDomain() } }.orEmpty()
+                val lines = dao.getSaleLinesOfProject(projectId).groupBy { it.saleId }
+                val payments = dao.getSalePaymentsOfProject(projectId).map { it.toDomain() }.groupBy { it.saleId }
+                val contacts = dao.getAllContactsOfProject(projectId).associateBy { it.id }
+                val sales = dao.getSalesOfProject(projectId).map { sale ->
+                    SaleRecord(sale, lines[sale.id].orEmpty(), payments[sale.id].orEmpty(), contacts[sale.contactId])
+                }
+                LedgerWindow(projectId, book.id, cutoff?.let(LocalDate::ofEpochDay), events, sales,
+                    cutoff?.let { dao.hasEarlierLedgerRows(book.id, it) } ?: false,
+                    dao.getSupplierPaymentTotals(book.id).associate { it.purchaseId to it.totalRupiah })
+            }
+        }
+    }
 
     fun eventCount(bookId: String): Flow<Int> = dao.observeEventCount(bookId)
 
@@ -238,7 +261,7 @@ class FinanceRepository(
             MonthPosting(YearMonth.parse(it.month), PostedRecord("", CashFlowRole.valueOf(it.cashFlowRole), LedgerAccount.valueOf(it.account), PostingSide.valueOf(it.side), it.amountRupiah))
         }
 
-    private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books")
+    private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books", "contacts")
 
     private suspend fun summaryOf(bookId: String): FinancialSummary = database.withTransaction {
         val posted = dao.getPostingTotals(bookId).summary()

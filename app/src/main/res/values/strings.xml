@@ -14,8 +14,7 @@
     <string name="nav_home">Beranda</string>
     <string name="nav_entry">Catatan</string>
     <string name="ledger_subtitle">%1$d catatan pada unit usaha dan buku yang aktif.</string>
-    <string name="ledger_truncated_title">Menampilkan catatan terbaru</string>
-    <string name="ledger_truncated_body">Ditampilkan %1$d dari %2$d catatan agar aplikasi tetap ringan. Pakai pencarian di atas untuk menemukan catatan lama, atau ekspor ke Excel untuk melihat semuanya.</string>
+    <string name="ledger_load_earlier">Muat catatan lebih lama</string>
     <string name="nav_reports">Laporan</string>
 
     <!-- Scope header -->

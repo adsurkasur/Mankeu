@@ -135,7 +135,7 @@ These mappings live in `LedgerPolicy.journalFor` and are covered by `LedgerPolic
 
 - Projection is the business plan: plan period, products with recipes and a first selling month, plan lines, planned capital. `PlanCalculator` derives the monthly averages, break-even (mix and per product), R/C, B/C, and capital need (deepest cumulative deficit before capital), and a cash schedule over the real months (DEC-014, DEC-016, DEC-017).
 - Realization is the recorded cash. `ActualBepCalculator` compares this month's revenue with its break-even.
-- `MonthlySummary` (U2, DEC-030 §2) is the one summary of a Realisasi month: sales, other income, HPP, other costs, profit (all from `ProfitCalculator.month`), operating money in and out, and cash, receivable and payable at month end. Beranda, Laporan, the BEP card, Komparasi and the PDF/xlsx show it and compute nothing of their own.
+- `MonthlySummary` (U2, DEC-030 §2) is the one summary of a Realisasi month: sales, other income, HPP, other costs, profit (all from `ProfitCalculator.month`), operating money in and out, total actual cash in/out across operating/investing/financing roles (DEC-033), and cash, receivable and payable at month end. Catatan reconciles complete daily totals to totalCashInRupiah/totalCashOutRupiah; operating moneyInRupiah/moneyOutRupiah keep their existing meaning. Beranda, Laporan, the BEP card, Komparasi and the PDF/xlsx show it and compute nothing of their own.
 - Comparison ("Uang masuk/keluar vs rencana") reads both and compares averages per month on a cash basis (Realisasi: the money in/out of every `MonthlySummary`). It is never called profit and does not own editable financial facts.
 
 ## Financing semantics

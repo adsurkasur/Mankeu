@@ -3,6 +3,7 @@ package com.mankeu.presentation
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.SaleRecord
 import com.mankeu.domain.FinancialEventType
+import com.mankeu.domain.CashTotals
 import com.mankeu.domain.MoneyEvent
 import com.mankeu.domain.SaleStatus
 import java.time.LocalDate
@@ -10,6 +11,7 @@ import java.time.LocalDate
 enum class CatatanFilter {
     ALL,
     UNPAID,
+    OVERDUE,
     INCOME,
     EXPENSE,
 }
@@ -23,6 +25,7 @@ sealed interface UnifiedLedgerItem {
         val record: SaleRecord,
         val productSummary: String,
         val paidOnDateRupiah: Long,
+        val representedPayments: List<MoneyEvent> = emptyList(),
     ) : UnifiedLedgerItem {
         override val id: String get() = "sale_" + record.sale.id
         override val date: LocalDate get() = LocalDate.ofEpochDay(record.sale.dateEpochDay)
@@ -51,11 +54,7 @@ sealed interface UnifiedLedgerItem {
         override val date: LocalDate get() = event.date
         val isCreditPurchase: Boolean get() = event.type == FinancialEventType.CREDIT_PURCHASE
         val isIncoming: Boolean get() = BusinessWords.isIncoming(event.type)
-        override val cashDeltaRupiah: Long get() = when {
-            isIncoming -> event.amountRupiah
-            isCreditPurchase -> 0L
-            else -> -event.amountRupiah
-        }
+        override val cashDeltaRupiah: Long get() = CashTotals.fromEvents(listOf(event)).deltaRupiah
         val amountRupiah: Long get() = event.amountRupiah
         val description: String get() = event.description
         val category: String get() = event.category
@@ -82,21 +81,27 @@ object UnifiedLedger {
         filter: CatatanFilter,
         search: String = "",
         today: LocalDate = LocalDate.now(),
+        oldestDate: LocalDate? = null,
+        /** Repository callers provide full status history; null is for complete standalone inputs. */
+        supplierPaymentsRupiah: Map<String, Long>? = null,
     ): List<LedgerDayGroup> {
         val productMap = products.associateBy { it.product.id }
         val saleMap = sales.associateBy { it.sale.id }
+        // Canonical event identity: a payment occurs once even when present in both inputs.
+        // Repository callers supply both inputs from the same database transaction.
+        val canonicalEvents = (sales.flatMap { it.payments } + events).associateBy { it.id }.values
+            .filter { oldestDate == null || !it.date.isBefore(oldestDate) }
+        val paymentsBySale = canonicalEvents.filter { it.saleId != null }.groupBy { it.saleId }
+        val supplierPaid = supplierPaymentsRupiah ?: canonicalEvents.filter { it.settlesEventId != null }.groupBy { it.settlesEventId }
+            .mapValues { (_, payments) -> payments.sumOf { it.amountRupiah } }
 
         val absorbedEventIds = mutableSetOf<String>()
 
-        val saleItems = sales.map { saleRecord ->
+        val saleItems = sales.filter { oldestDate == null || it.sale.dateEpochDay >= oldestDate.toEpochDay() }.map { saleRecord ->
             val saleDate = LocalDate.ofEpochDay(saleRecord.sale.dateEpochDay)
-            val paymentsOnSaleDate = saleRecord.payments.filter { it.date == saleDate }
+            val paymentsOnSaleDate = paymentsBySale[saleRecord.sale.id].orEmpty().filter { it.date == saleDate }
             paymentsOnSaleDate.forEach { absorbedEventIds.add(it.id) }
-            val paidOnDate = paymentsOnSaleDate.sumOf { it.amountRupiah }
-
-            // Also absorb any matching events in `events` on the same date for this sale
-            events.filter { it.saleId == saleRecord.sale.id && it.date == saleDate }
-                .forEach { absorbedEventIds.add(it.id) }
+            val paidOnDate = CashTotals.fromEvents(paymentsOnSaleDate).incomingRupiah
 
             val productSummary = saleRecord.lines.sortedBy { it.sortOrder }.joinToString(", ") { line ->
                 val pName = productMap[line.productId]?.product?.name ?: "—"
@@ -107,10 +112,11 @@ object UnifiedLedger {
                 record = saleRecord,
                 productSummary = productSummary,
                 paidOnDateRupiah = paidOnDate,
+                representedPayments = paymentsOnSaleDate,
             )
         }
 
-        val nonAbsorbedEvents = events.filterNot { it.id in absorbedEventIds }
+        val nonAbsorbedEvents = canonicalEvents.filterNot { it.id in absorbedEventIds }
 
         val moneyItems = nonAbsorbedEvents.map { event ->
             if (event.saleId != null) {
@@ -134,9 +140,11 @@ object UnifiedLedger {
                 CatatanFilter.ALL -> true
                 CatatanFilter.UNPAID -> when (item) {
                     is UnifiedLedgerItem.Sale -> item.outstandingRupiah > 0
-                    is UnifiedLedgerItem.Money -> item.isCreditPurchase
+                    is UnifiedLedgerItem.Money -> item.isCreditPurchase &&
+                        item.amountRupiah > (supplierPaid[item.event.id] ?: 0L)
                     is UnifiedLedgerItem.SalePayment -> false
                 }
+                CatatanFilter.OVERDUE -> item is UnifiedLedgerItem.Sale && item.record.overdue(today)
                 CatatanFilter.INCOME -> when (item) {
                     is UnifiedLedgerItem.Sale -> item.cashDeltaRupiah > 0
                     is UnifiedLedgerItem.SalePayment -> true
@@ -160,12 +168,12 @@ object UnifiedLedger {
                     is UnifiedLedgerItem.Sale -> {
                         item.customerName?.contains(trimmedSearch, ignoreCase = true) == true ||
                             item.productSummary.contains(trimmedSearch, ignoreCase = true) ||
-                            item.record.sale.notes.contains(trimmedSearch, ignoreCase = true)
+                            item.record.sale.notes.contains(trimmedSearch, ignoreCase = true) ||
+                            item.representedPayments.any { it.matches(trimmedSearch) }
                     }
                     is UnifiedLedgerItem.SalePayment -> {
                         item.customerName.contains(trimmedSearch, ignoreCase = true) ||
-                            item.event.description.contains(trimmedSearch, ignoreCase = true) ||
-                            item.event.category.contains(trimmedSearch, ignoreCase = true)
+                            item.event.matches(trimmedSearch)
                     }
                     is UnifiedLedgerItem.Money -> {
                         item.description.contains(trimmedSearch, ignoreCase = true) ||
@@ -181,14 +189,22 @@ object UnifiedLedger {
             .entries
             .sortedByDescending { it.key }
             .map { (date, items) ->
-                val totalIn = items.sumOf { it.cashDeltaRupiah.coerceAtLeast(0) }
-                val totalOut = items.sumOf { (-it.cashDeltaRupiah).coerceAtLeast(0) }
+                val cash = CashTotals.fromEvents(items.flatMap {
+                    when (it) {
+                        is UnifiedLedgerItem.Sale -> it.representedPayments
+                        is UnifiedLedgerItem.SalePayment -> listOf(it.event)
+                        is UnifiedLedgerItem.Money -> listOf(it.event)
+                    }
+                })
                 LedgerDayGroup(
                     date = date,
                     items = items,
-                    totalInRupiah = totalIn,
-                    totalOutRupiah = totalOut,
+                    totalInRupiah = cash.incomingRupiah,
+                    totalOutRupiah = cash.outgoingRupiah,
                 )
             }
     }
+
+    private fun MoneyEvent.matches(query: String) = description.contains(query, ignoreCase = true) ||
+        category.contains(query, ignoreCase = true) || reference?.contains(query, ignoreCase = true) == true
 }

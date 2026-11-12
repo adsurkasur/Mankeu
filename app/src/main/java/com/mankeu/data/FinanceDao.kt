@@ -29,6 +29,9 @@ data class CashFlowRow(
 /** One slice of the cost-composition chart, summed by the database rather than in memory. */
 data class CategoryTotalRow(val category: String, val totalRupiah: Long)
 
+/** Payment history of a purchase, independent of the currently displayed date window. */
+data class SupplierPaymentTotalRow(val purchaseId: String, val totalRupiah: Long)
+
 /** Notes of one month summed; see [FinanceDao.getSaleMonths]. */
 data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
 
@@ -187,22 +190,65 @@ interface FinanceDao {
     suspend fun getBudgetItemsForImportBatch(batchId: String): List<BudgetItemEntity>
 
     /**
-     * The most recent [limit] rows, newest first — what Beranda and Catatan actually render.
-     *
-     * Unbounded before: every screen observing a book pulled its entire history into memory just
-     * to show the newest handful and to filter a list nobody scrolls to the end of. Aggregates do
-     * not come from here (see [observeCashFlowRows] and [observeCategoryTotals]), so limiting the
-     * list cannot change a reported figure — only how much of the ledger is on screen at once.
+     * About [limit] recent rows, including every row on the boundary date. Aggregate reports use
+     * their own complete queries; a visible day's cash must also never be cut midway.
      */
     @Query(
         """
         SELECT * FROM financial_events
-        WHERE bookId = :bookId
-        ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC
-        LIMIT :limit
+        WHERE bookId = :bookId AND dateEpochDay >= (
+            SELECT MIN(dateEpochDay) FROM (
+                SELECT dateEpochDay FROM financial_events WHERE bookId = :bookId
+                ORDER BY dateEpochDay DESC LIMIT :limit
+            )
+        )
+        ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC, id
         """,
     )
     fun observeEventsForBook(bookId: String, limit: Int): Flow<List<FinancialEventEntity>>
+
+    /** Row budget over notes AND events; UNION ALL retains the number of rows on busy dates. */
+    @Query("""
+        SELECT MIN(dateEpochDay) FROM (
+            SELECT dateEpochDay FROM (
+                SELECT dateEpochDay FROM financial_events WHERE bookId = :bookId
+                UNION ALL
+                SELECT s.dateEpochDay FROM sales s JOIN books b ON b.projectId = s.projectId
+                WHERE b.id = :bookId AND b.mode = 'REALIZATION'
+            ) ORDER BY dateEpochDay DESC LIMIT :limit
+        )
+    """)
+    suspend fun getLedgerCutoff(bookId: String, limit: Int): Long?
+
+    @Query("SELECT * FROM financial_events WHERE bookId = :bookId AND dateEpochDay >= :cutoff ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC, id")
+    suspend fun getLedgerEvents(bookId: String, cutoff: Long): List<FinancialEventEntity>
+
+    @Query("""
+        SELECT purchase.id AS purchaseId, SUM(payment.amountRupiah) AS totalRupiah
+        FROM financial_events payment JOIN financial_events purchase ON payment.settlesEventId = purchase.id
+        WHERE purchase.bookId = :bookId AND purchase.type = 'CREDIT_PURCHASE'
+        GROUP BY purchase.id
+    """)
+    suspend fun getSupplierPaymentTotals(bookId: String): List<SupplierPaymentTotalRow>
+
+    @Query("""
+        SELECT EXISTS(SELECT 1 FROM financial_events WHERE bookId = :bookId AND dateEpochDay < :cutoff)
+            OR EXISTS(SELECT 1 FROM sales s JOIN books b ON b.projectId = s.projectId
+                WHERE b.id = :bookId AND b.mode = 'REALIZATION' AND s.dateEpochDay < :cutoff)
+    """)
+    suspend fun hasEarlierLedgerRows(bookId: String, cutoff: Long): Boolean
+
+    @Query("SELECT * FROM sales WHERE projectId = :projectId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC, id")
+    suspend fun getSalesOfProject(projectId: String): List<SaleEntity>
+
+    @Query("SELECT l.* FROM sale_lines l JOIN sales s ON s.id = l.saleId WHERE s.projectId = :projectId ORDER BY l.saleId, l.sortOrder")
+    suspend fun getSaleLinesOfProject(projectId: String): List<SaleLineEntity>
+
+    @Query("SELECT * FROM financial_events WHERE projectId = :projectId AND saleId IS NOT NULL ORDER BY dateEpochDay, createdAtEpochMillis, id")
+    suspend fun getSalePaymentsOfProject(projectId: String): List<FinancialEventEntity>
+
+    @Query("SELECT * FROM contacts WHERE businessId IN (SELECT businessId FROM projects WHERE id = :projectId)")
+    suspend fun getAllContactsOfProject(projectId: String): List<ContactEntity>
 
     @Query("SELECT COUNT(*) FROM financial_events WHERE bookId = :bookId")
     fun observeEventCount(bookId: String): Flow<Int>

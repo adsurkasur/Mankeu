@@ -7,6 +7,13 @@ import org.junit.Test
 
 /** U2 (P7 "satu angka"): one monthly summary, built from ProfitCalculator and the postings. */
 class MonthlySummaryTest {
+    @Test fun allCashFieldsIncludeCapitalAndAssetsWithoutChangingOperatingSummary() {
+        val summary = MonthlySummary.of(sep, inputs, postings)
+        assertEquals(10_000_000L, summary.totalCashInRupiah)
+        assertEquals(3_600_000L, summary.totalCashOutRupiah)
+        assertEquals(0L to 0L, summary.moneyInRupiah to summary.moneyOutRupiah)
+        assertEquals(-100_000L, summary.profitRupiah)
+    }
     private val sep = YearMonth.of(2026, 9)
     private val oct = YearMonth.of(2026, 10)
     private fun d(day: Int, month: Int = 10) = LocalDate.of(2026, month, day)

@@ -212,6 +212,7 @@ class FormComponentsTest {
                     title = "Pilih bahan",
                     items = listOf("Singkong", "Minyak goreng", "Garam"),
                     itemLabel = { it },
+                    itemKey = { it },
                     onPick = { picked = it },
                     onClose = {},
                     onAdd = { added = it },

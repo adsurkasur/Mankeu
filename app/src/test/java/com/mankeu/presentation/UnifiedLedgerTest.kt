@@ -9,6 +9,12 @@ import com.mankeu.data.SaleRecord
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.MoneyEvent
 import com.mankeu.domain.SaleStatus
+import com.mankeu.domain.LedgerPolicy
+import com.mankeu.domain.MonthPosting
+import com.mankeu.domain.MonthlySummary
+import com.mankeu.domain.PostedRecord
+import com.mankeu.domain.ProfitInputs
+import java.time.YearMonth
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,6 +22,106 @@ import org.junit.Test
 import java.time.LocalDate
 
 class UnifiedLedgerTest {
+    @Test fun fullDailyCashReconcilesToMonthlyCashAcrossEveryRole() {
+        val notePayment = event("note-payment", today, FinancialEventType.CASH_INCOME, 600_000, "Nota", "Penjualan", "s1")
+        val sale = note("s1", today, customerA, 600_000).copy(payments = listOf(notePayment))
+        val events = listOf(notePayment,
+            event("income", today, FinancialEventType.CASH_INCOME, 50_000, "Lain", "Pendapatan"),
+            event("capital", yesterday, FinancialEventType.OWNER_CAPITAL, 1_000_000, "Modal", "Modal"),
+            event("drawing", today, FinancialEventType.OWNER_DRAWING, 100_000, "Prive", "Prive"),
+            event("asset", today, FinancialEventType.ASSET_PURCHASE_CASH, 200_000, "Alat", "Aset"),
+            event("expense", today, FinancialEventType.CASH_EXPENSE, 70_000, "Biaya", "Biaya"),
+            event("credit", today, FinancialEventType.CREDIT_PURCHASE, 90_000, "Tempo", "Bahan"),
+            event("supplier", today, FinancialEventType.CASH_EXPENSE, 60_000, "Pemasok", "Bahan").copy(settlesEventId = "credit"))
+        val month = YearMonth.from(today)
+        val postings = events.flatMap { event -> LedgerPolicy.journalFor(event).postings.map {
+            MonthPosting(YearMonth.from(event.date), PostedRecord(event.id, event.cashFlowRole, it.account, it.side, it.amountRupiah))
+        } }
+        val summary = MonthlySummary.of(month, ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList()), postings)
+        val days = UnifiedLedger.build(listOf(sale), events, emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(1_650_000L, summary.totalCashInRupiah)
+        assertEquals(430_000L, summary.totalCashOutRupiah)
+        assertEquals(summary.totalCashInRupiah, days.sumOf { it.totalInRupiah })
+        assertEquals(summary.totalCashOutRupiah, days.sumOf { it.totalOutRupiah })
+        assertEquals(650_000L to 130_000L, summary.moneyInRupiah to summary.moneyOutRupiah)
+        assertEquals(summary.totalCashInRupiah - summary.totalCashOutRupiah, summary.cashOnHandRupiah)
+        assertEquals(0L, summary.profitRupiah)
+    }
+    @Test fun unpaidFilterExcludesFullySettledSupplierPurchases() {
+        val purchase = event("credit", yesterday, FinancialEventType.CREDIT_PURCHASE, 300_000, "Belanja tempo", "Bahan")
+        val payment = event("supplier", today, FinancialEventType.CASH_EXPENSE, 300_000, "Bayar pemasok", "Bahan")
+            .copy(settlesEventId = purchase.id)
+        val paid = UnifiedLedger.build(emptyList(), listOf(purchase, payment), emptyList(), CatatanFilter.UNPAID, today = today)
+        assertTrue("A settled purchase is no longer unpaid", paid.isEmpty())
+        val partial = UnifiedLedger.build(emptyList(), listOf(purchase, payment.copy(amountRupiah = 100_000)), emptyList(), CatatanFilter.UNPAID, today = today)
+        assertEquals(listOf("event_credit"), partial.flatMap { it.items }.map { it.id })
+    }
+    @Test fun overdueFilterExistsAndKeepsOnlyUnpaidPastDueNotes() {
+        val overdue = CatatanFilter.entries.firstOrNull { it.name == "OVERDUE" }
+        assertTrue("Catatan must retain the overdue capability", overdue != null)
+        val late = note("late", yesterday, customerA, 600_000, 0).let {
+            it.copy(sale = it.sale.copy(dueDateEpochDay = yesterday.toEpochDay()))
+        }
+        val future = late.copy(sale = late.sale.copy(id = "future", dueDateEpochDay = today.plusDays(1).toEpochDay()))
+        val paid = late.copy(sale = late.sale.copy(id = "paid"), payments = listOf(event("paid", today, FinancialEventType.CASH_INCOME, 600_000, "Bayar", "Jual", "paid")))
+        val groups = UnifiedLedger.build(listOf(late, future, paid), emptyList(), emptyList(), overdue!!, today = today)
+        assertEquals(listOf("sale_late"), groups.flatMap { it.items }.map { it.id })
+    }
+
+    @Test fun twoCanonicalSameDayPaymentsAreAbsorbedOnceEach() {
+        val first = event("first", today, FinancialEventType.CASH_INCOME, 200_000, "Uang muka", "Penjualan", "s1")
+        val second = first.copy(id = "second", amountRupiah = 400_000)
+        val sale = note("s1", today, customerA, 600_000).copy(payments = listOf(first, second))
+        val groups = UnifiedLedger.build(listOf(sale), listOf(first, second), emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(1, groups.single().items.size)
+        assertEquals(600_000L, groups.single().totalInRupiah)
+    }
+
+    @Test fun depositThenSettlementAndMovedNoteKeepOriginalPaymentDates() {
+        val deposit = event("deposit", yesterday, FinancialEventType.CASH_INCOME, 200_000, "Uang muka", "Penjualan", "s1")
+        val settlement = deposit.copy(id = "settlement", date = today, amountRupiah = 400_000, reference = "REF-LATER")
+        val sale = note("s1", yesterday, customerA, 600_000).copy(payments = listOf(deposit, settlement))
+        val groups = UnifiedLedger.build(listOf(sale), listOf(deposit, settlement), emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(listOf(400_000L, 200_000L), groups.map { it.totalInRupiah })
+        val moved = sale.copy(sale = sale.sale.copy(dateEpochDay = lastWeek.toEpochDay()))
+        val movedGroups = UnifiedLedger.build(listOf(moved), listOf(deposit, settlement), emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(listOf(400_000L, 200_000L, 0L), movedGroups.map { it.totalInRupiah })
+        assertEquals(400_000L, UnifiedLedger.build(listOf(sale), listOf(deposit, settlement), emptyList(), CatatanFilter.INCOME, "REF-LATER", today).single().totalInRupiah)
+    }
+    @Test fun absorbedPaymentRetainsDescriptionCategoryAndReferenceSearch() {
+        val payment = event("payment", today, FinancialEventType.CASH_INCOME, 600_000,
+            "Pelunasan khusus", "Kategori khusus", "s1").copy(reference = "REF-123")
+        val sale = note("s1", today, customerA, 600_000).copy(payments = listOf(payment))
+        for (filter in listOf(CatatanFilter.ALL, CatatanFilter.INCOME)) {
+            for (query in listOf("Pelunasan khusus", "Kategori khusus", "REF-123")) {
+                val groups = UnifiedLedger.build(listOf(sale), listOf(payment), emptyList(), filter, query, today)
+                assertEquals(query, 600_000L, groups.sumOf { it.totalInRupiah })
+                assertEquals(1, groups.flatMap { it.items }.size)
+            }
+        }
+    }
+
+    @Test fun laterPaymentRetainsDescriptionCategoryAndReferenceSearch() {
+        val payment = event("later-search", today, FinancialEventType.CASH_INCOME, 600_000,
+            "Pelunasan lanjutan", "Kategori lanjutan", "s1").copy(reference = "REF-LANJUTAN")
+        val sale = note("s1", yesterday, customerA, 600_000).copy(payments = listOf(payment))
+        for (filter in listOf(CatatanFilter.ALL, CatatanFilter.INCOME)) {
+            for (query in listOf("Pelunasan lanjutan", "Kategori lanjutan", "REF-LANJUTAN")) {
+                val groups = UnifiedLedger.build(listOf(sale), listOf(payment), emptyList(), filter, query, today)
+                assertEquals(query, 600_000L, groups.sumOf { it.totalInRupiah })
+                assertTrue(groups.single().items.single() is UnifiedLedgerItem.SalePayment)
+            }
+        }
+    }
+
+    @Test fun laterPaymentFromNoteHistoryRemainsVisibleOnce() {
+        val payment = event("later", today, FinancialEventType.CASH_INCOME, 600_000, "Bayar", "Jual", "s1")
+        val sale = note("s1", yesterday, customerA, 600_000).copy(payments = listOf(payment))
+        val groups = UnifiedLedger.build(listOf(sale), emptyList(), emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(600_000L, groups.first { it.date == today }.totalInRupiah)
+        val withEvent = UnifiedLedger.build(listOf(sale), listOf(payment), emptyList(), CatatanFilter.ALL, today = today)
+        assertEquals(600_000L, withEvent.sumOf { it.totalInRupiah })
+    }
     private val today = LocalDate.of(2026, 11, 10)
     private val yesterday = today.minusDays(1)
     private val lastWeek = today.minusDays(7)
@@ -85,7 +191,7 @@ class UnifiedLedgerTest {
     @Test
     fun absorbsInitialNotePaymentOnSameDayWithoutDuplicateRowOrDoubleCounting() {
         val saleToday = note("s1", today, customerA, 600_000, paid = 600_000)
-        val paymentEvent = event("pay1", today, FinancialEventType.CASH_INCOME, 600_000, "Bayar nota Toko A", "Penjualan", saleId = "s1")
+        val paymentEvent = saleToday.payments.single()
 
         val groups = UnifiedLedger.build(
             sales = listOf(saleToday),
@@ -247,7 +353,7 @@ class UnifiedLedgerTest {
     }
 
     @Test
-    fun buildsScaleLedgerUnderFiftyMilliseconds() {
+    fun buildsScaleLedgerUnderFiveHundredMilliseconds() {
         val largeSales = (1..500).map { i ->
             note("s_$i", today.minusDays((i % 60).toLong()), customerA, 500_000, paid = 250_000)
         }

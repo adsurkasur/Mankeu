@@ -80,14 +80,15 @@ fun EntryScreen(
     onFilter: (CatatanFilter) -> Unit = {},
     noteFilter: NoteFilter? = null,
     onNoteFilter: ((NoteFilter) -> Unit)? = null,
+    onLoadEarlier: () -> Unit = {},
 ) {
     var search by rememberSaveable { mutableStateOf("") }
     val feedback = LocalFeedback.current
     val today = remember { LocalDate.now() }
 
-    val activeFilter = filter
+    val activeFilter = if (noteFilter == NoteFilter.OVERDUE) CatatanFilter.OVERDUE else filter
 
-    val dayGroups = remember(state.sales, state.events, state.products, activeFilter, search, today) {
+    val dayGroups = remember(state.sales, state.events, state.products, activeFilter, search, today, state.ledgerOldestDate, state.ledgerSupplierPaidRupiah) {
         UnifiedLedger.build(
             sales = state.sales,
             events = state.events,
@@ -95,6 +96,8 @@ fun EntryScreen(
             filter = activeFilter,
             search = search,
             today = today,
+            oldestDate = state.ledgerOldestDate,
+            supplierPaymentsRupiah = state.ledgerSupplierPaidRupiah,
         )
     }
 
@@ -171,6 +174,7 @@ fun EntryScreen(
                 val filters = listOf(
                     CatatanFilter.ALL to stringResource(R.string.notes_filter_all),
                     CatatanFilter.UNPAID to stringResource(R.string.notes_filter_open),
+                    CatatanFilter.OVERDUE to stringResource(R.string.notes_filter_overdue),
                     CatatanFilter.INCOME to stringResource(R.string.reports_money_in),
                     CatatanFilter.EXPENSE to stringResource(R.string.reports_money_out),
                 )
@@ -184,6 +188,7 @@ fun EntryScreen(
                                 onNoteFilter?.invoke(
                                     when (catFilter) {
                                         CatatanFilter.UNPAID -> NoteFilter.OPEN
+                                        CatatanFilter.OVERDUE -> NoteFilter.OVERDUE
                                         else -> NoteFilter.ALL
                                     }
                                 )
@@ -239,18 +244,13 @@ fun EntryScreen(
                     }
                 }
 
-                if (state.eventCount > state.events.size) {
-                    item(key = "entry_truncated") {
-                        NoticeCard(
-                            title = stringResource(R.string.ledger_truncated_title),
-                            body = stringResource(
-                                R.string.ledger_truncated_body,
-                                state.events.size,
-                                state.eventCount,
-                            ),
-                            icon = Icons.Default.Info,
-                        )
-                    }
+            }
+        }
+        // Outside the match branches: an empty search/filter must never strand older records.
+        if (state.ledgerHasEarlier) {
+            item(key = "entry_load_earlier") {
+                Button(onClick = onLoadEarlier, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.ledger_load_earlier))
                 }
             }
         }

@@ -259,3 +259,7 @@ print(out)
 
 **[unknown]** Jitter HP murah, TalkBack, tablet, release build, input sentuh fisik, dan animasi keyboard saat
 mulai dibuka belum diverifikasi pada review ini. Pengujian berikutnya harus menyebut kondisi tersebut secara terpisah.
+
+## Tindak lanjut PK-0.5 (2026-11-12)
+
+[verified] N1 diperbaiki dengan identitas wajib pada empat pemanggil pemilih; tes generik dan alur produksi/nota terfokus lulus. N2/N3 ditangani lewat catatan koreksi pada laporan N/bug bash dan changelog tanpa klaim penyetelan jank baru. Bukti lengkap ada di PK-0.5-laporan.md (164 JVM, 31 instrumented terfokus). [unknown] Akar kinerja dan hasil HP nyata tetap terbuka pada X3/PK-5.4; bukan dinyatakan selesai oleh perbaikan pemilih.

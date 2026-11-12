@@ -245,7 +245,8 @@ fun MankeuApp(
     val openBills: (NoteFilter) -> Unit = { filter ->
         noteFilter = filter
         catatanFilter = when (filter) {
-            NoteFilter.OPEN, NoteFilter.OVERDUE -> CatatanFilter.UNPAID
+            NoteFilter.OPEN -> CatatanFilter.UNPAID
+            NoteFilter.OVERDUE -> CatatanFilter.OVERDUE
             NoteFilter.ALL -> CatatanFilter.ALL
         }
         destination = Destination.ENTRY
@@ -595,6 +596,7 @@ fun MankeuApp(
                                     title = stringResource(R.string.produce_pick_title),
                                     items = state.products,
                                     itemLabel = { it.product.name },
+                                    itemKey = { it.product.id },
                                     onPick = { produceId = it.product.id; overlay = Overlay.NONE },
                                     onClose = { overlay = Overlay.NONE },
                                 )
@@ -1431,6 +1433,7 @@ private fun ScreenContent(
                     onFilter = onCatatanFilter,
                     noteFilter = noteFilter,
                     onNoteFilter = onNoteFilter,
+                    onLoadEarlier = viewModel::loadEarlierLedger,
                 )
                 Destination.REPORTS -> ReportsScreen(
                     state = state,

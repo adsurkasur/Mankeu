@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-12 08:24] [Codex (GPT-6) — PK-0.5]
+- **Goal**: Menutup temuan uang/filter B dan crash pemilih N sebelum membangun model MVP.
+- **Actions**: Membuat pembacaan LedgerWindow transaksi dengan hari batas lengkap, riwayat yang dapat dimuat dari filter kosong, state terkait unit, metadata pelunasan lengkap, dan ID edit asli; menambah CashTotals serta total seluruh kas MonthlySummary sesuai DEC-033/035; mempertahankan overdue dan pencarian pembayaran; mengganti kunci nama dengan ID pada empat pemilih. Memperbaiki F5 dari review ulang, membetulkan klaim N/benchmark B secara bertanggal, menghapus dua resource usang dan satu pasangan daftar dasar. Review independen + re-review menyetujui. Merapikan tabel risiko audit spacing.
+- **Files**: FinanceDao.kt, FinanceRepository.kt, LedgerWindow.kt, CashTotals.kt, MonthlySummary.kt; AppViewModel/MankeuApp/UnifiedLedger/EntryScreen/PickerPage dan pemanggil; 8 berkas tes terkait; strings.xml dua bahasa dan baseline242; DOMAIN_MODEL; laporan PK-0.5 dan tindak lanjut PK-0.3/0.4/B/N/bugbash; seluruh logs terkait; rencana induk; WORK_IN_PROGRESS.
+- **Verification**: [terverifikasi] RED tiap temuan lalu GREEN164 tes JVM/0 gagal;31 instrumented terfokus/0 gagal sebelum penghapusan label usang; setelah cleanup164 JVM+lint0error/87warning+assembleDebug lulus, diff --check lulus. APK akhir dipasang; data emulator pulih4/4hash identik.
+
 ### [2026-11-12 07:59] [Codex (GPT-6) — Audit ruang kosong (permintaan tambahan pemilik)]
 - **Goal**: Menelusuri persepsi banyak ruang kosong pada layar Android tanpa mengubah layout secara spekulatif.
 - **Actions**: Membaca sumber layout dan memeriksa 15 pasangan screenshot/XML data sintetis. Mengukur celah footer saat keyboard buka/tutup, pesan pelanggan tersembunyi, serta kolom resep kosong. Membedakan sisa viewport dari padding/inset; memetakan tindak lanjut ke paket layar. Data emulator dipulihkan dengan hash empat berkas cocok.

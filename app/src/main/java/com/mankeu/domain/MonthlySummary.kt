@@ -10,8 +10,8 @@ data class MonthPosting(val month: YearMonth, val record: PostedRecord)
  * PDF/xlsx show these numbers and compute none of their own.
  *
  * Profit lines are [ProfitCalculator.month] ([profit]). Money in/out is this month's operating cash
- * (capital and assets are not "uang masuk/keluar"); cash on hand, receivable and payable are balances at
- * the end of the month.
+ * (capital and assets stay outside those operating fields). totalCashIn/Out includes every CASH role
+ * for reconciliation with complete Catatan days. Cash, receivable and payable are month-end balances.
  */
 data class MonthlySummary(
     val profit: MonthProfit,
@@ -22,6 +22,9 @@ data class MonthlySummary(
     val receivableRupiah: Long,
     /** What is still owed to suppliers at month end. */
     val payableRupiah: Long,
+    /** All actual cash movement, including owner capital/drawing and assets (DEC-033). */
+    val totalCashInRupiah: Long,
+    val totalCashOutRupiah: Long,
 ) {
     val month: YearMonth get() = profit.month
     /** Note revenue after discount. */
@@ -41,6 +44,8 @@ data class MonthlySummary(
             val upToEnd = PostingReportCalculator.calculate(postings.filter { !it.month.isAfter(month) }.map { it.record })
             val inMonth = PostingReportCalculator.calculate(postings.filter { it.month == month }.map { it.record })
             val notesToDate = inputs.sales.filter { !YearMonth.from(it.date).isAfter(month) }.sumOf { it.revenueRupiah }
+            val cash = CashTotals.fromPostings(postings.filter { it.month == month }
+                .map { Posting(it.record.account, it.record.side, it.record.amountRupiah) })
             return MonthlySummary(
                 profit = inputs.month(month),
                 moneyInRupiah = inMonth.operatingCashInRupiah,
@@ -49,6 +54,8 @@ data class MonthlySummary(
                 // The postings hold minus what was paid on notes; the notes themselves post nothing (DEC-029 §2).
                 receivableRupiah = notesToDate + upToEnd.receivableRupiah,
                 payableRupiah = upToEnd.payableRupiah,
+                totalCashInRupiah = cash.incomingRupiah,
+                totalCashOutRupiah = cash.outgoingRupiah,
             )
         }
 

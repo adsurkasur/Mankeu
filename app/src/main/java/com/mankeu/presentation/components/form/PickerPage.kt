@@ -47,12 +47,12 @@ fun <T> PickerPage(
     title: String,
     items: List<T>,
     itemLabel: (T) -> String,
+    itemKey: (T) -> String,
     onPick: (T) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     itemDetail: ((T) -> String?)? = null,
     onAdd: ((String) -> Unit)? = null,
-    itemKey: ((T) -> Any)? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     BackHandler(onBack = onClose)
@@ -79,7 +79,7 @@ fun <T> PickerPage(
                         HorizontalDivider()
                     }
                 }
-                items(shown, key = itemKey ?: { itemLabel(it) }) { item ->
+                items(shown, key = { "picker_entity_" + itemKey(it) }) { item ->
                     PickerRow(onClick = { onPick(item) }) {
                         Column {
                             Text(itemLabel(item), style = MankeuType.Body)

@@ -12,8 +12,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_entry">Records</string>
     <string name="ledger_subtitle">%1$d records in the active unit and book.</string>
-    <string name="ledger_truncated_title">Showing the most recent records</string>
-    <string name="ledger_truncated_body">Showing %1$d of %2$d records to keep the app responsive. Use the search above to find older records, or export to Excel to see them all.</string>
+    <string name="ledger_load_earlier">Load older records</string>
     <string name="nav_reports">Reports</string>
 
     <!-- Scope header -->

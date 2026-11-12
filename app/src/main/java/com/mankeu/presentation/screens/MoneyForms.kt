@@ -314,6 +314,7 @@ fun MoneyFormScreen(
                 title = stringResource(R.string.purchase_what),
                 items = listOf<StockItem?>(null) + materials,
                 itemLabel = { it?.name ?: notMaterial },
+                itemKey = { it?.let { material -> "material_" + material.id } ?: "not_material" },
                 itemDetail = { m -> m?.let { perUnit.format(it.basePriceRupiah.toRupiah(), it.unit) } ?: notMaterialHint },
                 onPick = { m ->
                     materialId = m?.id

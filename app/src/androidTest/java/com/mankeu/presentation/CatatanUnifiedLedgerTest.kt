@@ -14,6 +14,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTextInput
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -50,6 +53,55 @@ import java.util.Locale
  */
 @RunWith(AndroidJUnit4::class)
 class CatatanUnifiedLedgerTest {
+    @Test fun productionPickerAllowsDuplicateProductLabelsAndRecordsTheSelectedId() {
+        var second = ""
+        runBlocking {
+            second = repository.saveProduct(projectId, null, ProductDraft("Keripik", "bungkus", "1",
+                listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 1_000)), emptyList()))
+            val book = repository.books(projectId).first().first { it.mode == BookMode.REALIZATION.name }.id
+            repository.recordEvent(EventDraft(businessId, projectId, book, FinancialEventType.CASH_INCOME,
+                1_000, LocalDate.now(), "Pemasukan uji", "Pendapatan"))
+        }
+        start()
+        click("Produksi")
+        exists("Produksi apa?")
+        val records = runBlocking { repository.products(projectId).first() }
+        val secondIndex = records.indexOfFirst { it.product.id == second }
+        assertEquals(2, compose.onAllNodesWithText("Keripik").fetchSemanticsNodes().size)
+        compose.onAllNodesWithText("Keripik")[secondIndex].performClick()
+        settle()
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.products(projectId).first().single { it.product.id == second }.movements.isNotEmpty() } }
+        runBlocking { assertEquals(0, repository.products(projectId).first().single { it.product.id == keripik }.movements.size) }
+    }
+    @Test fun oldFilteredCashRowLoadsAndSavesTheOriginalEventId() {
+        var oldId = ""
+        runBlocking {
+            val book = repository.books(projectId).first().first { it.mode == BookMode.REALIZATION.name }.id
+            val cats = database.financeDao().getCategories(businessId)
+            val income = cats.first { it.role == "REVENUE" }
+            val expense = cats.first { it.role == "EXPENSE" }
+            repository.inTransaction {
+                repeat(200) { repository.recordEvent(EventDraft(businessId, projectId, book, FinancialEventType.CASH_INCOME,
+                    1_000, LocalDate.now(), "Pemasukan baru", income.name, income.id)) }
+                oldId = repository.recordEvent(EventDraft(businessId, projectId, book, FinancialEventType.CASH_EXPENSE,
+                    2_000, LocalDate.now().minusDays(1), "Biaya riwayat unik", expense.name, expense.id))
+            }
+        }
+        start()
+        click("Catatan")
+        compose.onAllNodes(hasSetTextAction())[0].performTextInput("Biaya riwayat unik")
+        settle()
+        click("Muat catatan lebih lama")
+        click("Biaya riwayat unik")
+        compose.onAllNodes(hasText("Jumlah uang") and hasSetTextAction())[0].performTextReplacement("3500")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { database.financeDao().getEvent(oldId)?.amountRupiah == 3_500L } }
+        runBlocking {
+            assertEquals(201, database.financeDao().countEventsForProject(projectId))
+            assertEquals("Biaya riwayat unik", database.financeDao().getEvent(oldId)!!.description)
+        }
+    }
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 

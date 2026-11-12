@@ -76,6 +76,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,6 +99,11 @@ data class AppUiState(
     val events: List<MoneyEvent> = emptyList(),
     /** How many rows the book really holds, regardless of how many [events] carries. */
     val eventCount: Int = 0,
+    /** Inclusive complete-day boundary and explicit history navigation for Catatan. */
+    val ledgerOldestDate: LocalDate? = null,
+    val ledgerHasEarlier: Boolean = false,
+    val ledgerLoadedRows: Int = 0,
+    val ledgerSupplierPaidRupiah: Map<String, Long>? = null,
     /** Narrow rows behind the cash-flow schedule, and category totals summed by the database. */
     val cashFlowRecords: List<CashFlowRecord> = emptyList(),
     val categoryTotals: List<CategoryTotalRow> = emptyList(),
@@ -192,6 +198,24 @@ class AppViewModel(
 ) : ViewModel() {
     private val selectedBusinessId = MutableStateFlow<String?>(null)
     private val selectedProjectId = MutableStateFlow<String?>(null)
+    private val ledgerRequest = MutableStateFlow<Pair<String, Int>?>(null)
+
+    // The request belongs to one unit. Switching units always starts a new bounded window.
+    private val ledgerWindow = selectedProjectId.flatMapLatest { project ->
+        if (project == null) flowOf(null) else ledgerRequest.map { request ->
+            request?.takeIf { it.first == project }?.second ?: FinanceRepository.RECENT_EVENT_LIMIT
+        }.distinctUntilChanged().flatMapLatest { limit ->
+            repository.ledgerWindow(project, limit).map { it as com.mankeu.data.LedgerWindow? }
+        }.onStart { emit(null) }
+    }
+
+    fun loadEarlierLedger() {
+        val state = uiState.value
+        val project = selectedProjectId.value ?: return
+        if (state.selectedProjectId == project && state.ledgerHasEarlier) {
+            ledgerRequest.value = project to (state.ledgerLoadedRows + FinanceRepository.RECENT_EVENT_LIMIT)
+        }
+    }
 
     val authUser: StateFlow<AuthUser?> = identity.currentUser
     val syncState: StateFlow<SyncController.State> = syncController?.state ?: MutableStateFlow(SyncController.State.Off)
@@ -412,6 +436,16 @@ class AppViewModel(
         .combine(salesContent) { state, c ->
             state.copy(contacts = c.contacts, sales = c.sales, payables = c.payables, businessSales = c.businessSales, businessPayables = c.businessPayables)
         }
+        .combine(combine(selectedProjectId, ledgerWindow) { project, window ->
+            window?.takeIf { it.projectId == project }
+        }) { state, window ->
+            // Cash and absorbed payments must come from the same read, never independent flows.
+            val current = window?.takeIf { it.projectId == state.selectedProjectId }
+            state.copy(events = current?.events.orEmpty(), sales = current?.sales.orEmpty(),
+                ledgerOldestDate = current?.oldestDate, ledgerHasEarlier = current?.hasEarlier ?: false,
+                ledgerLoadedRows = current?.loadedRows ?: 0,
+                ledgerSupplierPaidRupiah = current?.supplierPaidRupiah)
+        }
         .distinctUntilChanged()
         .stateIn(viewModelScope, KeepWarm, AppUiState(isLoading = true))
 
@@ -451,11 +485,13 @@ class AppViewModel(
     }
 
     fun selectBusiness(id: String) {
+        ledgerRequest.value = null
         selectedProjectId.value = null
         selectedBusinessId.value = id
     }
 
     fun selectProject(id: String) {
+        ledgerRequest.value = null
         selectedProjectId.value = id
     }
 

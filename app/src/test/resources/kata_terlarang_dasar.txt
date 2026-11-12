@@ -148,7 +148,6 @@ import_total_expense|aset
 import_total_expense|asset
 ledger_subtitle|buku
 ledger_subtitle|unit usaha
-ledger_truncated_body|ekspor
 manage_categories|kategori pembukuan
 msg_batch_undo_failed|impor
 msg_batch_undone_kept|impor

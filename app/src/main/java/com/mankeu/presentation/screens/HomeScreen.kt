@@ -87,6 +87,8 @@ fun HomeScreen(
     onOpenContact: (String) -> Unit = {},
     /** A named Tagihan row opens that customer's page (U5). */
     onOpenCustomer: (String) -> Unit = {},
+    /** Opens the existing local backup chooser from a fresh-install state. */
+    onOpenBackup: () -> Unit = {},
     expanded: Boolean = false,
 ) {
     val month = state.thisMonth
@@ -114,6 +116,11 @@ fun HomeScreen(
                     onManageScope,
                     learn = HelpArticle.START_SCOPE,
                 )
+            }
+            item(key = "restore_existing_data") {
+                TextButton(onClick = onOpenBackup, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.setup_restore_backup))
+                }
             }
             return@LazyColumn
         }

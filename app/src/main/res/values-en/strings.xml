@@ -227,6 +227,7 @@
     <string name="scope_no_options">Nothing here yet</string>
     <string name="setup_business_title">Start by adding your business</string>
     <string name="setup_business_body">Type your business name, for example \"Sari Grocery\". Then you can start recording money in and out right away.</string>
+    <string name="setup_restore_backup">Used Mankeu before? Restore your data</string>
     <string name="setup_project_title">Add a branch, outlet, or project</string>
     <string name="setup_project_body">Records are kept per place of business, for example \"Main shop\" or \"Market branch\". Only one place? Add it, then start recording.</string>
 
@@ -294,7 +295,7 @@
     <string name="backup_title">Encrypted backup</string>
     <string name="backup_create_title">Create a backup</string>
     <string name="backup_restore_title">Restore a backup</string>
-    <string name="backup_choose_body">An .aabk backup holds every business, business unit, transaction, budget plan, stock item and import trail. The file is encrypted on the device.</string>
+    <string name="backup_choose_body">Save a backup and move phones in three steps:\n1. On the old phone, choose Create new backup and set a password.\n2. Keep the file and password separate.\n3. On the new phone, choose Restore from file and follow the prompts.\n\nAn .aabk backup holds every business, business unit, transaction, budget plan, stock item and import trail. The file is encrypted on the device.</string>
     <string name="backup_create_cta">Create a new backup</string>
     <string name="backup_restore_cta">Restore from a file</string>
     <string name="backup_export_recovery">Export the data from before the last restore</string>

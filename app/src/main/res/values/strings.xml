@@ -234,6 +234,7 @@
     <string name="scope_no_options">Belum ada data</string>
     <string name="setup_business_title">Mulai dengan menambah usaha</string>
     <string name="setup_business_body">Tulis nama usaha kamu, misalnya \"Warung Bu Ani\". Setelah itu kamu bisa langsung mencatat uang masuk dan keluar.</string>
+    <string name="setup_restore_backup">Sudah pernah pakai Mankeu? Ambil data lama</string>
     <string name="setup_project_title">Tambah cabang, outlet, atau proyek</string>
     <string name="setup_project_body">Catatan disimpan per tempat usaha, misalnya \"Warung utama\" atau \"Cabang pasar\". Punya satu tempat saja? Tambahkan satu, lalu mulai mencatat.</string>
 
@@ -296,7 +297,7 @@
     <string name="backup_title">Cadangan terenkripsi</string>
     <string name="backup_create_title">Buat cadangan</string>
     <string name="backup_restore_title">Pulihkan cadangan</string>
-    <string name="backup_choose_body">Cadangan .aabk menyimpan seluruh usaha, unit usaha, transaksi, rencana anggaran, stok, dan jejak impor. Berkas dienkripsi di perangkat.</string>
+    <string name="backup_choose_body">Simpan cadangan dan pindah HP dalam tiga langkah:\n1. Di HP lama, pilih Buat cadangan baru lalu tentukan kata sandi.\n2. Simpan berkas dan kata sandinya terpisah.\n3. Di HP baru, pilih Pulihkan dari berkas dan ikuti petunjuk.\n\nCadangan .aabk menyimpan seluruh usaha, unit usaha, transaksi, rencana anggaran, stok, dan jejak impor. Berkas dienkripsi di perangkat.</string>
     <string name="backup_create_cta">Buat cadangan baru</string>
     <string name="backup_restore_cta">Pulihkan dari berkas</string>
     <string name="backup_export_recovery">Ekspor data sebelum pemulihan terakhir</string>

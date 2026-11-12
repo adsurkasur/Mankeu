@@ -835,6 +835,7 @@ fun MankeuApp(
                                                     onProduce = onProduce,
                                                     onOpenContact = openContacts,
                                                     onOpenCustomer = openCustomer,
+                                                    onOpenBackup = { dataFocus = DataFocus.BACKUP; overlay = Overlay.DATA },
                                                     onEditMoney = editMoney,
                                                     onBuyMaterial = buyMaterial,
                                                     expanded = true,
@@ -875,6 +876,7 @@ fun MankeuApp(
                                                 onProduce = onProduce,
                                                 onOpenContact = openContacts,
                                                 onOpenCustomer = openCustomer,
+                                                onOpenBackup = { dataFocus = DataFocus.BACKUP; overlay = Overlay.DATA },
                                                 onEditMoney = editMoney,
                                                 onBuyMaterial = buyMaterial,
                                                 expanded = false,
@@ -1362,6 +1364,7 @@ private fun ScreenContent(
     onProduce: () -> Unit,
     onOpenContact: (String) -> Unit,
     onOpenCustomer: (String) -> Unit,
+    onOpenBackup: () -> Unit,
     onEditMoney: (MoneyEvent) -> Unit,
     onBuyMaterial: (String, java.math.BigDecimal) -> Unit = { _, _ -> },
     expanded: Boolean,
@@ -1392,6 +1395,7 @@ private fun ScreenContent(
                     onNewProduct = { onOpenProduct(null) },
                     onOpenContact = onOpenContact,
                     onOpenCustomer = onOpenCustomer,
+                    onOpenBackup = onOpenBackup,
                     expanded = expanded,
                 )
                 Destination.PRODUCTS -> ProductsScreen(

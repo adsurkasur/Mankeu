@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 05:57] [Codex (GPT-6) — PK-4.7]
+- **Goal**: Menyediakan panduan cadangan/pindah HP dan membuktikan round-trip pemulihan data lokal.
+- **Actions**: Menambahkan CTA pemulihan ke empty state Beranda dengan routing ke chooser backup yang telah ada; menambahkan instruksi bernomor pada chooser dalam Bahasa Indonesia/Inggris tanpa mengubah format `.aabk`; menambah tes instrumented in-memory yang membuat backup terenkripsi, menghapus database tes, memulihkan bytes, lalu membandingkan MonthlySummary dan daftar pembeli. Percobaan Compose UI tidak stabil pada fixture, dihapus, dan dicatat sebagai belum terverifikasi.
+- **Files**: `app/src/main/java/com/mankeu/presentation/MankeuApp.kt`; `app/src/main/java/com/mankeu/presentation/screens/HomeScreen.kt`; `app/src/main/res/values/strings.xml`; `app/src/main/res/values-en/strings.xml`; `app/src/androidTest/java/com/mankeu/data/BackupMoveFlowTest.kt`; `docs/superpowers/reports/PK-4.7-laporan.md`; `docs/WORK_IN_PROGRESS.md`; rencana induk §8; `logs/CHANGELOG.md`; `logs/ACTIVITY_LOG.md`.
+- **Verification**: [terverifikasi] `:app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mankeu.data.BackupMoveFlowTest` lulus 1/1 pada `Mankeu_PK12_Proof`; DB in-memory saja yang dihapus. `git diff --check` lulus. [belum] Tes UI, pemilih file Android, `pm clear`, Drive, HP nyata, lint dan suite penuh.
+
 ### [2026-11-13 05:32] [Codex (GPT-6) — PK-1.3]
 - **Goal**: Mendukung baris nota bebas dan campuran di repository tanpa mengganggu HPP, stok, pembayaran atau data lama.
 - **Actions**: Mengubah draft/domain agar menerima productId nullable dan nama snapshot; memvalidasi nama/jumlah/harga; mencatat HPP 0 yang diketahui; menjaga filter stok dan menolak baris bebas dalam titipan; melindungi edit nota yang belum didukung; menambahkan penghitung omission workbook dan peringatan ekspor; mendokumentasikan batas UI dan ekspor.

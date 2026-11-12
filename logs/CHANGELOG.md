@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tab Produk: HPP dan untung per satuan jual, stok produk, Produksi, hitung stok; editor produk halaman penuh.
 
 ### Changed
+- Bahasa layar lama dan teks bantuan Indonesia/Inggris memakai istilah yang lebih akrab; daftar dasar kata terlarang kini kosong (PK-5.1). Kebenaran alur bantuan lengkap dan keterbacaan di perangkat masih menunggu PK-5.2 dan uji pengguna.
 - Satu angka per bulan: Beranda, Laporan, kartu BEP, dan PDF/Excel membaca satu ringkasan bulanan (untung, penjualan, HPP, biaya lain, uang masuk/keluar, uang di tangan, tagihan, utang). "Untung semua bulan" dihapus; Laporan Laba Rugi menyebut bulannya; selisih belanja produksi vs HPP sama di semua layar. Tab "Realisasi vs Target" menjadi "Uang vs rencana" (uang masuk/keluar, bukan untung); artikel bantuan terkait diperbarui.
 - The income form no longer offers a product: product sales go through Nota penjualan (link in the form).
 - Profit is counted when goods are sold: income is sale notes after discount plus other money in; costs are the HPP of what was sold, every other expense and depreciation. Spend in categories marked "Biaya produksi (sudah dihitung di HPP)" (by default only Bahan Baku & Stok; the owner can mark others such as packaging or gas) reaches profit through HPP; transport and other spend reduce profit directly. A supplier payment is not a cost again, and a purchase on credit counts on its purchase date. Cash flow still counts only cash.

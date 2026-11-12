@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 06:34] [Codex (GPT-6) — PK-5.1]
+- **Goal**: Mengosongkan daftar dasar kata terlarang untuk layar lama sesuai Lampiran A/C dan P4 audit UI/UX.
+- **Actions**: Mengganti istilah teknis pada resource Indonesia/Inggris dan teks bantuan yang masih terjaring; memperbarui sumber bantuan di `docs/guide/help_strings.py`, lalu menjalankan generator; mengosongkan daftar dasar setelah menemukan 242 pasangan lama dan memastikan gerbang ketat menolak pelanggaran baru.
+- **Files**: `app/src/main/res/values/strings.xml`; `app/src/main/res/values-en/strings.xml`; `app/src/test/resources/kata_terlarang_dasar.txt`; `docs/guide/help_strings.py`; `docs/superpowers/reports/PK-5.1-laporan.md`; `docs/WORK_IN_PROGRESS.md`; rencana induk §8; `logs/CHANGELOG.md`; `logs/ACTIVITY_LOG.md`.
+- **Verification**: [terverifikasi] generator bantuan membuat 103 string; `:app:testDebugUnitTest --tests com.mankeu.presentation.ScreenLanguageTest` lulus (7 tes, 0 gagal) setelah baseline 0 byte; `git diff --check` lulus. [belum] Suite penuh, lint, assemble, tampilan di emulator/HP, keterbacaan font/aksesibilitas, uji pengguna, dan audit isi bantuan penuh PK-5.2.
+
 ### [2026-11-13 05:57] [Codex (GPT-6) — PK-4.7]
 - **Goal**: Menyediakan panduan cadangan/pindah HP dan membuktikan round-trip pemulihan data lokal.
 - **Actions**: Menambahkan CTA pemulihan ke empty state Beranda dengan routing ke chooser backup yang telah ada; menambahkan instruksi bernomor pada chooser dalam Bahasa Indonesia/Inggris tanpa mengubah format `.aabk`; menambah tes instrumented in-memory yang membuat backup terenkripsi, menghapus database tes, memulihkan bytes, lalu membandingkan MonthlySummary dan daftar pembeli. Percobaan Compose UI tidak stabil pada fixture, dihapus, dan dicatat sebagai belum terverifikasi.

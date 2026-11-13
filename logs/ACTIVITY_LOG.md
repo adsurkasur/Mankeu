@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-13 07:12] [Codex (GPT-6) — PK-1.6]
+- **Goal**: Mengimplementasikan SIMPLE dan ITEM_COST, memastikan seluruh tampilan/ekspor memakai MonthlySummary, serta menghitung penjualan dengan biaya belum diketahui.
+- **Actions**: Menambahkan basis pada kalkulasi domain; mengalirkan basis usaha dan metadata `costKnown` melalui query Room/repository; menambahkan `setProfitBasis`; menyesuaikan HPP/biaya efektif dan input kalkulator BEP; memperluas tes angka tunggal serta fixture usaha keripik lama; memperbaiki pemicu invalidasi tabel `businesses` setelah emulator menemukan angka BEP yang tertinggal.
+- **Files**: domain `ProfitCalculator.kt`/`MonthlySummary.kt`; `FinanceDao.kt`, `FinanceRepository.kt`, `PlanAssembly.kt`; tes domain dan instrumentasi `FreeLineSaleTest`, `GoldenData`, `SalesFlowTest`, `OneNumberTest`; laporan PK-1.6; WIP; rencana induk §8; changelog; activity log.
+- **Verification**: [terverifikasi] 16 tes domain terarah lulus; empat kasus instrumentasi di AVD lulus untuk SIMPLE/ITEM_COST, termasuk UI, kartu BEP, ekspor dan metadata unknown; assemble debug serta androidTest lulus; `git diff --check` bersih; pencarian memastikan layar/eksportir tidak membaca basis langsung. [belum] suite penuh, lint, PDF, sinkronisasi, backup/restore, seluruh alur edit/hapus, dan HP nyata. Pertanyaan alokasi diskon unknown tercatat pada laporan.
+
 ### [2026-11-13 06:34] [Codex (GPT-6) — PK-5.1]
 - **Goal**: Mengosongkan daftar dasar kata terlarang untuk layar lama sesuai Lampiran A/C dan P4 audit UI/UX.
 - **Actions**: Mengganti istilah teknis pada resource Indonesia/Inggris dan teks bantuan yang masih terjaring; memperbarui sumber bantuan di `docs/guide/help_strings.py`, lalu menjalankan generator; mengosongkan daftar dasar setelah menemukan 242 pasangan lama dan memastikan gerbang ketat menolak pelanggaran baru.

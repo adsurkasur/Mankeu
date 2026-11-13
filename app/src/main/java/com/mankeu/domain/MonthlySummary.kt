@@ -32,12 +32,14 @@ data class MonthlySummary(
     val otherIncomeRupiah get() = profit.otherIncomeRupiah
     /** "Pendapatan": sales plus other income, the one sum every screen and export calls income. */
     val incomeRupiah get() = salesRupiah + otherIncomeRupiah
-    val hppRupiah get() = profit.hppRupiah
+    val hppRupiah get() = profit.effectiveHppRupiah
     /** Every cost besides HPP: spend outside HPP categories (fixed or variable) and depreciation. */
-    val otherCostRupiah get() = profit.fixedCostRupiah + profit.variableCostRupiah + profit.depreciationRupiah
+    val otherCostRupiah get() = profit.fixedCostRupiah + profit.variableCostRupiah + profit.depreciationRupiah + if (profit.basis == ProfitBasis.SIMPLE) profit.productionSpendRupiah else 0L
     val profitRupiah get() = profit.profitRupiah
     val productionSpendRupiah get() = profit.productionSpendRupiah
     val productionVarianceRupiah get() = profit.productionVarianceRupiah
+    val salesWithoutCostCount get() = profit.salesWithoutCostCount
+    val salesWithoutCostRupiah get() = profit.salesWithoutCostRupiah
 
     companion object {
         fun of(month: YearMonth, inputs: ProfitInputs, postings: List<MonthPosting>): MonthlySummary {

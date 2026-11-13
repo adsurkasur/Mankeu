@@ -70,6 +70,20 @@ class MonthlySummaryTest {
         assertEquals(inputs.month(oct).profitRupiah, m.profitRupiah)
     }
 
+    @Test fun monthlySummaryIsTheSingleProfitNumberForBothBases() {
+        val inputsForBoth = ProfitInputs(
+            sales = listOf(ProfitSale(d(5), 850_000, 400_000, false)),
+            otherIncome = emptyList(),
+            expenses = listOf(ProfitExpense(d(6), 500_000, includedInHpp = true), ProfitExpense(d(7), 50_000, includedInHpp = false)),
+            assets = emptyList(),
+        )
+        for ((basis, expected) in listOf(ProfitBasis.SIMPLE to 300_000L, ProfitBasis.ITEM_COST to 400_000L)) {
+            val summary = MonthlySummary.of(oct, inputsForBoth.copy(basis = basis), emptyList())
+            assertEquals(expected, summary.profitRupiah)
+            assertEquals(summary.profit.profitRupiah, summary.profitRupiah)
+        }
+    }
+
     @Test fun balancesAreAtMonthEndAndCapitalIsNotMoneyIn() {
         val september = MonthlySummary.of(sep, inputs, postings)
         assertEquals(-100_000L, september.profitRupiah) // the asset's first month

@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.ProfitBasis
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -75,7 +76,29 @@ class FreeLineSaleTest {
         assertTrue(repo.exportProjectWorkbook(projectId).isNotEmpty())
     }
 
+    @Test fun businessProfitBasisIsReadByTheSingleMonthlySummary() = runBlocking {
+        assertEquals(ProfitBasis.SIMPLE, repo.profitInputs(bookId).first().basis)
+        val saleId = repo.saveSale(projectId, null, SaleDraft(
+            contactId = buyerId, date = day, dueDate = null, discountRupiah = 0, notes = "",
+            lines = listOf(SaleLineDraft(productId, "botol", "1", 55_000)), paidNowRupiah = 55_000,
+        ))
+        val simple = repo.monthlySummary(bookId, YearMonth.from(day)).first()
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
+        val itemCost = repo.monthlySummary(bookId, YearMonth.from(day)).first()
+        assertEquals(ProfitBasis.SIMPLE, simple.profit.basis)
+        assertEquals(ProfitBasis.ITEM_COST, itemCost.profit.basis)
+        assertEquals(55_000L, simple.profitRupiah)
+        assertEquals(50_000L, itemCost.profitRupiah)
+        assertEquals(0L, simple.hppRupiah)
+        assertEquals(5_000L, itemCost.hppRupiah)
+        db.openHelper.writableDatabase.execSQL("UPDATE sale_lines SET costKnown = 0, hppRupiah = 0 WHERE saleId = ?", arrayOf(saleId))
+        val unknown = repo.monthlySummary(bookId, YearMonth.from(day)).first()
+        assertEquals(1, unknown.salesWithoutCostCount)
+        assertEquals(55_000L, unknown.salesWithoutCostRupiah)
+    }
+
     @Test fun freeAndProductLinesShareOneNoteAndOnlyProductCarriesCost() = runBlocking {
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
         val saleId = repo.saveSale(projectId, null, SaleDraft(
             contactId = buyerId,
             date = day,

@@ -33,7 +33,7 @@ data class CategoryTotalRow(val category: String, val totalRupiah: Long)
 data class SupplierPaymentTotalRow(val purchaseId: String, val totalRupiah: Long)
 
 /** Notes of one month summed; see [FinanceDao.getSaleMonths]. */
-data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
+data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean, val unknownCostCount: Int, val unknownCostRupiah: Long)
 
 /** Income, spend and assets that make profit (DEC-029 §4); see [FinanceDao.getProfitEventRows]. */
 data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean, val usefulLifeMonths: Int?)
@@ -352,9 +352,13 @@ interface FinanceDao {
     @Query(
         """
         SELECT MIN(s.dateEpochDay) AS dateEpochDay, SUM(t.subtotal - s.discountRupiah) AS revenueRupiah,
-               SUM(t.hpp) AS hppRupiah, MAX(s.hppEstimated) AS hppEstimated
+               SUM(t.hpp) AS hppRupiah, MAX(s.hppEstimated) AS hppEstimated,
+               SUM(t.unknownCostCount) AS unknownCostCount, SUM(t.unknownCostRupiah) AS unknownCostRupiah
         FROM sales s
-        INNER JOIN (SELECT saleId, SUM(totalRupiah) AS subtotal, SUM(hppRupiah) AS hpp FROM sale_lines GROUP BY saleId) t ON t.saleId = s.id
+        INNER JOIN (SELECT saleId, SUM(totalRupiah) AS subtotal, SUM(hppRupiah) AS hpp,
+                           SUM(CASE WHEN costKnown = 0 THEN 1 ELSE 0 END) AS unknownCostCount,
+                           SUM(CASE WHEN costKnown = 0 THEN totalRupiah ELSE 0 END) AS unknownCostRupiah
+                    FROM sale_lines GROUP BY saleId) t ON t.saleId = s.id
         WHERE s.projectId = :projectId
         GROUP BY strftime('%Y-%m', s.dateEpochDay * 86400, 'unixepoch')
         """,

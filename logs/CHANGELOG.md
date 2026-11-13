@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Usaha baru memakai hitung untung SIMPLE (semua belanja usaha mengurangi laba); usaha lama tetap ITEM_COST. MonthlySummary dan kartu BEP memakai basis yang sama, dan ringkasan mencatat jumlah/nilai baris penjualan dengan biaya belum diketahui (PK-1.6).
+
 ### Fixed
 - Biaya resep pecahan kini dijumlahkan sebelum pembulatan akhir pada modal satuan, snapshot nota, dan simulasi; editor menjelaskan selisih angka baris yang dibulatkan. Peringatan harga membedakan modal yang belum diketahui (PK-3.1, DEC-038).
 - Checkpoint belum dirilis: migrasi schema 14 dan pemulihan backup lama menyiapkan kolom model baru; integrasi modal unknown, stok dan laporan masih belum lengkap (PK-1.2, DEC-037).

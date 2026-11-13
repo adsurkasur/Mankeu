@@ -25,10 +25,12 @@ import com.mankeu.backup.cloud.GoogleDriveBackupClient
 import com.mankeu.data.AppDatabase
 import com.mankeu.data.FinanceRepository
 import com.mankeu.data.GoldenData
+import com.mankeu.data.WorkspaceSelection
 import com.mankeu.data.PlanAssembly
 import com.mankeu.domain.ActualBepCalculator
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.MonthlySummary
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.importer.FinanceWorkbookImporter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -114,7 +116,25 @@ class OneNumberTest {
         val products = runBlocking { repository.products(ids.projectId).first() }
         assertEquals(month.profitRupiah, ActualBepCalculator.analyse(PlanAssembly.products(products, emptyMap()), PlanAssembly.actualMonth(month.profit, products)).profitRupiah)
 
-        start()
+        val viewModel = start(ids)
+        assertEquals(month.profitRupiah, viewModel.uiState.value.thisMonth?.profitRupiah)
+        checkScreens(month)
+    }
+
+    @Test
+    fun simpleBasisReadsOneSummaryOnEveryScreenAndInTheExport() {
+        val ids = runBlocking { GoldenData.keripikOctober(repository, database) }
+        runBlocking { repository.setProfitBasis(ids.businessId, ProfitBasis.SIMPLE) }
+        val month = runBlocking { repository.monthlySummary(ids.bookId).first() }
+        assertEquals(ProfitBasis.SIMPLE, month.profit.basis)
+        assertEquals(month.salesRupiah + month.otherIncomeRupiah - month.otherCostRupiah, month.profitRupiah)
+        assertEquals(0L, month.hppRupiah)
+        val bundle = runBlocking { repository.buildProjectExportBundle(ids.projectId) }
+        assertEquals(month, bundle.books.single { it.book.mode == BookMode.REALIZATION.name }.month)
+        val sheet = laporanSheet(runBlocking { repository.exportProjectWorkbook(ids.projectId) })
+        assertEquals(month.profitRupiah, numberAfter(sheet, "Laba / rugi bulan ini"))
+        val viewModel = start(ids)
+        assertEquals(month.profitRupiah, viewModel.uiState.value.thisMonth?.profitRupiah)
         checkScreens(month)
     }
 
@@ -126,7 +146,7 @@ class OneNumberTest {
         assertEquals(-220_000L, month.productionVarianceRupiah) // 260.000 − 480.000, at the note's HPP
         assertEquals(listOf(350_000L, 260_000L, 590_000L, 300_000L), listOf(month.moneyInRupiah, month.moneyOutRupiah, month.cashOnHandRupiah, month.receivableRupiah))
 
-        start()
+        start(ids)
         checkScreens(month)
         // Today's recipe cost (Rp6.050 a bungkus) must not give a second gap.
         assertTrue(compose.onAllNodesWithText("224.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
@@ -141,7 +161,11 @@ class OneNumberTest {
     private fun checkScreens(month: MonthlySummary) {
         val profit = month.profitRupiah.toRupiah()
         val gap = month.productionVarianceRupiah.toRupiah()
-        val sentence = "lebih ${if (month.productionVarianceRupiah > 0) "besar" else "kecil"} ${kotlin.math.abs(month.productionVarianceRupiah).toRupiah()}"
+        val sentence = if (month.productionVarianceRupiah > 0) {
+            "Belanja produksi lebih besar ${kotlin.math.abs(month.productionVarianceRupiah).toRupiah()} dari modal barang terjual (stok bertambah atau modal barang terlalu rendah)."
+        } else {
+            "Belanja produksi lebih kecil ${kotlin.math.abs(month.productionVarianceRupiah).toRupiah()} dari modal barang terjual (stok terpakai atau modal barang terlalu tinggi)."
+        }
 
         // Beranda (U4): one profit figure; tapping it shows its lines from the same summary. The
         // reconciliation (selisih) and the BEP card are Laporan's, not Beranda's.
@@ -163,13 +187,13 @@ class OneNumberTest {
         exists("Laporan Laba Rugi · Oktober 2026")
         assertBeside("Untung / Rugi bulan ini", profit)
         assertBeside("Pendapatan Operasional", month.incomeRupiah.toRupiah())
-        assertBeside("Selisih belanja produksi vs HPP", gap)
+        assertBeside("Belanja produksi dibanding modal barang terjual", gap)
         assertBeside("Tagihan belum dibayar pelanggan", month.receivableRupiah.toRupiah())
         absent("semua bulan")
-        click("Kelayakan & BEP")
+        click("Supaya tidak rugi")
         scrollTo("Status BEP")
         assertBeside("Untung bulan ini", profit)
-        exists(sentence)
+        if (month.hppRupiah > 0) exists(sentence)
     }
 
     private fun assertBeside(label: String, expected: String) {
@@ -216,10 +240,10 @@ class OneNumberTest {
         }
     }
 
-    private fun start() {
+    private fun start(ids: GoldenData.Ids): AppViewModel {
         val vm = AppViewModel(
             repository, FinanceWorkbookImporter(), EncryptedBackupManager(database, File(context.cacheDir, "one-number.aabk")),
-            GoogleIdentity(context), GoogleDriveBackupClient(),
+            GoogleIdentity(context), GoogleDriveBackupClient(), rememberedSelection = WorkspaceSelection(ids.businessId, ids.projectId),
         )
         val indonesian = Locale.forLanguageTag("id")
         Locale.setDefault(indonesian)
@@ -231,6 +255,7 @@ class OneNumberTest {
         compose.setContent { MankeuApp(vm) }
         settle()
         exists("Untung bulan ini")
+        return vm
     }
 
     private fun settle() {

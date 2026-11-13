@@ -41,6 +41,34 @@ class ProfitCalculatorTest {
         assertFalse(p.hppEstimatedIncluded)
     }
 
+    @Test fun simpleAndItemCostUseTheirSpecifiedProfitRules() {
+        val sale = ProfitSale(d(5), 850_000, 400_000, false)
+        val expenses = listOf(ProfitExpense(d(6), 500_000, includedInHpp = true), ProfitExpense(d(7), 50_000, includedInHpp = false))
+        val common = ProfitInputs(listOf(sale), emptyList(), expenses, emptyList())
+        val simple = common.copy(basis = ProfitBasis.SIMPLE).month(oct)
+        val itemCost = common.copy(basis = ProfitBasis.ITEM_COST).month(oct)
+        assertEquals(300_000L, simple.profitRupiah)
+        assertEquals(0L, simple.effectiveHppRupiah)
+        assertEquals(400_000L, itemCost.profitRupiah)
+        assertEquals(100_000L, itemCost.productionVarianceRupiah)
+    }
+
+    @Test fun depreciationReducesProfitInBothBases() {
+        val base = ProfitInputs(emptyList(), emptyList(), emptyList(), listOf(ProfitAsset(d(1), 1_200, 12)))
+        assertEquals(-100L, base.copy(basis = ProfitBasis.SIMPLE).month(oct).profitRupiah)
+        assertEquals(-100L, base.copy(basis = ProfitBasis.ITEM_COST).month(oct).profitRupiah)
+    }
+
+    @Test fun unknownSaleCostsAreCountedAndValuedOnlyInTheirMonth() {
+        val inputs = ProfitInputs(
+            sales = listOf(ProfitSale(d(5), 100_000, 0, false, unknownCostCount = 1, unknownCostRupiah = 100_000)),
+            otherIncome = emptyList(), expenses = emptyList(), assets = emptyList(), basis = ProfitBasis.ITEM_COST,
+        )
+        assertEquals(1, inputs.month(oct).salesWithoutCostCount)
+        assertEquals(100_000L, inputs.month(oct).salesWithoutCostRupiah)
+        assertEquals(0, inputs.month(YearMonth.of(2026, 11)).salesWithoutCostCount)
+    }
+
     private val golden = ProfitInputs(
         sales = listOf(ProfitSale(d(5), 3_700_000, 3_000_000, false), ProfitSale(d(12), 1_680_000, 1_440_000, false)),
         otherIncome = listOf(d(8) to 50_000L),

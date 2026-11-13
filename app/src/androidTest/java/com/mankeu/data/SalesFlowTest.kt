@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mankeu.domain.BookMode
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.ProductMovementType
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.domain.SaleStatus
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -40,6 +41,7 @@ class SalesFlowTest {
         repo = FinanceRepository(db)
         val (b, p) = repo.createBusinessWithUnit("Keripik Bu Sri", "Umum")
         businessId = b
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
         projectId = p
         bookId = repo.books(p).first().single { it.mode == BookMode.REALIZATION.name }.id
         keripik = repo.saveProduct(p, null, ProductDraft(

@@ -9,6 +9,7 @@ import com.mankeu.domain.PlanLine
 import com.mankeu.domain.PlanProduct
 import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.ProfitCalculator
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.domain.MonthProfit
 import com.mankeu.domain.Recurrence
 import com.mankeu.domain.TransactionCalculation
@@ -102,8 +103,8 @@ object PlanAssembly {
             fixedCostRupiah = m.fixedCostRupiah,
             variableSpendRupiah = m.productionSpendRupiah,
             depreciationRupiah = m.depreciationRupiah,
-            hppRupiah = m.hppRupiah,
-            otherVariableCostRupiah = m.variableCostRupiah,
+            hppRupiah = m.effectiveHppRupiah,
+            otherVariableCostRupiah = m.variableCostRupiah + if (m.basis == ProfitBasis.SIMPLE) m.productionSpendRupiah else 0L,
         )
     }
 

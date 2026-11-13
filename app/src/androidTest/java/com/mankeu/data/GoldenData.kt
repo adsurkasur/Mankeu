@@ -4,6 +4,7 @@ import com.mankeu.domain.BookMode
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.CostNature
 import com.mankeu.domain.FinancialEventType
+import com.mankeu.domain.ProfitBasis
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -14,6 +15,7 @@ object GoldenData {
 
     private suspend fun unit(repo: FinanceRepository, name: String, recipeRupiah: Long): Ids {
         val (b, p) = repo.createBusinessWithUnit(name, "Umum")
+        repo.setProfitBasis(b, ProfitBasis.ITEM_COST)
         val book = repo.books(p).first().single { it.mode == BookMode.REALIZATION.name }.id
         // HPP Rp6.000 a bungkus at Rp2,4 jt per batch of 400; a dus holds 40.
         val keripik = repo.saveProduct(p, null, ProductDraft(

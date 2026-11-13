@@ -3,7 +3,15 @@ package com.mankeu.domain
 import java.time.LocalDate
 import java.time.YearMonth
 
-data class ProfitSale(val date: LocalDate, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean)
+data class ProfitSale(
+    val date: LocalDate,
+    val revenueRupiah: Long,
+    val hppRupiah: Long,
+    val hppEstimated: Boolean,
+    val unknownCostCount: Int = 0,
+    val unknownCostRupiah: Long = 0,
+)
+enum class ProfitBasis { SIMPLE, ITEM_COST }
 /**
  * A cash or credit purchase. [includedInHpp]: its category is "Biaya produksi (sudah dihitung di HPP)"
  * (F2-8), so HPP of what is sold stands for it. [variable] (effective cost nature) only splits the
@@ -24,9 +32,13 @@ data class MonthProfit(
     val depreciationRupiah: Long,
     val productionSpendRupiah: Long,
     val hppEstimatedIncluded: Boolean,
+    val salesWithoutCostCount: Int = 0,
+    val salesWithoutCostRupiah: Long = 0,
+    val basis: ProfitBasis = ProfitBasis.ITEM_COST,
 ) {
-    val grossProfitRupiah get() = salesRupiah - hppRupiah
-    val profitRupiah get() = salesRupiah + otherIncomeRupiah - hppRupiah - fixedCostRupiah - variableCostRupiah - depreciationRupiah
+    val effectiveHppRupiah get() = if (basis == ProfitBasis.SIMPLE) 0L else hppRupiah
+    val grossProfitRupiah get() = salesRupiah - effectiveHppRupiah
+    val profitRupiah get() = salesRupiah + otherIncomeRupiah - effectiveHppRupiah - fixedCostRupiah - variableCostRupiah - depreciationRupiah - if (basis == ProfitBasis.SIMPLE) productionSpendRupiah else 0L
     /** Positive: more spent in HPP categories than sold at HPP (stock built up or HPP too low). */
     val productionVarianceRupiah get() = productionSpendRupiah - hppRupiah
 }
@@ -37,6 +49,7 @@ data class ProfitInputs(
     val otherIncome: List<Pair<LocalDate, Long>>,
     val expenses: List<ProfitExpense>,
     val assets: List<ProfitAsset>,
+    val basis: ProfitBasis = ProfitBasis.ITEM_COST,
 ) {
     /**
      * Every month from the first dated row to the later of the last dated row and [through] (normally
@@ -51,7 +64,7 @@ data class ProfitInputs(
             .map(::month).toList()
     }
 
-    fun month(month: YearMonth): MonthProfit = ProfitCalculator.month(month, sales, otherIncome, expenses, assets)
+    fun month(month: YearMonth): MonthProfit = ProfitCalculator.month(month, sales, otherIncome, expenses, assets, basis)
 }
 
 /** Profit from data, not postings (Fase 2, F2-1 as corrected by F2-8). Payments of notes and debts are neither revenue nor cost. */
@@ -66,6 +79,7 @@ object ProfitCalculator {
         otherIncome: List<Pair<LocalDate, Long>>,
         expenses: List<ProfitExpense>,
         assets: List<ProfitAsset>,
+        basis: ProfitBasis = ProfitBasis.ITEM_COST,
     ): MonthProfit {
         val s = sales.filter { YearMonth.from(it.date) == month }
         val e = expenses.filter { YearMonth.from(it.date) == month }
@@ -79,6 +93,9 @@ object ProfitCalculator {
             depreciationRupiah = assets.sumOf { depreciation(month, YearMonth.from(it.date), it.amountRupiah, it.usefulLifeMonths) },
             productionSpendRupiah = e.filter { it.includedInHpp }.sumOf { it.amountRupiah },
             hppEstimatedIncluded = s.any { it.hppEstimated },
+            salesWithoutCostCount = s.sumOf { it.unknownCostCount },
+            salesWithoutCostRupiah = s.sumOf { it.unknownCostRupiah },
+            basis = basis,
         )
     }
 }

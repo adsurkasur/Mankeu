@@ -19,6 +19,7 @@ import com.mankeu.domain.ProfitAsset
 import com.mankeu.domain.ProfitExpense
 import com.mankeu.domain.ProfitInputs
 import com.mankeu.domain.ProfitSale
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.domain.JournalEntry
 import com.mankeu.domain.LedgerAccount
 import com.mankeu.domain.LedgerPolicy
@@ -261,7 +262,7 @@ class FinanceRepository(
             MonthPosting(YearMonth.parse(it.month), PostedRecord("", CashFlowRole.valueOf(it.cashFlowRole), LedgerAccount.valueOf(it.account), PostingSide.valueOf(it.side), it.amountRupiah))
         }
 
-    private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books", "contacts")
+    private fun onDataChange() = database.invalidationTracker.createFlow("financial_events", "postings", "journal_entries", "sales", "sale_lines", "categories", "books", "contacts", "businesses")
 
     private suspend fun summaryOf(bookId: String): FinancialSummary = database.withTransaction {
         val posted = dao.getPostingTotals(bookId).summary()
@@ -276,15 +277,20 @@ class FinanceRepository(
     private suspend fun profitInputsOf(bookId: String): ProfitInputs {
         val book = dao.getBookById(bookId)
         if (book?.mode != BookMode.REALIZATION.name) return ProfitInputs(emptyList(), emptyList(), emptyList(), emptyList())
+        val project = dao.getProject(book.projectId)
+        val business = project?.let { dao.getBusiness(it.businessId) }
+        val basis = runCatching { ProfitBasis.valueOf(business?.profitBasis ?: ProfitBasis.ITEM_COST.name) }.getOrDefault(ProfitBasis.ITEM_COST)
+        val saleMonths = dao.getSaleMonths(book.projectId)
         val rows = dao.getProfitEventRows(bookId)
         fun date(row: ProfitEventRow) = LocalDate.ofEpochDay(row.dateEpochDay)
         return ProfitInputs(
-            sales = dao.getSaleMonths(book.projectId).map { ProfitSale(LocalDate.ofEpochDay(it.dateEpochDay), it.revenueRupiah, it.hppRupiah, it.hppEstimated) },
+            sales = saleMonths.map { ProfitSale(LocalDate.ofEpochDay(it.dateEpochDay), it.revenueRupiah, it.hppRupiah, it.hppEstimated, it.unknownCostCount, it.unknownCostRupiah) },
             otherIncome = rows.filter { it.type == FinancialEventType.CASH_INCOME.name }.map { date(it) to it.amountRupiah },
             expenses = rows.filter { it.type == FinancialEventType.CASH_EXPENSE.name || it.type == FinancialEventType.CREDIT_PURCHASE.name }
                 .map { ProfitExpense(date(it), it.amountRupiah, it.includedInHpp, it.variable) },
             assets = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }
                 .map { ProfitAsset(date(it), it.amountRupiah, it.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS) },
+            basis = basis,
         )
     }
 
@@ -622,6 +628,11 @@ class FinanceRepository(
         dao.insertBusiness(business)
         ensureDefaultCategories(business.id)
         business.id
+    }
+
+    suspend fun setProfitBasis(businessId: String, basis: ProfitBasis) = database.withTransaction {
+        val business = requireNotNull(dao.getBusiness(businessId)) { "Usaha tidak ditemukan." }
+        dao.updateBusiness(business.copy(profitBasis = basis.name, updatedAtEpochMillis = System.currentTimeMillis()))
     }
 
     /** A business and its first unit in one transaction: never a business without a unit (DEC-022). */

@@ -500,6 +500,8 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · bukti · catatan`.
 
+- 2026-11-13 11:44 · Audit layout dan pilihan · checkpoint · lihat commit · [terverifikasi] margin ringkas, dropdown dan satuan kustom, pilihan stok simetris, validasi setelah Simpan; satu AVD 1080 × 2400/420 dpi. [belum] audit semua pilihan, font 200%, TalkBack, HP nyata dan PK-1.2. Laporan `docs/superpowers/reports/2026-11-13-audit-layout-pilihan.md`.
+
 - 2026-11-13 11:21 · PK-1.2 dan audit pemilik · checkpoint, belum selesai · lihat commit · [terverifikasi] kategori ganda dicegah, JVM 193/193, lint, tes UI dan AVD terisolasi; bahasa Indonesia sementara dan dialog stok diperbarui. [belum] kategori bebas/ambigu belum ditandai dan seed upgrade bebas belum lulus; laporan `docs/superpowers/reports/2026-11-13-pk12-audit-pemilik.md`.
 
 - 2026-11-13 07:40 · Handoff audit progres PK-1.2 + bahasa/layout · berhenti di checkpoint · belum commit · [terverifikasi] JVM 193/193 pada putaran sebelumnya, tes fokus UI terakhir 4/7 dengan tiga kegagalan selector; 10 berkas implementasi/test/resource tetap belum commit. [terverifikasi] English dapat dipilih/disimpan dan dialog stok menumpuk dua aksi kanan, Kembali terpisah. [belum] screenshot emulator dan audit runtime menyeluruh. Laporan + prompt agent: `docs/superpowers/reports/2026-11-13-handoff-progress.md`. Jangan merge main atau sentuh superproject.

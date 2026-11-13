@@ -3,6 +3,9 @@ package com.mankeu.presentation.screens
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -22,12 +25,14 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,8 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -163,6 +174,7 @@ internal fun MaterialSheets(
         val item = items.firstOrNull { it.id == id } ?: return@let
         val quantity = BigDecimal(quantityText)
         AlertDialog(
+            modifier = Modifier.padding(horizontal = 24.dp).testTag("stock_money_dialog"),
             onDismissRequest = { pendingIn = null },
             title = { Text(stringResource(R.string.stock_money_title)) },
             text = { Text(stringResource(R.string.stock_money_body, quantity.toQuantityText(), item.unit, item.name)) },
@@ -261,7 +273,7 @@ private fun MaterialStockNotice() {
 private val COMMON_UNITS = listOf("kg", "liter", "gram", "pcs", "bungkus", "ikat")
 
 /**
- * Tambah bahan (U5, audit L06): name, unit as chips, price. Stok awal and the low-stock limit are
+ * Tambah bahan: name, unit selector and price. Stok awal and the low-stock limit are
  * behind one link, and who owns the item only appears with two or more units (#15).
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -295,13 +307,8 @@ internal fun AddStockItemSheet(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),
         )
-        Text(stringResource(R.string.stock_item_unit_pick), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-            COMMON_UNITS.forEach { option ->
-                FilterChip(selected = !otherUnit && unit == option, onClick = { otherUnit = false; unit = option }, label = { Text(option) })
-            }
-            FilterChip(selected = otherUnit, onClick = { otherUnit = true; unit = "" }, label = { Text(stringResource(R.string.stock_item_unit_other)) })
-        }
+        UnitPicker(value = unit, options = COMMON_UNITS,
+            onSelect = { otherUnit = false; unit = it }, onCustom = { if (!otherUnit) unit = ""; otherUnit = true })
         if (otherUnit) {
             OutlinedTextField(unit, { unit = it }, label = { Text(stringResource(R.string.stock_item_unit)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
@@ -311,7 +318,7 @@ internal fun AddStockItemSheet(
             onValueChange = { price = it },
         )
         if (!stockOpen) {
-            TextButton(onClick = { stockOpen = true }) { Text(stringResource(R.string.stock_item_more)) }
+            OutlinedButton(onClick = { stockOpen = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) { Text(stringResource(R.string.stock_item_more)) }
         } else {
             QuantityField(stringResource(R.string.stock_item_initial), initial) { initial = it }
             QuantityField(stringResource(R.string.stock_item_min), minAlert, hint = stringResource(R.string.stock_item_min_hint)) { minAlert = it }
@@ -349,13 +356,22 @@ internal fun StockMovementSheet(
         if (item.currentStock.signum() < 0) {
             Text(stringResource(R.string.stock_negative_hint), color = LocalMankeuSemanticColors.current.danger, style = MaterialTheme.typography.bodySmall)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(
                 StockMovementType.IN to R.string.stock_type_in,
                 StockMovementType.OUT to R.string.stock_type_out,
                 StockMovementType.ADJUSTMENT to R.string.stock_type_adjust,
             ).forEach { (option, label) ->
-                FilterChip(selected = type == option, onClick = { type = option }, label = { Text(stringResource(label)) })
+                OutlinedButton(
+                    onClick = { type = option },
+                    modifier = Modifier.weight(1f).heightIn(min = 56.dp).semantics { selected = type == option; role = Role.RadioButton },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (type == option) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        contentColor = if (type == option) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) { Text(stringResource(label), textAlign = TextAlign.Center, maxLines = 2) }
             }
         }
         QuantityField(

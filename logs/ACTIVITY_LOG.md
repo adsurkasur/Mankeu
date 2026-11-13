@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-13 11:44] [Codex (GPT-6) — audit UI dan cleanup AVD]
+- **Goal**: Memperbaiki margin dialog, pilihan stok/satuan, keterlihatan aksi dan waktu validasi; membersihkan AVD serta memakai metrik ponsel realistis.
+- **Actions**: Menelusuri komponen dan pola pilihan; menambah margin, picker satuan dan tombol kustom terpisah, pilihan stok simetris, aksi berbingkai dan validasi setelah Simpan; menghapus empat AVD atas izin pemilik dan mempertahankan satu AVD berjendela 1080 × 2400/420 dpi; mengambil bukti sintetis.
+- **Files**: `MankeuSheet.kt`, `FullPageForm.kt`, `StockSection.kt`, `UnitPicker.kt`, editor produk, form uang/nota, resources, tes instrumentasi, laporan audit, screenshot, WIP dan logs.
+- **Verification**: [terverifikasi] Margin 320 dp gagal sebelum padding dan lulus sesudahnya; 11/12 tes instrumentasi dalam putaran terakhir lulus dan satu kegagalan selector dikoreksi serta tesnya lulus dua kali; sebelumnya empat tes UI lulus; JVM 193/193, lint dan build berhasil, build dan alur stok diulang setelah semantik. [belum] Audit seluruh aplikasi, 200% font, tablet, TalkBack, HP fisik dan MVP lengkap. Font 200% ditolak oleh API 30. PK-1.2 kategori bebas tetap belum tuntas.
+
+
 ### [2026-11-13 11:21] [Codex (GPT-6) — PK-1.2 dan audit pemilik]
 - **Goal**: Melanjutkan diagnosis kategori-null dan tes gagal, lalu memeriksa bahasa serta dialog tambah stok.
 - **Actions**: Memeriksa branch/diff/handoff, menelusuri dan mereproduksi penggandaan query, membatasi join ke satu kandidat seperan dan usaha, memperbaiki selector tes; menahan locale Indonesia tanpa menghapus pilihan tersimpan; menyusun ulang aksi dialog stok; mengambil screenshot sintetis sebelum/sesudah; membuat AVD terisolasi dan membukanya dalam jendela atas permintaan pemilik.

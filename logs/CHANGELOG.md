@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Validasi formulir menampilkan alasan merah setelah pengguna menekan Simpan; penyimpanan yang belum valid tetap ditolak (DEC-040).
+- Satuan bahan dan produk dipilih dari dropdown dengan tombol satuan kustom terpisah; pilihan stok ditata menjadi tiga tombol sama lebar. Aksi tambah dan detail memakai tombol berbingkai.
+- Dialog pencatatan uang memiliki jarak dari tepi layar pada lebar ringkas.
+
 - Tampilan MVP sementara menggunakan bahasa Indonesia; pilihan dan terjemahan English disimpan untuk penggunaan berikutnya (DEC-039).
 - Dialog tambah stok menempatkan dua pilihan pencatatan dan Kembali dalam tiga baris; alur belanja dan stok tetap sama.
 

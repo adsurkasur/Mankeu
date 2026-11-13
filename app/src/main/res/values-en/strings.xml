@@ -768,7 +768,7 @@
     <string name="date_none">Not set</string>
     <string name="date_clear">Clear %1$s</string>
     <string name="stock_item_unit_pick">Unit</string>
-    <string name="stock_item_unit_other">Other</string>
+    <string name="stock_item_unit_other">Enter a custom unit</string>
     <string name="stock_item_price_per">Buying price per %1$s</string>
     <string name="stock_item_more">+ Opening stock and low-stock limit</string>
     <string name="form_more_details">+ Add details (date, discount, note)</string>

@@ -255,7 +255,7 @@ class SaleNoteFlowTest {
         exists("Modal barang dihitung ulang dengan harga bahan sekarang")
     }
 
-    /** Review I-2: the pay sheet explains its bound and keeps Simpan off above what is left. */
+    /** Review I-2: the pay sheet refuses payment above what is left. */
     @Test
     fun thePaySheetRefusesMoreThanIsLeftInsideTheSheet() {
         seedUnpaidNote()
@@ -265,7 +265,7 @@ class SaleNoteFlowTest {
         click("Bayar")
         type("Jumlah dibayar", "999999999")
         exists("Maks Rp600.000")
-        saveButton().assertIsNotEnabled()
+        saveButton().assertIsEnabled().performSemanticsAction(SemanticsActions.OnClick)
         type("Jumlah dibayar", "600000")
         saveButton().assertIsEnabled()
     }

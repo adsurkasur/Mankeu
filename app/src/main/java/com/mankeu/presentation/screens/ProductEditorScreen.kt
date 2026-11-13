@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -75,7 +78,7 @@ private val unitSaver = rowsSaver<UnitInput>(4, { listOf(it.id.orEmpty(), it.nam
 
 private fun String.toInputNumber() = replace('.', ',')
 
-/** The base units a product is usually counted in; picked, with "Lainnya" for anything else. */
+/** Common base units; custom units can also be entered. */
 private val COMMON_BASE_UNITS = listOf("bungkus", "pcs", "porsi", "botol", "kg")
 
 /**
@@ -235,11 +238,11 @@ fun ProductEditorScreen(
         if (roundingDifference) {
             Text(stringResource(R.string.editor_rounding_explanation), style = MankeuType.Caption)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
             if (materials.isNotEmpty()) {
-                TextButton(onClick = { newLineIsMaterial = true; editingLine = -1 }) { Text(stringResource(R.string.editor_add_material_row)) }
+                OutlinedButton(onClick = { newLineIsMaterial = true; editingLine = -1 }, shape = RoundedCornerShape(8.dp)) { Text(stringResource(R.string.editor_add_material_row)) }
             }
-            TextButton(onClick = { newLineIsMaterial = false; editingLine = -1 }) { Text(stringResource(R.string.editor_add_cost_row)) }
+            OutlinedButton(onClick = { newLineIsMaterial = false; editingLine = -1 }, shape = RoundedCornerShape(8.dp)) { Text(stringResource(R.string.editor_add_cost_row)) }
         }
         if (cost != null && !cost.complete && cost.hasRecipe) {
             Text(stringResource(R.string.product_hpp_incomplete, cost.unpricedLines.joinToString(", ")), style = MankeuType.Caption, color = semantic.danger)
@@ -255,16 +258,20 @@ fun ProductEditorScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
         )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-            val setBase = { unit: String ->
+        UnitPicker(value = baseUnit, options = COMMON_BASE_UNITS,
+            onSelect = { unit ->
+                otherUnit = false
                 baseUnit = unit
                 if (firstUnitFollows && units.isNotEmpty()) units[0] = units[0].copy(name = unit.trim())
-            }
-            COMMON_BASE_UNITS.forEach { option ->
-                FilterChip(selected = !otherUnit && baseUnit == option, onClick = { otherUnit = false; setBase(option) }, label = { Text(option) })
-            }
-            FilterChip(selected = otherUnit, onClick = { otherUnit = true }, label = { Text(stringResource(R.string.stock_item_unit_other)) })
-        }
+            },
+            onCustom = {
+                if (!otherUnit) {
+                    baseUnit = ""
+                    if (firstUnitFollows && units.isNotEmpty()) units[0] = units[0].copy(name = "")
+                }
+                otherUnit = true
+            },
+        )
         if (otherUnit) {
             OutlinedTextField(
                 value = baseUnit,
@@ -295,7 +302,7 @@ fun ProductEditorScreen(
                 HorizontalDivider()
             }
         }
-        TextButton(onClick = { editingUnit = -1 }) { Text(stringResource(R.string.editor_add_unit_row)) }
+        OutlinedButton(onClick = { editingUnit = -1 }, shape = RoundedCornerShape(8.dp)) { Text(stringResource(R.string.editor_add_unit_row)) }
 
         if (showPlan) {
             SectionLabel(stringResource(R.string.editor_plan_section))

@@ -111,6 +111,46 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun emptyStockQuantityIsExplainedOnlyAfterSave() {
+        start()
+        click("Produk")
+        click("Minyak")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi jumlah lebih dari 0 dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        click("Simpan")
+        exists("Isi jumlah lebih dari 0 dulu.")
+        compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0].performTextInput("10")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi jumlah lebih dari 0 dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertEquals("0", stock())
+    }
+
+    @Test
+    fun stockCountAndUseChoicesSaveTheirOwnMovements() {
+        start()
+        click("Produk")
+        click("Minyak")
+        click("Hitung ulang")
+        compose.onAllNodes(hasSetTextAction() and hasText("Jumlah fisik hasil hitung"))[0].performTextInput("7")
+        click("Simpan")
+        compose.waitUntil(5_000) { stock() == "7" }
+        click("Minyak")
+        click("Pakai")
+        compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0].performTextInput("2")
+        click("Simpan")
+        compose.waitUntil(5_000) { stock() == "5" }
+    }
+
+    @Test
+    fun stockQuestionKeepsHorizontalMarginOnPhone() {
+        start()
+        addTen()
+        val dialog = compose.onNode(androidx.compose.ui.test.hasTestTag("stock_money_dialog"), useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInWindow
+        val metrics = context.resources.displayMetrics
+        org.junit.Assert.assertTrue("Dialog width ${dialog.width}, screen ${metrics.widthPixels}",
+            dialog.width <= metrics.widthPixels - 32 * metrics.density)
+    }
+
+    @Test
     fun stockQuestionPlacesChoicesAndBackInSeparateRows() {
         start()
         addTen()
@@ -143,15 +183,16 @@ class MaterialStockScreenTest {
         assertEquals("0", stock())
     }
 
-    /** U5, audit L06: Tambah bahan shows name and price as boxes, the unit as chips; stock is behind a link. */
+    /** U5, audit L06: Tambah bahan shows name and price as boxes, with a unit selector and optional stock fields. */
     @Test
     fun tambahBahanTypesTwoBoxesAndPicksTheUnit() {
         start()
         click("Produk")
         click("Tambah Barang")
-        exists("Lainnya")
+        exists("Satuan")
         assertEquals(2, compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size)
         compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0].performTextInput("Gula")
+        click("Satuan")
         click("kg")
         compose.onAllNodes(hasSetTextAction() and hasText("Harga beli per kg"))[0].performTextInput("15.000")
         click("Simpan")
@@ -159,6 +200,19 @@ class MaterialStockScreenTest {
         val gula = runBlocking { repository.stockItems(businessId, projectId).first() }.single { it.name == "Gula" }
         assertEquals("kg", gula.unit)
         assertEquals(15_000L, gula.basePriceRupiah)
+    }
+
+    @Test
+    fun customMaterialUnitIsClearlyOfferedAndSaved() {
+        start()
+        click("Produk")
+        click("Tambah Barang")
+        compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0].performTextInput("Gula")
+        click("Tulis satuan sendiri")
+        compose.onAllNodes(hasSetTextAction() and hasText("Nama satuan"))[0].performTextInput("karung")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.stockItems(businessId, projectId).first() }.any { it.name == "Gula" } }
+        assertEquals("karung", runBlocking { repository.stockItems(businessId, projectId).first() }.single { it.name == "Gula" }.unit)
     }
 
     @Test

@@ -382,7 +382,7 @@ fun SaleNoteEditorScreen(
 
             // Details.
             if (!details) {
-                TextButton(onClick = { details = true }) { Text(stringResource(R.string.form_more_details)) }
+                OutlinedButton(onClick = { details = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) { Text(stringResource(R.string.form_more_details)) }
             } else {
                 DateField(value = date, label = stringResource(R.string.sale_date), onValueChange = { date = it })
                 MoneyInput(

@@ -65,8 +65,10 @@ class FormComponentsTest {
                 ) { }
             }
         }
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
         compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
-        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        assertEquals(0, saved)
         reason = null
         compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
         compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
@@ -85,8 +87,10 @@ class FormComponentsTest {
                 ) { }
             }
         }
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
         compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
-        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        assertEquals(0, saved)
         reason = null
         compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
         compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
@@ -105,8 +109,10 @@ class FormComponentsTest {
                 ) { }
             }
         }
+        compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()
         compose.onNodeWithTag("save_blocked_reason").assertTextEquals("Isi harganya dulu.")
-        compose.onNodeWithText(text(R.string.action_save)).assertIsNotEnabled()
+        assertEquals(0, saved)
         reason = null
         compose.onNodeWithTag("save_blocked_reason").assertDoesNotExist()
         compose.onNodeWithText(text(R.string.action_save)).assertIsEnabled().performClick()

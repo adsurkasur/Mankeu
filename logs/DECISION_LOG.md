@@ -1,5 +1,14 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-040] Validasi setelah percobaan menyimpan dan pilihan yang jelas
+- **Tanggal**: 2026-11-13 11:44 WIB
+- **Status**: Diterima atas arahan pemilik; menggantikan perilaku tombol nonaktif DEC-034 pada `MankeuSheet` dan `FullPageForm`.
+- **Konteks**: Pesan kekurangan langsung muncul pada formulir kosong dan tindakan berbentuk teks/chip kurang jelas.
+- **Keputusan**: Izinkan percobaan Simpan; bila belum valid tampilkan alasan berwarna error dan jangan panggil callback. Gunakan dropdown satuan dengan tombol terpisah untuk satuan kustom, tombol terbingkai untuk aksi tambah, serta tiga pilihan stok sama lebar.
+- **Alasan dan alternatif**: Pesan muncul pada saat relevan, penyimpanan tidak valid tetap dicegah, dan tindakan terlihat dapat ditekan. Filter dan pilihan lain ditinjau menurut fungsi, tidak diganti secara massal.
+- **Komponen**: Komponen form bersama, stok, produk, nota, transaksi, tes dan panduan; aksesibilitas perangkat nyata masih perlu diuji.
+
+
 ### [DEC-039] Bahasa Indonesia sementara pada MVP
 - **Tanggal**: 2026-11-13 11:21 WIB
 - **Status**: Diterima sementara, sesuai arahan pemilik.

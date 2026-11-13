@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Checkpoint audit UI (2026-11-13 11:44 WIB):** [terverifikasi] Margin dialog, pilihan stok simetris, dropdown satuan dengan tombol custom terpisah, aksi tambah berbingkai, dan validasi setelah Simpan; satu AVD 1080 × 2400/420 dpi tersisa setelah cleanup atas izin pemilik. Lihat `docs/superpowers/reports/2026-11-13-audit-layout-pilihan.md`. [belum] PK-1.2 kategori historis, audit seluruh pilihan, font 200%, TalkBack, tablet, HP nyata dan seluruh paket MVP. Lanjutkan paket sesuai rencana tanpa merge main atau mengubah superproject.
+
+
 **Checkpoint (2026-11-13 11:21 WIB):** [terverifikasi] Perbaikan penggandaan kategori-null, tes fokus, bahasa Indonesia sementara dan susunan dialog stok; lihat `docs/superpowers/reports/2026-11-13-pk12-audit-pemilik.md`. JVM 193/193 dan lint lulus; AVD sintetis `emulator-5558` berjendela. [belum] PK-1.2 belum selesai: nama kategori bebas/ambigu masih menghasilkan klasifikasi tanpa peringatan dan seed upgrade bebas belum lulus. Jangan klaim hasil finansial lengkap atau rilis; jangan merge main atau ubah superproject.
 
 

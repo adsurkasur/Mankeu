@@ -106,7 +106,7 @@ class ProductEditorTest {
         open()
         // On open: name and yield are the only boxes; recipe and units are rows and buttons.
         assertEquals(2, compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size)
-        saveButton().assertIsNotEnabled()
+        saveButton().assertIsEnabled()
         fillKeripik()
 
         exists("Minyak · 20 liter")
@@ -127,6 +127,21 @@ class ProductEditorTest {
         assertEquals(1_900_000L, draft.recipe[1].amountRupiah)
         assertEquals("400", draft.batchYieldText)
         assertEquals("bungkus", draft.baseUnit)
+    }
+
+    @Test fun customBaseUnitAlsoNamesTheFirstSaleUnit() {
+        open()
+        box("Nama produk").performTextInput("Keripik")
+        box("Satu kali produksi menghasilkan").performTextInput("10")
+        click("Tulis satuan sendiri")
+        box("Satuan terkecil").performTextInput("karung")
+        click("karung")
+        box("Harga jual").performTextInput("8000")
+        click("Simpan")
+        saveButton().performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitForIdle()
+        assertEquals("karung", saved!!.baseUnit)
+        assertEquals("karung", saved!!.units.first().name)
     }
 
     /** Final review M-6: a new material line starts on a material the recipe does not use yet. */

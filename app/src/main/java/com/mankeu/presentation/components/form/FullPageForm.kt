@@ -74,6 +74,7 @@ fun FullPageForm(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     require(saveBlockedReason == null || saveBlockedReason.isNotBlank()) { "A blocked save needs a visible reason" }
+    var attempted by rememberSaveable { mutableStateOf(false) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     val close = { if (dirty) confirmDiscard = true else onClose() }
     BackHandler(onBack = close)
@@ -97,11 +98,11 @@ fun FullPageForm(
                 ) {
                     result?.invoke()
                 }
-                if (saveBlockedReason != null) {
-                    Text(saveBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), style = MankeuType.Caption)
+                if (saveBlockedReason != null && attempted) {
+                    Text(saveBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), color = MaterialTheme.colorScheme.error, style = MankeuType.Caption)
                 }
                 // The label is always "Simpan" (P2 §8): one word for one action on every form.
-                Button(onClick = onSave, enabled = saveBlockedReason == null, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
+                Button(onClick = { if (saveBlockedReason == null) onSave() else attempted = true }, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
                     Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold)
                 }
             }

@@ -770,7 +770,7 @@
     <string name="date_none">Belum diisi</string>
     <string name="date_clear">Kosongkan %1$s</string>
     <string name="stock_item_unit_pick">Satuan</string>
-    <string name="stock_item_unit_other">Lainnya</string>
+    <string name="stock_item_unit_other">Tulis satuan sendiri</string>
     <string name="stock_item_price_per">Harga beli per %1$s</string>
     <string name="stock_item_more">+ Stok awal dan batas menipis</string>
     <string name="form_more_details">+ Tambah detail (tanggal, diskon, catatan)</string>

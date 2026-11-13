@@ -185,7 +185,7 @@ class HomeScreenTest {
         runBlocking { GoldenData.buSri(repository, database) }
         start()
         click("Rencana usaha")
-        exists("Titik impas dan kelayakan")
+        exists("Penjualan minimum agar tidak rugi dihitung otomatis")
         assertTrue("one title on the plan page", compose.onAllNodesWithText("Rencana Usaha", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         settle()

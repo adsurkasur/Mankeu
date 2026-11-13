@@ -40,6 +40,8 @@ private const val PREFS_NAME = "mankeu_ui_prefs"
 private const val KEY_THEME_MODE = "theme_mode"
 private const val KEY_MOTION_MODE = "motion_mode"
 private const val KEY_LANGUAGE = "language"
+// Indonesian-only presentation for the current MVP; keep the saved choice and translations for later.
+internal const val LANGUAGE_SELECTION_ENABLED = false
 private const val KEY_ACCOUNT_NAME = "account_name"
 private const val KEY_HAPTICS = "haptics_enabled"
 
@@ -75,7 +77,7 @@ fun Context.readLanguage(): AppLanguage {
  * API 33+, and this app supports API 26+). Changing the language calls `Activity.recreate()`.
  */
 fun Context.withAppLanguage(): Context {
-    val locale = Locale.forLanguageTag(readLanguage().tag)
+    val locale = Locale.forLanguageTag(if (LANGUAGE_SELECTION_ENABLED) readLanguage().tag else AppLanguage.INDONESIAN.tag)
     Locale.setDefault(locale)
     val config = Configuration(resources.configuration)
     config.setLocale(locale)

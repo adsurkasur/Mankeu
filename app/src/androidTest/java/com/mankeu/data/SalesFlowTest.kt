@@ -60,6 +60,49 @@ class SalesFlowTest {
 
     @After fun tearDown() = db.close()
 
+    @Test fun legacyExpenseWithoutCategoryIdUsesExactCategorySnapshotForProfit() = runBlocking {
+        val materialCategory = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
+        repo.recordEvent(EventDraft(
+            businessId = businessId,
+            projectId = projectId,
+            bookId = bookId,
+            type = FinancialEventType.CASH_EXPENSE,
+            amountRupiah = 50_000,
+            date = day,
+            description = materialCategory.name,
+            category = materialCategory.name,
+            categoryId = null,
+        ))
+        val profitRows = db.financeDao().getProfitEventRows(bookId)
+        assertEquals(profitRows.toString(), 50_000L, profitRows.single().amountRupiah)
+        assertTrue("Rows: $profitRows; category: $materialCategory", profitRows.single().includedInHpp)
+        val summary = repo.monthlySummary(bookId, java.time.YearMonth.from(day)).first()
+        assertEquals(50_000L, summary.productionSpendRupiah)
+        assertEquals(0L, summary.profitRupiah)
+    }
+
+    @Test fun legacyExpenseDoesNotDuplicateWhenAnotherRoleSharesItsName() = runBlocking {
+        val category = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
+        db.financeDao().insertCategory(category.copy(id = "same-name-income", role = "REVENUE", includedInHpp = false))
+        repo.recordEvent(EventDraft(businessId = businessId, projectId = projectId, bookId = bookId,
+            type = FinancialEventType.CASH_EXPENSE, amountRupiah = 50_000, date = day,
+            description = category.name, category = category.name, categoryId = null))
+        val rows = db.financeDao().getProfitEventRows(bookId)
+        assertEquals(50_000L, rows.sumOf { it.amountRupiah })
+        assertTrue(rows.single().includedInHpp)
+    }
+
+    @Test fun ambiguousLegacyCategoryNeverDuplicatesAnExpense() = runBlocking {
+        val category = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
+        db.financeDao().insertCategory(category.copy(id = "ambiguous-expense", normalizedName = "alternate-key"))
+        repo.recordEvent(EventDraft(businessId = businessId, projectId = projectId, bookId = bookId,
+            type = FinancialEventType.CASH_EXPENSE, amountRupiah = 50_000, date = day,
+            description = category.name, category = "  BAHAN BAKU & STOK  ", categoryId = null))
+        val rows = db.financeDao().getProfitEventRows(bookId)
+        assertEquals(50_000L, rows.single().amountRupiah)
+        assertFalse(rows.single().includedInHpp)
+    }
+
     private suspend fun product(id: String) = repo.products(projectId).first().single { it.product.id == id }
     private suspend fun note(id: String) = repo.sales(projectId).first().single { it.sale.id == id }
     private suspend fun cash() = repo.accountingSummary(bookId).first().cashBalanceRupiah

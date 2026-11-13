@@ -500,6 +500,10 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · bukti · catatan`.
 
+- 2026-11-13 11:21 · PK-1.2 dan audit pemilik · checkpoint, belum selesai · lihat commit · [terverifikasi] kategori ganda dicegah, JVM 193/193, lint, tes UI dan AVD terisolasi; bahasa Indonesia sementara dan dialog stok diperbarui. [belum] kategori bebas/ambigu belum ditandai dan seed upgrade bebas belum lulus; laporan `docs/superpowers/reports/2026-11-13-pk12-audit-pemilik.md`.
+
+- 2026-11-13 07:40 · Handoff audit progres PK-1.2 + bahasa/layout · berhenti di checkpoint · belum commit · [terverifikasi] JVM 193/193 pada putaran sebelumnya, tes fokus UI terakhir 4/7 dengan tiga kegagalan selector; 10 berkas implementasi/test/resource tetap belum commit. [terverifikasi] English dapat dipilih/disimpan dan dialog stok menumpuk dua aksi kanan, Kembali terpisah. [belum] screenshot emulator dan audit runtime menyeluruh. Laporan + prompt agent: `docs/superpowers/reports/2026-11-13-handoff-progress.md`. Jangan merge main atau sentuh superproject.
+
 - 2026-11-12 02:05 · Rencana induk · ditulis · lihat log · tanpa kode; fakta [kode] dibaca di HEAD `7fe55ee` · menunggu jawaban K-1 sampai K-15 (DEC-032).
 - 2026-11-12 02:03 · Keputusan pemilik · K-1 = A, K-2 = B, K-3 = A, K-4 = A (spec V-7 sampai V-10) · Tahap 1 tidak lagi terhalang keputusan; K-5 sampai K-15 masih menunggu.
 - 2026-11-12 02:06 · PK-0.1 dan PK-0.2 · selesai · `f8a9bee` di `main`, digabung ke branch kerja · `ManifestTest` merah lalu hijau; unit 97/0 dan `assembleDebug` hijau di `main`; manifest gabungan debug memuat INTERNET · masuk Google dan Drive di HP nyata masih [belum] (PK-5.4).

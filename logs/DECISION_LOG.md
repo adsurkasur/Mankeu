@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-039] Bahasa Indonesia sementara pada MVP
+- **Tanggal**: 2026-11-13 11:21 WIB
+- **Status**: Diterima sementara, sesuai arahan pemilik.
+- **Konteks**: Pilihan English yang tersimpan membuat aplikasi terbuka dalam bahasa Inggris; V-4 mempertahankan kapabilitas yang ada.
+- **Keputusan**: Terapkan locale Indonesia dan sembunyikan pemilih untuk sementara, tanpa menghapus preferensi tersimpan, terjemahan, atau kode pemilih.
+- **Alasan dan alternatif**: Mengganti default saja tidak memengaruhi preferensi lama; menghapus English akan membuang kapabilitas. Perilaku saat pengaktifan ulang belum diputuskan.
+- **Komponen**: AppPreferences, pengaturan, resources dan tes bahasa.
+
 ### [DEC-038] Presisi resep dipertahankan sampai hasil akhir
 - **Date**: 2026-11-13
 - **Status**: Implemented untuk PK-3.1; schema dan integrasi MVP lain masih dalam pengerjaan.

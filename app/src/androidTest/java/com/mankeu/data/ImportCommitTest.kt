@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.domain.CategoryRole
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.ProductCosting
@@ -49,6 +50,7 @@ class ImportCommitTest {
             .allowMainThreadQueries().build()
         repository = FinanceRepository(database)
         businessId = repository.createBusiness("Kedai Kopi")
+        repository.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
         projectId = repository.createProject(businessId, "Gerai Utama")
     }
 

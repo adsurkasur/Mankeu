@@ -61,7 +61,7 @@ class StockHistoryScreenTest {
     fun historyListsEveryLineAndOnlyProductionAndCountsCanBeDeleted() {
         show()
 
-        compose.onNodeWithText("Produksi 1 batch").assertExists()
+        compose.onNodeWithText("Produksi 1 kali").assertExists()
         compose.onNodeWithText("+400 bungkus").assertExists()
         compose.onNodeWithText("Terjual 2 dus").assertExists()
         compose.onNodeWithText("-80 bungkus").assertExists()

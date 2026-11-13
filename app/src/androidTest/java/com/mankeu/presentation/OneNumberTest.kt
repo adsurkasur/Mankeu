@@ -151,10 +151,11 @@ class OneNumberTest {
         // Today's recipe cost (Rp6.050 a bungkus) must not give a second gap.
         assertTrue(compose.onAllNodesWithText("224.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         // Komparasi is money, never "untung".
+        scrollTo("Uang vs rencana")
         click("Uang vs rencana")
         exists("Uang masuk/keluar vs rencana")
         assertTrue(compose.onAllNodesWithText("Laba / Rugi kas", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
-        assertTrue(compose.onAllNodesWithText("Untung", substring = true, useUnmergedTree = true).fetchSemanticsNodes().none { text(it).startsWith("Untung") })
+        assertTrue(compose.onAllNodesWithText("Untung", substring = true, useUnmergedTree = true).fetchSemanticsNodes().none { text(it).startsWith("Untung") && text(it) != "Untung dan uang" })
     }
 
     /** Every profit and selisih figure on Beranda, Laporan and the BEP card equals [month]'s. */
@@ -190,6 +191,7 @@ class OneNumberTest {
         assertBeside("Belanja produksi dibanding modal barang terjual", gap)
         assertBeside("Tagihan belum dibayar pelanggan", month.receivableRupiah.toRupiah())
         absent("semua bulan")
+        scrollTo("Supaya tidak rugi")
         click("Supaya tidak rugi")
         scrollTo("Status BEP")
         assertBeside("Untung bulan ini", profit)

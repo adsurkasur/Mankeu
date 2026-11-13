@@ -532,7 +532,7 @@
     <string name="stock_history_empty">Belum ada produksi, hitung stok, atau penjualan.</string>
     <string name="stock_history_fix_hint">Salah catat produksi atau hitung stok? Hapus barisnya, lalu catat ulang.</string>
     <string name="stock_history_production">Produksi</string>
-    <string name="stock_history_production_batches">Produksi %1$d kali</string>
+    <string name="stock_history_production_batches">Produksi %1$s kali</string>
     <string name="stock_history_count">Hitung stok</string>
     <string name="stock_history_consign_out">Dititipkan</string>
     <string name="stock_history_consign_return">Titipan ditarik</string>

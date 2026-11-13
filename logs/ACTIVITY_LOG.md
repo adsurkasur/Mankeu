@@ -1,5 +1,18 @@
 # Activity Log
 
+### [2026-11-13 11:21] [Codex (GPT-6) — PK-1.2 dan audit pemilik]
+- **Goal**: Melanjutkan diagnosis kategori-null dan tes gagal, lalu memeriksa bahasa serta dialog tambah stok.
+- **Actions**: Memeriksa branch/diff/handoff, menelusuri dan mereproduksi penggandaan query, membatasi join ke satu kandidat seperan dan usaha, memperbaiki selector tes; menahan locale Indonesia tanpa menghapus pilihan tersimpan; menyusun ulang aksi dialog stok; mengambil screenshot sintetis sebelum/sesudah; membuat AVD terisolasi dan membukanya dalam jendela atas permintaan pemilik.
+- **Files**: Berkas sumber/tes data dan presentation, resources, `docs/superpowers/reports/2026-11-13-pk12-audit-pemilik.md`, screenshot evidence, WIP, rencana induk, log keputusan dan changelog; perubahan handoff sebelumnya juga dipertahankan.
+- **Verification**: [terverifikasi] Tes fokus lima kasus 5/5; tes susunan dialog dan tiga alur lulus; tes locale tersimpan lulus; kategori ambigu lulus; JVM 193/193, lint dan assemble debug/androidTest berhasil. [belum] Seed kategori bebas, peringatan ketidakpastian, seluruh layar, suite instrumentasi penuh, tablet, TalkBack dan HP nyata. PK-1.2 tetap checkpoint, bukan siap rilis. `emulator-5556` tidak digunakan untuk tes atau hapus data.
+
+
+### [2026-11-13 07:40] [Codex (GPT-6) — Handoff PK-1.2 dan audit tambahan]
+- **Goal**: Mendokumentasikan status tertunda dan membuat prompt agar agent lain dapat melanjutkan tanpa kehilangan perubahan atau konteks.
+- **Actions**: Memeriksa `git status`/stat perubahan; menulis handoff dengan daftar 10 berkas belum commit, bukti dan hasil tes, keterbatasan emulator, audit bahasa dan dialog stok, urutan tindak lanjut serta prompt siap salin; memperbarui WIP dan rencana induk §8.
+- **Files**: `docs/superpowers/reports/2026-11-13-handoff-progress.md`; `docs/WORK_IN_PROGRESS.md`; `docs/superpowers/plans/2026-11-12-rencana-induk-mvp.md`; `logs/ACTIVITY_LOG.md`.
+- **Verification**: [terverifikasi] Branch `fase2-nota-piutang`, PK-1.6 commit `5f81c45`; 10 berkas sumber/tes/resource belum commit dipertahankan. JVM sebelumnya 193/193; tes fokus UI terbaru 4/7 dengan 3 kegagalan yang dicatat. Sumber mengonfirmasi pilihan English tersimpan dan penempatan tiga aksi stok. [belum] Emulator visual karena CUA tidak terinisialisasi; tidak menjalankan ulang suite.
+
 ### [2026-11-13 07:12] [Codex (GPT-6) — PK-1.6]
 - **Goal**: Mengimplementasikan SIMPLE dan ITEM_COST, memastikan seluruh tampilan/ekspor memakai MonthlySummary, serta menghitung penjualan dengan biaya belum diketahui.
 - **Actions**: Menambahkan basis pada kalkulasi domain; mengalirkan basis usaha dan metadata `costKnown` melalui query Room/repository; menambahkan `setProfitBasis`; menyesuaikan HPP/biaya efektif dan input kalkulator BEP; memperluas tes angka tunggal serta fixture usaha keripik lama; memperbaiki pemicu invalidasi tabel `businesses` setelah emulator menemukan angka BEP yang tertinggal.

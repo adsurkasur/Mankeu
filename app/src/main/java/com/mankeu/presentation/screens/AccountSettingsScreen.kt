@@ -66,6 +66,7 @@ import androidx.compose.foundation.Image
 import androidx.core.net.toUri
 import com.mankeu.BuildConfig
 import com.mankeu.R
+import com.mankeu.presentation.LANGUAGE_SELECTION_ENABLED
 import com.mankeu.presentation.AppLanguage
 import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.FeedbackEvent
@@ -182,7 +183,7 @@ fun SettingsScreen(
             }
         }
 
-        item {
+        if (LANGUAGE_SELECTION_ENABLED) item {
             SettingCard(stringResource(R.string.settings_language)) {
                 LanguagePicker(language = language, onLanguageChange = onLanguageChange)
             }

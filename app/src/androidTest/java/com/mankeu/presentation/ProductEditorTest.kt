@@ -78,17 +78,17 @@ class ProductEditorTest {
     private fun fillKeripik() {
         box("Nama produk").performTextInput("Keripik")
         // Zero yield must not reach ProductCosting.hpp (division by zero): no preview, no crash.
-        box("1 batch jadi").performTextInput("0")
-        assertEquals(0, compose.onAllNodesWithText("HPP Rp", substring = true).fetchSemanticsNodes().size)
-        box("1 batch jadi").performTextClearance()
-        box("1 batch jadi").performTextInput("400")
+        box("Satu kali produksi menghasilkan").performTextInput("0")
+        assertEquals(0, compose.onAllNodesWithText("Modal barang Rp", substring = true).fetchSemanticsNodes().size)
+        box("Satu kali produksi menghasilkan").performTextClearance()
+        box("Satu kali produksi menghasilkan").performTextInput("400")
 
         click("+ Bahan")
         box("Jumlah (liter)").performTextInput("20")
         click("Simpan")
         click("+ Biaya lain")
         box("Biaya (mis. gas, upah)").performTextInput("Lain-lain")
-        box("Biaya per batch").performTextInput("1900000")
+        box("Biaya untuk sekali produksi").performTextInput("1900000")
         click("Simpan")
 
         click("bungkus")
@@ -104,15 +104,15 @@ class ProductEditorTest {
 
     @Test fun recipePerBatchGivesHppPerSaleUnitAndSaves() {
         open()
-        // On open: name and "1 batch jadi" are the only boxes; recipe and units are rows and buttons.
+        // On open: name and yield are the only boxes; recipe and units are rows and buttons.
         assertEquals(2, compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size)
         saveButton().assertIsNotEnabled()
         fillKeripik()
 
         exists("Minyak · 20 liter")
         exists("Rp500.000")
-        exists("HPP Rp6.000 per bungkus")
-        exists("Biaya 1 batch Rp2.400.000")
+        exists("Modal barang Rp6.000 per bungkus")
+        exists("Biaya satu kali produksi Rp2.400.000")
         exists("dus · isi 40 bungkus · untung Rp60.000")
         exists("bungkus · untung Rp2.000")
         saveButton().assertIsEnabled()
@@ -133,7 +133,7 @@ class ProductEditorTest {
     @Test fun aNewMaterialLineStartsOnAnUnusedMaterial() {
         open(listOf(oil, cassava))
         box("Nama produk").performTextInput("Keripik")
-        box("1 batch jadi").performTextInput("400")
+        box("Satu kali produksi menghasilkan").performTextInput("400")
         click("+ Bahan")
         box("Jumlah (liter)").performTextInput("20")
         click("Simpan")

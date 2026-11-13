@@ -377,7 +377,17 @@ interface FinanceDao {
                COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) AS variable,
                MAX(e.usefulLifeMonths) AS usefulLifeMonths
         FROM financial_events e
-        LEFT JOIN categories c ON c.id = e.categoryId
+        LEFT JOIN categories c ON c.businessId = e.businessId AND c.id = COALESCE(e.categoryId, (
+            SELECT MIN(candidate.id) FROM categories candidate
+            WHERE candidate.businessId = e.businessId
+              AND candidate.role = CASE e.type
+                  WHEN 'CASH_INCOME' THEN 'REVENUE'
+                  WHEN 'ASSET_PURCHASE_CASH' THEN 'ASSET'
+                  ELSE 'EXPENSE' END
+              AND lower(trim(candidate.name)) = lower(trim(e.category))
+            GROUP BY candidate.businessId
+            HAVING COUNT(*) = 1
+        ))
         WHERE e.bookId = :bookId
           AND ((e.type = 'CASH_INCOME' AND e.saleId IS NULL)
             OR (e.type = 'CASH_EXPENSE' AND e.settlesEventId IS NULL)

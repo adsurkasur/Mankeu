@@ -111,6 +111,16 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun stockQuestionPlacesChoicesAndBackInSeparateRows() {
+        start()
+        addTen()
+        val buy = compose.onAllNodesWithText("Ya, catat belanja")[0].fetchSemanticsNode().boundsInRoot
+        val stock = compose.onAllNodesWithText("Tidak, tambah stok saja")[0].fetchSemanticsNode().boundsInRoot
+        val back = compose.onAllNodesWithText("Kembali")[0].fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue(buy.bottom <= stock.top && stock.bottom <= back.top)
+    }
+
+    @Test
     fun stockOnlyRecordsTheMoveWithoutMoney() {
         start()
         addTen()

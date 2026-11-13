@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Tampilan MVP sementara menggunakan bahasa Indonesia; pilihan dan terjemahan English disimpan untuk penggunaan berikutnya (DEC-039).
+- Dialog tambah stok menempatkan dua pilihan pencatatan dan Kembali dalam tiga baris; alur belanja dan stok tetap sama.
+
 - Usaha baru memakai hitung untung SIMPLE (semua belanja usaha mengurangi laba); usaha lama tetap ITEM_COST. MonthlySummary dan kartu BEP memakai basis yang sama, dan ringkasan mencatat jumlah/nilai baris penjualan dengan biaya belum diketahui (PK-1.6).
 
 ### Fixed
+- Checkpoint PK-1.2: transaksi tanpa ID kategori tidak lagi digandakan ketika nama kategori bertabrakan antarperan; klasifikasi tanpa kecocokan tetap belum pasti dan belum siap rilis.
+- Riwayat produksi menerima jumlah berbentuk teks; biaya manual nota dikenali sebagai biaya yang diketahui.
+
 - Biaya resep pecahan kini dijumlahkan sebelum pembulatan akhir pada modal satuan, snapshot nota, dan simulasi; editor menjelaskan selisih angka baris yang dibulatkan. Peringatan harga membedakan modal yang belum diketahui (PK-3.1, DEC-038).
 - Checkpoint belum dirilis: migrasi schema 14 dan pemulihan backup lama menyiapkan kolom model baru; integrasi modal unknown, stok dan laporan masih belum lengkap (PK-1.2, DEC-037).
 - Catatan memuat hari secara utuh, menyediakan riwayat lebih awal walau filter kosong, mempertahankan filter lewat tempo dan pencarian pembayaran terserap, serta tidak lagi menampilkan belanja tempo lunas sebagai belum lunas. Total kas harian dibandingkan dengan angka seluruh kas di MonthlySummary; modal, ambil pribadi, dan alat tetap berbeda dari pendapatan/biaya operasional (PK-0.5, DEC-033/035).

@@ -1294,7 +1294,7 @@ class FinanceRepository(
                 hppRupiah = if (record == null) 0 else if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
                 sortOrder = index,
                 name = record?.product?.name ?: l.name,
-                costKnown = productCost?.complete ?: true,
+                costKnown = record == null || manual != null || productCost?.complete == true,
             )
         }
         if (existing == null) {

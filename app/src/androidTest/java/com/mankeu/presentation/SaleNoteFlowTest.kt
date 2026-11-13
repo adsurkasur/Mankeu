@@ -252,7 +252,7 @@ class SaleNoteFlowTest {
         click("Ubah")
         exists("Ubah nota")
         click("Simpan")
-        exists("HPP dihitung ulang dengan harga bahan sekarang")
+        exists("Modal barang dihitung ulang dengan harga bahan sekarang")
     }
 
     /** Review I-2: the pay sheet explains its bound and keeps Simpan off above what is left. */

@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.mankeu.domain.BookMode
+import com.mankeu.domain.ProfitBasis
 import com.mankeu.importer.FinanceWorkbookImporter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -50,6 +51,7 @@ class ScaleSimulationTest {
             // M1/K1/N1: the three rice-mill files are units of one business.
             val businessName = name.substringBefore('_')
             val businessId = businesses.getOrPut(businessName) { repository.createBusiness(businessName) }
+            repository.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
             val projectId = repository.createProject(businessId, sim.getString("unit"))
             val bytes = assets.open("simulasi/$name.xlsx").readBytes()
 

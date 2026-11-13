@@ -500,6 +500,8 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · bukti · catatan`.
 
+- 2026-11-13 11:51 · Modal penjualan belum diketahui · checkpoint · lihat commit · [terverifikasi] laba/BEP ITEM_COST ditahan di layar/ekspor, SIMPLE tidak terpengaruh; JVM 194/194, lint, uji UI/xlsx dan PDF smoke lulus. [belum] kategori-null ambigu, koreksi modal historis dan PDF visual; `docs/superpowers/reports/2026-11-13-modal-belum-diketahui.md`.
+
 - 2026-11-13 11:44 · Audit layout dan pilihan · checkpoint · lihat commit · [terverifikasi] margin ringkas, dropdown dan satuan kustom, pilihan stok simetris, validasi setelah Simpan; satu AVD 1080 × 2400/420 dpi. [belum] audit semua pilihan, font 200%, TalkBack, HP nyata dan PK-1.2. Laporan `docs/superpowers/reports/2026-11-13-audit-layout-pilihan.md`.
 
 - 2026-11-13 11:21 · PK-1.2 dan audit pemilik · checkpoint, belum selesai · lihat commit · [terverifikasi] kategori ganda dicegah, JVM 193/193, lint, tes UI dan AVD terisolasi; bahasa Indonesia sementara dan dialog stok diperbarui. [belum] kategori bebas/ambigu belum ditandai dan seed upgrade bebas belum lulus; laporan `docs/superpowers/reports/2026-11-13-pk12-audit-pemilik.md`.

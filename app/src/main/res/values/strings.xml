@@ -677,6 +677,7 @@
     <string name="form_yield_above_loss">Hasil sekali buat harus lebih besar daripada susut yang tersimpan.</string>
     <string name="sale_edit_unsupported">Nota ini memiliki baris bebas. Perubahan belum dapat disimpan; data tetap aman.</string>
     <string name="sale_trade_cost_unsupported">Modal barang dagangan belum dapat dihitung. Data tetap tersimpan.</string>
+    <string name="profit_incomplete">Untung belum dapat dihitung karena ada penjualan yang modal barangnya belum diketahui.</string>
     <string name="sale_cost_unknown">Modal barang belum diketahui.</string>
     <string name="sale_detail_title">Nota penjualan</string>
     <string name="sale_customer">Pelanggan</string>

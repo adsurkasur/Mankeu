@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-13 11:51] [Codex (GPT-6) — hasil finansial dengan modal belum diketahui]
+- **Goal**: Mencegah laba dan BEP yang tampak lengkap ketika modal penjualan ITEM_COST belum diketahui.
+- **Actions**: Menelusuri data `costKnown` sampai ringkasan, layar dan ekspor; menahan angka laba/HPP/selisih yang tidak lengkap dan menampilkan alasan; mempertahankan SIMPLE; menambahkan tes domain dan alur Room→Beranda→Laporan→BEP→xlsx serta PDF smoke.
+- **Files**: ProfitCalculator, HomeScreen, ReportsScreen, PlanCards, FinanceWorkbookExporter, FinancePdfExporter, resources, ProfitCalculatorTest, OneNumberTest, laporan checkpoint, WIP, changelog dan keputusan.
+- **Verification**: [terverifikasi] Tes domain terarah, dua uji OneNumber termasuk golden, lalu uji unknown diperluas untuk BEP/PDF lulus; JVM 194/194, lint dan assemble berhasil. [belum] PDF visual/isi, alur mengisi modal historis, kategori-null ambigu, sync/backup, seluruh MVP dan HP nyata.
+
+
 ### [2026-11-13 11:44] [Codex (GPT-6) — audit UI dan cleanup AVD]
 - **Goal**: Memperbaiki margin dialog, pilihan stok/satuan, keterlihatan aksi dan waktu validasi; membersihkan AVD serta memakai metrik ponsel realistis.
 - **Actions**: Menelusuri komponen dan pola pilihan; menambah margin, picker satuan dan tombol kustom terpisah, pilihan stok simetris, aksi berbingkai dan validasi setelah Simpan; menghapus empat AVD atas izin pemilik dan mempertahankan satu AVD berjendela 1080 × 2400/420 dpi; mengambil bukti sintetis.

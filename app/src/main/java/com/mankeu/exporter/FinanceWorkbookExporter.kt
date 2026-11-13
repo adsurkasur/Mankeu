@@ -303,7 +303,8 @@ class FinanceWorkbookExporter(
                         listOf(mode, "Laba atau rugi", profitRupiah),
                     ) + cash
                 } else {
-                    month.reportLines().map { (label, value) -> listOf("$mode ${month.monthLabel()}", label, value) } + cash
+                    month.reportLines().map { (label, value) -> listOf("$mode ${month.monthLabel()}", label, value) } +
+                        (if (month.profit.profitIncomplete) listOf(listOf("$mode ${month.monthLabel()}", "Untung belum dapat dihitung", "Modal barang pada sebagian penjualan belum diketahui")) else emptyList()) + cash
                 }
             }
         },
@@ -376,12 +377,12 @@ internal fun MonthlySummary.reportLines(): List<Pair<String, Long>> = buildList 
     add("Pendapatan" to incomeRupiah)
     add("Penjualan (nota)" to salesRupiah)
     if (otherIncomeRupiah != 0L) add("Pendapatan lain" to otherIncomeRupiah)
-    add("HPP (harga pokok penjualan)" to hppRupiah)
+    if (!profit.profitIncomplete) add("HPP (harga pokok penjualan)" to hppRupiah)
     add("Biaya lain (termasuk penyusutan)" to otherCostRupiah)
     add("Penyusutan" to profit.depreciationRupiah)
-    add("Laba / rugi bulan ini" to profitRupiah)
+    if (!profit.profitIncomplete) add("Laba / rugi bulan ini" to profitRupiah)
     add("Belanja biaya produksi (lewat HPP)" to productionSpendRupiah)
-    add("Selisih belanja produksi vs HPP" to productionVarianceRupiah)
+    if (!profit.profitIncomplete) add("Selisih belanja produksi vs HPP" to productionVarianceRupiah)
     add("Uang masuk usaha" to moneyInRupiah)
     add("Uang keluar usaha" to moneyOutRupiah)
     add("Kas akhir bulan" to cashOnHandRupiah)

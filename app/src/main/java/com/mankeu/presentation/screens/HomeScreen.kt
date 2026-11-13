@@ -233,6 +233,13 @@ internal fun customerBills(sales: List<SaleRecord>, today: LocalDate): List<Cust
 @Composable
 private fun ProfitCard(month: MonthlySummary, lastMonth: MonthlySummary?) {
     val semantic = LocalMankeuSemanticColors.current
+    if (month.profit.profitIncomplete) {
+        MankeuCard {
+            Text(stringResource(R.string.home_profit), style = MankeuType.Caption)
+            Text(stringResource(R.string.profit_incomplete), color = semantic.warning)
+        }
+        return
+    }
     var open by rememberSaveable { mutableStateOf(false) }
     val profit = month.profitRupiah
     MankeuCard(onClick = { open = !open }) {
@@ -248,7 +255,7 @@ private fun ProfitCard(month: MonthlySummary, lastMonth: MonthlySummary?) {
                     else -> MaterialTheme.colorScheme.onSurface
                 },
             )
-            val diff = lastMonth?.let { profit - it.profitRupiah }
+            val diff = lastMonth?.takeUnless { it.profit.profitIncomplete }?.let { profit - it.profitRupiah }
             Text(
                 when {
                     diff == null -> stringResource(R.string.home_profit_tap)

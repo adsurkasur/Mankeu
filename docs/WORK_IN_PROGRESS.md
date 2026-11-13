@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Checkpoint modal tidak diketahui (2026-11-13 11:51 WIB):** [terverifikasi] ITEM_COST menahan laba/BEP pada layar dan ekspor jika ada penjualan tanpa modal; SIMPLE tetap dihitung. Tes UI/xlsx dan PDF smoke lulus, golden Bu Sri lulus, JVM 194/194 dan lint berhasil. Laporan `docs/superpowers/reports/2026-11-13-modal-belum-diketahui.md`. [belum] kategori-null historis, koreksi modal historis, PDF visual, sync/backup dan seluruh MVP; jangan klaim siap produksi.
+
+
 **Checkpoint audit UI (2026-11-13 11:44 WIB):** [terverifikasi] Margin dialog, pilihan stok simetris, dropdown satuan dengan tombol custom terpisah, aksi tambah berbingkai, dan validasi setelah Simpan; satu AVD 1080 × 2400/420 dpi tersisa setelah cleanup atas izin pemilik. Lihat `docs/superpowers/reports/2026-11-13-audit-layout-pilihan.md`. [belum] PK-1.2 kategori historis, audit seluruh pilihan, font 200%, TalkBack, tablet, HP nyata dan seluruh paket MVP. Lanjutkan paket sesuai rencana tanpa merge main atau mengubah superproject.
 
 

@@ -48,6 +48,7 @@ class FinancePdfExporter {
                     // Realisasi: the month exactly as Beranda and Laporan show it (U2, P7); no all-months profit.
                     report.keyValue("Bulan", month.monthLabel())
                     month.reportLines().forEach { (label, value) -> report.keyValue(label, money(value)) }
+                    if (month.profit.profitIncomplete) report.paragraph("Untung belum dapat dihitung karena ada penjualan yang modal barangnya belum diketahui.")
                 }
                 report.keyValue("Arus kas operasi", money(book.summary.operatingCashFlowRupiah))
                 report.keyValue("Arus kas investasi", money(book.summary.investingCashFlowRupiah))

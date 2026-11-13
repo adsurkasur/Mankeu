@@ -328,6 +328,12 @@ fun ActualMonthCard(
     month: com.mankeu.domain.MonthlySummary?,
     modifier: Modifier = Modifier,
 ) {
+    if (month?.profit?.profitIncomplete == true) {
+        Card(modifier = modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.profit_incomplete), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
     // No sales yet (a planting or set-up month) is not "not feasible": there is nothing to judge.
     val noSales = actual.revenueRupiah == 0L
     val status = if (noSales) FeasibilityStatus.UNKNOWN else feasibilityStatusOf(actual.revenueCostRatio)

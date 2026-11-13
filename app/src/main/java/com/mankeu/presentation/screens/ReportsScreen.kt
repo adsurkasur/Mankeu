@@ -243,10 +243,14 @@ private fun FinancialsSection(
         // it exactly, with the figures the owner has to reconcile against a workbook. The cost
         // *breakdown* donut on Beranda, which really does have a dozen slices, stays.
         ReportRow(stringResource(R.string.reports_operating_income), month.incomeRupiah)
-        ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
+        if (!month.profit.profitIncomplete) ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
         HorizontalDivider()
-        ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
-        if (month.hasProfitDetail()) {
+        if (month.profit.profitIncomplete) {
+            Text(stringResource(R.string.profit_incomplete), color = MaterialTheme.colorScheme.error)
+        } else {
+            ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
+        }
+        if (!month.profit.profitIncomplete && month.hasProfitDetail()) {
             HorizontalDivider()
             ProfitDetailRows(month)
         }

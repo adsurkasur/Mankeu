@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Usaha baru memakai hitung untung SIMPLE (semua belanja usaha mengurangi laba); usaha lama tetap ITEM_COST. MonthlySummary dan kartu BEP memakai basis yang sama, dan ringkasan mencatat jumlah/nilai baris penjualan dengan biaya belum diketahui (PK-1.6).
 
 ### Fixed
+- Saat modal penjualan belum diketahui pada basis modal barang, Beranda, laporan dan ekspor tidak lagi menyajikan laba parsial sebagai lengkap; kartu BEP menjelaskan keterbatasan (DEC-041).
+
 - Checkpoint PK-1.2: transaksi tanpa ID kategori tidak lagi digandakan ketika nama kategori bertabrakan antarperan; klasifikasi tanpa kecocokan tetap belum pasti dan belum siap rilis.
 - Riwayat produksi menerima jumlah berbentuk teks; biaya manual nota dikenali sebagai biaya yang diketahui.
 

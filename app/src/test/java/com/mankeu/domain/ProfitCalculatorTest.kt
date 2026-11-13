@@ -11,6 +11,16 @@ class ProfitCalculatorTest {
     private val oct = YearMonth.of(2026, 10)
     private fun d(day: Int, month: Int = 10) = LocalDate.of(2026, month, day)
 
+    @Test fun incompleteCostsMakeItemCostProfitUncertainButNotSimpleProfit() {
+        val unknown = ProfitInputs(
+            listOf(ProfitSale(d(5), 100_000, 0, false, unknownCostCount = 1, unknownCostRupiah = 100_000)),
+            emptyList(), emptyList(), emptyList(),
+        )
+        assertTrue(unknown.month(oct).profitIncomplete)
+        assertFalse(unknown.copy(basis = ProfitBasis.SIMPLE).month(oct).profitIncomplete)
+        assertFalse(unknown.month(YearMonth.of(2026, 11)).profitIncomplete)
+    }
+
     @Test fun goldenKeripikOctober() {
         val p = ProfitCalculator.month(
             oct,

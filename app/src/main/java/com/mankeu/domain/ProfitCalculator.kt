@@ -36,6 +36,7 @@ data class MonthProfit(
     val salesWithoutCostRupiah: Long = 0,
     val basis: ProfitBasis = ProfitBasis.ITEM_COST,
 ) {
+    val profitIncomplete get() = basis == ProfitBasis.ITEM_COST && salesWithoutCostCount > 0
     val effectiveHppRupiah get() = if (basis == ProfitBasis.SIMPLE) 0L else hppRupiah
     val grossProfitRupiah get() = salesRupiah - effectiveHppRupiah
     val profitRupiah get() = salesRupiah + otherIncomeRupiah - effectiveHppRupiah - fixedCostRupiah - variableCostRupiah - depreciationRupiah - if (basis == ProfitBasis.SIMPLE) productionSpendRupiah else 0L

@@ -1,5 +1,14 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-041] Tahan laba dan BEP ketika modal penjualan belum diketahui
+- **Tanggal**: 2026-11-13 11:51 WIB
+- **Status**: Diimplementasikan untuk modal baris penjualan yang belum diketahui; kategori historis ambigu masih terbuka.
+- **Konteks**: MonthlySummary membawa jumlah modal yang belum diketahui tetapi beberapa layar dan ekspor tetap menyajikan laba parsial sebagai lengkap.
+- **Keputusan**: Untuk basis ITEM_COST, jangan tampilkan laba atau hasil BEP yang memerlukan modal yang hilang; tampilkan alasan pada layar dan laporan. Basis SIMPLE tetap mengikuti perhitungan kas usahanya.
+- **Alasan dan alternatif**: Angka parsial tanpa penanda melanggar gerbang tanpa selisih yang tidak dijelaskan. Menganggap modal kosong sebagai nol akan menyesatkan; tidak mengubah transaksi atau snapshot historis.
+- **Komponen**: ProfitCalculator, Beranda, laporan, kartu BEP, laporan xlsx/PDF, resource dan tes; koreksi modal historis dan kategori-null masih perlu dikerjakan.
+
+
 ### [DEC-040] Validasi setelah percobaan menyimpan dan pilihan yang jelas
 - **Tanggal**: 2026-11-13 11:44 WIB
 - **Status**: Diterima atas arahan pemilik; menggantikan perilaku tombol nonaktif DEC-034 pada `MankeuSheet` dan `FullPageForm`.

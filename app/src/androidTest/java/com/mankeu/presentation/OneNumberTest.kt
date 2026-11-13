@@ -139,6 +139,32 @@ class OneNumberTest {
     }
 
     @Test
+    fun unknownSaleCostHidesProfitOnHomeReportAndWorkbook() {
+        val ids = runBlocking { GoldenData.buSri(repository, database) }
+        database.openHelper.writableDatabase.execSQL("UPDATE sale_lines SET costKnown = 0")
+        val month = runBlocking { repository.monthlySummary(ids.bookId).first() }
+        assertTrue(month.profit.profitIncomplete)
+        start(ids)
+        exists("modal barangnya belum diketahui")
+        assertTrue(compose.onAllNodesWithText(month.profitRupiah.toRupiah(), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        click("Laporan")
+        exists("modal barangnya belum diketahui")
+        assertTrue(compose.onAllNodesWithText("Untung / Rugi bulan ini", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        scrollTo("Supaya tidak rugi")
+        click("Supaya tidak rugi")
+        exists("modal barangnya belum diketahui")
+        assertTrue(compose.onAllNodesWithText("Status BEP", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        val pdf = runBlocking { repository.exportProjectPdf(ids.projectId) }
+        assertTrue(pdf.decodeToString(0, 4) == "%PDF")
+        val workbook = runBlocking { repository.exportProjectWorkbook(ids.projectId) }
+        val sheets = ZipInputStream(ByteArrayInputStream(workbook)).use { zip ->
+            generateSequence { zip.nextEntry }.filter { it.name.startsWith("xl/worksheets/") }.map { zip.readBytes().decodeToString() }.toList()
+        }
+        assertTrue(sheets.any { "Untung belum dapat dihitung" in it })
+        assertTrue(sheets.none { "Laba / rugi bulan ini" in it })
+    }
+
+    @Test
     fun keripikBuSriHasOneProfitAndOneGap() {
         val ids = runBlocking { GoldenData.buSri(repository, database) }
         val month = runBlocking { repository.monthlySummary(ids.bookId).first() }

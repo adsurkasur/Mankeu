@@ -33,6 +33,9 @@ These rules apply to every future code, documentation, test, migration, import, 
 
 ## Start here
 
+For any UI, validation, accessibility, or screen audit, read `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md` and DEC-042. Follow its owner-confirmed reference screens, control selection, field validation timing, device test and evidence requirements. Preserve in-progress changes and existing feature behavior.
+
+
 1. Read `README.md`, `docs/PROJECT_GUIDE.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/DOMAIN_MODEL.md`, and `docs/QUALITY_GATES.md`.
 2. For import or export work, also read DEC-012 in `logs/DECISION_LOG.md` and the `MankeuTemplate` contract in `app/src/main/java/com/mankeu/importer/ImportModels.kt`. Superseded import docs are in `docs/archive/`.
 3. Inspect the current Git status and preserve unrelated changes.

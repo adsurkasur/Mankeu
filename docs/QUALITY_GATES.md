@@ -68,7 +68,7 @@ The earlier reference-workbook golden fixture is kept only as history in `docs/a
 ### UI and accessibility tests
 
 - fast entry on compact width;
-- invalid forms show an actionable error after a save attempt and never invoke the save callback until valid (DEC-040);
+- invalid fields show an actionable error after blur; an attempted save reveals and focuses the first invalid required field, errors clear as soon as valid, and the save callback is never invoked until valid (DEC-042);
 - adaptive navigation and list-detail on medium/expanded width;
 - selected business/unit always visible;
 - TalkBack labels/order, 200% font scale, contrast, touch targets, keyboard focus;

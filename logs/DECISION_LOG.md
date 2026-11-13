@@ -1,5 +1,15 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-042] Konsistensi antarmuka dan validasi saat meninggalkan kolom
+- **Tanggal**: 2026-11-13 12:22 WIB
+- **Status**: Disetujui pemilik; implementasi dan audit menyeluruh belum selesai.
+- **Konteks**: Pemilik menemukan perbedaan jarak, kartu, kontrol pilihan, keterlihatan tombol dan waktu pesan kesalahan; layar Produk, Pengaturan dan Pusat Bantuan dijadikan rujukan awal.
+- **Keputusan**: Pertahankan karakter visual dan pilih pola yang paling jelas menurut fungsi. Audit seluruh aplikasi, mulai dari contoh di emulator, lalu lanjutkan tanpa persetujuan tambahan jika sesuai acuan dan tes lulus. Dropdown satuan memiliki tombol tambah terpisah di sebelahnya; gerakan stok memakai kontrol tersambung; kategori memakai Tetap dan Variabel dengan penjelasan modal barang.
+- **Validasi**: Tampilkan kesalahan merah setelah kolom invalid ditinggalkan; percobaan Simpan mengungkap dan mengarahkan ke kolom wajib invalid yang belum disentuh. Hilangkan pesan segera saat isian valid. Petunjuk netral boleh tampil sejak awal. Ini menggantikan waktu validasi DEC-034/040; simpan invalid tetap dicegah.
+- **Alasan dan alternatif**: Konsistensi dipilih berdasarkan fungsi, bukan penggunaan kartu atau satu kontrol secara seragam. Validasi sejak awal dianggap menekan pengguna; menunggu Simpan untuk kolom yang telah dikunjungi memberi umpan balik terlambat.
+- **Komponen**: Tema, komponen form dan pilihan, seluruh layar, tes, panduan dan rencana `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`; satu AVD dipakai untuk variasi ukuran/dpi/font/tema, dan HP fisik diuji bila tersedia.
+
+
 ### [DEC-041] Tahan laba dan BEP ketika modal penjualan belum diketahui
 - **Tanggal**: 2026-11-13 11:51 WIB
 - **Status**: Diimplementasikan untuk modal baris penjualan yang belum diketahui; kategori historis ambigu masih terbuka.

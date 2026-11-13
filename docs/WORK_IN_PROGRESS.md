@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Rencana konsistensi antarmuka (2026-11-13 12:22 WIB):** [user-confirmed] Pemilik memilih audit seluruh aplikasi dengan Produk, Pengaturan dan Pusat Bantuan sebagai acuan awal; karakter visual dipertahankan, pilihan mengikuti fungsi, rincian penting tetap terlihat, dan pelaksanaan dapat berlanjut tanpa persetujuan contoh tambahan. Validasi: setelah blur atau saat Simpan untuk kolom yang belum disentuh; hilang segera saat valid (DEC-042). Rencana `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`. [terverifikasi] Perubahan kode/tes kategori-null dan UI masih belum di-commit; tes kosakata terakhir gagal karena istilah Variabel yang dipilih pemilik dan `break-even` di resource English. [belum] Implementasi aturan blur, audit seluruh layar dan seluruh gerbang MVP. Pertahankan perubahan tersebut; jangan merge main atau sentuh superproject.
+
+
 **Checkpoint modal tidak diketahui (2026-11-13 11:51 WIB):** [terverifikasi] ITEM_COST menahan laba/BEP pada layar dan ekspor jika ada penjualan tanpa modal; SIMPLE tetap dihitung. Tes UI/xlsx dan PDF smoke lulus, golden Bu Sri lulus, JVM 194/194 dan lint berhasil. Laporan `docs/superpowers/reports/2026-11-13-modal-belum-diketahui.md`. [belum] kategori-null historis, koreksi modal historis, PDF visual, sync/backup dan seluruh MVP; jangan klaim siap produksi.
 
 

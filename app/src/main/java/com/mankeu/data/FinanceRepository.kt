@@ -1969,6 +1969,18 @@ class FinanceRepository(
     private suspend fun importNoteConflicts(businessId: String, projectId: String, preview: WorkbookImportPreview): List<String> {
         val products = (dao.getProducts(projectId).map { normalize(it.name) } + preview.products.map { normalize(it.name) }).toSet()
         val conflicts = mutableListOf<String>()
+        val existingProducts = dao.getProducts(projectId).associateBy { normalize(it.name) }
+        val referenced = preview.notes.flatMap { it.lines }.mapNotNull { it.productName }.map(::normalize).toSet()
+        preview.products.filter { normalize(it.name) in referenced }.forEach { imported ->
+            existingProducts[normalize(imported.name)]?.let { existing ->
+                val different = normalize(existing.unit) != normalize(imported.baseUnit) ||
+                    existing.kind != imported.kind || existing.tracksStock != imported.tracksStock ||
+                    existing.manualCostRupiah != imported.manualCostRupiah ||
+                    existing.batchYieldText.replace(',', '.').toBigDecimalOrNull()?.compareTo(imported.batchYieldText.replace(',', '.').toBigDecimalOrNull()) != 0 ||
+                    existing.batchLossText.replace(',', '.').toBigDecimalOrNull()?.compareTo(imported.batchLossText.replace(',', '.').toBigDecimalOrNull()) != 0
+                if (different) conflicts += "${imported.source}: produk \"${imported.name}\" sudah ada dengan rincian berbeda; samakan produknya sebelum impor nota."
+            }
+        }
         preview.notes.forEach { note ->
             note.lines.forEach { line ->
                 line.productName?.let { name -> if (normalize(name) !in products) conflicts += "${line.source}: produk \"$name\" tidak ada di unit usaha atau lembar Produk." }

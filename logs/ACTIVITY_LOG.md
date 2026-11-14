@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 04:53] [Codex (GPT-6) — konflik produk pada impor nota]
+- **Goal**: Mencegah nota impor terhubung ke produk lain yang hanya sama namanya.
+- **Actions**: Pratinjau dan commit menolak produk rujukan nota bila satuan dasar, jenis, stok, modal manual, hasil atau susut berbeda dari produk tujuan.
+- **Files**: FinanceRepository, ImportCommitTest, rencana dan changelog.
+- **Verification**: [verified] Tes baru gagal sebelum perbaikan karena konflik tidak terdeteksi; setelah perbaikan tes konflik dan round-trip nota campuran lulus 2/2 pada emulator-5558, build aplikasi dan instrumentasi lulus, diff check bersih. [unknown] Semua bentuk perbedaan resep atau satuan jual dan format workbook lengkap belum terjamin.
+
 ### [2026-11-15 01:27] [Codex (GPT-6) — metadata produk workbook]
 - **Goal**: Mempertahankan jenis dan konfigurasi biaya produk ketika workbook diimpor kembali.
 - **Actions**: Menambahkan jenis, pencatatan stok, modal manual termasuk nol, dan susut per batch ke lembar Produk beserta validasi dan petunjuk.

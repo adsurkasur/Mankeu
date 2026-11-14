@@ -91,6 +91,19 @@ class ImportCommitTest {
     }
 
     @Test
+    fun importRejectsNoteLinkedToDifferentExistingProduct() = runBlocking {
+        val productId = repository.saveProduct(projectId, null, ProductDraft("Kopi", "cup", "1", listOf(SaleUnitDraft(name = "cup", contentText = "1", priceRupiah = 10000)), emptyList()))
+        repository.saveSale(projectId, null, SaleDraft(null, DAY, null, 0, "", listOf(SaleLineDraft(productId, "cup", "1", 10000)), 10000))
+        val preview = FinanceWorkbookImporter().preview("nota.xlsx", repository.exportProjectWorkbook(projectId))
+        val (targetBusiness, targetProject) = repository.createBusinessWithUnit("Tujuan konflik", "Utama")
+        repository.saveProduct(targetProject, null, ProductDraft("Kopi", "kg", "1", listOf(SaleUnitDraft(name = "kg", contentText = "1", priceRupiah = 10000)), emptyList()))
+        val review = repository.reviewImport(targetBusiness, targetProject, preview)
+        assertTrue(review.conflicts.toString(), review.conflicts.any { it.contains("Kopi") })
+        assertTrue(runCatching { repository.commitImport(targetBusiness, targetProject, preview) }.isFailure)
+        assertTrue(repository.sales(targetProject).first().isEmpty())
+    }
+
+    @Test
     fun workbookPreservesProductKindTrackingManualCostAndLoss() = runBlocking {
         val productId = repository.saveProduct(projectId, null, ProductDraft("Keripik", "bungkus", "10", listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 10_000)), emptyList()))
         database.openHelper.writableDatabase.execSQL("UPDATE products SET kind='SERVICE', tracksStock=0, manualCostRupiah=0, batchLossText='2' WHERE id=?", arrayOf(productId))

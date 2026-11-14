@@ -179,6 +179,7 @@ class SaleNoteFlowTest {
 
         // No note yet: the first product, its main unit. The line sheet changes unit and quantity.
         click("1 bungkus Keripik")
+        click("Satuan")
         click("dus")
         clickDescription("Tambah Jumlah")
         click("Simpan")

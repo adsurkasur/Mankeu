@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Satuan pada nota (2026-11-14 16:08 WIB):** [terverifikasi] Dropdown menampilkan satuan produk dan mempertahankan harga otomatis; dua alur nota dan dua regresi produk/satuan lulus pada emulator-5558, build debug/androidTest berhasil. [belum] Audit visual seluruh layar, perangkat dan gerbang MVP.
+
+
 **Pesan batas stok (2026-11-14 16:05 WIB):** [terverifikasi] Produk menyatakan bila belum ada batas menipis; jika ada batas tetapi tidak ada peringatan, teks tidak lagi mengklaim semua barang di atas minimum. Tes stok nol/tanpa batas dan stok minus 2/2 lulus pada emulator-5558; build debug/androidTest lulus. [belum] Audit visual menyeluruh, semua perangkat dan gerbang MVP.
 
 

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Satuan produk pada baris nota dipilih dari dropdown; harga bawaan tetap mengikuti satuan yang dipilih.
 - Nama, isi dan harga satuan jual menunjukkan kesalahan setelah kolom ditinggalkan dan menerima fokus saat Simpan jika belum valid.
 - Nama kontak kosong atau duplikat ditandai setelah kolom ditinggalkan atau Simpan ditekan; kesalahan hilang ketika nama valid.
 - Form uang dan belanja menampilkan kesalahan jumlah, kuantitas dan harga setelah kolom ditinggalkan; Simpan memfokuskan kolom pertama yang belum valid.

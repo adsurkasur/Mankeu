@@ -478,7 +478,7 @@ private fun NoteLineRow(title: String, amount: String?, profit: Long?, onClick: 
     }
 }
 
-/** The line sheet: unit (chips), quantity (stepper) and price (filled from the unit); Hapus removes the line. */
+/** The line sheet: unit, quantity and price (filled from the unit); Hapus removes the line. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () -> Unit, onSave: (SaleLineInput) -> Unit, onDelete: () -> Unit) {
@@ -494,15 +494,13 @@ private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () 
         },
         onDelete = onDelete,
     ) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-            record.unitNames().forEach { unit ->
-                FilterChip(
-                    selected = draft.unit.equals(unit, ignoreCase = true),
-                    onClick = { draft = draft.copy(unit = unit, price = record.priceOf(unit)?.toString() ?: draft.price) },
-                    label = { Text(unit) },
-                )
-            }
-        }
+        UnitPicker(
+            value = draft.unit,
+            options = record.unitNames(),
+            onSelect = { unit -> draft = draft.copy(unit = unit, price = record.priceOf(unit)?.toString() ?: draft.price) },
+            onCustom = null,
+            label = stringResource(R.string.editor_unit_name),
+        )
         QuantityStepper(value = draft.quantity, onValueChange = { draft = draft.copy(quantity = it) }, label = stringResource(R.string.sale_quantity))
         val usual = record.priceOf(draft.unit)
         MoneyInput(

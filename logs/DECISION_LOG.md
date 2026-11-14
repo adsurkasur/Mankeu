@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-047] Dropdown satuan pada baris nota
+- **Tanggal**: 2026-11-14; **status**: diterapkan.
+- **Konteks**: Jumlah satuan jual bisa bertambah dan chip dalam baris nota membentuk deretan yang tidak konsisten.
+- **Keputusan**: Gunakan UnitPicker untuk daftar satuan produk dalam nota tanpa aksi satuan kustom; aksi tambah tetap tersedia pada form barang/produk yang mendukungnya.
+- **Alasan dan alternatif**: Dropdown menjaga ruang dan menunjukkan pilihan yang sudah tersedia; pemilihan tetap memperbarui harga bawaan seperti sebelumnya.
+- **Komponen**: UnitPicker dan editor baris nota.
+
+
 ### [DEC-046] Fokus validasi pada sheet baris
 - **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
 - **Konteks**: Form satuan jual dalam LineEditSheet memerlukan fokus pada kolom invalid sesuai DEC-042.

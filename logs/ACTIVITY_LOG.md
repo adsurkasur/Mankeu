@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:08] [Codex (GPT-6) — satuan di nota]
+- **Goal**: Menyelaraskan pemilihan satuan nota dengan pilihan daftar yang dapat bertambah.
+- **Actions**: Mengganti chip satuan pada editor baris nota dengan dropdown satuan produk; mempertahankan harga otomatis dan pemilih satuan barang dengan tombol tambah.
+- **Files**: UnitPicker, SaleNoteScreens, SaleNoteFlowTest, WIP, changelog dan DEC-047.
+- **Verification**: [terverifikasi] Tes alur yang diperbarui gagal sebelum perubahan dan lulus sesudahnya; dua alur nota serta dua regresi pemilih satuan/produk lulus pada emulator-5558. Build debug/androidTest dan diff check lulus. [belum] Audit visual seluruh perangkat dan MVP.
+
+
 ### [2026-11-14 16:05] [Codex (GPT-6) — pesan batas stok]
 - **Goal**: Memperbaiki informasi stok yang menyesatkan pada Produk.
 - **Actions**: Mengganti klaim semua stok di atas minimum dengan informasi tidak ada batas atau tidak ada peringatan, sesuai konfigurasi; tidak mengubah aturan hitung atau peringatan stok.

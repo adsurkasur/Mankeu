@@ -30,13 +30,13 @@ import com.mankeu.R
 /** A unit list and an adjacent action for entering a custom unit. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun UnitPicker(value: String, options: List<String>, onSelect: (String) -> Unit, onCustom: () -> Unit) {
+internal fun UnitPicker(value: String, options: List<String>, onSelect: (String) -> Unit, onCustom: (() -> Unit)?, label: String = stringResource(R.string.stock_item_unit_pick)) {
     var expanded by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = Modifier.weight(1f)) {
             OutlinedTextField(
                 value = value, onValueChange = {}, readOnly = true, singleLine = true,
-                label = { Text(stringResource(R.string.stock_item_unit_pick)) },
+                label = { Text(label) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                 modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             )
@@ -46,8 +46,10 @@ internal fun UnitPicker(value: String, options: List<String>, onSelect: (String)
                 }
             }
         }
-        OutlinedIconButton(onClick = onCustom, modifier = Modifier.size(56.dp), shape = RoundedCornerShape(12.dp)) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.stock_item_unit_other))
+        if (onCustom != null) {
+            OutlinedIconButton(onClick = onCustom, modifier = Modifier.size(56.dp), shape = RoundedCornerShape(12.dp)) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.stock_item_unit_other))
+            }
         }
     }
 }

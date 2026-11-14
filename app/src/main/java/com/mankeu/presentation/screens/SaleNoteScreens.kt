@@ -230,6 +230,12 @@ fun SaleNoteEditorScreen(
         PaidChoice.PART -> partAmount ?: 0
     }
     val partTooHigh = paidChoice == PaidChoice.PART && (partAmount ?: 0) > total
+    val partFocus = remember { FocusRequester() }
+    val discountFocus = remember { FocusRequester() }
+    var partFocused by remember { mutableStateOf(false) }
+    var discountFocused by remember { mutableStateOf(false) }
+    var partTouched by rememberSaveable { mutableStateOf(false) }
+    var discountTouched by rememberSaveable { mutableStateOf(false) }
     // F2-3: a customer is needed while the note is not fully paid; shown before Simpan, not only after.
     val needsCustomer = contactId == null && (existing?.paid ?: paidNow) < total
     val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
@@ -260,6 +266,17 @@ fun SaleNoteEditorScreen(
                 parsedDate == null -> stringResource(R.string.form_need_date)
                 discountTooHigh -> stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())
                 else -> null
+            },
+            onInvalidSave = {
+                when {
+                    existing?.lines?.any { it.productId == null } == true -> false
+                    lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> false
+                    lines.isEmpty() || results.any { it == null } -> false
+                    partTooHigh -> { partTouched = true; partFocus.requestFocus(); true }
+                    parsedDate == null -> false
+                    discountTooHigh -> { discountTouched = true; discountFocus.requestFocus(); true }
+                    else -> false
+                }
             },
             onSave = {
                 onSave(
@@ -355,8 +372,12 @@ fun SaleNoteEditorScreen(
                         label = stringResource(R.string.sale_paid_amount),
                         value = partAmount,
                         onValueChange = { partAmount = it },
-                        isError = partTooHigh,
+                        isError = partTouched && partTooHigh,
                         supportingText = { Text(stringResource(R.string.sale_max_amount, total.toRupiah())) },
+                        fieldModifier = Modifier.focusRequester(partFocus).onFocusChanged { focus ->
+                            if (partFocused && !focus.isFocused) partTouched = true
+                            partFocused = focus.isFocused
+                        },
                     )
                 }
             } else {
@@ -392,8 +413,12 @@ fun SaleNoteEditorScreen(
                     label = stringResource(R.string.sale_discount),
                     value = discount,
                     onValueChange = { discount = it },
-                    isError = discountTooHigh,
-                    supportingText = if (discountTooHigh) ({ Text(stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())) }) else null,
+                    isError = discountTouched && discountTooHigh,
+                    supportingText = if (discountTouched && discountTooHigh) ({ Text(stringResource(R.string.sale_discount_too_high, subtotal.toRupiah())) }) else null,
+                    fieldModifier = Modifier.focusRequester(discountFocus).onFocusChanged { focus ->
+                        if (discountFocused && !focus.isFocused) discountTouched = true
+                        discountFocused = focus.isFocused
+                    },
                 )
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },

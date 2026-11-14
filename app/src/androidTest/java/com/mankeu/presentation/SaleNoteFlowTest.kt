@@ -5,7 +5,9 @@ import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.performTextReplacement
@@ -191,6 +193,43 @@ class SaleNoteFlowTest {
         price.assertIsFocused().performTextReplacement("8000")
         click("Simpan")
         exists("2 bungkus Keripik · Rp16.000")
+    }
+
+    @Test
+    fun partialPaymentErrorAppearsAfterBlurAndSaveFocusesField() {
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("Sebagian")
+        val payment = compose.onAllNodes(hasText("Dibayar sekarang", substring = true) and hasSetTextAction())[0]
+        payment.performClick().performTextReplacement("9000")
+        payment.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+        click("+ Tambah detail")
+        val discount = compose.onAllNodes(hasText("Diskon", substring = true) and hasSetTextAction())[0]
+        discount.performClick()
+        payment.assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Error))
+        click("Simpan")
+        payment.assertIsFocused().performTextReplacement("4000")
+        payment.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+    }
+
+    @Test
+    fun discountErrorAppearsAfterBlurAndSaveFocusesField() {
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("+ Tambah detail")
+        val discount = compose.onAllNodes(hasText("Diskon", substring = true) and hasSetTextAction())[0]
+        discount.performClick().performTextReplacement("9000")
+        discount.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+        compose.onAllNodes(hasText("Catatan", substring = true) and hasSetTextAction())[0].performClick()
+        discount.assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Error))
+        click("Simpan")
+        discount.assertIsFocused().performTextReplacement("1000")
+        discount.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+        exists("Total Rp7.000")
     }
 
     @Test

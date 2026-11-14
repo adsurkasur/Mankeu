@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:48] [Codex (GPT-6) — pembayaran dan diskon nota]
+- **Goal**: Menghindari peringatan merah saat pengguna masih mengetik pembayaran atau diskon.
+- **Actions**: Menampilkan kesalahan pembayaran berlebih dan diskon berlebih setelah blur atau Simpan; fokus berpindah ke kolom invalid dan penyimpanan invalid tetap ditolak.
+- **Files**: SaleNoteScreens, SaleNoteFlowTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Tes pembayaran menunjukkan error langsung sebelum perubahan; tes blur/fokus pembayaran dan diskon serta alur nota dua produk lulus pada emulator-5558. Build debug/androidTest dan diff check lulus. [belum] Semua form, TalkBack dan MVP.
+
+
 ### [2026-11-14 16:44] [Codex (GPT-6) — validasi produksi dan hitung stok]
 - **Goal**: Menyelaraskan validasi jumlah produksi dan hitung stok produk serta perpindahan ke tanggal.
 - **Actions**: Menampilkan error setelah blur atau Simpan dan memfokuskan jumlah; mempertahankan nol sebagai hasil hitung stok yang sah. DateField melepas fokus saat pemilih tanggal dibuka sehingga blur terpanggil.

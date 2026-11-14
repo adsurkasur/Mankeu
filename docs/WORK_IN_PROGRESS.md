@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Pembayaran dan diskon nota (2026-11-14 16:48 WIB):** [terverifikasi] Error berlebih muncul setelah blur/Simpan dan fokus menuju kolom; tes pembayaran, diskon dan alur dua produk lulus pada emulator-5558, build lulus. [belum] Semua form, TalkBack dan MVP.
+
+
 **Produksi dan hitung stok (2026-11-14 16:44 WIB):** [terverifikasi] Validasi jumlah dan fokus diterapkan; stok nol sah. Membuka tanggal melepas fokus input. Dua tes form, satu alur produksi dan satu tes tanggal lulus pada emulator-5558, build lulus. [belum] TalkBack, seluruh audit dan MVP.
 
 

@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Validasi kontak (2026-11-14 15:59 WIB):** [terverifikasi] Nama kosong dan duplikat mengikuti validasi blur, koreksi dan fokus saat Simpan; tiga tes instrumentasi lulus pada emulator-5558, build debug dan tes berhasil. [belum] Form lain, audit visual dan seluruh gerbang MVP.
+
+
 **Bukti kategori historis (2026-11-14 15:56 WIB):** [terverifikasi] Migrasi 13→14 mempertahankan dua belanja sintetis dengan ID kategori null, nilai, label dan tautan stok; pada database terpisah koreksi melalui Catatan menghilangkan ketidakpastian ringkasan tanpa menggandakan uang keluar. Kedua tes lulus bersama pada emulator-5558. [belum] Rangkaian migrasi hingga koreksi pada database yang sama, laporan/ekspor, backup/sync dan seluruh gerbang MVP. Lihat `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`.
 
 

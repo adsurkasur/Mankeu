@@ -28,6 +28,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -159,6 +162,10 @@ internal fun ContactSheet(
     var customer by rememberSaveable { mutableStateOf(existing?.isCustomer ?: true) }
     var supplier by rememberSaveable { mutableStateOf(existing?.isSupplier ?: false) }
     val duplicate = others.any { it.name.trim().equals(name.trim(), ignoreCase = true) }
+    val nameFocus = remember { FocusRequester() }
+    var nameFocused by remember { mutableStateOf(false) }
+    var nameTouched by rememberSaveable { mutableStateOf(false) }
+    val nameInvalid = nameTouched && (name.isBlank() || duplicate)
     MankeuSheet(
         title = stringResource(if (existing == null) R.string.contact_new_title else R.string.contact_edit_title),
         onDismiss = onDismiss,
@@ -167,13 +174,19 @@ internal fun ContactSheet(
             duplicate -> stringResource(R.string.contact_duplicate, name.trim())
             else -> null
         },
+        onInvalidConfirm = { nameTouched = true; nameFocus.requestFocus() },
         onConfirm = { onSave(ContactDraft(name, phone, address, notes, customer, supplier)) },
     ) {
         OutlinedTextField(
             name, { name = it }, singleLine = true, label = { Text(stringResource(R.string.contact_name)) },
-            isError = duplicate,
-            supportingText = if (duplicate) ({ Text(stringResource(R.string.contact_duplicate, name.trim())) }) else null,
-            modifier = Modifier.fillMaxWidth(),
+            isError = nameInvalid,
+            supportingText = if (nameInvalid) ({
+                Text(if (name.isBlank()) stringResource(R.string.form_need_name) else stringResource(R.string.contact_duplicate, name.trim()))
+            }) else null,
+            modifier = Modifier.fillMaxWidth().focusRequester(nameFocus).onFocusChanged { focus ->
+                if (nameFocused && !focus.isFocused) nameTouched = true
+                nameFocused = focus.isFocused
+            },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = customer, onClick = { customer = !customer }, label = { Text(stringResource(R.string.contact_customer)) })

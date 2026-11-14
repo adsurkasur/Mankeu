@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 15:59] [Codex (GPT-6) — validasi kontak]
+- **Goal**: Menyamakan validasi nama kontak dengan DEC-042.
+- **Actions**: Pesan nama kosong dan duplikat muncul setelah blur atau percobaan Simpan, hilang saat valid, dan Simpan memfokuskan nama. Menambah bukti tes dan memperbarui laporan kategori sebelumnya.
+- **Files**: ContactsScreen, ContactValidationTest, WIP, changelog dan laporan kategori.
+- **Verification**: [terverifikasi] Tiga tes gagal sebelum perubahan dan lulus setelahnya pada emulator-5558; assembleDebug dan assembleDebugAndroidTest lulus. [belum] Audit seluruh form, perangkat nyata dan MVP.
+
+
 ### [2026-11-14 15:56] [Codex (GPT-6) — bukti kategori historis]
 - **Goal**: Memperkuat bukti migrasi dan koreksi kategori lama melalui Catatan.
 - **Actions**: Menambah uji koreksi transaksi sintetis melalui Catatan sampai ringkasan, dan memeriksa nilai, label, ID kategori null serta tautan stok pada dua transaksi hasil migrasi 13→14.

@@ -1,5 +1,11 @@
 # Checkpoint kategori lama dan contoh validasi — 2026-11-14 14:50 WIB
 
+## Tambahan 2026-11-14 15:56 WIB
+
+- [terverifikasi] Migrasi 13→14 menjaga nilai, label, ID kategori null dan tautan stok pada dua belanja sintetis. Tes terpisah mengoreksi kategori melalui Catatan: ketidakpastian ringkasan hilang, uang keluar tetap Rp50.000 dan tidak ada transaksi ganda. Kedua tes lulus pada emulator-5558.
+- [belum] Migrasi sampai koreksi pada database yang sama, hasil visual laporan/PDF, backup/sync dan kesiapan produksi.
+
+
 ## Hasil
 
 - [terverifikasi] Belanja lama tanpa ID kategori yang bukan pelunasan ditandai tidak pasti meskipun nama cocok. Pada ITEM_COST laba dan BEP ditahan dari layar dan laporan; SIMPLE tetap menghitung laba kas, tetapi BEP ditahan bila sifat biaya belum pasti. Transaksi dan jumlah uang tidak dihapus atau diubah oleh penanda ini.

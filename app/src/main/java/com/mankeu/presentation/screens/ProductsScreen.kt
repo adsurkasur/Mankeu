@@ -191,7 +191,9 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
                 Text(stringResource(R.string.product_stock_negative_hint), color = semantic.danger, style = MaterialTheme.typography.bodySmall)
             }
             Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = onProduce, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_produce)) }
+                if (spec.kind == ItemKind.MADE) {
+                    FilledTonalButton(onClick = onProduce, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_produce)) }
+                }
                 FilledTonalButton(onClick = onCount, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_count_stock)) }
             }
             TextButton(onClick = onHistory) { Text(stringResource(R.string.product_stock_history)) }

@@ -445,7 +445,7 @@ fun MankeuApp(
     }
     // No product yet: say why the product editor opens instead of the picker (U4 review M-4).
     val onProduce: () -> Unit = {
-        if (state.products.isEmpty()) {
+        if (state.products.none { it.product.kind == "MADE" }) {
             viewModel.message.value = UiText.of(R.string.produce_need_product)
             openProduct(null)
         } else {
@@ -594,7 +594,7 @@ fun MankeuApp(
 
                                 Overlay.PICK_PRODUCT -> PickerPage(
                                     title = stringResource(R.string.produce_pick_title),
-                                    items = state.products,
+                                    items = state.products.filter { it.product.kind == "MADE" },
                                     itemLabel = { it.product.name },
                                     itemKey = { it.product.id },
                                     onPick = { produceId = it.product.id; overlay = Overlay.NONE },

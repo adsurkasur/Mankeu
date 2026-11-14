@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 05:58] [Codex (GPT-6) — aksi stok menurut jenis]
+- **Goal**: Mencegah barang dagangan ditawarkan sebagai barang yang diproduksi.
+- **Actions**: Menyembunyikan aksi produksi untuk barang dagangan dan membatasi pemilih produksi beranda pada barang buatan; hitung stok tetap tersedia.
+- **Files**: ProductsScreen, MankeuApp, string, PlanProductsTest dan changelog.
+- **Verification**: [verified] Tes layar awal gagal karena tombol produksi masih muncul; setelah perbaikan tes lulus 1/1 pada emulator-5558 dan build aplikasi/test lulus. [unknown] Alur belanja dagangan belum tersedia.
+
 ### [2026-11-15 05:55] [Codex (GPT-6) — membuat barang dagangan]
 - **Goal**: Memungkinkan pengguna memilih barang yang dibeli untuk dijual saat menambah produk.
 - **Actions**: Menambah pilihan jenis pada editor produk baru; dagangan tidak memerlukan resep atau hasil produksi, jenis disimpan di database. Produk lama tetap mempertahankan jenis dan resepnya.

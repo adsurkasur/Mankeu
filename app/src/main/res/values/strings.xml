@@ -56,7 +56,7 @@
     <string name="home_bill_no_name">Umum</string>
     <string name="home_bill_today">%1$s · hari ini</string>
     <string name="home_bill_yesterday">%1$s · kemarin</string>
-    <string name="produce_need_product">Buat produk dulu, lalu catat produksinya.</string>
+    <string name="produce_need_product">Buat barang yang diproduksi sendiri, lalu catat produksinya.</string>
     <string name="home_bills_receive">Terima bayar</string>
     <string name="home_bills_more">dan %1$d pelanggan lain</string>
     <string name="home_payable_title">Utang ke pemasok</string>

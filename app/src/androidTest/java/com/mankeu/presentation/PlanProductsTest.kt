@@ -83,6 +83,14 @@ class PlanProductsTest {
     }
 
     @Test
+    fun tradedProductOffersStockCountWithoutProduction() {
+        val record = ProductRecord(ProductEntity("k", "p", "Air", "botol", kind = "TRADED", createdAtEpochMillis = 0), listOf(ProductUnitEntity("u", "k", "botol", "1", 8000)), emptyList())
+        compose.setContent { MankeuTheme { com.mankeu.presentation.screens.ProductsScreen(listOf(record), emptyList(), true, "Utama", {}, {}, {}, { _, _, _ -> }, { _, _, _ -> }, { _, _, _, _, _, _ -> }, { _, _, _, _ -> }) } }
+        assertTrue(compose.onAllNodesWithText(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.getString(com.mankeu.R.string.product_count_stock), substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.getString(com.mankeu.R.string.product_produce), substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
     fun productWithTwoSaleUnitsRendersInThePlan() {
         val record = ProductRecord(
             product = ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),

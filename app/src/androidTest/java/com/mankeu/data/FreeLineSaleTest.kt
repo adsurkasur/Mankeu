@@ -121,6 +121,11 @@ class FreeLineSaleTest {
         assertEquals(5_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().hppRupiah)
     }
 
+    @Test fun newTradedProductPersistsItsKind() = runBlocking {
+        val id = repo.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 7000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        assertEquals("TRADED", db.financeDao().getProduct(id)?.kind)
+    }
+
     @Test fun tradedGoodsCanBeSoldWhileCostRemainsUnknown() = runBlocking {
         repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
         db.openHelper.writableDatabase.execSQL("UPDATE products SET kind='TRADED', manualCostRupiah=1000 WHERE id=?", arrayOf(productId))

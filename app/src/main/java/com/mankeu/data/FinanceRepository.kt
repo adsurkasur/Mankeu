@@ -122,6 +122,7 @@ data class ProductDraft(
     val recipe: List<RecipeLineDraft>,
     val targetPerMonthText: String? = null,
     val sellFromMonth: Int = 1,
+    val kind: com.mankeu.domain.ItemKind = com.mankeu.domain.ItemKind.MADE,
 )
 
 /** See [FinanceRepository.reviewImport]. */
@@ -451,6 +452,8 @@ class FinanceRepository(
                     sortOrder = dao.getProducts(projectId).size,
                     createdAtEpochMillis = now,
                     sellFromMonth = draft.sellFromMonth,
+                    kind = draft.kind.name,
+                    tracksStock = draft.kind != com.mankeu.domain.ItemKind.SERVICE,
                 ),
             )
         } else {

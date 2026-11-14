@@ -44,6 +44,7 @@ import com.mankeu.data.ProductDraft
 import com.mankeu.data.ProductRecord
 import com.mankeu.data.RecipeLineDraft
 import com.mankeu.data.SaleUnitDraft
+import com.mankeu.domain.ItemKind
 import com.mankeu.domain.ProductCosting
 import com.mankeu.domain.ProductSpec
 import com.mankeu.domain.RecipeLine
@@ -96,7 +97,7 @@ private val COMMON_BASE_UNITS = listOf("bungkus", "pcs", "porsi", "botol", "kg")
  * show when the editor is opened from Rencana usaha ([showPlan]); elsewhere they are kept as
  * stored. Final validation stays in `FinanceRepository.saveProduct`.
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ProductEditorScreen(
     existing: ProductRecord?,
@@ -110,6 +111,8 @@ fun ProductEditorScreen(
     snackbarHost: SnackbarHostState? = null,
 ) {
     var name by rememberSaveable { mutableStateOf(existing?.product?.name.orEmpty()) }
+    var kind by rememberSaveable { mutableStateOf(existing?.product?.kind ?: ItemKind.MADE.name) }
+    var kindExpanded by remember { mutableStateOf(false) }
     var baseUnit by rememberSaveable { mutableStateOf(existing?.product?.unit ?: COMMON_BASE_UNITS.first()) }
     var otherUnit by rememberSaveable { mutableStateOf(existing != null && existing.product.unit !in COMMON_BASE_UNITS) }
     var batchYield by rememberSaveable { mutableStateOf(existing?.product?.batchYieldText?.toInputNumber().orEmpty()) }
@@ -135,7 +138,7 @@ fun ProductEditorScreen(
         (existing?.units.orEmpty().sortedBy { it.sortOrder }.map { UnitInput(it.id, it.name, it.contentText.toInputNumber(), it.priceRupiah.toString()) }
             .ifEmpty { listOf(UnitInput(null, name = baseUnit, content = "1")) }).toMutableStateList()
     }
-    val snapshot = listOf(name, baseUnit, batchYield, target, sellFrom, lines.toList(), units.toList()).toString()
+    val snapshot = listOf(name, kind, baseUnit, batchYield, target, sellFrom, lines.toList(), units.toList()).toString()
     val initial = rememberSaveable { snapshot }
 
     val semantic = LocalMankeuSemanticColors.current
@@ -155,7 +158,7 @@ fun ProductEditorScreen(
     val yieldFocusRequester = remember { FocusRequester() }
     val unitFocusRequester = remember { FocusRequester() }
     val yieldQuantity = TransactionCalculation.parseQuantity(batchYield)
-    val recipe = lines.mapNotNull { line ->
+    val recipe = (if (kind == ItemKind.TRADED.name && existing == null) emptyList() else lines).mapNotNull { line ->
         if (line.materialId != null) {
             TransactionCalculation.parseQuantity(line.quantity)?.let { RecipeLine(materialName(line), line.materialId, it) }
         } else {
@@ -216,12 +219,13 @@ fun ProductEditorScreen(
                     baseUnit = baseUnit.trim(),
                     batchYieldText = batchYield,
                     units = units.filter { it.name.isNotBlank() }.map { SaleUnitDraft(it.id, it.name.trim(), it.content, it.price.toLongOrNull() ?: 0) },
-                    recipe = lines.map {
+                    recipe = (if (kind == ItemKind.TRADED.name && existing == null) emptyList() else lines).map {
                         if (it.materialId != null) RecipeLineDraft(materialName(it), it.materialId, quantityText = it.quantity)
                         else RecipeLineDraft(it.name.trim(), amountRupiah = it.amount.toLongOrNull())
                     },
                     targetPerMonthText = target.ifBlank { null },
                     sellFromMonth = sellFrom.toIntOrNull() ?: 1,
+                    kind = ItemKind.valueOf(kind),
                 ),
             )
         },
@@ -246,6 +250,23 @@ fun ProductEditorScreen(
             },
         )
 
+        if (existing == null) {
+            ExposedDropdownMenuBox(expanded = kindExpanded, onExpandedChange = { kindExpanded = it }) {
+                OutlinedTextField(
+                    value = stringResource(if (kind == ItemKind.TRADED.name) R.string.editor_kind_traded else R.string.editor_kind_made),
+                    onValueChange = {}, readOnly = true, label = { Text(stringResource(R.string.editor_kind)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = kindExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                )
+                ExposedDropdownMenu(expanded = kindExpanded, onDismissRequest = { kindExpanded = false }) {
+                    listOf(ItemKind.MADE, ItemKind.TRADED).forEach { option ->
+                        DropdownMenuItem(text = { Text(stringResource(if (option == ItemKind.TRADED) R.string.editor_kind_traded else R.string.editor_kind_made)) },
+                            onClick = { kind = option.name; if (option == ItemKind.TRADED) batchYield = "1"; kindExpanded = false })
+                    }
+                }
+            }
+        }
+        if (kind != ItemKind.TRADED.name || existing?.recipe?.isNotEmpty() == true) {
         // What goes into one batch.
         SectionLabel(stringResource(R.string.editor_recipe))
         Column {
@@ -294,6 +315,7 @@ fun ProductEditorScreen(
                 yieldFocused = focus.isFocused
             },
         )
+        }
         UnitPicker(value = baseUnit, options = COMMON_BASE_UNITS,
             onSelect = { unit ->
                 otherUnit = false

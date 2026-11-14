@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 05:55] [Codex (GPT-6) — membuat barang dagangan]
+- **Goal**: Memungkinkan pengguna memilih barang yang dibeli untuk dijual saat menambah produk.
+- **Actions**: Menambah pilihan jenis pada editor produk baru; dagangan tidak memerlukan resep atau hasil produksi, jenis disimpan di database. Produk lama tetap mempertahankan jenis dan resepnya.
+- **Files**: ProductEditorScreen, FinanceRepository, resources, ProductEditorTest, FreeLineSaleTest, rencana dan changelog.
+- **Verification**: [verified] Tes editor dan penyimpanan jenis 2/2 pada emulator-5558; build aplikasi/test dan diff check lulus. [unknown] Alur belanja barang dagangan dan integrasi rata-rata belum tersedia; perjalanan lengkap lintas layar belum diuji.
+
 ### [2026-11-15 05:50] [Codex (GPT-6) — penjualan dagangan dengan modal belum diketahui]
 - **Goal**: Menghilangkan jalan buntu pencatatan dagangan tanpa menampilkan laba semu.
 - **Actions**: Izinkan nota dagangan tanpa resep; harga manual dagangan tidak dianggap rata-rata, modal dicatat unknown dan laporan ITEM_COST tetap tidak lengkap.

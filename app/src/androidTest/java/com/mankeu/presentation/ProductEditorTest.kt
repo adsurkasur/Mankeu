@@ -106,6 +106,21 @@ class ProductEditorTest {
         click("Simpan")
     }
 
+    @Test fun newTradedGoodsDoNotRequireProductionRecipe() {
+        open()
+        click("Jenis barang")
+        click("Dibeli untuk dijual")
+        assertEquals(0, compose.onAllNodesWithText("Resep untuk sekali produksi", substring = true).fetchSemanticsNodes().size)
+        box("Nama produk").performTextInput("Air minum")
+        click("bungkus")
+        box("Harga jual").performTextInput("7000")
+        click("Simpan")
+        click("Simpan")
+        assertEquals(com.mankeu.domain.ItemKind.TRADED, saved?.kind)
+        assertEquals("1", saved?.batchYieldText)
+        assertEquals(emptyList<com.mankeu.data.RecipeLineDraft>(), saved?.recipe)
+    }
+
     @Test fun saleUnitFieldsReportErrorsAfterBlurAndFocusOnSave() {
         open()
         click("+ Satuan jual")

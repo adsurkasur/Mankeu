@@ -557,6 +557,9 @@
     <string name="count_stock_field">Quantity now (%1$s)</string>
     <string name="editor_title_new">New product</string>
     <string name="editor_title_edit">Edit product</string>
+    <string name="editor_kind">Item type</string>
+    <string name="editor_kind_made">Made in-house</string>
+    <string name="editor_kind_traded">Bought for resale</string>
     <string name="editor_name">Product name</string>
     <string name="editor_base_unit">Smallest unit</string>
     <string name="editor_recipe">Recipe for one production run</string>

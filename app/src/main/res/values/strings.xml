@@ -559,6 +559,9 @@
     <string name="count_stock_field">Jumlah sekarang (%1$s)</string>
     <string name="editor_title_new">Produk baru</string>
     <string name="editor_title_edit">Ubah produk</string>
+    <string name="editor_kind">Jenis barang</string>
+    <string name="editor_kind_made">Dibuat sendiri</string>
+    <string name="editor_kind_traded">Dibeli untuk dijual</string>
     <string name="editor_name">Nama produk</string>
     <string name="editor_base_unit">Satuan terkecil</string>
     <string name="editor_recipe">Resep untuk sekali produksi</string>

@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-15 00:52] [Codex (GPT-6) — keputusan modal dagangan]
+- **Goal**: Mencatat pilihan K-8 agar pengembangan MVP memakai dasar yang dipilih pemilik.
+- **Actions**: Pemilik memilih rata-rata harga beli; mencatat bahwa algoritme rinci dan dampak penyimpanan masih harus dirancang dan diuji.
+- **Files**: Rencana induk, WIP, DEC-053 dan activity log.
+- **Verification**: [user-confirmed] Pilihan B diberikan langsung oleh pemilik. [belum] Implementasi dan tes PK-1.4. Perubahan tes nota yang sedang dikerjakan tidak masuk commit ini.
+
+
 ### [2026-11-15 00:50] [Codex (GPT-6) — prioritas MVP dan baris kosong]
 - **Goal**: Menerapkan urutan prioritas pemilik dan menutup perubahan baris yang sudah dikerjakan.
 - **Actions**: Mendokumentasikan prioritas fitur → UI/UX → multi-skala; baris dengan nilai kosong tidak lagi menyisihkan separuh lebar untuk nilai tersebut.

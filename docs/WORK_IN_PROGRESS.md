@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Keputusan modal dagangan K-8 (2026-11-15 00:52 WIB):** [user-confirmed] Gunakan rata-rata harga beli. [belum] Rumus rinci serta perlakuan stok awal, koreksi, pembulatan dan perjalanan PK-1.4; jangan memakai harga terakhir sebagai keputusan pemilik. Pekerjaan saat ini: nota bebas, PK-2.4.
+
+
 **Prioritas pemilik (2026-11-15 00:50 WIB):** [user-confirmed] Urutan kerja adalah (1) lengkapi dan fungsikan fitur MVP beserta tes penerimaan yang relevan, (2) poles seluruh UI/UX, (3) penyempurnaan multi-skala. Tunda audit skala tambahan sampai tahap ketiga kecuali diperlukan memperbaiki penghalang fitur. Lanjutkan mandiri, gunakan satu AVD sintetis dan jangan merge ke main atau sentuh superproject.
 
 

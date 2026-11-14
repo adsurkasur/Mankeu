@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-053] Dasar modal barang dagangan
+- **Tanggal**: 2026-11-15; **status**: keputusan pemilik, implementasi belum selesai.
+- **Konteks**: K-8 menawarkan harga beli terakhir atau rata-rata.
+- **Keputusan**: Pemilik memilih rata-rata harga beli untuk modal barang dagangan.
+- **Alasan dan alternatif**: Pemilik memilih rata-rata yang lebih stabil dibanding harga terakhir. Perhitungan rinci, perubahan persediaan dan pembulatan belum ditetapkan atau diverifikasi.
+- **Komponen**: PK-1.4, biaya produk dagangan, persediaan, laporan, impor/ekspor dan tes.
+
+
 ### [DEC-052] Urutan prioritas menuju MVP
 - **Tanggal**: 2026-11-15; **status**: dikonfirmasi pemilik.
 - **Konteks**: Pemilik meminta agar pengembangan tidak didominasi pengujian visual dan skala saat fitur inti masih belum lengkap.

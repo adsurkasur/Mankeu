@@ -221,6 +221,8 @@ Batas jawab: sebelum PK-2.2.
 
 ### K-8. Modal barang dagangan
 
+**Keputusan pemilik 2026-11-15:** B, rata-rata harga beli. [user-confirmed] Rumus rinci, perlakuan stok awal/koreksi, pembulatan dan bukti alur masih harus dirancang dan diuji sebelum PK-1.4 dinyatakan selesai.
+
 - **A (rekomendasi).** Harga beli terakhir, sama dengan aturan bahan sekarang (spec #20). Akibat: mudah dijelaskan
   ("modalnya ikut harga belanja terakhir"); untung bergeser saat harga beli berubah.
 - B. Rata-rata harga beli. Akibat: lebih halus; sulit dicocokkan pengguna dengan hitungan tangan.

@@ -24,6 +24,21 @@ class PlanProductsTest {
     val compose = createComposeRule()
 
     @Test
+    fun missingCostIsNotDisplayedAsZeroInProductRow() {
+        val record = ProductRecord(
+            product = ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "1", createdAtEpochMillis = 0),
+            units = listOf(ProductUnitEntity("k-u0", "k", "bungkus", "1", 8_000, 0)),
+            recipe = emptyList(),
+        )
+        val project = ProjectEntity("p", "b", "Utama", isGeneral = true, createdAtEpochMillis = 0)
+        val state = AppUiState(isLoading = false, projects = listOf(project), selectedProjectId = "p", products = listOf(record))
+        compose.setContent { MankeuTheme { PlanScreen(state, {}, { _, _, _, _, _, _, _, _ -> }, {}, { _, _ -> }, {}) } }
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Keripik", substring = true))
+        assertTrue(compose.onAllNodesWithText("—", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText("Rp0", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
     fun productWithTwoSaleUnitsRendersInThePlan() {
         val record = ProductRecord(
             product = ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),
@@ -43,5 +58,6 @@ class PlanProductsTest {
         // Composing the product row is what crashed; it must be built (a scroll may be needed to reach it).
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Keripik", substring = true))
         assertTrue(compose.onAllNodesWithText("Keripik", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText("Rp6.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
     }
 }

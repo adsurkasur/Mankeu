@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:14] [Codex (GPT-6) — modal belum lengkap pada daftar rencana]
+- **Goal**: Mencegah nominal parsial ditampilkan sebagai modal pasti dalam daftar produk Rencana.
+- **Actions**: Mengganti nominal modal yang tidak lengkap dengan tanda kosong dan mempertahankan penjelasan resep belum lengkap; memeriksa nominal resep lengkap.
+- **Files**: PlanScreen, PlanProductsTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Uji modal kosong gagal sebelumnya; kedua uji modal kosong dan resep lengkap lulus pada emulator-5558. Build debug/androidTest dan diff check lulus. [belum] Agregasi hasil kelayakan rencana dengan modal belum lengkap sedang ditelusuri; seluruh MVP belum terbukti.
+
+
 ### [2026-11-14 16:12] [Codex (GPT-6) — modal belum lengkap di editor]
 - **Goal**: Mencegah editor produk menampilkan biaya parsial atau harga jual sebagai untung pasti.
 - **Actions**: Menahan pratinjau modal dan untung per satuan hingga resep lengkap; menambah tes resep kosong, bahan tanpa harga dan kontrol resep lengkap. Mencatat tampilan Rencana untuk tindak lanjut.

@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Modal pada daftar rencana (2026-11-14 16:14 WIB):** [terverifikasi] Nominal modal yang belum lengkap diganti tanda kosong dengan peringatan, sementara resep lengkap tetap menampilkan nominal; PlanProductsTest 2/2 pada emulator-5558 dan build lulus. [belum] Telusuri agregasi kelayakan rencana saat modal belum lengkap dan seluruh gerbang MVP.
+
+
 **Modal di editor produk (2026-11-14 16:12 WIB):** [terverifikasi] Pratinjau modal dan untung ditahan bila resep kosong atau belum lengkap; dua tes baru dan kontrol resep lengkap 3/3 pada emulator-5558, build dan JVM 196/196 lulus. [belum] `PlanScreen` masih menyertakan nominal HPP parsial dalam baris meski ada peringatan; perbaiki sebelum menyatakan perhitungan rencana aman. Audit visual dan MVP belum selesai.
 
 

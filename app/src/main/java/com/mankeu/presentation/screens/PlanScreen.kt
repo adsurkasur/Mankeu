@@ -157,7 +157,7 @@ fun PlanScreen(
                         R.string.plan_product_row,
                         (row.mainUnit?.priceRupiah ?: 0).toRupiah(),
                         row.mainUnit?.name ?: row.product.unit,
-                        (cost.perSaleUnit.firstOrNull()?.hppRupiah ?: 0L).toRupiah(),
+                        cost.perSaleUnit.firstOrNull()?.hppRupiah?.takeIf { cost.complete }?.toRupiah() ?: "—",
                         row.product.targetPerMonthText ?: "-",
                     )
                     // An HPP missing a price or a recipe is a floor, not the HPP: say so (Task 2 review M-3).

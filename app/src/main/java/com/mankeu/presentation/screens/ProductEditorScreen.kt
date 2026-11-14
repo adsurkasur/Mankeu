@@ -457,6 +457,18 @@ private fun RecipeLineSheet(line: LineInput, materials: List<StockItem>, onDismi
 @Composable
 private fun SaleUnitSheet(unit: UnitInput, baseUnit: String, onDismiss: () -> Unit, onSave: (UnitInput) -> Unit, onDelete: (() -> Unit)?) {
     var draft by remember(unit) { mutableStateOf(unit.copy(content = unit.content.ifBlank { "1" })) }
+    val nameFocus = remember { FocusRequester() }
+    val contentFocus = remember { FocusRequester() }
+    val priceFocus = remember { FocusRequester() }
+    var nameFocused by remember { mutableStateOf(false) }
+    var contentFocused by remember { mutableStateOf(false) }
+    var priceFocused by remember { mutableStateOf(false) }
+    var nameTouched by rememberSaveable { mutableStateOf(false) }
+    var contentTouched by rememberSaveable { mutableStateOf(false) }
+    var priceTouched by rememberSaveable { mutableStateOf(false) }
+    val invalidName = draft.name.isBlank()
+    val invalidContent = TransactionCalculation.parseQuantity(draft.content) == null
+    val invalidPrice = (draft.price.toLongOrNull() ?: 0) <= 0
     LineEditSheet(
         title = stringResource(R.string.editor_unit_title),
         onDismiss = onDismiss,
@@ -468,24 +480,47 @@ private fun SaleUnitSheet(unit: UnitInput, baseUnit: String, onDismiss: () -> Un
             else -> null
         },
         onDelete = onDelete,
+        onInvalidSave = {
+            when {
+                invalidName -> { nameTouched = true; nameFocus.requestFocus() }
+                invalidContent -> { contentTouched = true; contentFocus.requestFocus() }
+                invalidPrice -> { priceTouched = true; priceFocus.requestFocus() }
+            }
+        },
     ) {
         OutlinedTextField(
             value = draft.name, onValueChange = { draft = draft.copy(name = it) }, singleLine = true,
             label = { Text(stringResource(R.string.editor_unit_name)) },
+            isError = nameTouched && invalidName,
+            supportingText = if (nameTouched && invalidName) ({ Text(stringResource(R.string.form_need_name)) }) else null,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(nameFocus).onFocusChanged { focus ->
+                if (nameFocused && !focus.isFocused) nameTouched = true
+                nameFocused = focus.isFocused
+            },
         )
         OutlinedTextField(
             value = draft.content, onValueChange = { draft = draft.copy(content = sanitizeDecimal(it)) }, singleLine = true,
             label = { Text(stringResource(R.string.editor_unit_content)) },
             suffix = { Text(baseUnit) },
+            isError = contentTouched && invalidContent,
+            supportingText = if (contentTouched && invalidContent) ({ Text(stringResource(R.string.form_need_content)) }) else null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(contentFocus).onFocusChanged { focus ->
+                if (contentFocused && !focus.isFocused) contentTouched = true
+                contentFocused = focus.isFocused
+            },
         )
         MoneyInput(
             label = stringResource(R.string.editor_unit_price),
             value = draft.price.toLongOrNull(),
             onValueChange = { draft = draft.copy(price = it?.toString().orEmpty()) },
+            isError = priceTouched && invalidPrice,
+            supportingText = if (priceTouched && invalidPrice) ({ Text(stringResource(R.string.form_need_price)) }) else null,
+            fieldModifier = Modifier.focusRequester(priceFocus).onFocusChanged { focus ->
+                if (priceFocused && !focus.isFocused) priceTouched = true
+                priceFocused = focus.isFocused
+            },
             imeAction = ImeAction.Done,
         )
     }

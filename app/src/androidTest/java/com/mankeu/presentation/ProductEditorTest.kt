@@ -106,6 +106,34 @@ class ProductEditorTest {
         click("Simpan")
     }
 
+    @Test fun saleUnitFieldsReportErrorsAfterBlurAndFocusOnSave() {
+        open()
+        click("+ Satuan jual")
+        click("Simpan")
+        box("Satuan").assertIsFocused()
+        exists("Isi namanya dulu.")
+        box("Satuan").performTextInput("dus")
+        box("Harga jual").performClick()
+        box("Isi").performClick()
+        exists("Isi harga lebih dari Rp0 dulu.")
+        box("Harga jual").performTextInput("300000")
+        click("Simpan")
+        exists("dus")
+    }
+
+    @Test fun saleUnitSaveFocusesInvalidContentThenPrice() {
+        open()
+        click("+ Satuan jual")
+        box("Satuan").performTextInput("dus")
+        box("Isi").performTextClearance()
+        click("Simpan")
+        box("Isi").assertIsFocused().performTextInput("12")
+        click("Simpan")
+        box("Harga jual").assertIsFocused().performTextInput("60000")
+        click("Simpan")
+        exists("dus")
+    }
+
     @Test fun recipePerBatchGivesHppPerSaleUnitAndSaves() {
         open()
         // On open: name and yield are the only boxes; recipe and units are rows and buttons.

@@ -121,6 +121,7 @@ fun LineEditSheet(
     onSave: () -> Unit,
     saveBlockedReason: String? = null,
     onDelete: (() -> Unit)? = null,
+    onInvalidSave: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
@@ -129,6 +130,7 @@ fun LineEditSheet(
         title = title,
         onDismiss = onDismiss,
         confirmBlockedReason = saveBlockedReason,
+        onInvalidConfirm = onInvalidSave,
         onConfirm = onSave,
         startAction = onDelete?.let {
             {

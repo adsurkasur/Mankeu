@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Validasi satuan jual (2026-11-14 16:02 WIB):** [terverifikasi] Nama, isi dan harga pada sheet satuan jual mengikuti validasi blur dan fokus saat Simpan. ProductEditorTest 9/9 dan tes fokus isi/harga tambahan 1/1 lulus pada emulator-5558; build debug dan androidTest lulus. [belum] Form lain, audit visual dan seluruh gerbang MVP.
+
+
 **Validasi kontak (2026-11-14 15:59 WIB):** [terverifikasi] Nama kosong dan duplikat mengikuti validasi blur, koreksi dan fokus saat Simpan; tiga tes instrumentasi lulus pada emulator-5558, build debug dan tes berhasil. [belum] Form lain, audit visual dan seluruh gerbang MVP.
 
 

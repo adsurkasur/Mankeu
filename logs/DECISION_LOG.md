@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-046] Fokus validasi pada sheet baris
+- **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
+- **Konteks**: Form satuan jual dalam LineEditSheet memerlukan fokus pada kolom invalid sesuai DEC-042.
+- **Keputusan**: Teruskan callback opsional validasi ke MankeuSheet; pemanggil tanpa callback tetap memakai pesan umum.
+- **Alasan dan alternatif**: Form pemilik mengetahui urutan kolom dan dapat menunjukkan pesan yang tepat tanpa mengubah perilaku sheet lain.
+- **Komponen**: LineEditSheet dan editor produk.
+
+
 ### [DEC-045] Fokus pada kolom input uang
 - **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
 - **Konteks**: MoneyInput membungkus kolom dan chip; fokus harus diarahkan ke kolom aktual untuk memenuhi DEC-042.

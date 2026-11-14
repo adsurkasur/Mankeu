@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:02] [Codex (GPT-6) — validasi satuan jual]
+- **Goal**: Melengkapi validasi kolom pada satuan jual produk.
+- **Actions**: Menerapkan pesan blur dan fokus Simpan untuk nama, isi dan harga; menambah callback opsional LineEditSheet dan tes alur.
+- **Files**: ProductEditorScreen, Rows, ProductEditorTest, WIP, changelog dan DEC-046.
+- **Verification**: [terverifikasi] Skenario awal gagal sebelum perubahan; suite ProductEditorTest 9/9 dan tes fokus isi/harga 1/1 lulus pada emulator-5558, build debug/androidTest lulus. [belum] Form lain dan MVP.
+
+
 ### [2026-11-14 15:59] [Codex (GPT-6) — validasi kontak]
 - **Goal**: Menyamakan validasi nama kontak dengan DEC-042.
 - **Actions**: Pesan nama kosong dan duplikat muncul setelah blur atau percobaan Simpan, hilang saat valid, dan Simpan memfokuskan nama. Menambah bukti tes dan memperbarui laporan kategori sebelumnya.

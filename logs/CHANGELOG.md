@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Nama, isi dan harga satuan jual menunjukkan kesalahan setelah kolom ditinggalkan dan menerima fokus saat Simpan jika belum valid.
 - Nama kontak kosong atau duplikat ditandai setelah kolom ditinggalkan atau Simpan ditekan; kesalahan hilang ketika nama valid.
 - Form uang dan belanja menampilkan kesalahan jumlah, kuantitas dan harga setelah kolom ditinggalkan; Simpan memfokuskan kolom pertama yang belum valid.
 - Form tambah barang dan editor produk menunjukkan kesalahan pada kolom yang ditinggalkan serta memfokuskan kolom wajib saat Simpan; perluasan ke form lain masih berlangsung (DEC-042/044).

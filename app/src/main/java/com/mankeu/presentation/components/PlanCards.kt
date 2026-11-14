@@ -175,6 +175,13 @@ private fun ratioText(ratio: BigDecimal?, undefined: String) = ratio?.toDisplayQ
 /** The plan at a glance: status, monthly break-even against the target, profit and capital need. */
 @Composable
 fun PlanFeasibilityCard(plan: PlanAnalysis, modifier: Modifier = Modifier, onOpenPlan: (() -> Unit)? = null) {
+    if (plan.costIncomplete) {
+        ReportCard(stringResource(R.string.feasibility_title), modifier) {
+            Text(stringResource(R.string.plan_cost_incomplete), color = MaterialTheme.colorScheme.error)
+            if (onOpenPlan != null) FilledTonalButton(onClick = onOpenPlan) { Text(stringResource(R.string.plan_open)) }
+        }
+        return
+    }
     val status = feasibilityStatusOf(plan.revenueCostRatio)
     val undefined = stringResource(R.string.reports_undefined)
     Card(
@@ -247,6 +254,12 @@ fun PlanFeasibilityCard(plan: PlanAnalysis, modifier: Modifier = Modifier, onOpe
  */
 @Composable
 fun PlanBreakdownCard(plan: PlanAnalysis, modifier: Modifier = Modifier) {
+    if (plan.costIncomplete) {
+        ReportCard(stringResource(R.string.plan_breakdown_title), modifier) {
+            Text(stringResource(R.string.plan_cost_incomplete), color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
     val undefined = stringResource(R.string.reports_undefined)
     ReportCard(stringResource(R.string.plan_breakdown_title), modifier) {
         Text(stringResource(R.string.plan_fixed_header), fontWeight = FontWeight.Bold)
@@ -364,7 +377,7 @@ fun ActualMonthCard(
             } else {
                 ReportRow(stringResource(R.string.actual_revenue), actual.revenueRupiah)
                 Text(
-                    stringResource(if (noSales && products.isNotEmpty()) R.string.actual_no_sales else R.string.actual_no_bep),
+                    stringResource(if (actual.bepCostIncomplete) R.string.actual_bep_cost_incomplete else if (noSales && products.isNotEmpty()) R.string.actual_no_sales else R.string.actual_no_bep),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

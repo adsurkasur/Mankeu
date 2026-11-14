@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:23] [Codex (GPT-6) — rencana dengan modal belum lengkap]
+- **Goal**: Mencegah kelayakan dan titik impas semu ketika modal produk belum lengkap.
+- **Actions**: Menandai kelengkapan biaya pada input/hasil rencana; menahan kesimpulan, perbandingan dan angka turunan dalam layar, Excel dan PDF; titik impas aktual menahan hasil jika produk terjual belum memiliki biaya standar lengkap tanpa menyembunyikan laba aktual yang valid.
+- **Files**: PlanAssembly, BusinessPlan, PlanCards, ReportsScreen, eksportir Excel/PDF, resource, tes domain/layar/ekspor, WIP, laporan, changelog dan DEC-048.
+- **Verification**: [terverifikasi] Tes domain, Excel, layar dan pembangkitan PDF sintetis lulus; lima tes instrumentasi pada emulator-5558, 199/199 JVM, build debug/androidTest; teks PDF diperiksa menggunakan pdftotext. Satu tes kosakata awal gagal karena istilah English dan diperbaiki. Lint lulus. [belum] Pemeriksaan visual PDF, input manual/jenis barang pada UI, semua jalur ekspor/sinkron dan MVP.
+
+
 ### [2026-11-14 16:14] [Codex (GPT-6) — modal belum lengkap pada daftar rencana]
 - **Goal**: Mencegah nominal parsial ditampilkan sebagai modal pasti dalam daftar produk Rencana.
 - **Actions**: Mengganti nominal modal yang tidak lengkap dengan tanda kosong dan mempertahankan penjelasan resep belum lengkap; memeriksa nominal resep lengkap.

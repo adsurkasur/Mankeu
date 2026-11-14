@@ -39,6 +39,22 @@ class PlanAssemblyTest {
         )
 
     @Test
+    fun `incomplete recipe marks the entire plan incomplete`() {
+        val withoutRecipe = kopi.copy(recipe = emptyList())
+        val inputs = PlanAssembly.planInputs(null, listOf(withoutRecipe), emptyList(), categories, today, emptyMap())
+        val plan = PlanCalculator.analyse(inputs)
+        org.junit.Assert.assertTrue(plan.costIncomplete)
+        org.junit.Assert.assertNull(plan.feasible)
+        org.junit.Assert.assertEquals(listOf("Kopi susu"), plan.products.filter { !it.product.costKnown }.map { it.product.name })
+        val partlyPriced = kopi.copy(recipe = kopi.recipe + ProductRecipeLineEntity("missing", "kopi", "Susu", stockItemId = "missing", quantityText = "1"))
+        val partial = PlanCalculator.analyse(PlanAssembly.planInputs(null, listOf(partlyPriced), emptyList(), categories, today, emptyMap()))
+        org.junit.Assert.assertTrue(partial.costIncomplete)
+        org.junit.Assert.assertNull(partial.feasible)
+        val complete = PlanCalculator.analyse(PlanAssembly.planInputs(null, listOf(kopi), emptyList(), categories, today, emptyMap()))
+        org.junit.Assert.assertFalse(complete.costIncomplete)
+    }
+
+    @Test
     fun `stored plan reproduces the lecturer benchmark`() {
         val inputs = PlanAssembly.planInputs(
             project = null,

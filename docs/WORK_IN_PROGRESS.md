@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Kelayakan dan modal belum lengkap (2026-11-14 16:23 WIB):** [terverifikasi] Status biaya tidak lengkap mencegah kesimpulan rencana dan perbandingan pada layar serta angka turunan Excel/PDF; titik impas aktual ditahan bila biaya standar produk terjual belum lengkap. Lima tes layar/PDF pada emulator-5558, 199/199 JVM dan build lulus; teks PDF sintetis diperiksa. Laporan `docs/superpowers/reports/2026-11-14-kelayakan-modal-belum-lengkap.md`. [belum] Verifikasi visual PDF, dukungan modal manual/harga dagangan di rencana, sinkronisasi dan seluruh MVP.
+
+
 **Modal pada daftar rencana (2026-11-14 16:14 WIB):** [terverifikasi] Nominal modal yang belum lengkap diganti tanda kosong dengan peringatan, sementara resep lengkap tetap menampilkan nominal; PlanProductsTest 2/2 pada emulator-5558 dan build lulus. [belum] Telusuri agregasi kelayakan rencana saat modal belum lengkap dan seluruh gerbang MVP.
 
 

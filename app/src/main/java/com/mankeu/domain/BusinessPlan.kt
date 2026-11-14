@@ -29,6 +29,8 @@ data class PlanProduct(
     val components: List<CostComponent>,
     /** Month of the plan period (1 = first) from which it sells; before that it neither sells nor buys ingredients. */
     val sellFromMonth: Int = 1,
+    /** False when the cost used in this plan is not known completely. */
+    val costKnown: Boolean = true,
 ) {
     val variableCostPerUnit: BigDecimal get() = components.fold(BigDecimal.ZERO) { sum, c -> sum + c.perUnit }
     val contributionMargin: BigDecimal get() = BigDecimal.valueOf(priceRupiah) - variableCostPerUnit
@@ -108,7 +110,8 @@ data class PlanAnalysis(
     /** Whole-period cash summary, same shape as a posted book (depreciation is not cash). */
     val summary: FinancialSummary,
 ) {
-    val feasible: Boolean? get() = benefitCostRatio?.let { it.signum() >= 0 }
+    val costIncomplete: Boolean get() = products.any { !it.product.costKnown }
+    val feasible: Boolean? get() = if (costIncomplete) null else benefitCostRatio?.let { it.signum() >= 0 }
 
     /** Some product starts selling after month 1: monthly figures are period averages, unit BEP is per selling month. */
     val seasonal: Boolean get() = products.any { it.product.sellFromMonth > 1 }
@@ -320,6 +323,7 @@ data class ActualMonthAnalysis(
     val profitRupiah: Long,
     val revenueCostRatio: BigDecimal?,
     val benefitCostRatio: BigDecimal?,
+    val bepCostIncomplete: Boolean = false,
 )
 
 object ActualBepCalculator {
@@ -337,6 +341,7 @@ object ActualBepCalculator {
         val units = (actual.unitsSold.keys + inferred.keys).associateWith { (actual.unitsSold[it] ?: BigDecimal.ZERO) + (inferred[it] ?: BigDecimal.ZERO) }
             .filterKeys { it in byId }
         val totalUnits = units.values.fold(BigDecimal.ZERO, BigDecimal::add)
+        val bepCostIncomplete = units.any { (id, quantity) -> quantity.signum() > 0 && !byId.getValue(id).costKnown }
         val standardVc = units.entries.sumOf { (id, q) -> PlanCalculator.money(q * byId.getValue(id).variableCostPerUnit) }
 
         // BEP in rupiah at the actual mix: FC / weighted contribution-margin ratio.
@@ -345,7 +350,7 @@ object ActualBepCalculator {
         // The base is fixed cost plus variable spend outside any recipe (transport), as in the plan
         // (plan_bep_base_note), so "impas" means the profit row is zero (Task 4 review I-2).
         val bepBase = fc + actual.otherVariableCostRupiah
-        val bep = if (totalUnits.signum() > 0 && unitCm.signum() > 0) {
+        val bep = if (!bepCostIncomplete && totalUnits.signum() > 0 && unitCm.signum() > 0) {
             BigDecimal.valueOf(bepBase).multiply(unitRevenue).divide(unitCm, 0, RoundingMode.HALF_UP).toLong()
         } else null
 
@@ -364,6 +369,7 @@ object ActualBepCalculator {
             profitRupiah = profit,
             revenueCostRatio = PlanCalculator.ratio(actual.revenueRupiah, totalCost),
             benefitCostRatio = PlanCalculator.ratio(profit, totalCost),
+            bepCostIncomplete = bepCostIncomplete,
         )
     }
 }

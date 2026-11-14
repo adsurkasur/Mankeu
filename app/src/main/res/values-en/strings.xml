@@ -642,6 +642,8 @@
     <string name="plan_section_asset_hint">The cost of equipment used for years is spread across the months it is used.</string>
     <string name="plan_section_capital">Capital contributions</string>
     <string name="plan_section_capital_hint">Owner money paid into the business. Not income and does not affect profit.</string>
+    <string name="actual_bep_cost_incomplete">The sales threshold cannot be calculated because the costs of sold products are incomplete.</string>
+    <string name="plan_cost_incomplete">Plan feasibility cannot be calculated because product costs are incomplete. Complete product recipes and material prices.</string>
     <string name="plan_product_row">%1$s per %2$s · cost %3$s · target %4$s/month</string>
     <string name="plan_product_sell_from">Sells from month</string>
     <string name="plan_product_sell_from_hint">1 = first month of the period. Enter 3 if the harvest comes in month three; earlier months have no sales.</string>

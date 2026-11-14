@@ -39,7 +39,9 @@ class FinancePdfExporter {
                 report.section(if (mode == BookMode.PROJECTION) "Proyeksi" else "Realisasi", followingHeight = 300f)
                 report.subsection("Ringkasan")
                 val month = book.month
-                if (month == null) {
+                if (mode == BookMode.PROJECTION && bundle.plan?.costIncomplete == true) {
+                    report.paragraph("Kelayakan rencana belum dapat dihitung karena modal barang belum lengkap.")
+                } else if (month == null) {
                     report.keyValue("Kas", money(book.summary.cashBalanceRupiah))
                     report.keyValue("Pendapatan", money(book.summary.operatingIncomeRupiah))
                     report.keyValue("Beban", money(book.summary.operatingExpenseRupiah))
@@ -50,9 +52,11 @@ class FinancePdfExporter {
                     month.reportLines().forEach { (label, value) -> report.keyValue(label, money(value)) }
                     if (month.profit.profitIncomplete) report.paragraph(month.profit.incompleteWarning())
                 }
-                report.keyValue("Arus kas operasi", money(book.summary.operatingCashFlowRupiah))
-                report.keyValue("Arus kas investasi", money(book.summary.investingCashFlowRupiah))
-                report.keyValue("Arus kas pendanaan", money(book.summary.financingCashFlowRupiah))
+                if (mode != BookMode.PROJECTION || bundle.plan?.costIncomplete != true) {
+                    report.keyValue("Arus kas operasi", money(book.summary.operatingCashFlowRupiah))
+                    report.keyValue("Arus kas investasi", money(book.summary.investingCashFlowRupiah))
+                    report.keyValue("Arus kas pendanaan", money(book.summary.financingCashFlowRupiah))
+                }
 
                 report.subsection("Anggaran (${book.budgets.count { !it.archived }} item aktif)")
                 val categoryNames = bundle.categories.associate { it.id to it.name }
@@ -76,6 +80,10 @@ class FinancePdfExporter {
 
             bundle.plan?.let { plan ->
                 report.section("Rencana Usaha & Titik Impas (BEP)", followingHeight = 190f)
+                if (plan.costIncomplete) {
+                    report.paragraph("Kelayakan rencana belum dapat dihitung karena modal barang belum lengkap.")
+                    return@let
+                }
                 report.paragraph(
                     "Dihitung dari produk, resep biaya variabel, dan rencana biaya tetap unit usaha ini, per bulan, " +
                         "untuk periode ${plan.months.first()} s.d. ${plan.months.last()} (${plan.months.size} bulan).",

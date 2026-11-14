@@ -32,7 +32,8 @@ object PlanAssembly {
     fun products(rows: List<ProductRecord>, materialPrices: Map<String, Long>): List<PlanProduct> = rows.mapNotNull { row ->
         val spec = row.spec
         val main = spec.saleUnits.firstOrNull() ?: return@mapNotNull null
-        val hpp = ProductCosting.cost(spec, materialPrices).perSaleUnit.first().hppRupiah
+        val cost = ProductCosting.cost(spec, materialPrices)
+        val hpp = cost.perSaleUnit.first().hppRupiah
         PlanProduct(
             id = spec.id,
             name = spec.name,
@@ -41,6 +42,7 @@ object PlanAssembly {
             targetPerMonth = TransactionCalculation.parseQuantity(row.product.targetPerMonthText),
             components = if (hpp > 0) listOf(CostComponent("HPP", hpp, BigDecimal.ONE)) else emptyList(),
             sellFromMonth = row.product.sellFromMonth,
+            costKnown = cost.complete,
         )
     }
 

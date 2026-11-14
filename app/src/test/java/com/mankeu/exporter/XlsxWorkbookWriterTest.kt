@@ -30,6 +30,25 @@ class XlsxWorkbookWriterTest {
     }
 
     @Test
+    fun `incomplete product costs withhold derived projection and feasibility from workbook`() {
+        val product = com.mankeu.data.ProductRecord(
+            com.mankeu.data.ProductEntity("p", "u", "Keripik", "bungkus", batchYieldText = "1", targetPerMonthText = "10", createdAtEpochMillis = 0),
+            listOf(com.mankeu.data.ProductUnitEntity("pu", "p", "bungkus", "1", 8_000)), emptyList(),
+        )
+        val project = com.mankeu.data.ProjectEntity("u", "b", "Utama", true, createdAtEpochMillis = 0)
+        val plan = com.mankeu.domain.PlanCalculator.analyse(com.mankeu.data.PlanAssembly.planInputs(project, listOf(product), emptyList(), emptyList(), java.time.LocalDate.of(2026, 11, 14), emptyMap()))
+        val projection = FinanceExportBook(com.mankeu.data.BookEntity("book", "u", "PROJECTION", 0), emptyList(), emptyList(), plan.summary)
+        val bundle = FinanceExportBundle(com.mankeu.data.BusinessEntity("b", "Usaha", createdAtEpochMillis = 0), project, emptyList(), listOf(projection), emptyList(), emptyList(), emptyList(), products = listOf(product), plan = plan)
+        val workbook = XlsxWorkbookReader().read(FinanceWorkbookExporter().export(bundle).inputStream())
+        for (name in listOf("Laporan", "Kelayakan")) {
+            val sheet = workbook.sheets.single { it.name == name }
+            val text = sheet.rows.flatMap { row -> (0..2).mapNotNull { row.cellAt(it)?.text } }
+            assertTrue(text.any { it.contains("Modal barang belum lengkap") })
+            assertTrue(text.none { it == "Laba / bulan" || it == "Laba atau rugi" || it == "Status kelayakan" })
+        }
+    }
+
+    @Test
     fun `duplicate and invalid sheet names are normalized uniquely`() {
         val bytes = XlsxWorkbookWriter().write(
             listOf(

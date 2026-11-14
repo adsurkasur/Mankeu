@@ -112,7 +112,7 @@ class FinanceWorkbookExporter(
                 movements(bundle.products, writtenStock, bundle.stockMovements),
                 stock(writtenStock),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
-                reportTable(bundle.books),
+                reportTable(bundle.books, bundle.plan?.costIncomplete == true),
                 bundle.plan?.let(::feasibilityTable),
             ),
         )
@@ -282,11 +282,14 @@ class FinanceWorkbookExporter(
         rows = categories.map { listOf(it.name, roleLabel(it.role), MankeuTemplate.natureLabel(it.nature)) },
     )
 
-    private fun reportTable(books: List<FinanceExportBook>) = WorkbookTable(
+    private fun reportTable(books: List<FinanceExportBook>, planIncomplete: Boolean) = WorkbookTable(
         name = "Laporan",
         headers = listOf("Buku", "Metrik", "Nilai"),
         rows = books.flatMap { book ->
             val mode = BookMode.valueOf(book.book.mode).label()
+            if (planIncomplete && book.book.mode == BookMode.PROJECTION.name) {
+                return@flatMap listOf(listOf(mode, "Kelayakan belum dapat dihitung", "Modal barang belum lengkap"))
+            }
             with(book.summary) {
                 val cash = listOf(
                     listOf(mode, "Arus kas operasi", operatingCashFlowRupiah),
@@ -315,7 +318,7 @@ class FinanceWorkbookExporter(
     private fun feasibilityTable(plan: PlanAnalysis) = WorkbookTable(
         name = "Kelayakan",
         headers = listOf("Bagian", "Rincian", "Nilai (Rp / unit)"),
-        rows = buildList {
+        rows = if (plan.costIncomplete) listOf(listOf("Rencana", "Kelayakan belum dapat dihitung", "Modal barang belum lengkap")) else buildList {
             plan.fixedCost.recurring.forEach { add(listOf("Biaya tetap / bulan", it.first, it.second)) }
             plan.fixedCost.oneOffSpread.forEach { add(listOf("Biaya tetap / bulan", "${it.first} (sekali, dibagi rata)", it.second)) }
             plan.fixedCost.depreciation.forEach { add(listOf("Biaya tetap / bulan", "Penyusutan ${it.first}", it.second)) }

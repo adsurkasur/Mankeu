@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-048] Menahan hasil rencana ketika modal belum lengkap
+- **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
+- **Konteks**: Resep kosong atau sebagian tanpa harga menghasilkan biaya nol/parsial, tetapi kelayakan, perbandingan dan ekspor menampilkannya sebagai angka final. Titik impas aktual juga memakai biaya standar produk terjual.
+- **Keputusan**: Bawa status kelengkapan dari perakitan produk ke hasil rencana; tahan hasil turunan dan perbandingan pada layar serta laporan Excel/PDF, dan tahan titik impas aktual bila produk terjual memiliki biaya standar tidak lengkap. Laba aktual yang berdasar transaksi tetap dapat ditampilkan jika lengkap.
+- **Alasan dan alternatif**: Peringatan di samping angka parsial masih dapat terbaca sebagai hasil pasti. Angka internal parsial bukan hasil yang boleh ditampilkan; penanganan modal manual dan harga beli barang dagangan perlu integrasi berikutnya, sehingga penilaian saat ini konservatif.
+- **Komponen**: PlanAssembly, PlanProduct/PlanAnalysis, ActualBepCalculator, UI Rencana/Laporan dan eksportir.
+
+
 ### [DEC-047] Dropdown satuan pada baris nota
 - **Tanggal**: 2026-11-14; **status**: diterapkan.
 - **Konteks**: Jumlah satuan jual bisa bertambah dan chip dalam baris nota membentuk deretan yang tidak konsisten.

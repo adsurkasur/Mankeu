@@ -344,6 +344,12 @@ private fun FeasibilitySection(
  */
 @Composable
 private fun ComparisonSection(state: AppUiState) {
+    if (state.plan?.costIncomplete == true) {
+        ReportCard(stringResource(R.string.reports_comparison_title)) {
+            Text(stringResource(R.string.plan_cost_incomplete), color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
     val planMonths = state.plan?.months?.size ?: 1
     val actualMonths = state.realizationMonths
     // Realisasi: the money in and out of every MonthlySummary (U2), cash basis; never called profit.

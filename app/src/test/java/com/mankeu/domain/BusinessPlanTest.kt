@@ -26,6 +26,16 @@ class BusinessPlanTest {
     )
 
     @Test
+    fun `actual break even is unavailable if a sold product has unknown cost`() {
+        val inputs = ActualMonthInputs(month, mapOf("kopi" to BigDecimal.TEN), 100_000, 0, 20_000, 0, 0, hppRupiah = 50_000)
+        val actual = ActualBepCalculator.analyse(listOf(kopi.copy(costKnown = false)), inputs)
+        assertTrue(actual.bepCostIncomplete)
+        assertNull(actual.breakEvenRupiah)
+        assertNull(actual.reached)
+        assertEquals(30_000L, actual.profitRupiah)
+    }
+
+    @Test
     fun `lecturer benchmark - 400 cup, Rp4 juta, RC 1,27, BC 0,27`() {
         val plan = PlanCalculator.analyse(PlanInputs(listOf(month), listOf(kopi), benchmarkFixed))
 

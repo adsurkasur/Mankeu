@@ -644,6 +644,8 @@
     <string name="plan_section_asset_hint">Harga alat yang dipakai bertahun-tahun dibagi menjadi biaya per bulan.</string>
     <string name="plan_section_capital">Setoran Modal</string>
     <string name="plan_section_capital_hint">Uang pemilik yang disetor ke usaha. Bukan pendapatan dan tidak memengaruhi laba.</string>
+    <string name="actual_bep_cost_incomplete">Titik impas belum dapat dihitung karena modal produk yang terjual belum lengkap.</string>
+    <string name="plan_cost_incomplete">Kelayakan rencana belum dapat dihitung karena modal barang belum lengkap. Lengkapi resep dan harga bahan pada produk.</string>
     <string name="plan_product_row">%1$s per %2$s · modal barang %3$s · target %4$s/bulan</string>
     <string name="plan_product_sell_from">Mulai dijual bulan ke-</string>
     <string name="plan_product_sell_from_hint">1 = bulan pertama periode. Isi 3 bila baru panen di bulan ketiga; bulan sebelumnya tanpa penjualan.</string>

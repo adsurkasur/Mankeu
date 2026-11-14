@@ -220,6 +220,35 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun newMaterialNameErrorAppearsOnBlurAndClearsWhenValid() {
+        start()
+        click("Produk")
+        click("Tambah Barang")
+        val name = compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0]
+        name.performClick()
+        compose.onAllNodes(hasSetTextAction() and hasText("Harga beli per kg"))[0].performClick()
+        exists("Isi namanya dulu.")
+        name.performTextInput("Gula")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi namanya dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun savingWithoutCustomUnitFocusesTheMissingField() {
+        start()
+        click("Produk")
+        click("Tambah Barang")
+        compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0].performTextInput("Gula")
+        compose.onNodeWithContentDescription("Tulis satuan sendiri").performClick()
+        click("Simpan")
+        exists("Isi satuan barangnya dulu.")
+        val unit = compose.onAllNodes(hasSetTextAction() and hasText("Nama satuan"))[0]
+        unit.assertIsFocused().performTextInput("karung")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi satuan barangnya dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.stockItems(businessId, projectId).first() }.any { it.name == "Gula" && it.unit == "karung" } }
+    }
+
+    @Test
     fun customMaterialUnitIsClearlyOfferedAndSaved() {
         start()
         click("Produk")

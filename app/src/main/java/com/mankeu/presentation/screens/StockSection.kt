@@ -289,6 +289,14 @@ internal fun AddStockItemSheet(
     var initial by rememberSaveable { mutableStateOf("") }
     var minAlert by rememberSaveable { mutableStateOf("") }
     var stockOpen by rememberSaveable { mutableStateOf(false) }
+    var nameFocused by remember { mutableStateOf(false) }
+    var nameTouched by rememberSaveable { mutableStateOf(false) }
+    var unitFocused by remember { mutableStateOf(false) }
+    var unitTouched by rememberSaveable { mutableStateOf(false) }
+    val nameFocusRequester = remember { FocusRequester() }
+    val unitFocusRequester = remember { FocusRequester() }
+    val nameInvalid = nameTouched && name.isBlank()
+    val unitInvalid = unitTouched && unit.isBlank()
     MankeuSheet(
         title = stringResource(R.string.stock_add_item),
         onDismiss = onDismiss,
@@ -298,16 +306,34 @@ internal fun AddStockItemSheet(
             else -> null
         },
         onConfirm = { onSave(name.trim(), unit.trim(), price ?: 0, initial.toQuantity(), minAlert.toQuantity(), shared) },
+        onInvalidConfirm = {
+            if (name.isBlank()) { nameTouched = true; nameFocusRequester.requestFocus() }
+            else if (unit.isBlank()) { unitTouched = true; unitFocusRequester.requestFocus() }
+        },
     ) {
         OutlinedTextField(
             name, { name = it }, label = { Text(stringResource(R.string.stock_item_name)) }, singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
+            isError = nameInvalid,
+            supportingText = if (nameInvalid) ({ Text(stringResource(R.string.form_need_name)) }) else null,
+            modifier = Modifier.fillMaxWidth().focusRequester(nameFocusRequester).onFocusChanged { focus ->
+                if (nameFocused && !focus.isFocused) nameTouched = true
+                nameFocused = focus.isFocused
+            },
         )
         UnitPicker(value = unit, options = COMMON_UNITS,
-            onSelect = { otherUnit = false; unit = it }, onCustom = { if (!otherUnit) unit = ""; otherUnit = true })
+            onSelect = { otherUnit = false; unit = it; unitTouched = false },
+            onCustom = { if (!otherUnit) { unit = ""; unitTouched = false }; otherUnit = true })
         if (otherUnit) {
-            OutlinedTextField(unit, { unit = it }, label = { Text(stringResource(R.string.stock_item_unit)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                unit, { unit = it }, label = { Text(stringResource(R.string.stock_item_unit)) }, singleLine = true,
+                isError = unitInvalid,
+                supportingText = if (unitInvalid) ({ Text(stringResource(R.string.form_need_unit)) }) else null,
+                modifier = Modifier.fillMaxWidth().focusRequester(unitFocusRequester).onFocusChanged { focus ->
+                    if (unitFocused && !focus.isFocused) unitTouched = true
+                    unitFocused = focus.isFocused
+                },
+            )
         }
         MoneyInput(
             label = stringResource(R.string.stock_item_price_per, unit.ifBlank { stringResource(R.string.editor_unit_fallback) }),

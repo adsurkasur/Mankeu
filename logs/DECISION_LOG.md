@@ -1,5 +1,14 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-044] Fokus kesalahan spesifik pada form halaman penuh
+- **Tanggal**: 2026-11-14 14:58 WIB
+- **Status**: Diimplementasikan untuk form produk; perlu diterapkan bertahap pada form lain.
+- **Konteks**: DEC-042 meminta kesalahan pada kolom yang ditinggalkan dan fokus ke isian pertama saat Simpan, sedangkan `FullPageForm` hanya menerima satu alasan umum.
+- **Keputusan**: Sediakan callback opsional yang mengungkap dan memfokuskan field invalid; callback melaporkan apakah kesalahan sudah ditangani. Jika tidak, alasan umum tetap muncul. Callback simpan hanya dipanggil ketika validasi lolos.
+- **Alasan dan alternatif**: Field pemilik form memahami validasi dan fokusnya; penanganan umum tetap tersedia untuk kondisi lintas field atau yang belum dimigrasikan. Tidak mengubah aturan domain atau penyimpanan.
+- **Komponen**: FullPageForm, ProductEditorScreen, tes komponen dan editor produk. Validasi field lain tetap belum selesai.
+
+
 ### [DEC-043] Tahan hasil yang bergantung pada kategori belanja lama yang belum jelas
 - **Tanggal**: 2026-11-14 14:50 WIB
 - **Status**: Diimplementasikan sebagai checkpoint; upgrade dan koreksi UI lengkap belum diverifikasi.

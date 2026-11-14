@@ -68,6 +68,8 @@ fun FullPageForm(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
     saveBlockedReason: String? = null,
+    // Return true when the form shows and focuses a specific invalid field.
+    onInvalidSave: (() -> Boolean)? = null,
     result: (@Composable () -> Unit)? = null,
     /** The shell's snackbar, so a refusal from the repository shows on this page (it stays open). */
     snackbarHost: SnackbarHostState? = null,
@@ -102,7 +104,7 @@ fun FullPageForm(
                     Text(saveBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), color = MaterialTheme.colorScheme.error, style = MankeuType.Caption)
                 }
                 // The label is always "Simpan" (P2 §8): one word for one action on every form.
-                Button(onClick = { if (saveBlockedReason == null) onSave() else attempted = true }, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
+                Button(onClick = { if (saveBlockedReason == null) onSave() else attempted = onInvalidSave?.invoke() != true }, modifier = Modifier.fillMaxWidth().heightIn(min = Space.Row)) {
                     Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold)
                 }
             }

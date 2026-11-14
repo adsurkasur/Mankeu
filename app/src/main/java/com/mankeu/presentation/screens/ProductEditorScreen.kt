@@ -28,6 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -138,6 +141,15 @@ fun ProductEditorScreen(
 
     // Only numbers that parse to > 0 reach the costing: a yield of 0 would divide by zero, and a
     // half-typed line is a line without cost, not a crash.
+    var nameFocused by remember { mutableStateOf(false) }
+    var nameTouched by rememberSaveable { mutableStateOf(false) }
+    var yieldFocused by remember { mutableStateOf(false) }
+    var yieldTouched by rememberSaveable { mutableStateOf(false) }
+    var unitFocused by remember { mutableStateOf(false) }
+    var unitTouched by rememberSaveable { mutableStateOf(false) }
+    val nameFocusRequester = remember { FocusRequester() }
+    val yieldFocusRequester = remember { FocusRequester() }
+    val unitFocusRequester = remember { FocusRequester() }
     val yieldQuantity = TransactionCalculation.parseQuantity(batchYield)
     val recipe = lines.mapNotNull { line ->
         if (line.materialId != null) {
@@ -185,6 +197,14 @@ fun ProductEditorScreen(
         modifier = modifier,
         snackbarHost = snackbarHost,
         saveBlockedReason = saveBlockedReason,
+        onInvalidSave = {
+            when {
+                name.isBlank() -> { nameTouched = true; nameFocusRequester.requestFocus(); true }
+                baseUnit.isBlank() && otherUnit -> { unitTouched = true; unitFocusRequester.requestFocus(); true }
+                yieldQuantity == null || yieldQuantity <= existingLoss -> { yieldTouched = true; yieldFocusRequester.requestFocus(); true }
+                else -> false
+            }
+        },
         onSave = {
             onSave(
                 ProductDraft(
@@ -214,7 +234,12 @@ fun ProductEditorScreen(
             value = name, onValueChange = { name = it }, singleLine = true,
             label = { Text(stringResource(R.string.editor_name)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
+            isError = nameTouched && name.isBlank(),
+            supportingText = if (nameTouched && name.isBlank()) ({ Text(stringResource(R.string.form_need_name)) }) else null,
+            modifier = Modifier.fillMaxWidth().focusRequester(nameFocusRequester).onFocusChanged { focus ->
+                if (nameFocused && !focus.isFocused) nameTouched = true
+                nameFocused = focus.isFocused
+            },
         )
 
         // What goes into one batch.
@@ -256,16 +281,25 @@ fun ProductEditorScreen(
             suffix = { Text(unitLabel) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-            modifier = Modifier.fillMaxWidth(),
+            isError = yieldTouched && (yieldQuantity == null || yieldQuantity <= existingLoss),
+            supportingText = if (yieldTouched && (yieldQuantity == null || yieldQuantity <= existingLoss)) ({
+                Text(stringResource(if (yieldQuantity == null) R.string.form_need_yield else R.string.form_yield_above_loss))
+            }) else null,
+            modifier = Modifier.fillMaxWidth().focusRequester(yieldFocusRequester).onFocusChanged { focus ->
+                if (yieldFocused && !focus.isFocused) yieldTouched = true
+                yieldFocused = focus.isFocused
+            },
         )
         UnitPicker(value = baseUnit, options = COMMON_BASE_UNITS,
             onSelect = { unit ->
                 otherUnit = false
+                unitTouched = false
                 baseUnit = unit
                 if (firstUnitFollows && units.isNotEmpty()) units[0] = units[0].copy(name = unit.trim())
             },
             onCustom = {
                 if (!otherUnit) {
+                    unitTouched = false
                     baseUnit = ""
                     if (firstUnitFollows && units.isNotEmpty()) units[0] = units[0].copy(name = "")
                 }
@@ -281,7 +315,12 @@ fun ProductEditorScreen(
                 },
                 singleLine = true,
                 label = { Text(stringResource(R.string.editor_base_unit)) },
-                modifier = Modifier.fillMaxWidth(),
+                isError = unitTouched && baseUnit.isBlank(),
+                supportingText = if (unitTouched && baseUnit.isBlank()) ({ Text(stringResource(R.string.form_need_unit)) }) else null,
+                modifier = Modifier.fillMaxWidth().focusRequester(unitFocusRequester).onFocusChanged { focus ->
+                    if (unitFocused && !focus.isFocused) unitTouched = true
+                    unitFocused = focus.isFocused
+                },
             )
         }
 

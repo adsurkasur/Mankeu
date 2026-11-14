@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -129,6 +131,35 @@ class ProductEditorTest {
         assertEquals(1_900_000L, draft.recipe[1].amountRupiah)
         assertEquals("400", draft.batchYieldText)
         assertEquals("bungkus", draft.baseUnit)
+    }
+
+    @Test fun productNameIsValidatedAfterBlurAndClearsWhenValid() {
+        open()
+        box("Nama produk").performClick()
+        box("Satu kali produksi menghasilkan").performClick()
+        exists("Isi namanya dulu.")
+        box("Nama produk").performTextInput("Keripik")
+        assertEquals(0, compose.onAllNodesWithText("Isi namanya dulu.", substring = true).fetchSemanticsNodes().size)
+    }
+
+    @Test fun saveFocusesFirstMissingProductField() {
+        open()
+        saveButton().performClick()
+        exists("Isi namanya dulu.")
+        box("Nama produk").assertIsFocused().performTextInput("Keripik")
+        saveButton().performClick()
+        exists("Isi hasil sekali buat lebih dari 0 dulu.")
+        box("Satu kali produksi menghasilkan").assertIsFocused()
+    }
+
+    @Test fun saveFocusesAnEmptyCustomProductUnit() {
+        open()
+        box("Nama produk").performTextInput("Keripik")
+        compose.onNodeWithContentDescription("Tulis satuan sendiri").performClick()
+        saveButton().performClick()
+        exists("Isi satuan barangnya dulu.")
+        box("Satuan terkecil").assertIsFocused().performTextInput("karung")
+        assertEquals(0, compose.onAllNodesWithText("Isi satuan barangnya dulu.", substring = true).fetchSemanticsNodes().size)
     }
 
     @Test fun customBaseUnitAlsoNamesTheFirstSaleUnit() {

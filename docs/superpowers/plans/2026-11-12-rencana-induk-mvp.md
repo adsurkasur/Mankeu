@@ -501,6 +501,9 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-14 14:58 · Validasi produk dan stok · checkpoint · lihat commit · [terverifikasi] blur/fokus untuk nama dan satuan barang serta nama, satuan dan hasil produk; tes terarah 4/4 dan 6/6, JVM 196/196, lint/build. [belum] form lain dan MVP. `docs/superpowers/reports/2026-11-14-validasi-produk-stok.md`.
+
+
 - 2026-11-14 14:50 · Kategori lama dan contoh validasi · checkpoint · lihat commit · [terverifikasi] penanda kategori tidak pasti dan koreksi eksplisit; blur jumlah stok/nama kategori; JVM 196/196, lint/build dan tes terarah. [belum] koreksi Catatan pada upgrade 13→14, validasi semua form, PDF visual dan MVP. `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`.
 
 

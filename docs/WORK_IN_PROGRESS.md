@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Validasi produk dan stok (2026-11-14 14:58 WIB):** [terverifikasi] Nama/satuan kustom barang dan nama/satuan terkecil/hasil produk menampilkan kesalahan setelah blur dan mengarahkan fokus saat Simpan; tes terarah barang 4/4 dan produk/komponen 6/6, JVM 196/196, lint/build lulus. Laporan `docs/superpowers/reports/2026-11-14-validasi-produk-stok.md`. [belum] Form uang/nota lain, fokus satuan jual, audit visual seluruh aplikasi dan gerbang MVP. Lanjutkan dari `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`; jangan merge main atau menyentuh superproject.
+
+
 **Checkpoint kategori dan validasi (2026-11-14 14:50 WIB):** [terverifikasi] Belanja lama tanpa ID kategori yang bukan pelunasan menahan laba ITEM_COST/BEP sampai dipilih; edit meminta kategori eksplisit, termasuk belanja bahan. Validasi blur baru pada jumlah gerakan stok dan nama kategori; kontrol stok/satuan/kategori diselaraskan. JVM 196/196, lint/build dan tes terarah lulus. Rincian serta batas: `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`. [belum] Validasi form lain, seluruh audit layar, koreksi lengkap lewat Catatan setelah upgrade 13→14, PDF visual, sync/backup dan gerbang MVP. Lanjut `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`; jangan merge main atau sentuh superproject.
 
 

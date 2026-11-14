@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 14:58] [Codex (GPT-6) — validasi barang dan produk]
+- **Goal**: Memperluas DEC-042 pada form tambah barang dan editor produk tanpa mengubah perilaku penyimpanan.
+- **Actions**: Menambah tes gagal untuk blur dan fokus, mengaitkan error/fokus ke nama dan satuan kustom barang serta nama, satuan terkecil dan hasil produk; menambah callback opsional FullPageForm dengan fallback alasan umum; menguji alur normal dan mendokumentasikan batas.
+- **Files**: StockSection, ProductEditorScreen, FullPageForm, MaterialStockScreenTest, ProductEditorTest, laporan checkpoint, WIP, rencana induk, changelog dan DEC-044.
+- **Verification**: [terverifikasi] Tes terarah barang 4/4 dan editor/komponen 6/6 dan ulang empat skenario editor 4/4; JVM 196/196, lint dan assemble debug/androidTest lulus. [belum] Validasi semua form, satuan jual, aksesibilitas dan HP nyata; emulator-5556/superproject tidak disentuh.
+
+
 ### [2026-11-14 14:50] [Codex (GPT-6) — kategori lama dan validasi contoh]
 - **Goal**: Melanjutkan checkpoint PK-1.2 dan konsistensi UI tanpa menghilangkan perubahan sebelumnya.
 - **Actions**: Menelusuri dan menguji penanda kategori-null hingga laporan; mencegah pemilihan kategori otomatis pada edit lama dan menyediakan pemilih pada belanja bahan; menyelaraskan kontrol stok/satuan/kategori; menerapkan validasi blur dan fokus pada kuantitas stok serta nama kategori; membatasi pengecualian kosakata Variabel pada dua label pilihan pemilik.

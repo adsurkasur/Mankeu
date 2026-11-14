@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Form tambah barang dan editor produk menunjukkan kesalahan pada kolom yang ditinggalkan serta memfokuskan kolom wajib saat Simpan; perluasan ke form lain masih berlangsung (DEC-042/044).
+
 - Gerakan stok menggunakan pilihan tersambung; satuan kustom dibuka melalui tombol tambah di samping dropdown. Kategori memakai Tetap/Variabel dan menjelaskan pilihan modal barang pada tempatnya.
 - Kesalahan pada jumlah gerakan stok dan nama kategori tampil setelah kolom ditinggalkan; percobaan Simpan kosong mengarahkan ke kolom terkait. Form lain masih bertahap mengikuti DEC-042.
 

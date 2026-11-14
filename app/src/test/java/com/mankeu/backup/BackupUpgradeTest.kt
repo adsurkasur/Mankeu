@@ -23,7 +23,7 @@ class BackupUpgradeTest {
     @Test fun `current snapshot keeps explicit free line and cost status`() {
         val line = table("sale_lines", listOf("id", "productId", "name", "costKnown"),
             listOf(listOf(t("l"), nul, t("Jasa"), i(0))))
-        val snapshot = PortableBackup(14, 0, listOf(line))
+        val snapshot = PortableBackup(15, 0, listOf(line))
         assertEquals(snapshot, BackupUpgrade.toCurrent(snapshot))
     }
     private fun table(name: String, columns: List<String> = listOf("id"), rows: List<List<BackupValue>> = emptyList()) = BackupTable(name, columns, rows)
@@ -54,7 +54,7 @@ class BackupUpgradeTest {
 
     @Test fun `schema 12 snapshot gets the current table set and the reshaped product rows`() {
         val upgraded = BackupUpgrade.toCurrent(PortableBackup(12, 0, schema12Tables))
-        assertEquals(14, upgraded.schemaVersion)
+        assertEquals(15, upgraded.schemaVersion)
         assertEquals(AppDatabase.DATA_TABLES.toSet(), upgraded.tables.map { it.name }.toSet())
         val units = upgraded.tables.single { it.name == "product_units" }
         assertEquals(listOf(t("kopi-u0"), t("kopi"), t("cup"), t("1"), i(10_000), i(0)), units.rows.single())
@@ -120,7 +120,7 @@ class BackupUpgradeTest {
                 ),
             ),
         )
-        assertEquals(14, upgraded.schemaVersion)
+        assertEquals(15, upgraded.schemaVersion)
         assertEquals(AppDatabase.DATA_TABLES.toSet(), upgraded.tables.map { it.name }.toSet())
         fun rows(name: String) = upgraded.tables.single { it.name == name }.let { tbl -> tbl.rows.map { tbl.columns.zip(it).toMap() } }
 
@@ -157,7 +157,7 @@ class BackupUpgradeTest {
     }
 
     @Test fun `current snapshot passes through untouched`() {
-        val current = PortableBackup(14, 0, AppDatabase.DATA_TABLES.map { table(it) })
+        val current = PortableBackup(15, 0, AppDatabase.DATA_TABLES.map { table(it) })
         assertSame(current, BackupUpgrade.toCurrent(current))
     }
 }

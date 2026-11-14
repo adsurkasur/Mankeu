@@ -51,6 +51,7 @@ import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.components.DateField
 import com.mankeu.presentation.components.EmptyCard
 import com.mankeu.presentation.components.MankeuSheet
+import com.mankeu.presentation.components.form.MoneyInput
 import com.mankeu.presentation.components.form.QuantityStepper
 import com.mankeu.presentation.components.form.ResultBar
 import com.mankeu.presentation.components.sanitizeDecimal
@@ -79,13 +80,16 @@ fun ProductsScreen(
     onBuyMaterial: (String, BigDecimal) -> Unit = { _, _ -> },
     expanded: Boolean = false,
     multiUnit: Boolean = false,
+    onBuyTrade: (String, BigDecimal, Long, LocalDate, () -> Unit) -> Unit = { _, _, _, _, _ -> },
 ) {
     var produceId by rememberSaveable { mutableStateOf<String?>(null) }
+    var purchaseId by rememberSaveable { mutableStateOf<String?>(null) }
     var countId by rememberSaveable { mutableStateOf<String?>(null) }
     var addingMaterial by rememberSaveable { mutableStateOf(false) }
     var materialId by rememberSaveable { mutableStateOf<String?>(null) }
     val prices = materials.associate { it.id to it.basePriceRupiah }
 
+    products.firstOrNull { it.product.id == purchaseId }?.let { record -> TradePurchaseSheet(record, onDismiss = { purchaseId = null }) { quantity, amount, date -> onBuyTrade(record.product.id, quantity, amount, date) { purchaseId = null } } }
     products.firstOrNull { it.product.id == produceId }?.let { ProductionSheet(it, materials, onDismiss = { produceId = null }) { batches, date -> onProduce(it.product.id, batches, date); produceId = null } }
     products.firstOrNull { it.product.id == countId }?.let { CountStockSheet(it, onDismiss = { countId = null }) { counted, date -> onCountStock(it.product.id, counted, date); countId = null } }
     MaterialSheets(
@@ -142,6 +146,7 @@ fun ProductsScreen(
                 cost = cost,
                 onOpen = { onOpenProduct(record.product.id) },
                 onProduce = { produceId = record.product.id },
+                onBuy = { purchaseId = record.product.id },
                 onCount = { countId = record.product.id },
                 onHistory = { onOpenHistory(record.product.id) },
             )
@@ -163,7 +168,7 @@ internal fun hppLines(cost: ProductCost, spec: ProductSpec? = null): List<String
 }
 
 @Composable
-private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> Unit, onProduce: () -> Unit, onCount: () -> Unit, onHistory: () -> Unit) {
+private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> Unit, onProduce: () -> Unit, onBuy: () -> Unit, onCount: () -> Unit, onHistory: () -> Unit) {
     val semantic = LocalMankeuSemanticColors.current
     val spec = record.spec
     val stock = record.stock
@@ -193,11 +198,50 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
             Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (spec.kind == ItemKind.MADE) {
                     FilledTonalButton(onClick = onProduce, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_produce)) }
+                } else if (spec.kind == ItemKind.TRADED) {
+                    FilledTonalButton(onClick = onBuy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.trade_buy)) }
                 }
                 FilledTonalButton(onClick = onCount, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.product_count_stock)) }
             }
             TextButton(onClick = onHistory) { Text(stringResource(R.string.product_stock_history)) }
         }
+    }
+}
+
+@Composable
+internal fun TradePurchaseSheet(record: ProductRecord, onDismiss: () -> Unit, onSave: (BigDecimal, Long, LocalDate) -> Unit) {
+    var quantity by rememberSaveable(record.product.id) { mutableStateOf("1") }
+    var amount by rememberSaveable(record.product.id) { mutableStateOf<Long?>(null) }
+    var date by rememberSaveable(record.product.id) { mutableStateOf(LocalDate.now().toString()) }
+    var quantityTouched by rememberSaveable(record.product.id) { mutableStateOf(false) }
+    var amountTouched by rememberSaveable(record.product.id) { mutableStateOf(false) }
+    var quantityFocused by remember { mutableStateOf(false) }
+    var amountFocused by remember { mutableStateOf(false) }
+    val quantityFocus = remember { FocusRequester() }
+    val amountFocus = remember { FocusRequester() }
+    val parsed = TransactionCalculation.parseQuantity(quantity)
+    val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
+    MankeuSheet(
+        title = stringResource(R.string.trade_buy_title, record.product.name), onDismiss = onDismiss,
+        confirmBlockedReason = when {
+            parsed == null -> stringResource(R.string.form_need_quantity)
+            amount == null || amount!! <= 0 -> stringResource(R.string.trade_need_amount)
+            parsedDate == null -> stringResource(R.string.form_need_date)
+            else -> null
+        },
+        onInvalidConfirm = {
+            if (parsed == null) { quantityTouched = true; quantityFocus.requestFocus() }
+            else if (amount == null || amount!! <= 0) { amountTouched = true; amountFocus.requestFocus() }
+        },
+        onConfirm = { onSave(requireNotNull(parsed), requireNotNull(amount), requireNotNull(parsedDate)) },
+    ) {
+        QuantityStepper(value = quantity, onValueChange = { quantity = it }, label = stringResource(R.string.trade_quantity, record.product.unit), isError = quantityTouched && parsed == null,
+            fieldModifier = Modifier.focusRequester(quantityFocus).onFocusChanged { if (quantityFocused && !it.isFocused) quantityTouched = true; quantityFocused = it.isFocused })
+        if (quantityTouched && parsed == null) Text(stringResource(R.string.form_need_quantity), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        MoneyInput(label = stringResource(R.string.trade_total), value = amount, onValueChange = { amount = it }, isError = amountTouched && (amount == null || amount!! <= 0),
+            fieldModifier = Modifier.focusRequester(amountFocus).onFocusChanged { if (amountFocused && !it.isFocused) amountTouched = true; amountFocused = it.isFocused },
+            supportingText = if (amountTouched && (amount == null || amount!! <= 0)) ({ Text(stringResource(R.string.trade_need_amount)) }) else null)
+        DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
     }
 }
 

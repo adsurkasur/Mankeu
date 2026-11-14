@@ -1,6 +1,9 @@
 package com.mankeu.presentation
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
@@ -80,6 +83,18 @@ class PlanProductsTest {
         compose.setContent { MankeuTheme { com.mankeu.presentation.screens.ProductsScreen(listOf(record), emptyList(), true, "Utama", {}, {}, {}, { _, _, _ -> }, { _, _, _ -> }, { _, _, _, _, _, _ -> }, { _, _, _, _ -> }) } }
         assertTrue(compose.onAllNodesWithText("Rp6.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
         assertTrue(compose.onAllNodesWithText("Rp2.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
+    fun tradePurchaseFormSendsQuantityAndAmount() {
+        val record = ProductRecord(ProductEntity("k", "p", "Air", "botol", kind = "TRADED", createdAtEpochMillis = 0), listOf(ProductUnitEntity("u", "k", "botol", "1", 8000)), emptyList())
+        var captured: Pair<java.math.BigDecimal, Long>? = null
+        compose.setContent { MankeuTheme { com.mankeu.presentation.screens.TradePurchaseSheet(record, {}, { quantity, amount, _ -> captured = quantity to amount }) } }
+        val ctx = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+        compose.onAllNodes(androidx.compose.ui.test.hasSetTextAction() and hasText(ctx.getString(com.mankeu.R.string.trade_total), substring = true))[0].performTextInput("50000")
+        compose.onAllNodesWithText(ctx.getString(com.mankeu.R.string.action_save))[0].performClick()
+        assertTrue(captured?.first?.compareTo(java.math.BigDecimal.ONE) == 0)
+        assertTrue(captured?.second == 50_000L)
     }
 
     @Test

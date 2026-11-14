@@ -21,6 +21,7 @@ import com.mankeu.sync.SyncSchema
         CategoryEntity::class,
         BudgetItemEntity::class,
         FinancialEventEntity::class,
+        TradePurchaseEntity::class,
         JournalEntryEntity::class,
         PostingEntity::class,
         ProductEntity::class,
@@ -40,7 +41,7 @@ import com.mankeu.sync.SyncSchema
         SyncOutboxEntity::class,
         SyncMetaEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -79,6 +80,7 @@ abstract class AppDatabase : RoomDatabase() {
             "sale_lines",
             "budget_items",
             "financial_events",
+            "trade_purchases",
             "journal_entries",
             "postings",
             "import_notices",
@@ -94,7 +96,7 @@ abstract class AppDatabase : RoomDatabase() {
             // DEC-026 / spec #1: pre-0.1.0 installs start clean; schema 12 onward is carried forward.
             // The destructive path runs Callback.onDestructiveMigration, not onCreate (see SyncSchema.callback).
             .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
-            .addMigrations(Migration12To13, Migration13To14)
+            .addMigrations(Migration12To13, Migration13To14, Migration14To15)
             .addCallback(SyncSchema.callback)
             .build()
     }

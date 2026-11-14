@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Barang dagangan dapat dicatat sebagai belanja tunai yang menambah stok; catatan ikut dalam cadangan dan sinkron.
 - Produk baru dapat ditandai sebagai barang yang dibeli untuk dijual tanpa mengisi resep produksi.
 - Workbook menyertakan jenis produk, pilihan pencatatan stok, modal manual dan susut per batch.
 - Excel membawa nota penjualan, baris produk atau jasa bebas, pembayaran dan rincian pelanggan; pratinjau menunjukkan kontak baru.

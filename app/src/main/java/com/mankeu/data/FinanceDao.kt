@@ -59,6 +59,9 @@ data class ConsignmentSoldLine(
     val consignmentId: String,
 )
 
+/** A trade purchase and its cash event, in base product units. */
+data class TradePurchaseRow(val id: String, val productId: String, val quantityText: String, val amountRupiah: Long, val dateEpochDay: Long, val createdAtEpochMillis: Long)
+
 /** A purchase that names a material; the newest one prices it (DEC-028 §2). */
 data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Long)
 
@@ -373,8 +376,8 @@ interface FinanceDao {
     @Query(
         """
         SELECT e.type, MIN(e.dateEpochDay) AS dateEpochDay, SUM(e.amountRupiah) AS amountRupiah,
-               COALESCE(c.includedInHpp, 0) AS includedInHpp,
-               COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) AS variable,
+               CASE WHEN EXISTS (SELECT 1 FROM trade_purchases t WHERE t.id = e.id) THEN 1 ELSE COALESCE(c.includedInHpp, 0) END AS includedInHpp,
+               CASE WHEN EXISTS (SELECT 1 FROM trade_purchases t WHERE t.id = e.id) THEN 1 ELSE COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) END AS variable,
                MAX(e.usefulLifeMonths) AS usefulLifeMonths,
                SUM(CASE WHEN e.type IN ('CASH_EXPENSE', 'CREDIT_PURCHASE') AND e.categoryId IS NULL THEN 1 ELSE 0 END) AS uncertainCategoryCount
         FROM financial_events e
@@ -513,6 +516,18 @@ interface FinanceDao {
         """,
     )
     fun observeProductMovements(projectId: String): Flow<List<ProductMovementEntity>>
+
+    @Query("SELECT COUNT(*) FROM trade_purchases t JOIN financial_events e ON e.id = t.id WHERE e.projectId = :projectId")
+    suspend fun countTradePurchases(projectId: String): Int
+
+    @Query("SELECT * FROM trade_purchases WHERE id = :id")
+    suspend fun getTradePurchase(id: String): TradePurchaseEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertTradePurchase(purchase: TradePurchaseEntity)
+
+    @Query("SELECT t.id, t.productId, t.quantityText, e.amountRupiah, e.dateEpochDay, e.createdAtEpochMillis FROM trade_purchases t JOIN financial_events e ON e.id = t.id WHERE e.projectId = :projectId")
+    fun observeTradePurchases(projectId: String): Flow<List<TradePurchaseRow>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProductMovement(movement: ProductMovementEntity)

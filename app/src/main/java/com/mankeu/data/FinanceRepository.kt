@@ -162,17 +162,18 @@ class FinanceRepository(
     /** Products of a business unit with sale units, recipe and stock movements (spec #5 #6 #9). */
     fun products(projectId: String): Flow<List<ProductRecord>> = combine(
         combine(dao.observeProducts(projectId), dao.observeProductUnits(projectId), dao.observeRecipeLines(projectId), ::Triple),
-        dao.observeProductMovements(projectId),
+        combine(dao.observeProductMovements(projectId), dao.observeTradePurchases(projectId)) { movements, purchases -> movements to purchases },
         // Sales come from note lines (DEC-029 §8), consignment sends from consignment lines.
         dao.observeProductSaleLines(projectId),
         dao.observeConsignmentSends(projectId),
-    ) { (products, units, recipe), movements, sales, sends ->
+    ) { (products, units, recipe), (movements, purchases), sales, sends ->
         val unitsOf = units.groupBy { it.productId }
         val recipeOf = recipe.groupBy { it.productId }
         val movementsOf = movements.groupBy { it.productId }
         val salesOf = sales.groupBy { it.productId }
         val sendsOf = sends.groupBy { it.productId }
-        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty(), salesOf[it.id].orEmpty(), sendsOf[it.id].orEmpty()) }
+        val purchasesOf = purchases.groupBy { it.productId }
+        products.map { ProductRecord(it, unitsOf[it.id].orEmpty(), recipeOf[it.id].orEmpty(), movementsOf[it.id].orEmpty(), salesOf[it.id].orEmpty(), sendsOf[it.id].orEmpty(), purchasesOf[it.id].orEmpty()) }
     }
     fun importBatches(projectId: String): Flow<List<ImportBatchEntity>> = dao.observeImportBatches(projectId)
 
@@ -326,8 +327,6 @@ class FinanceRepository(
                     month = if (book.mode == BookMode.REALIZATION.name) MonthlySummary.of(currentMonth(), profitInputsOf(book.id), monthPostingsOf(book.id)) else null,
                 )
             }
-            require(dao.countConsignmentsForProject(project.id) == 0) { "Ekspor Excel belum mendukung titip jual. Gunakan Cadangan untuk menyimpan seluruh data." }
-            require(exportBooks.flatMap { it.events }.none { it.type == FinancialEventType.CREDIT_PURCHASE.name || it.settlesEventId != null }) { "Ekspor Excel belum mendukung utang dan pelunasannya. Gunakan Cadangan untuk menyimpan seluruh data." }
             val notes = dao.getSalesForProject(project.id).filter { it.consignmentId == null }.map { sale ->
                 FinanceExportNote(sale, dao.getSaleLines(sale.id), dao.getSalePayments(sale.id), sale.contactId?.let { dao.getContact(it) })
             }
@@ -363,9 +362,12 @@ class FinanceRepository(
 
     data class WorkbookExport(val bytes: ByteArray, val omittedFreeSaleLineCount: Int)
 
-    suspend fun exportProjectWorkbookWithNotice(projectId: String): WorkbookExport {
+    suspend fun exportProjectWorkbookWithNotice(projectId: String): WorkbookExport = database.withTransaction {
         val bundle = buildProjectExportBundle(projectId)
-        return WorkbookExport(FinanceWorkbookExporter().export(bundle), bundle.omittedFreeSaleLineCount)
+        require(dao.countTradePurchases(projectId) == 0) { "Ekspor Excel belum mendukung belanja barang dagangan. Gunakan Cadangan untuk menyimpan seluruh data." }
+        require(dao.countConsignmentsForProject(projectId) == 0) { "Ekspor Excel belum mendukung titip jual. Gunakan Cadangan untuk menyimpan seluruh data." }
+        require(bundle.books.flatMap { it.events }.none { it.type == FinancialEventType.CREDIT_PURCHASE.name || it.settlesEventId != null }) { "Ekspor Excel belum mendukung utang dan pelunasannya. Gunakan Cadangan untuk menyimpan seluruh data." }
+        WorkbookExport(FinanceWorkbookExporter().export(bundle), bundle.omittedFreeSaleLineCount)
     }
 
     suspend fun exportProjectWorkbook(projectId: String): ByteArray = exportProjectWorkbookWithNotice(projectId).bytes
@@ -866,6 +868,22 @@ class FinanceRepository(
      * sale naming a product becomes a paid one-line note with this event as its payment (DEC-029 M4),
      * so no product sale bypasses notes.
      */
+    suspend fun recordTradePurchase(productId: String, quantity: BigDecimal, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
+        require(quantity.signum() > 0 && amountRupiah > 0) { "Jumlah dan total belanja harus lebih dari nol." }
+        val product = requireNotNull(dao.getProduct(productId)) { "Barang tidak ditemukan." }
+        require(product.kind == "TRADED" && !product.archived) { "Pilih barang dagangan aktif." }
+        val project = requireNotNull(dao.getProject(product.projectId))
+        val category = dao.getCategories(project.businessId).firstOrNull { it.active && it.includedInHpp && CategoryRole.parse(it.role) == CategoryRole.EXPENSE }
+            ?: error("Aktifkan kategori belanja yang dihitung sebagai modal barang terlebih dahulu.")
+        val book = ensureBookPair(project.id).getValue(BookMode.REALIZATION)
+        val event = MoneyEvent(UUID.randomUUID().toString(), project.businessId, project.id, FinancialEventType.CASH_EXPENSE, amountRupiah, date,
+            "Belanja ${product.name}", category.name, bookId = book.id, categoryId = category.id, quantityText = quantity.stripTrailingZeros().toPlainString(),
+            unit = product.unit, productId = product.id)
+        insertEventWithJournal(event)
+        dao.insertTradePurchase(TradePurchaseEntity(event.id, product.id, quantity.stripTrailingZeros().toPlainString()))
+        event.id
+    }
+
     suspend fun recordEvent(draft: EventDraft): String = database.withTransaction {
         requireValid(draft)
         val event = draft.toEvent().withPurchasePrice()
@@ -879,6 +897,7 @@ class FinanceRepository(
      * event, and it cascades, so this is one atomic swap.
      */
     suspend fun updateEvent(eventId: String, draft: EventDraft) = database.withTransaction {
+        require(dao.getTradePurchase(eventId) == null) { "Belanja barang dagangan belum dapat diubah dari transaksi ini." }
         val old = dao.getEvent(eventId) ?: error("Transaksi tidak ditemukan.")
         requireValid(draft)
         // The old form does not carry the phase-2 links (DEC-029); an edit keeps them, so a note payment

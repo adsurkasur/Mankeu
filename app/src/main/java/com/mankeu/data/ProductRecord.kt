@@ -20,6 +20,7 @@ data class ProductRecord(
     val sales: List<ProductSaleRow> = emptyList(),
     /** Lines of consignments that sent this product out (CONSIGN_OUT, DEC-029 §8). */
     val consignmentSends: List<ConsignmentSendRow> = emptyList(),
+    val purchases: List<TradePurchaseRow> = emptyList(),
 ) {
     val spec: ProductSpec
         get() = ProductSpec(
@@ -69,6 +70,11 @@ data class ProductRecord(
                     Triple(m.dateEpochDay, m.createdAtEpochMillis, StockHistoryEntry(m.id, type, m.dateEpochDay, TransactionCalculation.parseQuantity(m.quantityText) ?: BigDecimal.ZERO, BigDecimal.ZERO, m.batchesText, m.notes))
                 }
             }
+            val bought = purchases.mapNotNull { purchase ->
+                TransactionCalculation.parseQuantity(purchase.quantityText)?.let { q ->
+                    Triple(purchase.dateEpochDay, purchase.createdAtEpochMillis, StockHistoryEntry(purchase.id, ProductMovementType.PURCHASE, purchase.dateEpochDay, q, BigDecimal.ZERO))
+                }
+            }
             val mainName = mainUnit?.name ?: product.unit
             // A consignment sell-through left the stock when it was sent, so it does not count again.
             val sold = sales.filter { it.consignmentId == null }.mapNotNull { s ->
@@ -83,7 +89,7 @@ data class ProductRecord(
                 }
             }
             var level = BigDecimal.ZERO
-            return (stored + sold + sent).sortedWith(compareBy({ it.first }, { it.second })).map { (_, _, entry) ->
+            return (stored + bought + sold + sent).sortedWith(compareBy({ it.first }, { it.second })).map { (_, _, entry) ->
                 level = ProductStock.level(level, ProductMovement(entry.type, entry.quantity))
                 entry.copy(stockAfter = level)
             }

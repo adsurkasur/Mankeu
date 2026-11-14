@@ -506,6 +506,7 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-15 06:23 · PK-1.4 pembelian dagangan · checkpoint · [verified] formulir, pembelian/stok/kas, migrasi, pemulihan dan sinkron diuji pada emulator-5558; [unknown] rata-rata pada nota, backdate/edit dan ekspor Excel (DEC-057).
 - 2026-11-15 05:55 · PK-2.8 editor jenis dagangan · checkpoint · [verified] pilihan produk dagangan tanpa resep di editor dan penyimpanan jenis diuji 2/2; [unknown] perjalanan lengkap dan belanja dagangan.
 - 2026-11-15 05:50 · PK-1.4 penjualan tanpa modal · checkpoint · [verified] nota dagangan dengan modal unknown tersimpan lewat UI, stok berkurang dan laba ditandai belum lengkap; tes UI dan data 2/2. [unknown] pembelian dan rata-rata belum terintegrasi.
 - 2026-11-15 05:46 · PK-1.4 fondasi domain · checkpoint · [verified] rata-rata tertimbang, penjualan, hitung stok dan unknown diuji 6/6; [unknown] penyimpanan, alur pembelian, nota, edit/hapus, backup dan sinkron (DEC-056); belum dapat digunakan.

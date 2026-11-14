@@ -54,6 +54,8 @@ class BackupMoveFlowTest {
             lines = listOf(SaleLineDraft(productId, "gelas", "1", 20_000)),
             paidNowRupiah = 10_000,
         ))
+        val tradedId = repository.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 8_000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        repository.recordTradePurchase(tradedId, java.math.BigDecimal("10"), 50_000, LocalDate.of(2026, 10, 12))
         // Keep the expected canonical summary and buyer list alongside the fixture for restoration.
         expectedSummary = repository.monthlySummary(bookId, YearMonth.of(2026, 10)).first()
         expectedBuyers = repository.contacts(businessId).first()
@@ -84,5 +86,8 @@ class BackupMoveFlowTest {
         val bookId = repository.books(projectId).first().single { it.mode == BookMode.REALIZATION.name }.id
         assertEquals(expectedSummary, repository.monthlySummary(bookId, YearMonth.of(2026, 10)).first())
         assertEquals(expectedBuyers, repository.contacts(businessId).first())
+        val traded = repository.products(projectId).first().single { it.product.name == "Air" }
+        assertEquals(0, java.math.BigDecimal("10").compareTo(traded.stock))
+        assertEquals(50_000L, traded.purchases.single().amountRupiah)
     }
 }

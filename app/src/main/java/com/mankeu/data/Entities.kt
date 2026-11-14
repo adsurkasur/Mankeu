@@ -176,6 +176,21 @@ data class FinancialEventEntity(
     val payMethod: String? = null,
 )
 
+/** A cash purchase of traded stock; the financial event owns amount, date and journal. */
+@Entity(
+    tableName = "trade_purchases",
+    foreignKeys = [
+        ForeignKey(FinancialEventEntity::class, ["id"], ["id"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(ProductEntity::class, ["id"], ["productId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("productId")],
+)
+data class TradePurchaseEntity(
+    @PrimaryKey val id: String,
+    val productId: String,
+    val quantityText: String,
+)
+
 @Entity(
     tableName = "journal_entries",
     foreignKeys = [ForeignKey(FinancialEventEntity::class, ["id"], ["sourceEventId"], ForeignKey.CASCADE)],

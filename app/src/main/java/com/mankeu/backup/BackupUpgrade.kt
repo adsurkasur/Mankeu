@@ -22,7 +22,9 @@ object BackupUpgrade {
         var upgraded = snapshot
         if (upgraded.schemaVersion == 12) upgraded = from12(upgraded)
         if (upgraded.schemaVersion == 13) upgraded = from13(upgraded)
-        return normalize14(upgraded)
+        upgraded = normalize14(upgraded)
+        if (upgraded.schemaVersion == 14) upgraded = upgraded.copy(schemaVersion = 15, tables = upgraded.tables + BackupTable("trade_purchases", listOf("id", "productId", "quantityText"), emptyList()))
+        return upgraded
     }
 
     /** Older debug builds also used version 14; add only absent columns, never overwrite values. */

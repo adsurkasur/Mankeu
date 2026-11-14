@@ -30,6 +30,18 @@ import java.time.LocalDate
  */
 @RunWith(AndroidJUnit4::class)
 class SyncEngineTest {
+    @Test fun tradePurchaseSyncsItsStockAndCashTogether() = runBlocking {
+        val (_, project) = a.repository.createBusinessWithUnit("Usaha dagang", "Utama")
+        val product = a.repository.saveProduct(project, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 7000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        val event = a.repository.recordTradePurchase(product, BigDecimal("10"), 50_000, LocalDate.of(2026, 10, 20))
+        SyncCoordinator(a.engine, store).syncOnce(passphrase)
+        val result = SyncCoordinator(b.engine, store).syncOnce(passphrase)
+        assertEquals(0, result.rejected)
+        assertEquals(50_000L, b.database.financeDao().getEvent(event)?.amountRupiah)
+        assertEquals("10", b.database.financeDao().getTradePurchase(event)?.quantityText)
+        assertEquals(0, BigDecimal.TEN.compareTo(b.repository.products(project).first().single().stock))
+    }
+
     @Test fun newSchema14FieldsAndFreeLineSyncWithoutLoss() = runBlocking {
         val (business, project) = a.repository.createBusinessWithUnit("Usaha uji", "Utama")
         val db = a.database.openHelper.writableDatabase

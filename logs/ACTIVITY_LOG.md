@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 06:23] [Codex (GPT-6) — pembelian dagangan]
+- **Goal**: Mencatat pembelian dagangan sebagai pengeluaran dan penambahan stok yang saling terkait.
+- **Actions**: Menambah skema 15 dan migrasi, relasi pembelian dengan transaksi, pencatatan atomik dan alur formulir, klasifikasi biaya barang, riwayat stok, peningkatan cadangan dan sinkron; menahan ekspor Excel yang belum membawa relasi tanpa memblokir PDF.
+- **Files**: AppDatabase, Entities, Migration14To15, FinanceDao/Repository, ProductRecord/Costing, BackupUpgrade, ProductsScreen, StockHistoryScreen, AppViewModel, MankeuApp, resources, schema 15, tes migrasi/data/UI/backup/sync, rencana dan DEC-057.
+- **Verification**: [verified] Migrasi 14→15, pembelian/stok/kas, formulir dan backup restore lulus 4/4; sinkron dua database lulus 1/1 di emulator-5558; BackupUpgradeTest dan build lulus. [unknown] Rata-rata pada nota, koreksi/backdate, ekspor Excel dan alur menyeluruh lintas layar belum selesai.
+
 ### [2026-11-15 05:58] [Codex (GPT-6) — aksi stok menurut jenis]
 - **Goal**: Mencegah barang dagangan ditawarkan sebagai barang yang diproduksi.
 - **Actions**: Menyembunyikan aksi produksi untuk barang dagangan dan membatasi pemilih produksi beranda pada barang buatan; hitung stok tetap tersedia.

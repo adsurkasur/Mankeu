@@ -527,6 +527,12 @@
     <string name="product_stock_line">Stock %1$s %2$s</string>
     <string name="product_stock_split">(%1$s %2$s + %3$s %4$s)</string>
     <string name="product_stock_negative_hint">Stock below zero: record production or count stock.</string>
+    <string name="trade_buy">Record purchase</string>
+    <string name="trade_buy_title">Buy %1$s</string>
+    <string name="trade_quantity">Quantity (%1$s)</string>
+    <string name="trade_total">Total paid</string>
+    <string name="trade_need_amount">Enter a total above zero.</string>
+    <string name="trade_purchase_saved">Purchase and stock recorded.</string>
     <string name="product_produce">Produce</string>
     <string name="product_count_stock">Count stock</string>
     <string name="product_stock_history">Stock history</string>

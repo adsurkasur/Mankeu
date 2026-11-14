@@ -1,5 +1,12 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-057] Catatan pembelian dagangan dalam skema 15
+- **Tanggal**: 2026-11-15; **status**: implementasi awal, penilaian rata-rata nota belum terintegrasi.
+- **Konteks**: Pembelian barang dagangan harus menambah stok dan mencatat uang tanpa mengira transaksi belanja lama sebagai pembelian produk. DEC-034 mempertahankan skema 14 selama perubahan awal; data baru membutuhkan migrasi yang dapat membedakan relasi secara eksplisit.
+- **Keputusan**: Skema 15 menambah trade_purchases yang menautkan transaksi kas dan produk dengan jumlah satuan dasar; jurnal uang tetap dibuat melalui jalur seimbang. Pengeluaran tersebut diklasifikasikan sebagai modal barang untuk ITEM_COST meskipun pengaturan kategori berubah. Cadangan lama dinaikkan dengan tabel kosong dan sinkron menangkap tabel baru. Ekspor Excel ditolak untuk data ini sampai dapat membawa relasinya; PDF tidak diblokir. Editor transaksi lama menolak perubahan catatan khusus.
+- **Alasan dan alternatif**: Menebak pembelian dari transaksi produk lama berisiko mengubah stok dan laba. Tabel relasi menjaga makna tanpa mengandalkan teks atau nama kategori.
+- **Komponen**: Room/migrasi 14→15, backup, sync, pencatatan belanja, stok, laba, workbook dan layar Produk. Perhitungan rata-rata pada nota, edit khusus, impor/ekspor dan riwayat backdate masih perlu diselesaikan.
+
 ### [DEC-056] Dasar perhitungan rata-rata persediaan dagangan
 - **Tanggal**: 2026-11-15; **status**: fondasi domain, belum terintegrasi.
 - **Konteks**: Pemilik memilih rata-rata harga beli (DEC-053); stok dan harga dapat berubah setelah setiap pembelian.

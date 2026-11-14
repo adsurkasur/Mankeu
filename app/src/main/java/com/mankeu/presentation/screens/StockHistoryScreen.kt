@@ -87,6 +87,7 @@ fun StockHistoryScreen(record: ProductRecord, onDelete: (String) -> Unit, modifi
 private fun headline(entry: StockHistoryEntry): String = when (entry.type) {
     ProductMovementType.PRODUCTION -> entry.batchesText?.let { stringResource(R.string.stock_history_production_batches, it.replace('.', ',')) }
         ?: stringResource(R.string.stock_history_production)
+    ProductMovementType.PURCHASE -> stringResource(R.string.stock_history_purchase)
     ProductMovementType.ADJUSTMENT -> stringResource(R.string.stock_history_count)
     ProductMovementType.SALE -> stringResource(R.string.stock_history_sold, entry.soldText.orEmpty())
     ProductMovementType.CONSIGN_OUT -> stringResource(R.string.stock_history_consign_out)
@@ -111,7 +112,7 @@ private fun HistoryRow(entry: StockHistoryEntry, unit: String, onDelete: (() -> 
                 )
                 Text(
                     when (entry.type) {
-                        ProductMovementType.PRODUCTION, ProductMovementType.CONSIGN_RETURN -> stringResource(R.string.stock_history_added, amount, unit)
+                        ProductMovementType.PRODUCTION, ProductMovementType.PURCHASE, ProductMovementType.CONSIGN_RETURN -> stringResource(R.string.stock_history_added, amount, unit)
                         ProductMovementType.SALE, ProductMovementType.CONSIGN_OUT -> stringResource(R.string.stock_history_removed, amount, unit)
                         ProductMovementType.ADJUSTMENT -> stringResource(R.string.stock_history_counted, amount, unit)
                     },

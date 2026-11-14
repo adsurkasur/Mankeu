@@ -1411,6 +1411,7 @@ private fun ScreenContent(
                     onCreateStockItem = viewModel::createStockItem,
                     onRecordStockMovement = viewModel::recordStockMovement,
                     onBuyMaterial = onBuyMaterial,
+                    onBuyTrade = viewModel::recordTradePurchase,
                     expanded = expanded,
                     multiUnit = state.projects.size >= 2,
                 )

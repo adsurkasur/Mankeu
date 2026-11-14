@@ -150,7 +150,7 @@ object ProductCosting {
 }
 
 /** CONSIGN_OUT is read from consignment lines and CONSIGN_RETURN is stored (DEC-029 §8). */
-enum class ProductMovementType { PRODUCTION, SALE, ADJUSTMENT, CONSIGN_OUT, CONSIGN_RETURN }
+enum class ProductMovementType { PRODUCTION, PURCHASE, SALE, ADJUSTMENT, CONSIGN_OUT, CONSIGN_RETURN }
 
 /** [quantity] in base units. */
 data class ProductMovement(val type: ProductMovementType, val quantity: BigDecimal)
@@ -164,7 +164,7 @@ object ProductStock {
 
     /** The stock after one [movement] applied to [level]. */
     fun level(level: BigDecimal, movement: ProductMovement): BigDecimal = when (movement.type) {
-        ProductMovementType.PRODUCTION, ProductMovementType.CONSIGN_RETURN -> level + movement.quantity
+        ProductMovementType.PRODUCTION, ProductMovementType.PURCHASE, ProductMovementType.CONSIGN_RETURN -> level + movement.quantity
         ProductMovementType.SALE, ProductMovementType.CONSIGN_OUT -> level - movement.quantity
         ProductMovementType.ADJUSTMENT -> movement.quantity
     }

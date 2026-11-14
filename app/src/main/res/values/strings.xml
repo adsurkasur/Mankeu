@@ -529,6 +529,12 @@
     <string name="product_stock_line">Stok %1$s %2$s</string>
     <string name="product_stock_split">(%1$s %2$s + %3$s %4$s)</string>
     <string name="product_stock_negative_hint">Stok minus: catat produksi atau hitung stok.</string>
+    <string name="trade_buy">Catat belanja</string>
+    <string name="trade_buy_title">Belanja %1$s</string>
+    <string name="trade_quantity">Jumlah (%1$s)</string>
+    <string name="trade_total">Total belanja</string>
+    <string name="trade_need_amount">Isi total belanja lebih dari Rp0.</string>
+    <string name="trade_purchase_saved">Belanja dan stok berhasil dicatat.</string>
     <string name="product_produce">Produksi</string>
     <string name="product_count_stock">Hitung stok</string>
     <string name="product_stock_history">Riwayat stok</string>

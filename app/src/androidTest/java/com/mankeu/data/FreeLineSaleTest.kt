@@ -121,6 +121,24 @@ class FreeLineSaleTest {
         assertEquals(5_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().hppRupiah)
     }
 
+    @Test fun tradedPurchaseAddsStockAndRecordsCashExpense() = runBlocking {
+        val id = repo.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 7000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        val eventId = repo.recordTradePurchase(id, BigDecimal("10"), 50_000, day)
+        val record = repo.products(projectId).first().single { it.product.id == id }
+        assertEquals(0, BigDecimal.TEN.compareTo(record.stock))
+        assertEquals(50_000L, db.financeDao().getEvent(eventId)?.amountRupiah)
+        assertEquals(-50_000L, repo.accountingSummary(bookId).first().cashBalanceRupiah)
+        assertEquals("10", db.financeDao().getTradePurchase(eventId)?.quantityText)
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
+        val categoryId = requireNotNull(db.financeDao().getEvent(eventId)?.categoryId)
+        repo.setCategoryIncludedInHpp(categoryId, false)
+        val profit = repo.monthlySummary(bookId, YearMonth.from(day)).first().profit
+        assertEquals(50_000L, profit.productionSpendRupiah)
+        assertEquals(0L, profit.fixedCostRupiah + profit.variableCostRupiah)
+        assertTrue(runCatching { repo.exportProjectWorkbook(projectId) }.exceptionOrNull()?.message.orEmpty().contains("belanja barang dagangan"))
+        assertEquals("%PDF", repo.exportProjectPdf(projectId).take(4).toByteArray().toString(Charsets.US_ASCII))
+    }
+
     @Test fun newTradedProductPersistsItsKind() = runBlocking {
         val id = repo.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 7000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
         assertEquals("TRADED", db.financeDao().getProduct(id)?.kind)

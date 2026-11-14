@@ -832,6 +832,12 @@ class AppViewModel(
             .onFailure { message.value = UiText.fromError(it, R.string.msg_sale_failed) }
     }
 
+    fun recordTradePurchase(productId: String, quantity: BigDecimal, amount: Long, date: LocalDate, onSuccess: () -> Unit = {}) = mutating {
+        runCatching { repository.recordTradePurchase(productId, quantity, amount, date) }
+            .onSuccess { message.value = UiText.of(R.string.trade_purchase_saved); onSuccess() }
+            .onFailure { message.value = UiText.fromError(it, R.string.msg_plan_save_failed) }
+    }
+
     fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate) = mutating {
         runCatching { repository.recordProduction(productId, batches, date, "") }
             .onSuccess { message.value = UiText.of(R.string.msg_production_saved) }

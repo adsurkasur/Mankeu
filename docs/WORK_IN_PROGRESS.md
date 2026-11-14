@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Produksi dan hitung stok (2026-11-14 16:44 WIB):** [terverifikasi] Validasi jumlah dan fokus diterapkan; stok nol sah. Membuka tanggal melepas fokus input. Dua tes form, satu alur produksi dan satu tes tanggal lulus pada emulator-5558, build lulus. [belum] TalkBack, seluruh audit dan MVP.
+
+
 **Validasi baris nota (2026-11-14 16:38 WIB):** [terverifikasi] Jumlah dan harga mengikuti blur dan fokus saat Simpan; tes terarah dan alur nota dua produk lulus pada emulator-5558, build debug/androidTest lulus. [belum] TalkBack, form lain, audit seluruh layar dan MVP.
 
 

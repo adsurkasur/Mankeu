@@ -30,6 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -202,14 +205,26 @@ internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, 
     var batches by rememberSaveable(record.product.id) { mutableStateOf("1") }
     var date by rememberSaveable(record.product.id) { mutableStateOf(LocalDate.now().toString()) }
     val parsed = TransactionCalculation.parseQuantity(batches)
+    val quantityFocus = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
+    var touched by rememberSaveable(record.product.id) { mutableStateOf(false) }
     MankeuSheet(
         title = stringResource(R.string.production_title, record.product.name),
         onDismiss = onDismiss,
         confirmBlockedReason = if (parsed == null) stringResource(R.string.form_need_quantity) else null,
+        onInvalidConfirm = { touched = true; quantityFocus.requestFocus() },
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
         // − 1 + (audit L10): batches are nearly always 1–3; still typeable, decimals allowed.
-        QuantityStepper(value = batches, onValueChange = { batches = it }, label = stringResource(R.string.production_batches))
+        QuantityStepper(
+            value = batches, onValueChange = { batches = it }, label = stringResource(R.string.production_batches),
+            isError = touched && parsed == null,
+            fieldModifier = Modifier.focusRequester(quantityFocus).onFocusChanged { focus ->
+                if (focused && !focus.isFocused) touched = true
+                focused = focus.isFocused
+            },
+        )
+        if (touched && parsed == null) Text(stringResource(R.string.form_need_quantity), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
         // The live result above Simpan (P2 §7). U-2: the recipe's materials leave their stock (quantity per batch × batches).
         parsed?.let {
@@ -226,30 +241,33 @@ internal fun ProductionSheet(record: ProductRecord, materials: List<StockItem>, 
 }
 
 @Composable
-private fun CountStockSheet(record: ProductRecord, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
+internal fun CountStockSheet(record: ProductRecord, onDismiss: () -> Unit, onSave: (BigDecimal, LocalDate) -> Unit) {
     var counted by rememberSaveable(record.product.id) { mutableStateOf(record.stock.takeIf { it.signum() >= 0 }?.toQuantityText().orEmpty()) }
     var date by rememberSaveable(record.product.id) { mutableStateOf(LocalDate.now().toString()) }
     // Zero is a real count (sold out); parseQuantity would refuse it.
     val parsed = counted.replace(',', '.').toBigDecimalOrNull()?.takeIf { it.signum() >= 0 }
+    val quantityFocus = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
+    var touched by rememberSaveable(record.product.id) { mutableStateOf(false) }
     MankeuSheet(
         title = stringResource(R.string.count_stock_title, record.product.name),
         onDismiss = onDismiss,
         confirmBlockedReason = if (parsed == null) stringResource(R.string.form_need_count) else null,
+        onInvalidConfirm = { touched = true; quantityFocus.requestFocus() },
         onConfirm = { parsed?.let { onSave(it, LocalDate.parse(date)) } },
     ) {
-        QuantityInput(stringResource(R.string.count_stock_field, record.product.unit), counted) { counted = it }
+        OutlinedTextField(
+            value = counted, onValueChange = { counted = sanitizeDecimal(it) },
+            label = { Text(stringResource(R.string.count_stock_field, record.product.unit)) },
+            singleLine = true,
+            isError = touched && parsed == null,
+            supportingText = if (touched && parsed == null) ({ Text(stringResource(R.string.form_need_count)) }) else null,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth().focusRequester(quantityFocus).onFocusChanged { focus ->
+                if (focused && !focus.isFocused) touched = true
+                focused = focus.isFocused
+            },
+        )
         DateField(value = date, label = stringResource(R.string.entry_date), onValueChange = { date = it })
     }
-}
-
-@Composable
-private fun QuantityInput(label: String, value: String, onValueChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = { onValueChange(sanitizeDecimal(it)) },
-        label = { Text(label) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
-    )
 }

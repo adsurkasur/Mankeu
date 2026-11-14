@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Form produksi dan hitung stok menunjukkan kesalahan jumlah pada kolom; hitungan stok nol tetap diperbolehkan.
 - Editor baris nota menandai jumlah dan harga yang tidak valid setelah kolom ditinggalkan dan memfokuskan kolom terkait saat Simpan.
 - Bahan resep dipilih dari dropdown; kesalahan jumlah bahan serta nama dan nilai biaya ditampilkan pada kolom setelah ditinggalkan atau Simpan ditekan.
 - Satuan produk pada baris nota dipilih dari dropdown; harga bawaan tetap mengikuti satuan yang dipilih.

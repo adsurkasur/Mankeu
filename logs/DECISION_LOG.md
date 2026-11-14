@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-051] Perpindahan fokus saat memilih tanggal
+- **Tanggal**: 2026-11-14; **status**: diterapkan.
+- **Konteks**: Membuka DateField dari field yang sedang disunting tidak melepas fokus, sehingga validasi blur tidak berjalan.
+- **Keputusan**: Lepaskan fokus input sebelum membuka pemilih tanggal; pemilihan tanggal dan penyimpanan nilai tetap sama.
+- **Alasan dan alternatif**: Komponen bersama menangani perpindahan fokus di seluruh pemanggil, sesuai waktu validasi DEC-042.
+- **Komponen**: DateField dan form yang memakainya.
+
+
 ### [DEC-050] Validasi kolom pada pengatur jumlah
 - **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
 - **Konteks**: QuantityStepper membungkus kolom jumlah dan tombol tambah/kurang; pemilik form memerlukan fokus dan status error pada kolom.

@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
@@ -162,12 +163,13 @@ fun DateField(
     onValueChange: (String) -> Unit,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     val parsed = remember(value) { runCatching { LocalDate.parse(value) }.getOrNull() }
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         ListRowField(
             label = label,
             value = parsed?.let { dateWords(it) } ?: stringResource(R.string.date_none),
-            onClick = { open = true },
+            onClick = { focusManager.clearFocus(); open = true },
             modifier = Modifier.weight(1f),
         )
         if (clearable && parsed != null) {

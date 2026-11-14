@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:44] [Codex (GPT-6) — validasi produksi dan hitung stok]
+- **Goal**: Menyelaraskan validasi jumlah produksi dan hitung stok produk serta perpindahan ke tanggal.
+- **Actions**: Menampilkan error setelah blur atau Simpan dan memfokuskan jumlah; mempertahankan nol sebagai hasil hitung stok yang sah. DateField melepas fokus saat pemilih tanggal dibuka sehingga blur terpanggil.
+- **Files**: ProductsScreen, FormFields, ProductStockValidationTest, WIP, changelog dan DEC-051.
+- **Verification**: [terverifikasi] Pengujian awal menunjukkan blur belum terpanggil saat membuka tanggal; setelah perbaikan dua tes form dan satu alur produksi lulus pada emulator-5558, tes pemilih tanggal 1/1, build debug/androidTest dan diff check lulus. [belum] TalkBack dan MVP.
+
+
 ### [2026-11-14 16:38] [Codex (GPT-6) — validasi baris nota]
 - **Goal**: Menyelaraskan validasi jumlah dan harga pada baris nota dengan DEC-042.
 - **Actions**: Menambahkan modifier kolom dan status error opsional pada QuantityStepper; menampilkan pesan setelah blur dan memfokuskan kolom invalid saat Simpan.

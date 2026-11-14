@@ -101,6 +101,8 @@ fun QuantityStepper(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
+    isError: Boolean = false,
 ) {
     val decrease = stringResource(R.string.stepper_decrease) + " " + label
     val increase = stringResource(R.string.stepper_increase) + " " + label
@@ -115,7 +117,8 @@ fun QuantityStepper(
             singleLine = true,
             textStyle = MankeuType.Body.copy(textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.width(Space.NumberField).semantics { contentDescription = label },
+            isError = isError,
+            modifier = fieldModifier.width(Space.NumberField).semantics { contentDescription = label },
         )
         FilledTonalIconButton(onClick = { stepQuantity(value, 1)?.let(onValueChange) }) {
             Icon(Icons.Default.Add, contentDescription = increase)

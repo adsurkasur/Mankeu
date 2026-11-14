@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Validasi baris nota (2026-11-14 16:38 WIB):** [terverifikasi] Jumlah dan harga mengikuti blur dan fokus saat Simpan; tes terarah dan alur nota dua produk lulus pada emulator-5558, build debug/androidTest lulus. [belum] TalkBack, form lain, audit seluruh layar dan MVP.
+
+
 **Pemilih bahan dan validasi resep (2026-11-14 16:33 WIB):** [terverifikasi] Dropdown memilih bahan berdasarkan ID dan mempertahankan jumlah; validasi kolom resep mengikuti blur/fokus. Empat tes terarah dan build debug/androidTest lulus pada emulator-5558. [belum] Audit seluruh layar, perangkat dan MVP.
 
 

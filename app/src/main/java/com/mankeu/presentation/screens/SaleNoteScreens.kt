@@ -55,6 +55,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -483,6 +486,14 @@ private fun NoteLineRow(title: String, amount: String?, profit: Long?, onClick: 
 @Composable
 private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () -> Unit, onSave: (SaleLineInput) -> Unit, onDelete: () -> Unit) {
     var draft by remember(line) { mutableStateOf(line) }
+    val quantityFocus = remember { FocusRequester() }
+    val priceFocus = remember { FocusRequester() }
+    var quantityFocused by remember { mutableStateOf(false) }
+    var priceFocused by remember { mutableStateOf(false) }
+    var quantityTouched by rememberSaveable { mutableStateOf(false) }
+    var priceTouched by rememberSaveable { mutableStateOf(false) }
+    val quantityInvalid = TransactionCalculation.parseQuantity(draft.quantity) == null
+    val priceInvalid = (draft.price.toLongOrNull() ?: 0) <= 0
     LineEditSheet(
         title = record.product.name,
         onDismiss = onDismiss,
@@ -493,6 +504,12 @@ private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () 
             else -> null
         },
         onDelete = onDelete,
+        onInvalidSave = {
+            when {
+                quantityInvalid -> { quantityTouched = true; quantityFocus.requestFocus() }
+                priceInvalid -> { priceTouched = true; priceFocus.requestFocus() }
+            }
+        },
     ) {
         UnitPicker(
             value = draft.unit,
@@ -501,12 +518,28 @@ private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () 
             onCustom = null,
             label = stringResource(R.string.editor_unit_name),
         )
-        QuantityStepper(value = draft.quantity, onValueChange = { draft = draft.copy(quantity = it) }, label = stringResource(R.string.sale_quantity))
+        QuantityStepper(
+            value = draft.quantity,
+            onValueChange = { draft = draft.copy(quantity = it) },
+            label = stringResource(R.string.sale_quantity),
+            isError = quantityTouched && quantityInvalid,
+            fieldModifier = Modifier.focusRequester(quantityFocus).onFocusChanged { focus ->
+                if (quantityFocused && !focus.isFocused) quantityTouched = true
+                quantityFocused = focus.isFocused
+            },
+        )
+        if (quantityTouched && quantityInvalid) Text(stringResource(R.string.form_need_quantity), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         val usual = record.priceOf(draft.unit)
         MoneyInput(
             label = stringResource(R.string.sale_price, draft.unit),
             value = draft.price.toLongOrNull(),
             onValueChange = { draft = draft.copy(price = it?.toString().orEmpty()) },
+            isError = priceTouched && priceInvalid,
+            supportingText = if (priceTouched && priceInvalid) ({ Text(stringResource(R.string.form_need_price)) }) else null,
+            fieldModifier = Modifier.focusRequester(priceFocus).onFocusChanged { focus ->
+                if (priceFocused && !focus.isFocused) priceTouched = true
+                priceFocused = focus.isFocused
+            },
             chips = listOfNotNull(usual?.takeIf { it.toString() != draft.price }?.let { MoneyChip(stringResource(R.string.sale_price_usual), it) }),
             imeAction = ImeAction.Done,
         )

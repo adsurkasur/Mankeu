@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:38] [Codex (GPT-6) — validasi baris nota]
+- **Goal**: Menyelaraskan validasi jumlah dan harga pada baris nota dengan DEC-042.
+- **Actions**: Menambahkan modifier kolom dan status error opsional pada QuantityStepper; menampilkan pesan setelah blur dan memfokuskan kolom invalid saat Simpan.
+- **Files**: Stepper, SaleNoteScreens, SaleNoteFlowTest, WIP, changelog dan DEC-050.
+- **Verification**: [terverifikasi] Tes blur jumlah gagal sebelum perubahan; tes blur/fokus jumlah dan harga serta alur nota dua produk lulus pada emulator-5558. Build debug/androidTest dan diff check lulus. [belum] TalkBack, seluruh layar dan MVP.
+
+
 ### [2026-11-14 16:33] [Codex (GPT-6) — pemilih bahan dan validasi resep]
 - **Goal**: Merapikan daftar bahan dan validasi editor resep sesuai DEC-042.
 - **Actions**: Mengganti chip bahan dengan dropdown berbasis ID; menampilkan pesan dan fokus pada jumlah bahan, nama biaya dan jumlah biaya setelah blur/Simpan.

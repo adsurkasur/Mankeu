@@ -7,6 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
@@ -166,6 +168,29 @@ class SaleNoteFlowTest {
         assertEquals(600_000L, note.total)
         assertEquals(0L, note.paid)
         assertEquals(LocalDate.now().plusDays(14), note.dueDate)
+    }
+
+    @Test
+    fun lineEditorFocusesInvalidQuantityAndPrice() {
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("1 bungkus Keripik")
+        val quantity = compose.onAllNodes(hasContentDescription("Jumlah") and hasSetTextAction())[0]
+        quantity.performTextReplacement("0")
+        val price = compose.onAllNodes(hasText("Harga per bungkus", substring = true) and hasSetTextAction())[0]
+        price.performClick()
+        exists("Isi jumlah lebih dari 0 dulu.")
+        click("Simpan")
+        quantity.assertIsFocused().performTextReplacement("2")
+        price.performTextReplacement("")
+        quantity.performClick()
+        exists("Isi harga lebih dari Rp0 dulu.")
+        click("Simpan")
+        price.assertIsFocused().performTextReplacement("8000")
+        click("Simpan")
+        exists("2 bungkus Keripik · Rp16.000")
     }
 
     @Test

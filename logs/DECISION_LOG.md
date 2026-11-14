@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-050] Validasi kolom pada pengatur jumlah
+- **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
+- **Konteks**: QuantityStepper membungkus kolom jumlah dan tombol tambah/kurang; pemilik form memerlukan fokus dan status error pada kolom.
+- **Keputusan**: Tambahkan modifier dan status error opsional untuk kolom tanpa mengubah perilaku pemanggil lain; pemilik form menyediakan pesan dan fokus.
+- **Alasan dan alternatif**: Fokus pada wadah tidak selalu mencapai field. Pengaturan jumlah dan validasi transaksi tetap terpisah.
+- **Komponen**: QuantityStepper dan editor baris nota.
+
+
 ### [DEC-049] Modal manual pada perakitan rencana
 - **Tanggal**: 2026-11-14; **status**: diterapkan terbatas.
 - **Konteks**: DEC-048 menahan semua produk tanpa resep, termasuk modal manual yang sudah diketahui.

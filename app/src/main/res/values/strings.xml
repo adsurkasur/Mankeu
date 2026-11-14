@@ -697,6 +697,10 @@
     <string name="sale_quantity">Jumlah</string>
     <string name="sale_price">Harga per %1$s</string>
     <string name="sale_line_result">%1$s · modal barang %2$s · untung %3$s</string>
+    <string name="sale_add_free_line">Tambah barang atau jasa</string>
+    <string name="sale_free_line_title">Barang atau jasa</string>
+    <string name="sale_free_line_name">Nama barang atau jasa</string>
+    <string name="sale_free_line_price">Harga per satuan</string>
     <string name="sale_add_line">Tambah produk</string>
     <string name="sale_discount">Diskon (opsional)</string>
     <string name="sale_subtotal">Subtotal</string>
@@ -708,7 +712,7 @@
     <string name="sale_paid_amount">Dibayar sekarang</string>
     <string name="sale_already_paid">Sudah dibayar %1$s</string>
     <string name="sale_notes">Catatan (opsional)</string>
-    <string name="sale_no_products">Belum ada produk. Tambahkan produk dulu di tab Produk.</string>
+    <string name="sale_no_products">Belum ada barang atau jasa. Tambahkan ke nota ini.</string>
     <string name="sale_status_paid">Lunas</string>
     <string name="sale_status_partial">Sebagian</string>
     <string name="sale_status_unpaid">Belum dibayar</string>
@@ -901,8 +905,8 @@
     <string name="help_start_home_body">Beranda merangkum bulan ini di unit yang dipilih: uang kas, untung, pendapatan, serta uang masuk dan keluar. Di catatan Rencana, Beranda menampilkan ringkasan rencana usaha.</string>
     <string name="help_start_home_steps">Uang kas adalah sisa uang dari semua catatan di unit ini.\nUntung bulan ini adalah pendapatan bulan ini dikurangi modal barang barang terjual dan biaya lain. Angkanya sama dengan di Laporan.\nKomposisi biaya menunjukkan ke mana uang paling banyak keluar.</string>
     <string name="help_record_income_title">Mencatat penjualan</string>
-    <string name="help_record_income_body">Setiap uang yang masuk dari pembeli dicatat sebagai Pemasukan berkategori penjualan. Jika produkmu sudah ada di Rencana Usaha, pilih produk dan jumlahnya agar jumlah minimum penjualan bulan ini bisa dihitung.</string>
-    <string name="help_record_income_steps">Pastikan catatan nyata dipilih, lalu ketuk tombol Catat.\nPilih Catat Pemasukan.\nIsi jumlah uang, keterangan, dan kategori Penjualan &amp; Jasa.\nBila ada, pilih produk dan isi jumlah terjual. Jumlah uang mengikuti harga x jumlah.\nKetuk Simpan catatan.</string>
+    <string name="help_record_income_body">Catat penjualan dengan nota. Pilih produk yang sudah ada, atau tambahkan barang maupun jasa yang belum didaftarkan. Barang atau jasa bebas tidak mengubah stok dan modalnya belum diketahui.</string>
+    <string name="help_record_income_steps">Buka Catatan, ketuk Catat, lalu pilih Nota penjualan.\nPilih produk, atau ketuk Tambah barang atau jasa lalu isi nama, jumlah, dan harga.\nPilih pelanggan bila belum lunas, lalu pilih status pembayaran.\nPeriksa total dan ketuk Simpan.</string>
     <string name="help_record_expense_title">Mencatat pengeluaran dan sifat biaya</string>
     <string name="help_record_expense_body">Belanja bahan, gaji, sewa, dan listrik dicatat sebagai Pengeluaran. Biaya rutin tetap sama saat penjualan berubah. Biaya lain bisa naik atau turun mengikuti penjualan; pembagian ini dipakai untuk menghitung penjualan yang menutup biaya.</string>
     <string name="help_record_expense_steps">Ketuk tombol Catat, lalu Catat Pengeluaran.\nIsi jumlah, keterangan, dan kategorinya.\nJika pengeluaran ini berbeda dari biasanya, ubah sifat biayanya menjadi Tetap atau berubah mengikuti penjualan.\nKetuk Simpan catatan.</string>

@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Nota bebas (2026-11-15 01:07 WIB):** [terverifikasi] Penjualan barang/jasa dapat dicatat tanpa produk, dicampur produk dan diedit tanpa kehilangan pembayaran; biaya bebas belum diketahui ditandai, termasuk flag lama yang keliru. Sebelas tes data/UI dan satu regresi nota produk lulus pada emulator-5558; JVM 201/201 dan build debug/androidTest lulus. Rincian `docs/superpowers/reports/2026-11-15-nota-bebas.md`. [belum] Ekspor/impor workbook lossless untuk nota/baris bebas (PK-4.1/4.2), masukan modal bebas, saran nama, simpan jadi produk dan seluruh MVP.
+
+
 **Keputusan modal dagangan K-8 (2026-11-15 00:52 WIB):** [user-confirmed] Gunakan rata-rata harga beli. [belum] Rumus rinci serta perlakuan stok awal, koreksi, pembulatan dan perjalanan PK-1.4; jangan memakai harga terakhir sebagai keputusan pemilik. Pekerjaan saat ini: nota bebas, PK-2.4.
 
 

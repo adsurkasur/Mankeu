@@ -28,18 +28,34 @@ class PickerPageTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private data class Choice(val id: String, val name: String)
 
-    @Test fun freeLineNoteShowsExplicitReasonAndCannotBeSaved() {
+    @Test fun existingFreeLineCanBeSavedWithoutLosingItsName() {
         val record = SaleRecord(SaleEntity("s", "b", "p", null, 20000, createdAtEpochMillis = 0),
             listOf(SaleLineEntity("l", "s", null, "", "1", "1", 1000, 1000, 0, name = "Jasa", costKnown = false)),
             emptyList(), null)
-        var saves = 0
+        var saved: SaleDraft? = null
         compose.setContent { MankeuTheme {
             SaleNoteEditorScreen("Nota", record, emptyList(), emptyList(), emptyList(), emptyList(),
-                onSave = { saves++ }, onSaveContact = { _, _, _, _ -> }, onClose = {})
+                onSave = { saved = it }, onSaveContact = { _, _, _, _ -> }, onClose = {})
         } }
-        compose.onNodeWithText(compose.activity.getString(R.string.sale_edit_unsupported)).assertExists()
-        compose.onNodeWithText(compose.activity.getString(R.string.action_save)).assertIsNotEnabled()
-        assertEquals(0, saves)
+        compose.onNodeWithText(compose.activity.getString(R.string.action_save)).performClick()
+        assertEquals("Jasa", saved!!.lines.single().name)
+        assertEquals(null, saved!!.lines.single().productId)
+    }
+
+    @Test fun freeLineCanBeCreatedWithoutARegisteredProduct() {
+        var saved: SaleDraft? = null
+        compose.setContent { MankeuTheme {
+            SaleNoteEditorScreen("Nota", null, emptyList(), emptyList(), emptyList(), emptyList(),
+                onSave = { saved = it }, onSaveContact = { _, _, _, _ -> }, onClose = {})
+        } }
+        compose.onNodeWithText(compose.activity.getString(R.string.sale_add_free_line)).performClick()
+        compose.onAllNodes(hasSetTextAction() and hasText(compose.activity.getString(R.string.sale_free_line_name), substring = true))[0].performTextInput("Jasa servis")
+        compose.onAllNodes(hasSetTextAction() and hasText(compose.activity.getString(R.string.sale_free_line_price), substring = true))[0].performTextInput("50000")
+        compose.onAllNodesWithText(compose.activity.getString(R.string.action_save)).let { it[it.fetchSemanticsNodes().size - 1] }.performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.action_save)).performClick()
+        assertEquals("Jasa servis", saved!!.lines.single().name)
+        assertEquals(null, saved!!.lines.single().productId)
+        assertEquals(50_000L, saved!!.paidNowRupiah)
     }
 
     @Test fun duplicateLabelsRenderAndSelectByIdentity() {

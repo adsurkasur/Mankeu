@@ -65,6 +65,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Template Excel v5: lembar Stok Barang memakai kolom "Stok Awal"; lembar Produksi & Stok punya kolom "Bahan" dan jenis "Pemakaian bahan", "Bahan masuk", "Bahan keluar", "Hitung ulang bahan", sehingga ekspor lalu impor menghasilkan stok bahan yang sama.
 - Untung dihitung saat barang terjual: penjualan nota − HPP − biaya; belanja berkategori "Biaya produksi (sudah dihitung di HPP)" diganti HPP dengan baris selisih (F2-8). Arus kas tetap dari uang yang benar-benar masuk/keluar.
 ### Added
+- Nota dapat memuat barang atau jasa tanpa membuat produk; baris tersebut dapat diubah dan tidak mengubah stok. Modal yang belum diketahui tidak diperlakukan sebagai nol.
 - Panduan tiga langkah untuk menyimpan cadangan dan pindah HP, serta jalan masuk pemulihan pada Beranda kosong. Format backup tidak berubah (PK-4.7).
 - Catatan penjualan pada lapisan repository menerima baris bebas dan gabungan produk/jasa tanpa membuat gerakan stok; ekspor workbook memberi tahu jika baris bebas belum termasuk sebelum dukungan lengkap pada PK-4.1.
 - Uang diketik dengan titik ribuan ("1.250.000") di semua kotak rupiah. Fondasi desain baru untuk form (baris pilihan, halaman pilih dengan cari dan "Tambah", stepper, hasil di atas Simpan, "Buang perubahan?" saat Back); layar memakainya mulai tugas berikutnya.

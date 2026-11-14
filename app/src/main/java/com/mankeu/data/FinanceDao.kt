@@ -356,8 +356,8 @@ interface FinanceDao {
                SUM(t.unknownCostCount) AS unknownCostCount, SUM(t.unknownCostRupiah) AS unknownCostRupiah
         FROM sales s
         INNER JOIN (SELECT saleId, SUM(totalRupiah) AS subtotal, SUM(hppRupiah) AS hpp,
-                           SUM(CASE WHEN costKnown = 0 THEN 1 ELSE 0 END) AS unknownCostCount,
-                           SUM(CASE WHEN costKnown = 0 THEN totalRupiah ELSE 0 END) AS unknownCostRupiah
+                           SUM(CASE WHEN costKnown = 0 OR productId IS NULL THEN 1 ELSE 0 END) AS unknownCostCount,
+                           SUM(CASE WHEN costKnown = 0 OR productId IS NULL THEN totalRupiah ELSE 0 END) AS unknownCostRupiah
                     FROM sale_lines GROUP BY saleId) t ON t.saleId = s.id
         WHERE s.projectId = :projectId
         GROUP BY strftime('%Y-%m', s.dateEpochDay * 86400, 'unixepoch')

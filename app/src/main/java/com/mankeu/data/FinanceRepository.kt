@@ -1141,11 +1141,6 @@ class FinanceRepository(
         val existing = id?.let { dao.getSale(it) ?: error("Nota tidak ditemukan.") }
         require(existing == null || existing.projectId == projectId) { "Nota berasal dari unit usaha lain." }
         require(draft.lines.isNotEmpty()) { "Isi minimal satu baris produk." }
-        if (existing != null) {
-            require(dao.getSaleLines(existing.id).none { it.productId == null }) {
-                "Nota ini memiliki baris bebas dan belum dapat diubah. Data tetap tersimpan."
-            }
-        }
         existing?.let { sale ->
             val firstPaid = dao.getSalePayments(sale.id).minOfOrNull { it.dateEpochDay }
             require(firstPaid == null || draft.date.toEpochDay() <= firstPaid) { "Tanggal bayar tidak boleh sebelum tanggal nota. Ubah atau hapus pembayarannya dulu." }
@@ -1294,7 +1289,7 @@ class FinanceRepository(
                 hppRupiah = if (record == null) 0 else if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
                 sortOrder = index,
                 name = record?.product?.name ?: l.name,
-                costKnown = record == null || manual != null || productCost?.complete == true,
+                costKnown = record != null && (manual != null || productCost?.complete == true),
             )
         }
         if (existing == null) {

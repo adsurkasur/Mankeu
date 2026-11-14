@@ -1,0 +1,6 @@
+# Nota barang atau jasa bebas — 2026-11-15 01:07 WIB
+
+- [terverifikasi] Pengguna dapat menambahkan nama, jumlah dan harga tanpa produk yang didaftarkan; baris dapat dicampur dengan produk dan tidak membuat atau mengubah stok. Nota bebas juga dapat diedit; pembayaran, serta snapshot baris ketika hanya catatan berubah, dipertahankan. Edit dengan total di bawah pembayaran ditolak secara atomik.
+- [terverifikasi] Baris bebas baru ditandai modal belum diketahui. Baris bebas lama yang telanjur memiliki flag diketahui tetap dianggap belum diketahui pada ringkasan dan detail; dengan basis ITEM_COST laba tidak ditampilkan sebagai pasti. Basis SIMPLE tetap mengikuti aturan yang ada.
+- [terverifikasi] Sebelas tes instrumentasi terarah pada emulator-5558 mencakup penjualan pertama tanpa produk, penjualan campuran, edit dengan pembayaran, penolakan perubahan yang tidak sah dan perlakuan flag lama. Satu regresi nota dua produk lulus; JVM 201/201 dan build debug/androidTest lulus. Bantuan penjualan diperbarui mengikuti alur nota.
+- [belum] Workbook saat ini belum mengekspor detail baris bebas dan memberikan pemberitahuan setelah ekspor. PK-4.1/4.2 harus membawa nota dan baris bebas secara lossless; jangan menganggap fitur ekspor lengkap. Saran nama, simpan menjadi produk, input modal bebas, suite penuh, sinkronisasi dan seluruh MVP juga belum selesai.

@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-054] Nota barang atau jasa tanpa produk terdaftar
+- **Tanggal**: 2026-11-15; **status**: diterapkan sebagian, ekspor lossless belum selesai.
+- **Konteks**: API telah menerima baris bebas tetapi layar mewajibkan produk dan menolak edit nota yang memuatnya. Biaya bebas belum dapat diisi.
+- **Keputusan**: Izinkan menambah dan mengubah nama, jumlah dan harga barang/jasa langsung pada nota, tanpa membuat produk atau mengubah stok. Tanpa modal yang dinyatakan, baris baru berstatus modal tidak diketahui; baris bebas lama juga diperlakukan tidak diketahui pada ringkasan dan detail walau flag lamanya menyatakan diketahui. Pembayaran dan snapshot baris yang tidak berubah dipertahankan saat edit.
+- **Alasan dan alternatif**: Harga jual tidak membuktikan modal nol. Perlakuan konservatif mencegah laba ITEM_COST semu; basis SIMPLE tetap mengikuti aturan kas yang berlaku. Kontrak workbook saat ini belum membawa baris bebas dan aplikasi masih memberi pemberitahuan kehilangan detail; PK-4.1 perlu diselesaikan sebelum mengklaim ekspor lossless.
+- **Komponen**: editor nota, repository/DAO, ringkasan laba, bantuan, ekspor dan pengujian.
+
+
 ### [DEC-053] Dasar modal barang dagangan
 - **Tanggal**: 2026-11-15; **status**: keputusan pemilik, implementasi belum selesai.
 - **Konteks**: K-8 menawarkan harga beli terakhir atau rata-rata.

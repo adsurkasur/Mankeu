@@ -107,11 +107,16 @@ import java.time.LocalDate
 enum class NoteFilter { ALL, OPEN, OVERDUE }
 
 /** One product line while typed; text until saved, so "0", blank or "1," never reach the math. */
-private data class SaleLineInput(val productId: String, val unit: String, val quantity: String, val price: String)
+private data class SaleLineInput(val productId: String, val unit: String, val quantity: String, val price: String, val name: String = "")
 
 private val saleLineSaver = listSaver<SnapshotStateList<SaleLineInput>, String>(
-    save = { rows -> rows.flatMap { listOf(it.productId, it.unit, it.quantity, it.price) } },
-    restore = { flat -> flat.chunked(4).map { SaleLineInput(it[0], it[1], it[2], it[3]) }.toMutableStateList() },
+    save = { rows -> listOf("v2") + rows.flatMap { listOf(it.productId, it.unit, it.quantity, it.price, it.name) } },
+    restore = { flat ->
+        val current = flat.firstOrNull() == "v2"
+        (if (current) flat.drop(1) else flat).chunked(if (current) 5 else 4).map {
+            SaleLineInput(it[0], it[1], it[2], it[3], if (current) it[4] else "")
+        }.toMutableStateList()
+    },
 )
 
 private enum class PaidChoice { FULL, NONE, PART }
@@ -181,11 +186,12 @@ fun SaleNoteEditorScreen(
     var details by rememberSaveable { mutableStateOf(existing != null && (existing.sale.discountRupiah > 0 || existing.sale.notes.isNotBlank())) }
     var pickingCustomer by rememberSaveable { mutableStateOf(false) }
     var pickingProduct by rememberSaveable { mutableStateOf(false) }
+    var addingFreeLine by rememberSaveable { mutableStateOf(false) }
     var pickingDue by rememberSaveable { mutableStateOf(false) }
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     val lines = rememberSaveable(saver = saleLineSaver) {
         val stored = existing?.lines.orEmpty().sortedBy { it.sortOrder }
-            .map { SaleLineInput(it.productId.orEmpty(), it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString()) }
+            .map { SaleLineInput(it.productId.orEmpty(), it.unitName, it.quantityText.replace('.', ','), it.unitPriceRupiah.toString(), it.name) }
         (if (existing != null) stored else startLines(products, history)).toMutableStateList()
     }
     // Until the owner touches the lines, picking a customer restarts them on what that customer
@@ -210,14 +216,16 @@ fun SaleNoteEditorScreen(
         val record = products.firstOrNull { it.product.id == line.productId }
         val quantity = TransactionCalculation.parseQuantity(line.quantity)
         val price = line.price.toLongOrNull()?.takeIf { it > 0 }
-        if (record == null || quantity == null || price == null) null
+        if (quantity == null || price == null || (line.productId.isBlank() && line.name.isBlank())) null
+        else if (line.productId.isBlank()) SalesMath.lineTotal(quantity, price) to 0L
+        else if (record == null) null
         else SalesMath.lineTotal(quantity, price) to (record.product.manualCostRupiah?.takeIf { record.recipe.isEmpty() && record.product.kind != "TRADED" }
             ?.let { TransactionCalculation.computeTotalRupiah(record.contentOf(line.unit) * quantity, it) }
             ?: ProductCosting.hpp(record.spec, prices, record.contentOf(line.unit) * quantity))
     }
-    val unknownCost = lines.any { line -> products.firstOrNull { it.product.id == line.productId }?.let { record ->
+    val unknownCost = lines.any { line -> line.productId.isBlank() || (products.firstOrNull { it.product.id == line.productId }?.let { record ->
         !costs.getValue(record.product.id).complete && (record.recipe.isNotEmpty() || record.product.manualCostRupiah == null || record.product.kind == "TRADED")
-    } ?: false }
+    } ?: true) }
     val subtotal = results.sumOf { it?.first ?: 0 }
     val hpp = results.sumOf { it?.second ?: 0 }
     val discountRupiah = discount ?: 0
@@ -251,13 +259,13 @@ fun SaleNoteEditorScreen(
             onClose = onClose,
             snackbarHost = snackbarHost,
             saveBlockedReason = when {
-                existing?.lines?.any { it.productId == null } == true -> stringResource(R.string.sale_edit_unsupported)
                 lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> stringResource(R.string.sale_trade_cost_unsupported)
                 lines.isEmpty() -> stringResource(R.string.form_need_sale_line)
                 results.any { it == null } -> {
                     val line = lines[results.indexOfFirst { it == null }]
                     when {
-                        products.none { it.product.id == line.productId } -> stringResource(R.string.form_choose_item)
+                        line.productId.isBlank() && line.name.isBlank() -> stringResource(R.string.form_need_name)
+                        line.productId.isNotBlank() && products.none { it.product.id == line.productId } -> stringResource(R.string.form_choose_item)
                         TransactionCalculation.parseQuantity(line.quantity) == null -> stringResource(R.string.form_need_quantity)
                         else -> stringResource(R.string.form_need_price)
                     }
@@ -269,7 +277,6 @@ fun SaleNoteEditorScreen(
             },
             onInvalidSave = {
                 when {
-                    existing?.lines?.any { it.productId == null } == true -> false
                     lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> false
                     lines.isEmpty() || results.any { it == null } -> false
                     partTooHigh -> { partTouched = true; partFocus.requestFocus(); true }
@@ -286,7 +293,7 @@ fun SaleNoteEditorScreen(
                         dueDate = due.takeIf { showDue }?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
                         discountRupiah = discountRupiah,
                         notes = notes,
-                        lines = lines.map { SaleLineDraft(it.productId, it.unit, it.quantity, it.price.toLongOrNull() ?: 0) },
+                        lines = lines.map { SaleLineDraft(it.productId.ifBlank { null }, it.unit, it.quantity, it.price.toLongOrNull() ?: 0, name = it.name) },
                         paidNowRupiah = paidNow,
                     ),
                 )
@@ -304,12 +311,12 @@ fun SaleNoteEditorScreen(
         ) {
             // What and how much.
             FormLabel(stringResource(R.string.sale_products))
-            if (products.isEmpty()) Text(stringResource(R.string.sale_no_products), color = semantic.danger)
+            if (products.isEmpty() && lines.isEmpty()) Text(stringResource(R.string.sale_no_products), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Column {
                 lines.forEachIndexed { index, line ->
                     val record = products.firstOrNull { it.product.id == line.productId }
                     NoteLineRow(
-                        title = stringResource(R.string.sale_line_title, line.quantity.ifBlank { "?" }, line.unit, record?.product?.name ?: existing?.lines?.sortedBy { it.sortOrder }?.getOrNull(index)?.name?.ifBlank { "—" } ?: "—"),
+                        title = listOf(line.quantity.ifBlank { "?" }, line.unit, record?.product?.name ?: line.name.ifBlank { "—" }).filter { it.isNotBlank() }.joinToString(" "),
                         amount = results[index]?.first?.toRupiah(),
                         profit = if (unknownCost) null else results[index]?.let { (t, h) -> t - h },
                         onClick = { editing = index },
@@ -324,6 +331,11 @@ fun SaleNoteEditorScreen(
                     Icon(Icons.Default.Add, contentDescription = null)
                     Text(stringResource(R.string.sale_add_line))
                 }
+            }
+
+            TextButton(onClick = { addingFreeLine = true }) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Text(stringResource(R.string.sale_add_free_line))
             }
 
             // Who.
@@ -356,7 +368,11 @@ fun SaleNoteEditorScreen(
 
             // Payment.
             if (existing == null) {
-                val choices = listOf(PaidChoice.FULL to R.string.sale_paid_full, PaidChoice.NONE to R.string.sale_paid_none, PaidChoice.PART to R.string.sale_paid_part)
+                val choices = listOf(
+                    PaidChoice.FULL to R.string.sale_paid_full,
+                    PaidChoice.NONE to R.string.sale_paid_none,
+                    PaidChoice.PART to R.string.sale_paid_part,
+                )
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     choices.forEachIndexed { i, (choice, label) ->
                         SegmentedButton(
@@ -429,14 +445,17 @@ fun SaleNoteEditorScreen(
 
         editing?.let { index ->
             val line = lines.getOrNull(index) ?: return@let
-            val record = products.firstOrNull { it.product.id == line.productId } ?: return@let
-            LineSheet(
-                record = record,
-                line = line,
-                onDismiss = { editing = null },
-                onSave = { lines[index] = it; editing = null },
-                onDelete = { lines.removeAt(index); editing = null },
-            )
+            if (line.productId.isBlank()) {
+                FreeLineSheet(line, onDismiss = { editing = null }, onSave = { lines[index] = it; editing = null }, onDelete = { lines.removeAt(index); editing = null })
+            } else {
+                val record = products.firstOrNull { it.product.id == line.productId } ?: return@let
+                LineSheet(record = record, line = line, onDismiss = { editing = null },
+                    onSave = { lines[index] = it; editing = null }, onDelete = { lines.removeAt(index); editing = null })
+            }
+        }
+        if (addingFreeLine) {
+            FreeLineSheet(SaleLineInput("", "", "1", ""), onDismiss = { addingFreeLine = false },
+                onSave = { lines.add(it); addingFreeLine = false }, onDelete = null)
         }
         if (pickingDue) {
             MankeuDatePicker(initial = runCatching { LocalDate.parse(due) }.getOrNull() ?: parsedDate, onDismiss = { pickingDue = false }) {
@@ -568,6 +587,31 @@ private fun LineSheet(record: ProductRecord, line: SaleLineInput, onDismiss: () 
             chips = listOfNotNull(usual?.takeIf { it.toString() != draft.price }?.let { MoneyChip(stringResource(R.string.sale_price_usual), it) }),
             imeAction = ImeAction.Done,
         )
+    }
+}
+
+/** A sale of an item or service that has not been saved as a product. */
+@Composable
+private fun FreeLineSheet(line: SaleLineInput, onDismiss: () -> Unit, onSave: (SaleLineInput) -> Unit, onDelete: (() -> Unit)?) {
+    var draft by remember(line) { mutableStateOf(line) }
+    LineEditSheet(
+        title = stringResource(R.string.sale_free_line_title), onDismiss = onDismiss,
+        onSave = { onSave(draft.copy(name = draft.name.trim())) },
+        saveBlockedReason = when {
+            draft.name.isBlank() -> stringResource(R.string.form_need_name)
+            TransactionCalculation.parseQuantity(draft.quantity) == null -> stringResource(R.string.form_need_quantity)
+            (draft.price.toLongOrNull() ?: 0) <= 0 -> stringResource(R.string.form_need_price)
+            else -> null
+        },
+        onDelete = onDelete,
+    ) {
+        OutlinedTextField(value = draft.name, onValueChange = { draft = draft.copy(name = it) },
+            label = { Text(stringResource(R.string.sale_free_line_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = draft.quantity, onValueChange = { draft = draft.copy(quantity = com.mankeu.presentation.components.sanitizeDecimal(it)) },
+            label = { Text(stringResource(R.string.sale_quantity)) }, singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        MoneyInput(label = stringResource(R.string.sale_free_line_price), value = draft.price.toLongOrNull(),
+            onValueChange = { draft = draft.copy(price = it?.toString().orEmpty()) }, imeAction = ImeAction.Done)
     }
 }
 
@@ -767,7 +811,7 @@ fun SaleNoteDetailScreen(
                     ReportRow(stringResource(R.string.sale_subtotal), record.subtotal.toRupiah())
                     if (record.sale.discountRupiah > 0) ReportRow(stringResource(R.string.sale_discount_row), record.sale.discountRupiah.toRupiah())
                     ReportRow(stringResource(R.string.sale_total), record.total.toRupiah(), emphasized = true)
-                    ReportRow(stringResource(R.string.sale_profit), if (record.lines.any { !it.costKnown }) stringResource(R.string.sale_cost_unknown) else (record.total - record.hpp).toRupiah())
+                    ReportRow(stringResource(R.string.sale_profit), if (record.lines.any { !it.costKnown || it.productId == null }) stringResource(R.string.sale_cost_unknown) else (record.total - record.hpp).toRupiah())
                 }
             }
             if (record.sale.notes.isNotBlank()) item(key = "sale_detail_notes") { Text(record.sale.notes) }

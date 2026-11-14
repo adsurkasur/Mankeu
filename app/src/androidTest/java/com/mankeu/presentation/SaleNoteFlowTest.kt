@@ -233,6 +233,80 @@ class SaleNoteFlowTest {
     }
 
     @Test
+    fun freeLineCanBeAddedToANoteAndSavedWithoutCreatingStock() {
+        val productsBefore = runBlocking { repository.products(projectId).first().size }
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("Tambah barang atau jasa")
+        type("Nama barang atau jasa", "Jasa antar")
+        type("Jumlah", "2")
+        type("Harga", "25000")
+        click("Simpan")
+        exists("2 Jasa antar")
+        exists("Total Rp58.000")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.sales(projectId).first().isNotEmpty() } }
+        val note = runBlocking { repository.sales(projectId).first().single() }
+        val free = note.lines.single { it.productId == null }
+        assertEquals("Jasa antar", free.name)
+        assertEquals(50_000L, free.totalRupiah)
+        assertEquals(false, free.costKnown)
+        assertEquals(58_000L, note.total)
+        assertEquals(productsBefore, runBlocking { repository.products(projectId).first().size })
+    }
+
+    @Test
+    fun firstSaleCanBeRecordedWithoutAnyProductAndUnknownCostStaysVisible() {
+        runBlocking {
+            repository.products(projectId).first().forEach { repository.archiveProduct(it.product.id) }
+            repository.setProfitBasis(businessId, com.mankeu.domain.ProfitBasis.ITEM_COST)
+        }
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("Tambah barang atau jasa")
+        type("Nama barang atau jasa", "Jasa servis")
+        type("Harga", "50000")
+        click("Simpan")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.sales(projectId).first().isNotEmpty() } }
+        runBlocking {
+            val sale = repository.sales(projectId).first().single()
+            val book = repository.books(projectId).first().first { it.mode == "REALIZATION" }.id
+            val summary = repository.monthlySummary(book, java.time.YearMonth.now()).first()
+            assertEquals(50_000L, sale.total)
+            assertEquals(50_000L, sale.paid)
+            assertTrue(repository.products(projectId).first().isEmpty())
+            assertEquals(1, summary.profit.salesWithoutCostCount)
+            assertTrue(summary.profit.profitIncomplete)
+        }
+    }
+
+    @Test
+    fun freeLineCanBeEditedWithoutLosingPayment() {
+        val customer = runBlocking { repository.saveContact(businessId, null, ContactDraft("Bu Sari")) }
+        val saleId = runBlocking { repository.saveSale(projectId, null, SaleDraft(customer, LocalDate.now(), null, 0, "", listOf(SaleLineDraft(null, "", "1", 50_000, name = "Jasa servis")), paidNowRupiah = 20_000)) }
+        start()
+        click("Catatan")
+        click("Bu Sari")
+        click("Ubah")
+        click("1 Jasa servis")
+        type("Nama barang atau jasa", "Jasa antar")
+        type("Harga", "60000")
+        click("Simpan")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { repository.sales(projectId).first().single { it.sale.id == saleId }.total == 60_000L } }
+        val note = runBlocking { repository.sales(projectId).first().single { it.sale.id == saleId } }
+        assertEquals("Jasa antar", note.lines.single().name)
+        assertEquals(false, note.lines.single().costKnown)
+        assertEquals(20_000L, note.paid)
+        assertEquals(40_000L, note.outstanding)
+    }
+
+    @Test
     fun aNoteWithTwoProductsShowsTotalDiscountAndProfitAndAnUnpaidNoteNeedsACustomer() {
         start()
         // U4: the speed dial lives on Catatan.

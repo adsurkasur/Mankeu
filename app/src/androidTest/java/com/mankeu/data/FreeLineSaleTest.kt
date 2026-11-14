@@ -121,6 +121,15 @@ class FreeLineSaleTest {
         assertEquals(5_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().hppRupiah)
     }
 
+    @Test fun legacyFreeLineFlaggedKnownStillMarksProfitIncomplete() = runBlocking {
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
+        val id = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(null, "", "1", 50_000, name = "Jasa lama")), 50_000))
+        db.openHelper.writableDatabase.execSQL("UPDATE sale_lines SET costKnown = 1 WHERE saleId = ?", arrayOf(id))
+        val month = repo.monthlySummary(bookId, YearMonth.from(day)).first()
+        assertEquals(1, month.profit.salesWithoutCostCount)
+        assertTrue(month.profit.profitIncomplete)
+    }
+
     @Test fun freeLineNeedsAnExplicitName() = runBlocking {
         val error = runCatching {
             repo.saveSale(projectId, null, SaleDraft(
@@ -141,34 +150,24 @@ class FreeLineSaleTest {
         assertEquals(0L, repo.accountingSummary(bookId).first().cashBalanceRupiah)
     }
 
-    @Test fun editingAnUnsupportedFreeLineNoteIsRejectedWithoutChangingItsSnapshotOrPayment() = runBlocking {
-        val saleId = repo.saveSale(projectId, null, SaleDraft(
-            contactId = buyerId,
-            date = day,
-            dueDate = null,
-            discountRupiah = 0,
-            notes = "",
-            lines = listOf(SaleLineDraft(null, "", "1", 1_500_000, name = "Jahit seragam")),
-            paidNowRupiah = 750_000,
-        ))
+    @Test fun editingFreeLinePreservesPaymentAndRejectsTotalBelowPaid() = runBlocking {
+        val draft = SaleDraft(buyerId, day, null, 0, "", listOf(SaleLineDraft(null, "", "1", 1_500_000, name = "Jahit seragam")), paidNowRupiah = 750_000)
+        val saleId = repo.saveSale(projectId, null, draft)
         val before = repo.sales(projectId).first().single { it.sale.id == saleId }
-
-        val error = runCatching {
-            repo.saveSale(projectId, saleId, SaleDraft(
-                contactId = buyerId,
-                date = day,
-                dueDate = null,
-                discountRupiah = 0,
-                notes = "ubah",
-                lines = listOf(SaleLineDraft(null, "", "1", 1_500_000, name = "Jahit seragam")),
-                paidNowRupiah = 0,
-            ))
-        }.exceptionOrNull()
-
-        assertEquals("Nota ini memiliki baris bebas dan belum dapat diubah. Data tetap tersimpan.", error?.message)
+        repo.saveSale(projectId, saleId, draft.copy(notes = "catatan"))
+        val afterNotes = repo.sales(projectId).first().single { it.sale.id == saleId }
+        assertEquals(before.lines, afterNotes.lines)
+        assertEquals(before.payments, afterNotes.payments)
+        val invalid = runCatching { repo.saveSale(projectId, saleId, draft.copy(lines = listOf(SaleLineDraft(null, "", "1", 500_000, name = "Jahit seragam")))) }.exceptionOrNull()
+        assertTrue(invalid is IllegalArgumentException)
+        assertEquals(afterNotes, repo.sales(projectId).first().single { it.sale.id == saleId })
+        repo.saveSale(projectId, saleId, draft.copy(notes = "ubah", lines = listOf(SaleLineDraft(null, "", "2", 1_000_000, name = "Jahit baju"))))
         val after = repo.sales(projectId).first().single { it.sale.id == saleId }
-        assertEquals(before.lines, after.lines)
+        assertEquals("Jahit baju", after.lines.single().name)
+        assertEquals(false, after.lines.single().costKnown)
+        assertEquals(2_000_000L, after.total)
+        assertEquals(750_000L, after.paid)
         assertEquals(before.payments, after.payments)
-        assertEquals(before.sale.notes, after.sale.notes)
+        assertEquals("ubah", after.sale.notes)
     }
 }

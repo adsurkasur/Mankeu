@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Usaha baru memakai hitung untung SIMPLE (semua belanja usaha mengurangi laba); usaha lama tetap ITEM_COST. MonthlySummary dan kartu BEP memakai basis yang sama, dan ringkasan mencatat jumlah/nilai baris penjualan dengan biaya belum diketahui (PK-1.6).
 
 ### Fixed
+- Ringkasan stok tidak lagi menyatakan semua stok di atas minimum saat batas menipis belum diatur.
 - Belanja lama tanpa ID kategori yang bukan pelunasan ditandai tidak pasti pada laba ITEM_COST/BEP; saat koreksi pengguna diminta memilih kategori tanpa mengubah nilai atau tautan bahan secara otomatis (DEC-043).
 
 - Saat modal penjualan belum diketahui pada basis modal barang, Beranda, laporan dan ekspor tidak lagi menyajikan laba parsial sebagai lengkap; kartu BEP menjelaskan keterbatasan (DEC-041).

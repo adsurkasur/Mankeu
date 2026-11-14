@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:05] [Codex (GPT-6) — pesan batas stok]
+- **Goal**: Memperbaiki informasi stok yang menyesatkan pada Produk.
+- **Actions**: Mengganti klaim semua stok di atas minimum dengan informasi tidak ada batas atau tidak ada peringatan, sesuai konfigurasi; tidak mengubah aturan hitung atau peringatan stok.
+- **Files**: StockSection, resource Indonesia/English, MaterialStockScreenTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Kasus stok nol tanpa batas gagal sebelum perbaikan; dua tes kasus nol dan stok minus lulus pada emulator-5558. Build debug/androidTest dan diff check lulus. [belum] Audit visual seluruh aplikasi dan MVP.
+
+
 ### [2026-11-14 16:02] [Codex (GPT-6) — validasi satuan jual]
 - **Goal**: Melengkapi validasi kolom pada satuan jual produk.
 - **Actions**: Menerapkan pesan blur dan fokus Simpan untuk nama, isi dan harga; menambah callback opsional LineEditSheet dan tes alur.

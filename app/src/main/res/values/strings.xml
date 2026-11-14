@@ -477,7 +477,8 @@
     <string name="stock_value">Total nilai stok</string>
     <string name="stock_item_count">%1$d barang tercatat</string>
     <string name="stock_low_count">%1$d barang menipis</string>
-    <string name="stock_all_ok">Semua stok di atas batas minimum.</string>
+    <string name="stock_all_ok">Tidak ada peringatan stok menipis.</string>
+    <string name="stock_no_limit">Belum ada batas stok menipis.</string>
     <string name="stock_empty">Belum ada bahan atau barang. Tambahkan bahan baku agar jumlah stok dan harganya terpantau.</string>
     <string name="stock_manage">Kelola Stok</string>
     <string name="stock_add_item">Tambah Barang</string>

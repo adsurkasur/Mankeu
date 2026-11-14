@@ -105,7 +105,8 @@ internal fun StockCard(items: List<StockItem>, onManage: (() -> Unit)?) {
                         }
                     }
                 } else {
-                    Text(stringResource(R.string.stock_all_ok), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val message = if (items.none { it.minAlertStock.signum() > 0 }) R.string.stock_no_limit else R.string.stock_all_ok
+                    Text(stringResource(message), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (onManage != null) {

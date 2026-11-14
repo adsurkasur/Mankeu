@@ -475,7 +475,8 @@
     <string name="stock_value">Stock value</string>
     <string name="stock_item_count">%1$d items recorded</string>
     <string name="stock_low_count">%1$d items running low</string>
-    <string name="stock_all_ok">All stock is above its minimum level.</string>
+    <string name="stock_all_ok">There are no low-stock alerts.</string>
+    <string name="stock_no_limit">No low-stock limits have been set.</string>
     <string name="stock_empty">No materials or goods yet. Add raw materials to track their stock and price.</string>
     <string name="stock_manage">Manage stock</string>
     <string name="stock_add_item">Add item</string>

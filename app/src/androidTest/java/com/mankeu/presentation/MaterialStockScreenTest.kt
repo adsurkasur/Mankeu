@@ -262,6 +262,14 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun zeroStockWithoutMinimumDoesNotClaimAllStockIsAboveMinimum() {
+        start()
+        click("Produk")
+        exists("Belum ada batas stok menipis.")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Semua stok di atas batas minimum.", substring = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
     fun minusStockSaysWhatToDo() {
         runBlocking { repository.recordStockMovement(minyak, StockMovementType.OUT, BigDecimal(3), LocalDate.now(), "") }
         start()

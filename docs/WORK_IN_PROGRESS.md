@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Pesan batas stok (2026-11-14 16:05 WIB):** [terverifikasi] Produk menyatakan bila belum ada batas menipis; jika ada batas tetapi tidak ada peringatan, teks tidak lagi mengklaim semua barang di atas minimum. Tes stok nol/tanpa batas dan stok minus 2/2 lulus pada emulator-5558; build debug/androidTest lulus. [belum] Audit visual menyeluruh, semua perangkat dan gerbang MVP.
+
+
 **Validasi satuan jual (2026-11-14 16:02 WIB):** [terverifikasi] Nama, isi dan harga pada sheet satuan jual mengikuti validasi blur dan fokus saat Simpan. ProductEditorTest 9/9 dan tes fokus isi/harga tambahan 1/1 lulus pada emulator-5558; build debug dan androidTest lulus. [belum] Form lain, audit visual dan seluruh gerbang MVP.
 
 

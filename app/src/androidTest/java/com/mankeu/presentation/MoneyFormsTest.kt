@@ -2,6 +2,8 @@ package com.mankeu.presentation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -81,6 +83,46 @@ class MoneyFormsTest {
     private fun box(label: String) = compose.onNode(hasSetTextAction() and hasText(label, substring = true))
 
     private fun save() = compose.onAllNodes(hasText(t(R.string.action_save)) and hasClickAction()).let { it[0] }.performClick()
+
+    @Test
+    fun moneyAmountErrorAppearsAfterBlurAndClearsWhenValid() {
+        open(MoneyFormMode.OTHER_OUT)
+        val amount = box(t(R.string.entry_amount))
+        amount.performClick()
+        box(t(R.string.entry_description)).performClick()
+        compose.onNodeWithText(t(R.string.form_need_amount)).assertExists()
+        amount.performTextInput("50000")
+        assertEquals(0, compose.onAllNodesWithText(t(R.string.form_need_amount), useUnmergedTree = true).fetchSemanticsNodes().size)
+        assertTrue(saved.isEmpty())
+    }
+
+    @Test
+    fun saveWithoutMoneyFocusesAmountAndDoesNotSave() {
+        open(MoneyFormMode.OTHER_OUT)
+        save()
+        compose.onNodeWithText(t(R.string.form_need_amount)).assertExists()
+        box(t(R.string.entry_amount)).assertIsFocused().performTextInput("50000")
+        assertEquals(0, compose.onAllNodesWithText(t(R.string.form_need_amount), useUnmergedTree = true).fetchSemanticsNodes().size)
+        save()
+        compose.waitForIdle()
+        assertEquals(50_000L, saved.single().amountRupiah)
+    }
+
+    @Test
+    fun purchasePriceShowsErrorAfterBlurAndClearsWhenValid() {
+        open(MoneyFormMode.PURCHASE)
+        val quantity = box(t(R.string.purchase_quantity))
+        quantity.performTextInput("2")
+        val price = box(t(R.string.purchase_price, "liter"))
+        price.performTextClearance()
+        quantity.performClick()
+        compose.onNodeWithText(t(R.string.form_need_price)).assertExists()
+        price.performTextInput("26000")
+        assertEquals(0, compose.onAllNodesWithText(t(R.string.form_need_price), useUnmergedTree = true).fetchSemanticsNodes().size)
+        save()
+        compose.waitForIdle()
+        assertEquals(52_000L, saved.single().amountRupiah)
+    }
 
     @Test
     fun belanjaStartsOnTheLastMaterialWithItsPriceAndSaysWhatTheStockBecomes() {

@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-045] Fokus pada kolom input uang
+- **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
+- **Konteks**: MoneyInput membungkus kolom dan chip; fokus harus diarahkan ke kolom aktual untuk memenuhi DEC-042.
+- **Keputusan**: Tambahkan modifier opsional khusus kolom, terpisah dari modifier wadah, dan gunakan callback validasi DEC-044 untuk memfokuskan kolom invalid.
+- **Alasan dan alternatif**: Modifier wadah tetap mempertahankan perilaku pemanggil lama; modifier kolom memungkinkan fokus dan pengamatan blur tanpa mengubah nilai atau chip. Alasan umum tetap menjadi fallback untuk validasi yang belum dipetakan.
+- **Komponen**: MoneyInput, MoneyForms dan pengujian form.
+
+
 ### [DEC-044] Fokus kesalahan spesifik pada form halaman penuh
 - **Tanggal**: 2026-11-14 14:58 WIB
 - **Status**: Diimplementasikan untuk form produk; perlu diterapkan bertahap pada form lain.

@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 15:04] [Codex (GPT-6) — validasi form uang]
+- **Goal**: Menerapkan validasi kolom uang dan belanja sesuai DEC-042 tanpa mengubah pencatatan.
+- **Actions**: Menambah tes blur, perbaikan dan fokus saat Simpan; menghubungkan fokus dan pesan merah ke jumlah, kuantitas dan harga; mempertahankan fallback untuk kesalahan lain.
+- **Files**: MoneyInput, MoneyForms, MoneyFormsTest, laporan, WIP, rencana induk, changelog dan DEC-045.
+- **Verification**: [terverifikasi] Tiga tes baru gagal sebelum perubahan dan lulus setelahnya; MoneyFormsTest 11/11 pada emulator-5558, JVM 196/196, assemble debug dan androidTest lulus. Lint dicatat pada laporan. [belum] Seluruh form dan perjalanan MVP, perangkat fisik, backup/sync dan upgrade penuh. Emulator-5556 dan superproject tidak disentuh.
+
+
 ### [2026-11-14 14:58] [Codex (GPT-6) — validasi barang dan produk]
 - **Goal**: Memperluas DEC-042 pada form tambah barang dan editor produk tanpa mengubah perilaku penyimpanan.
 - **Actions**: Menambah tes gagal untuk blur dan fokus, mengaitkan error/fokus ke nama dan satuan kustom barang serta nama, satuan terkecil dan hasil produk; menambah callback opsional FullPageForm dengan fallback alasan umum; menguji alur normal dan mendokumentasikan batas.

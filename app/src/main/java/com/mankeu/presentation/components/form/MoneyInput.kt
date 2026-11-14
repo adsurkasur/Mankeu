@@ -28,6 +28,7 @@ fun MoneyInput(
     value: Long?,
     onValueChange: (Long?) -> Unit,
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
     chips: List<MoneyChip> = emptyList(),
     supportingText: @Composable (() -> Unit)? = null,
     isError: Boolean = false,
@@ -37,6 +38,7 @@ fun MoneyInput(
         MoneyField(
             label = label,
             value = value?.toString().orEmpty(),
+            modifier = fieldModifier,
             supportingText = supportingText,
             isError = isError,
             imeAction = imeAction,

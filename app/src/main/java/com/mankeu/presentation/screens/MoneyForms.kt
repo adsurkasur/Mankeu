@@ -29,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -196,6 +197,13 @@ fun MoneyFormScreen(
         else -> null
     }
     val amountFocus = remember { FocusRequester() }
+    val priceFocus = remember { FocusRequester() }
+    var amountFocused by remember { mutableStateOf(false) }
+    var amountTouched by rememberSaveable(material?.id, mode) { mutableStateOf(false) }
+    var priceFocused by remember { mutableStateOf(false) }
+    var priceTouched by rememberSaveable(material?.id, mode) { mutableStateOf(false) }
+    val amountInvalid = amountTouched && if (material != null) parsedQuantity == null else total == null
+    val priceInvalid = priceTouched && material != null && (unitPrice == null || unitPrice!! <= 0)
     val title = stringResource(
         when (mode) {
             MoneyFormMode.PURCHASE -> R.string.money_title_purchase
@@ -212,6 +220,14 @@ fun MoneyFormScreen(
             onClose = onClose,
             snackbarHost = snackbarHost,
             saveBlockedReason = saveBlockedReason,
+            onInvalidSave = {
+                when {
+                    material != null && parsedQuantity == null -> { amountTouched = true; amountFocus.requestFocus(); true }
+                    material != null && (unitPrice == null || unitPrice!! <= 0) -> { priceTouched = true; priceFocus.requestFocus(); true }
+                    total == null -> { amountTouched = true; amountFocus.requestFocus(); true }
+                    else -> false
+                }
+            },
             onSave = {
                 val cat = category ?: return@FullPageForm
                 val t = total ?: return@FullPageForm
@@ -268,12 +284,23 @@ fun MoneyFormScreen(
                     suffix = { Text(material.unit) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth().focusRequester(amountFocus),
+                    isError = amountInvalid,
+                    supportingText = if (amountInvalid) ({ Text(stringResource(R.string.form_need_quantity)) }) else null,
+                    modifier = Modifier.fillMaxWidth().focusRequester(amountFocus).onFocusChanged { focus ->
+                        if (amountFocused && !focus.isFocused) amountTouched = true
+                        amountFocused = focus.isFocused
+                    },
                 )
                 MoneyInput(
                     label = stringResource(R.string.purchase_price, material.unit),
                     value = unitPrice,
                     onValueChange = { unitPrice = it },
+                    isError = priceInvalid,
+                    supportingText = if (priceInvalid) ({ Text(stringResource(R.string.form_need_price)) }) else null,
+                    fieldModifier = Modifier.focusRequester(priceFocus).onFocusChanged { focus ->
+                        if (priceFocused && !focus.isFocused) priceTouched = true
+                        priceFocused = focus.isFocused
+                    },
                     chips = listOfNotNull(
                         material.basePriceRupiah.takeIf { it > 0 && it != unitPrice }?.let { MoneyChip(stringResource(R.string.purchase_last_price), it) },
                     ),
@@ -284,7 +311,12 @@ fun MoneyFormScreen(
                     label = stringResource(R.string.entry_amount),
                     value = amount,
                     onValueChange = { amount = it },
-                    modifier = Modifier.focusRequester(amountFocus),
+                    isError = amountInvalid,
+                    supportingText = if (amountInvalid) ({ Text(stringResource(R.string.form_need_amount)) }) else null,
+                    fieldModifier = Modifier.focusRequester(amountFocus).onFocusChanged { focus ->
+                        if (amountFocused && !focus.isFocused) amountTouched = true
+                        amountFocused = focus.isFocused
+                    },
                 )
             }
             if (mode != MoneyFormMode.CAPITAL && (material == null || requiresCategoryConfirmation)) {

@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Validasi form uang (2026-11-14 15:04 WIB):** [terverifikasi] Jumlah, kuantitas dan harga menampilkan kesalahan setelah blur dan memfokuskan kolom saat Simpan; MoneyFormsTest 11/11 pada AVD terisolasi, JVM 196/196, build dan lint lulus. Laporan `docs/superpowers/reports/2026-11-14-validasi-form-uang.md`. [belum] Validasi form lain dan kondisi lintas kolom, audit seluruh layar dan gerbang MVP.
+
+
 Dokumen ini diperbarui **setiap kali satu langkah selesai**, sebelum langkah berikutnya dimulai, supaya
 pekerjaan bisa dilanjutkan bila sesi agen terputus (kejadian 2026-10-21: sesi hilang saat limit,
 perubahan schema 10 tertinggal tanpa catatan). Agen berikutnya: baca bagian "Status" dan "Catatan

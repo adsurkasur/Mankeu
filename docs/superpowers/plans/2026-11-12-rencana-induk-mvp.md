@@ -501,6 +501,8 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-14 15:04 · Validasi form uang · checkpoint · [terverifikasi] blur/fokus jumlah, kuantitas dan harga; MoneyFormsTest 11/11, JVM 196/196 dan lint/build. [belum] form lain dan MVP. `docs/superpowers/reports/2026-11-14-validasi-form-uang.md`.
+
 - 2026-11-14 14:58 · Validasi produk dan stok · checkpoint · lihat commit · [terverifikasi] blur/fokus untuk nama dan satuan barang serta nama, satuan dan hasil produk; tes terarah 4/4 dan 6/6, JVM 196/196, lint/build. [belum] form lain dan MVP. `docs/superpowers/reports/2026-11-14-validasi-produk-stok.md`.
 
 

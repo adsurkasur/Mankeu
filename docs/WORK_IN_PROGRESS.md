@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Modal manual pada Produk (2026-11-14 16:29 WIB):** [terverifikasi] Kartu produk non-dagang tanpa resep menampilkan modal manual dan untung menurut isi satuan; enam tes produk/rencana dan satu alur editor lulus pada emulator-5558, build lulus. [belum] Form input modal manual dan kontrak ekspor/impor yang mempertahankannya, harga beli dagangan, serta seluruh MVP.
+
+
 **Modal manual rencana (2026-11-14 16:26 WIB):** [terverifikasi] Modal manual non-dagang tanpa resep, termasuk nol, dihitung per isi satuan jual dan ditampilkan pada Rencana. PlanAssemblyTest serta 5/5 PlanProductsTest dan build lulus. [belum] Harga beli terakhir barang dagangan, UI modal manual, sinkron dan seluruh MVP.
 
 

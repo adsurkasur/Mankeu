@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:29] [Codex (GPT-6) — modal manual di kartu produk]
+- **Goal**: Menyelaraskan kartu Produk dengan modal manual yang sudah diketahui.
+- **Actions**: Menampilkan modal dan untung sesuai isi tiap satuan untuk produk non-dagang tanpa resep dan dengan modal manual; mempertahankan penanganan modal belum diketahui untuk dagangan.
+- **Files**: ProductsScreen, PlanProductsTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Uji kartu modal manual gagal sebelum perubahan; enam uji produk/rencana dan satu alur editor resep lulus pada emulator-5558, build debug/androidTest dan diff check lulus. [belum] Input modal manual, format impor/ekspor lossless dan seluruh MVP.
+
+
 ### [2026-11-14 16:26] [Codex (GPT-6) — modal manual dalam rencana]
 - **Goal**: Memakai modal manual yang diketahui tanpa menebak harga beli barang dagangan.
 - **Actions**: Memasukkan modal manual per satuan dasar termasuk nol untuk produk non-dagang tanpa resep; mengalikan isi satuan jual dan menyelaraskan baris Rencana dengan perakitan yang sama.

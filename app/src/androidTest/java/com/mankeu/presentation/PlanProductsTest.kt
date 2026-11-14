@@ -75,6 +75,14 @@ class PlanProductsTest {
     }
 
     @Test
+    fun productCardShowsKnownManualCostAndProfit() {
+        val record = ProductRecord(ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "1", manualCostRupiah = 3_000, createdAtEpochMillis = 0), listOf(ProductUnitEntity("ku", "k", "paket", "2", 8_000)), emptyList())
+        compose.setContent { MankeuTheme { com.mankeu.presentation.screens.ProductsScreen(listOf(record), emptyList(), true, "Utama", {}, {}, {}, { _, _, _ -> }, { _, _, _ -> }, { _, _, _, _, _, _ -> }, { _, _, _, _ -> }) } }
+        assertTrue(compose.onAllNodesWithText("Rp6.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText("Rp2.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
     fun productWithTwoSaleUnitsRendersInThePlan() {
         val record = ProductRecord(
             product = ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),

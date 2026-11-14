@@ -38,6 +38,8 @@ import com.mankeu.R
 import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ProductCost
 import com.mankeu.domain.ProductCosting
+import com.mankeu.domain.ProductSpec
+import com.mankeu.domain.ItemKind
 import com.mankeu.domain.ProductStock
 import com.mankeu.domain.StockItem
 import com.mankeu.domain.StockMovementType
@@ -147,7 +149,11 @@ fun ProductsScreen(
 
 /** "HPP Rp6.000/bungkus · untung Rp2.000" per unit, or why there is no HPP yet; shared with the plan rows. */
 @Composable
-internal fun hppLines(cost: ProductCost): List<String> = when {
+internal fun hppLines(cost: ProductCost, spec: ProductSpec? = null): List<String> = when {
+    !cost.hasRecipe && spec?.manualCostRupiah != null && spec.kind != ItemKind.TRADED -> spec.saleUnits.map { unit ->
+        val hpp = TransactionCalculation.computeTotalRupiah(unit.content, spec.manualCostRupiah)
+        stringResource(R.string.product_hpp_line, hpp.toRupiah(), unit.name, (unit.priceRupiah - hpp).toRupiah())
+    }
     !cost.hasRecipe -> listOf(stringResource(R.string.product_no_recipe))
     !cost.complete -> listOf(stringResource(R.string.product_hpp_incomplete, cost.unpricedLines.joinToString(", ")))
     else -> cost.perSaleUnit.map { stringResource(R.string.product_hpp_line, it.hppRupiah.toRupiah(), it.unit.name, it.profitRupiah.toRupiah()) }
@@ -164,8 +170,9 @@ private fun ProductCard(record: ProductRecord, cost: ProductCost, onOpen: () -> 
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(record.product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            hppLines(cost).forEach {
-                Text(it, color = if (cost.complete) MaterialTheme.colorScheme.onSurface else semantic.danger)
+            val manualKnown = !cost.hasRecipe && spec.manualCostRupiah != null && spec.kind != ItemKind.TRADED
+            hppLines(cost, spec).forEach {
+                Text(it, color = if (cost.complete || manualKnown) MaterialTheme.colorScheme.onSurface else semantic.danger)
             }
             val biggest = spec.saleUnits.filter { it.content > BigDecimal.ONE }.maxByOrNull { it.content }
             // "(0 dus + 0 bungkus)" says nothing: the split only shows once a whole big unit is on hand.

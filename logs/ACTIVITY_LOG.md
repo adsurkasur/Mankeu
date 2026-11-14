@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 04:56] [Codex (GPT-6) — dasar laba workbook]
+- **Goal**: Mencegah angka laba berubah diam-diam ketika workbook dimasukkan ke usaha dengan cara hitung berbeda.
+- **Actions**: Ekspor mencatat dasar laba; pratinjau dan commit menolak tujuan yang berbeda, tanpa mengubah pengaturan usaha. Template kosong tanpa metadata tetap dapat digunakan.
+- **Files**: FinanceWorkbookImporter/Exporter, ImportModels, FinanceRepository, ImportCommitTest, rencana, DEC-055 dan changelog.
+- **Verification**: [verified] Tes perbedaan basis gagal sebelum perbaikan; setelah perbaikan skenario konflik, penyesuaian basis dan impor serta regresi nota campuran lulus 2/2 di emulator-5558. TemplateImportTest 24/24 dan build aplikasi/test lulus. [unknown] Seluruh format workbook dan interoperabilitas versi lama.
+
 ### [2026-11-15 04:53] [Codex (GPT-6) — konflik produk pada impor nota]
 - **Goal**: Mencegah nota impor terhubung ke produk lain yang hanya sama namanya.
 - **Actions**: Pratinjau dan commit menolak produk rujukan nota bila satuan dasar, jenis, stok, modal manual, hasil atau susut berbeda dari produk tujuan.

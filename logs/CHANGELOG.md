@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ekspor Excel untuk titip jual atau utang ditolak dengan arahan menggunakan Cadangan sampai format mendukungnya.
 
 ### Changed
+- Ekspor mencatat cara hitung untung; impor meminta pengaturan usaha tujuan yang sama agar hasil tidak berubah diam-diam.
 - Impor nota menolak produk tujuan bernama sama bila rincian dasar produk berbeda, sehingga stok tidak tertaut diam-diam ke barang lain.
 - Pilihan gerakan stok tetap sejajar pada font lebih besar; label dialog pencatatan lebih ringkas.
 - Dialog tambah stok memakai tombol yang jelas untuk mencatat belanja atau menambah stok saja.

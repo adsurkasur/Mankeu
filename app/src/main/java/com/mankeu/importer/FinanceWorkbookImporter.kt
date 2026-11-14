@@ -50,6 +50,10 @@ class FinanceWorkbookImporter(
         val period = sheets.getValue(MankeuTemplate.GUIDE).rows
             .firstOrNull { it.cellAt(0)?.display?.trim() == MankeuTemplate.PLAN_PERIOD }
             ?.let { row -> readPeriod(Row(MankeuTemplate.GUIDE, row), errors) }
+        val basisRows = sheets.getValue(MankeuTemplate.GUIDE).rows.filter { it.cellAt(0)?.display?.trim() == MankeuTemplate.PROFIT_BASIS }
+        if (basisRows.size > 1) errors += "Lembar Petunjuk: cara hitung untung ditulis lebih dari sekali."
+        val basis = basisRows.firstOrNull()?.cellAt(1)?.display?.trim()?.takeIf { it.isNotEmpty() }
+        if (basis != null && basis !in setOf("SIMPLE", "ITEM_COST")) errors += "Lembar Petunjuk: cara hitung untung harus SIMPLE atau ITEM_COST."
         val (productMoves, materialMoves) = readMovements(sheets.getValue(MankeuTemplate.MOVEMENTS), errors)
         val stock = dataRows(sheets.getValue(MankeuTemplate.STOCK)).mapNotNull { readStock(it, errors) }
         // Material moves are imported only with their item, so undoing the import removes them too.
@@ -70,6 +74,7 @@ class FinanceWorkbookImporter(
             stockItems = stock.map { item -> item.copy(movements = materialMoves.filter { it.second.equals(item.name.trim(), ignoreCase = true) }.map { it.third }) },
             notes = readNotes(sheets.getValue(MankeuTemplate.NOTES), sheets.getValue(MankeuTemplate.NOTE_LINES), sheets.getValue(MankeuTemplate.NOTE_PAYMENTS), errors),
             planPeriod = period,
+            profitBasis = basis,
             errors = errors,
         )
     }

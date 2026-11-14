@@ -1602,7 +1602,7 @@ class FinanceRepository(
         val products = importProductPlan(businessId, projectId, preview)
         ImportReview(
             newCategories = plan.newCategories.map { it.name to it.role },
-            conflicts = plan.conflicts + products.conflicts + importNoteConflicts(businessId, projectId, preview),
+            conflicts = plan.conflicts + products.conflicts + importNoteConflicts(businessId, projectId, preview) + importBasisConflicts(businessId, preview),
             existingStockNames = preview.stockItems.filter { normalize(it.name) in existingStock }.map { it.name },
             previouslyImported = dao.hasImported(preview.sourceSha256),
             existingProductNames = products.skipped,
@@ -1621,7 +1621,7 @@ class FinanceRepository(
         require(preview.canCommit) { "Berkas impor belum bisa disimpan." }
         val plan = planCategories(businessId, preview)
         val productPlan = importProductPlan(businessId, projectId, preview)
-        (plan.conflicts + productPlan.conflicts + importNoteConflicts(businessId, projectId, preview)).let { conflicts -> require(conflicts.isEmpty()) { conflicts.joinToString("\n") } }
+        (plan.conflicts + productPlan.conflicts + importNoteConflicts(businessId, projectId, preview) + importBasisConflicts(businessId, preview)).let { conflicts -> require(conflicts.isEmpty()) { conflicts.joinToString("\n") } }
         val books = ensureBookPair(projectId)
         val actual = books.getValue(BookMode.REALIZATION)
         val planBook = books.getValue(BookMode.PROJECTION)
@@ -1964,6 +1964,12 @@ class FinanceRepository(
         }
         preview.budgetLines.forEach { roleOf(it.categoryName, CategoryRole.EXPENSE) }
         return CategoryPlan(existing, drafts.values.toList(), conflicts)
+    }
+
+    private suspend fun importBasisConflicts(businessId: String, preview: WorkbookImportPreview): List<String> {
+        val basis = preview.profitBasis ?: return emptyList()
+        val target = requireNotNull(dao.getBusiness(businessId)).profitBasis
+        return if (basis == target) emptyList() else listOf("Cara hitung untung usaha tujuan berbeda dari berkas. Samakan pengaturan usaha sebelum impor.")
     }
 
     private suspend fun importNoteConflicts(businessId: String, projectId: String, preview: WorkbookImportPreview): List<String> {

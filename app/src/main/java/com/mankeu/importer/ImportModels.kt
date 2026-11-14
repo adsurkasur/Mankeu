@@ -62,6 +62,7 @@ object MankeuTemplate {
     const val NATURE_VARIABLE = "Variabel"
     const val MONTHLY = "Bulanan"
     /** Optional `Petunjuk` row: the unit's plan period as `YYYY-MM s.d. YYYY-MM`. */
+    const val PROFIT_BASIS = "Cara hitung untung"
     const val PLAN_PERIOD = "Periode rencana"
     const val PERIOD_SEPARATOR = " s.d. "
     const val ONCE = "Sekali"
@@ -230,6 +231,7 @@ data class WorkbookImportPreview(
     val planPeriod: Pair<YearMonth, YearMonth>? = null,
     /** Problems that make the file unusable: not a template, renamed columns, invalid cells. */
     val errors: List<String> = emptyList(),
+    val profitBasis: String? = null,
 ) {
     val canCommit: Boolean get() = errors.isEmpty() &&
         (transactions.isNotEmpty() || budgetLines.isNotEmpty() || products.isNotEmpty() || stockItems.isNotEmpty() || notes.isNotEmpty())

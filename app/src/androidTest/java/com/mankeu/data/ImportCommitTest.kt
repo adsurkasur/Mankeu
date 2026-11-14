@@ -91,6 +91,20 @@ class ImportCommitTest {
     }
 
     @Test
+    fun importWarnsAndBlocksWhenProfitBasisDiffers() = runBlocking {
+        val id = repository.saveProduct(projectId, null, ProductDraft("Kopi", "cup", "1", listOf(SaleUnitDraft(name = "cup", contentText = "1", priceRupiah = 10000)), emptyList()))
+        repository.saveSale(projectId, null, SaleDraft(null, DAY, null, 0, "", listOf(SaleLineDraft(id, "cup", "1", 10000)), 10000))
+        val preview = FinanceWorkbookImporter().preview("nota.xlsx", repository.exportProjectWorkbook(projectId))
+        val (targetBusiness, targetProject) = repository.createBusinessWithUnit("Tujuan basis", "Utama")
+        assertTrue(repository.reviewImport(targetBusiness, targetProject, preview).conflicts.any { it.contains("cara hitung untung", ignoreCase = true) })
+        assertTrue(runCatching { repository.commitImport(targetBusiness, targetProject, preview) }.isFailure)
+        repository.setProfitBasis(targetBusiness, ProfitBasis.ITEM_COST)
+        assertTrue(repository.reviewImport(targetBusiness, targetProject, preview).conflicts.isEmpty())
+        repository.commitImport(targetBusiness, targetProject, preview)
+        assertEquals(1, repository.sales(targetProject).first().size)
+    }
+
+    @Test
     fun importRejectsNoteLinkedToDifferentExistingProduct() = runBlocking {
         val productId = repository.saveProduct(projectId, null, ProductDraft("Kopi", "cup", "1", listOf(SaleUnitDraft(name = "cup", contentText = "1", priceRupiah = 10000)), emptyList()))
         repository.saveSale(projectId, null, SaleDraft(null, DAY, null, 0, "", listOf(SaleLineDraft(productId, "cup", "1", 10000)), 10000))

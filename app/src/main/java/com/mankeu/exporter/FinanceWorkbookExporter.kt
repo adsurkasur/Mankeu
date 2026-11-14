@@ -106,6 +106,7 @@ class FinanceWorkbookExporter(
                     listOf(
                         listOf("Usaha", bundle.business.name),
                         listOf("Unit usaha", bundle.project.name),
+                        listOf(MankeuTemplate.PROFIT_BASIS, bundle.business.profitBasis),
                         listOf(
                             "Dibuat pada",
                             Instant.ofEpochMilli(bundle.generatedAtEpochMillis).atZone(java.time.ZoneId.systemDefault())
@@ -159,6 +160,7 @@ class FinanceWorkbookExporter(
             listOf("Produksi & Stok", "Riwayat stok produk dan bahan. Jenis untuk produk (Bahan kosong): Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong); hanya untuk produk di lembar Produk berkas ini. Pemakaian bahan: Produk, Bahan, dan Jumlah bahan (satuan bahan) yang dipakai produksi di atasnya; tanpa baris ini produksi tidak mengurangi bahan. Jenis untuk bahan (Produk kosong): Bahan masuk, Bahan keluar, atau Hitung ulang bahan (boleh 0), Jumlah dalam satuan bahan; hanya untuk bahan di lembar Stok Barang berkas ini. Belanja bahan di Transaksi menambah stok bahan dengan sendirinya. Pada tanggal yang sama, baris ini dihitung sesudah transaksi hari itu, berurutan seperti di lembar."),
             listOf("Stok Barang", "Stok Awal: jumlah sebelum belanja dan gerakan di berkas ini; stok sekarang dihitung dari stok awal, belanja, dan lembar Produksi & Stok. Barang yang namanya sudah ada di aplikasi dilewati, beserta gerakannya. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
             listOf("Nota Penjualan", "Isi satu kode unik untuk setiap nota. Gunakan kode yang sama di Baris Nota dan Pembayaran Nota. Produk boleh kosong untuk barang atau jasa bebas; isi nama, jumlah dan harga. Modal Diketahui diisi Ya hanya bila modal barang tercatat; baris bebas menggunakan Tidak. Pelanggan wajib diisi jika belum lunas. Pembayaran nota ditulis di lembar Pembayaran Nota, bukan Transaksi."),
+            listOf("Panduan cara hitung untung", "SIMPLE berarti uang masuk dikurangi pengeluaran; ITEM_COST menggunakan modal barang. Ekspor membawa pengaturan sumber dan impor mensyaratkan pengaturan yang sama. Pada template kosong, biarkan baris ini tidak ada."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
     )

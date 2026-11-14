@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 15:56] [Codex (GPT-6) — bukti kategori historis]
+- **Goal**: Memperkuat bukti migrasi dan koreksi kategori lama melalui Catatan.
+- **Actions**: Menambah uji koreksi transaksi sintetis melalui Catatan sampai ringkasan, dan memeriksa nilai, label, ID kategori null serta tautan stok pada dua transaksi hasil migrasi 13→14.
+- **Files**: CatatanUnifiedLedgerTest, Migration13To14Test, WIP dan laporan checkpoint.
+- **Verification**: [terverifikasi] Dua tes lulus bersama pada AVD sintetis emulator-5558; assembleDebugAndroidTest dan git diff --check lulus. [belum] Rangkaian migrasi sampai koreksi pada database yang sama, keluaran visual/PDF, backup/sync dan seluruh MVP. Emulator-5556 dan superproject tidak disentuh.
+
+
 ### [2026-11-14 15:04] [Codex (GPT-6) — validasi form uang]
 - **Goal**: Menerapkan validasi kolom uang dan belanja sesuai DEC-042 tanpa mengubah pencatatan.
 - **Actions**: Menambah tes blur, perbaikan dan fokus saat Simpan; menghubungkan fokus dan pesan merah ke jumlah, kuantitas dan harga; mempertahankan fallback untuk kesalahan lain.

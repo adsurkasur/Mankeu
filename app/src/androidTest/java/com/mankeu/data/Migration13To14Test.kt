@@ -101,6 +101,11 @@ class Migration13To14Test {
                     rows,
                 )
             }
+            // Legacy expense categories cannot be inferred from a stored label; retain both rows unchanged.
+            db.query("SELECT id, amountRupiah, category, categoryId, stockItemId FROM financial_events WHERE id IN ('buy1', 'buy2') ORDER BY id").use { c ->
+                val rows = buildList { while (c.moveToNext()) add((0..4).map { c.getString(it) }) }
+                assertEquals(listOf(listOf("buy1", "44000", "c", null, "m1"), listOf("buy2", "50000", "c", null, "m1")), rows)
+            }
             db.query("SELECT id, saleId FROM financial_events ORDER BY id").use { c ->
                 val rows = buildList { while (c.moveToNext()) add(c.getString(0) to c.getString(1)) }
                 assertEquals(

@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Bukti kategori historis (2026-11-14 15:56 WIB):** [terverifikasi] Migrasi 13→14 mempertahankan dua belanja sintetis dengan ID kategori null, nilai, label dan tautan stok; pada database terpisah koreksi melalui Catatan menghilangkan ketidakpastian ringkasan tanpa menggandakan uang keluar. Kedua tes lulus bersama pada emulator-5558. [belum] Rangkaian migrasi hingga koreksi pada database yang sama, laporan/ekspor, backup/sync dan seluruh gerbang MVP. Lihat `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`.
+
+
 **Validasi form uang (2026-11-14 15:04 WIB):** [terverifikasi] Jumlah, kuantitas dan harga menampilkan kesalahan setelah blur dan memfokuskan kolom saat Simpan; MoneyFormsTest 11/11 pada AVD terisolasi, JVM 196/196, build dan lint lulus. Laporan `docs/superpowers/reports/2026-11-14-validasi-form-uang.md`. [belum] Validasi form lain dan kondisi lintas kolom, audit seluruh layar dan gerbang MVP.
 
 

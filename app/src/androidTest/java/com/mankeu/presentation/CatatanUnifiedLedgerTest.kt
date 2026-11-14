@@ -102,6 +102,37 @@ class CatatanUnifiedLedgerTest {
             assertEquals("Biaya riwayat unik", database.financeDao().getEvent(oldId)!!.description)
         }
     }
+    @Test fun correctingLegacyExpenseFromCatatanUpdatesSummaryWithoutDuplicatingMoney() {
+        var eventId = ""
+        var bookId = ""
+        var chosenCategoryId = ""
+        runBlocking {
+            repository.setProfitBasis(businessId, com.mankeu.domain.ProfitBasis.ITEM_COST)
+            bookId = repository.books(projectId).first().first { it.mode == BookMode.REALIZATION.name }.id
+            chosenCategoryId = database.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }.id
+            eventId = repository.recordEvent(EventDraft(businessId, projectId, bookId, FinancialEventType.CASH_EXPENSE,
+                50_000, LocalDate.now(), "Belanja historis unik", "Kategori lama", categoryId = null))
+            val before = repository.monthlySummary(bookId, java.time.YearMonth.now()).first()
+            assertEquals(1, before.profit.uncertainExpenseCategoryCount)
+            assertEquals(true, before.profit.profitIncomplete)
+            assertEquals(50_000L, before.totalCashOutRupiah)
+        }
+        start()
+        click("Catatan")
+        click("Belanja historis unik")
+        click("Bahan Baku & Stok")
+        click("Simpan")
+        compose.waitUntil(5_000) { runBlocking { database.financeDao().getEvent(eventId)?.categoryId == chosenCategoryId } }
+        runBlocking {
+            val after = repository.monthlySummary(bookId, java.time.YearMonth.now()).first()
+            assertEquals(0, after.profit.uncertainExpenseCategoryCount)
+            assertEquals(false, after.profit.profitIncomplete)
+            assertEquals(50_000L, after.totalCashOutRupiah)
+            assertEquals(50_000L, after.productionSpendRupiah)
+            assertEquals(1, database.financeDao().countEventsForProject(projectId))
+        }
+    }
+
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 

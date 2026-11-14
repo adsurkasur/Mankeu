@@ -506,6 +506,7 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-15 01:27 · Workbook metadata produk · checkpoint · [verified] jenis, pencatatan stok, modal manual nol dan susut bertahan ekspor–impor pada emulator-5558. [unknown] konflik produk sama nama dan keseluruhan format lossless.
 - 2026-11-15 01:24 · Workbook nota PK-4.1/4.2 · checkpoint · [verified] nota campuran dan pembayaran melalui ekspor, impor dan undo pada emulator-5558, TemplateImportTest 24/24; [unknown] metadata produk, dasar laba, pembayaran lama dan titip jual, sehingga belum lossless (DEC-055).
 - 2026-11-15 01:07 · Nota bebas PK-2.4 · checkpoint · [terverifikasi] barang/jasa tanpa produk dapat dicatat dan diedit, modal unknown ditandai; 11 tes terarah, regresi nota produk, JVM 201/201 dan build lulus. [belum] ekspor/impor lossless, saran nama, simpan sebagai produk dan seluruh MVP. `docs/superpowers/reports/2026-11-15-nota-bebas.md`.
 

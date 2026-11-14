@@ -47,7 +47,7 @@ object MankeuTemplate {
         "Bulan", "Kategori", "Item", "Jumlah", "Satuan", "Harga Satuan (Rp)", "Total (Rp)",
         "Berulang", "Sifat Biaya", "Umur Pakai (bulan)",
     )
-    val PRODUCT_HEADERS = listOf("Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)")
+    val PRODUCT_HEADERS = listOf("Nama", "Satuan Dasar", "Hasil per Batch", "Target per Bulan", "Mulai Dijual (bulan ke-)", "Jenis Produk", "Catat Stok", "Modal Manual (Rp)", "Susut per Batch")
     val SALE_UNIT_HEADERS = listOf("Produk", "Satuan", "Isi (satuan dasar)", "Harga Jual (Rp)")
     val RECIPE_HEADERS = listOf("Produk", "Komponen", "Bahan", "Jumlah per Batch", "Biaya per Batch (Rp)")
     val MOVEMENT_HEADERS = listOf("Tanggal", "Produk", "Jenis", "Jumlah (satuan dasar)", "Batch", "Catatan", "Bahan")
@@ -179,6 +179,10 @@ data class ImportProduct(
     val units: List<ImportSaleUnit>,
     val recipe: List<ImportRecipeLine>,
     val movements: List<ImportProductMovement> = emptyList(),
+    val kind: String = "MADE",
+    val tracksStock: Boolean = true,
+    val manualCostRupiah: Long? = null,
+    val batchLossText: String = "0",
 )
 
 /** One `Stok Barang` row. */

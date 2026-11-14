@@ -257,6 +257,18 @@ class FinanceWorkbookImporter(
                     errors += "${row.ref(4)}: bulan mulai dijual harus angka bulat 1 atau lebih, tertulis \"$raw\"."
                 }
             } ?: 1
+            val kind = row.text(5) ?: "MADE"
+            if (kind !in setOf("MADE", "TRADED", "SERVICE")) errors += "${row.ref(5)}: jenis produk harus MADE, TRADED, atau SERVICE."
+            val tracksStock = when (row.text(6)) {
+                null, "Ya" -> true
+                "Tidak" -> false
+                else -> { errors += "${row.ref(6)}: catat stok harus Ya atau Tidak."; true }
+            }
+            val manualRaw = row.text(7)
+            val manualDigits = manualRaw?.removePrefix("Rp")?.replace(".", "")?.replace(" ", "")
+            val manual = if (manualRaw == null) null else if (!manualDigits.isNullOrEmpty() && manualDigits.all { it == '0' }) 0L else row.money(7, errors)
+            val loss = row.quantity(8, errors) ?: return@mapNotNull null
+            if (loss.toBigDecimal() >= yield.replace(',', '.').toBigDecimal()) errors += "${row.ref(8)}: susut harus lebih kecil dari hasil per batch."
             val own = units.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third }
             if (own.isEmpty()) {
                 errors += "${row.ref(0)}: produk \"${name.trim()}\" belum punya baris di lembar \"${MankeuTemplate.SALE_UNITS}\"."
@@ -266,6 +278,7 @@ class FinanceWorkbookImporter(
                 row.ref(0), name, baseUnit, yield, target, sellFrom, own,
                 lines.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third },
                 movements.filter { it.second.equals(name.trim(), ignoreCase = true) }.map { it.third },
+                kind, tracksStock, manual, loss,
             )
         }
         // Sale units and recipe lines belong to a product row of the same file; the export always writes all three sheets.

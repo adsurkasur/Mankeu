@@ -91,6 +91,21 @@ class ImportCommitTest {
     }
 
     @Test
+    fun workbookPreservesProductKindTrackingManualCostAndLoss() = runBlocking {
+        val productId = repository.saveProduct(projectId, null, ProductDraft("Keripik", "bungkus", "10", listOf(SaleUnitDraft(name = "bungkus", contentText = "1", priceRupiah = 10_000)), emptyList()))
+        database.openHelper.writableDatabase.execSQL("UPDATE products SET kind='SERVICE', tracksStock=0, manualCostRupiah=0, batchLossText='2' WHERE id=?", arrayOf(productId))
+        val preview = FinanceWorkbookImporter().preview("produk.xlsx", repository.exportProjectWorkbook(projectId))
+        assertTrue(preview.errors.toString(), preview.canCommit)
+        val (targetBusiness, targetProject) = repository.createBusinessWithUnit("Tujuan produk", "Utama")
+        repository.commitImport(targetBusiness, targetProject, preview)
+        val imported = dao.getProducts(targetProject).single()
+        assertEquals("SERVICE", imported.kind)
+        assertFalse(imported.tracksStock)
+        assertEquals(0L, imported.manualCostRupiah)
+        assertEquals("2", imported.batchLossText)
+    }
+
+    @Test
     fun templateRowsLandInTheirBooksWithCategoryDrivenTypesAndUndoCleanly() = runBlocking {
         val review = repository.reviewImport(businessId, projectId, preview())
         assertEquals(listOf("Sewa Gerobak" to CategoryRole.EXPENSE), review.newCategories)

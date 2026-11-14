@@ -155,6 +155,7 @@ class FinanceWorkbookExporter(
             listOf("Modal & prive", "Setoran modal: Pemasukan berkategori 'Setoran Modal Pemilik'. Ambil uang pribadi: Pengeluaran berkategori 'Ambil untuk Pribadi (Prive)'. Beli alat: Pengeluaran berkategori 'Beli Peralatan & Aset'."),
             listOf("Rencana Anggaran", "Biaya tetap, biaya sekali bayar, aset, dan rencana setoran modal buku Proyeksi. Berulang: Bulanan (tiap bulan periode) atau Sekali. Bulan YYYY-MM."),
             listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
+            listOf("Rincian produk", "Jenis Produk: MADE (dibuat), TRADED (dagangan), SERVICE (jasa); kosong berarti MADE. Catat Stok: Ya atau Tidak, kosong berarti Ya. Modal Manual boleh kosong jika tidak diketahui, atau 0 jika memang nol. Susut per Batch boleh 0 dan harus lebih kecil dari hasil per batch."),
             listOf("Produksi & Stok", "Riwayat stok produk dan bahan. Jenis untuk produk (Bahan kosong): Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong); hanya untuk produk di lembar Produk berkas ini. Pemakaian bahan: Produk, Bahan, dan Jumlah bahan (satuan bahan) yang dipakai produksi di atasnya; tanpa baris ini produksi tidak mengurangi bahan. Jenis untuk bahan (Produk kosong): Bahan masuk, Bahan keluar, atau Hitung ulang bahan (boleh 0), Jumlah dalam satuan bahan; hanya untuk bahan di lembar Stok Barang berkas ini. Belanja bahan di Transaksi menambah stok bahan dengan sendirinya. Pada tanggal yang sama, baris ini dihitung sesudah transaksi hari itu, berurutan seperti di lembar."),
             listOf("Stok Barang", "Stok Awal: jumlah sebelum belanja dan gerakan di berkas ini; stok sekarang dihitung dari stok awal, belanja, dan lembar Produksi & Stok. Barang yang namanya sudah ada di aplikasi dilewati, beserta gerakannya. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
             listOf("Nota Penjualan", "Isi satu kode unik untuk setiap nota. Gunakan kode yang sama di Baris Nota dan Pembayaran Nota. Produk boleh kosong untuk barang atau jasa bebas; isi nama, jumlah dan harga. Modal Diketahui diisi Ya hanya bila modal barang tercatat; baris bebas menggunakan Tidak. Pelanggan wajib diisi jika belum lunas. Pembayaran nota ditulis di lembar Pembayaran Nota, bukan Transaksi."),
@@ -241,7 +242,8 @@ class FinanceWorkbookExporter(
         name = MankeuTemplate.PRODUCTS,
         headers = MankeuTemplate.PRODUCT_HEADERS,
         rows = products.map { p ->
-            listOf(p.product.name, p.product.unit, quantity(p.product.batchYieldText), quantity(p.product.targetPerMonthText), p.product.sellFromMonth)
+            listOf(p.product.name, p.product.unit, quantity(p.product.batchYieldText), quantity(p.product.targetPerMonthText), p.product.sellFromMonth,
+                p.product.kind, flag(p.product.tracksStock), p.product.manualCostRupiah, quantity(p.product.batchLossText))
         },
     )
 

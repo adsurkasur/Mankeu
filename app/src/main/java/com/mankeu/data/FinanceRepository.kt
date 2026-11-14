@@ -1693,6 +1693,7 @@ class FinanceRepository(
                     batchYieldText = item.batchYieldText,
                     targetPerMonthText = item.targetPerMonthText,
                     sellFromMonth = item.sellFromMonth,
+                    kind = item.kind, tracksStock = item.tracksStock, manualCostRupiah = item.manualCostRupiah, batchLossText = item.batchLossText,
                     sortOrder = productIds.size + index,
                     createdAtEpochMillis = now,
                     importBatchId = batchId,

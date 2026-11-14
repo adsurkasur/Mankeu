@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 01:27] [Codex (GPT-6) — metadata produk workbook]
+- **Goal**: Mempertahankan jenis dan konfigurasi biaya produk ketika workbook diimpor kembali.
+- **Actions**: Menambahkan jenis, pencatatan stok, modal manual termasuk nol, dan susut per batch ke lembar Produk beserta validasi dan petunjuk.
+- **Files**: ImportModels, FinanceWorkbookImporter/Exporter, FinanceRepository, ImportCommitTest, rencana dan changelog.
+- **Verification**: [verified] Round-trip SERVICE tanpa stok, modal nol dan susut lulus pada emulator-5558; TemplateImportTest 24/24 dan build aplikasi/test lulus. [unknown] Produk dengan nama yang sama di tujuan masih dilewati; dasar laba, utang, titip jual dan pembayaran lama belum terjamin round-trip.
+
 ### [2026-11-15 01:24] [Codex (GPT-6) — workbook nota]
 - **Goal**: Membawa nota campuran dan pembayaran melalui ekspor, impor dan pembatalan.
 - **Actions**: Menambah tiga lembar workbook v6, validasi dan pratinjau kontak, transaksi impor atomik dan undo; menolak ekspor titip jual/utang yang belum didukung. Meluruskan pilihan rata-rata harga dagang pada rencana.

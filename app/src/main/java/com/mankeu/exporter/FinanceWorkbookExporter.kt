@@ -5,6 +5,9 @@ import com.mankeu.data.BookEntity
 import com.mankeu.data.BudgetItemEntity
 import com.mankeu.data.BusinessEntity
 import com.mankeu.data.CategoryEntity
+import com.mankeu.data.ContactEntity
+import com.mankeu.data.SaleEntity
+import com.mankeu.data.SaleLineEntity
 import com.mankeu.data.FinancialEventEntity
 import com.mankeu.data.ImportBatchEntity
 import com.mankeu.data.ImportNoticeEntity
@@ -38,6 +41,8 @@ data class FinanceExportBook(
     val month: MonthlySummary? = null,
 )
 
+data class FinanceExportNote(val sale: SaleEntity, val lines: List<SaleLineEntity>, val payments: List<FinancialEventEntity>, val contact: ContactEntity?)
+
 data class FinanceExportBundle(
     val business: BusinessEntity,
     val project: ProjectEntity,
@@ -50,9 +55,10 @@ data class FinanceExportBundle(
     /** Manual moves and counts of [stockItems], and the production use of [products] (U3). */
     val stockMovements: List<StockMovementEntity> = emptyList(),
     val products: List<ProductRecord> = emptyList(),
+    val notes: List<FinanceExportNote> = emptyList(),
     /** The business plan's BEP (DEC-014), computed by the repository from the same rows. */
     val plan: PlanAnalysis? = null,
-    /** Free note lines are not in the current workbook contract (PK-4.1) and must be disclosed. */
+    /** Free lines not represented by the exported note sheets, if any. */
     val omittedFreeSaleLineCount: Int = 0,
     val generatedAtEpochMillis: Long = System.currentTimeMillis(),
 )
@@ -61,7 +67,7 @@ data class FinanceExportBundle(
 data class TemplateCategory(val name: String, val role: CategoryRole, val nature: CostNature?)
 
 /**
- * Writes [MankeuTemplate] (DEC-012, v3). [template] is the blank form; [export] is the same sheets
+ * Writes [MankeuTemplate] (DEC-012, v6). [template] is the blank form; [export] is the same sheets
  * filled from a business unit, so an export imports back without loss. The export also appends
  * two calculated sheets (Laporan, Kelayakan) that the importer ignores.
  */
@@ -79,6 +85,9 @@ class FinanceWorkbookExporter(
             WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList(), setOf(2)),
             categoryTable(categories),
+            noteTable(emptyList()),
+            noteLineTable(emptyList(), emptyMap()),
+            notePaymentTable(emptyList()),
         ),
     )
 
@@ -104,7 +113,7 @@ class FinanceWorkbookExporter(
                         ),
                     ) + listOfNotNull(planPeriodRow(bundle.project)),
                 ),
-                transactions(books[BookMode.REALIZATION]?.events.orEmpty(), productNames, stockNames),
+                transactions(books[BookMode.REALIZATION]?.events.orEmpty().filterNot { event -> bundle.notes.any { it.sale.id == event.saleId } }, productNames, stockNames),
                 budget(books[BookMode.PROJECTION]?.budgets.orEmpty(), categories),
                 products(bundle.products),
                 saleUnits(bundle.products),
@@ -112,6 +121,9 @@ class FinanceWorkbookExporter(
                 movements(bundle.products, writtenStock, bundle.stockMovements),
                 stock(writtenStock),
                 categoryTable(bundle.categories.filter { it.active }.map { TemplateCategory(it.name, CategoryRole.parse(it.role), PlanAssembly.nature(it.costNature)) }),
+                noteTable(bundle.notes),
+                noteLineTable(bundle.notes, productNames),
+                notePaymentTable(bundle.notes),
                 reportTable(bundle.books, bundle.plan?.costIncomplete == true),
                 bundle.plan?.let(::feasibilityTable),
             ),
@@ -145,8 +157,38 @@ class FinanceWorkbookExporter(
             listOf("Produk & Resep", "Produk: satuan dasar, hasil per batch, target terjual per bulan, dan bulan mulai dijual (1 = bulan pertama periode). Satuan Jual: tiap satuan jual produk, isinya dalam satuan dasar, dan harga jualnya; baris pertama jadi satuan utama. Resep: isi Bahan dan Jumlah per Batch untuk bahan di Stok Barang, atau Biaya per Batch saja untuk biaya bebas."),
             listOf("Produksi & Stok", "Riwayat stok produk dan bahan. Jenis untuk produk (Bahan kosong): Produksi (Jumlah dalam satuan dasar yang bertambah; Batch opsional) atau Hitung stok (Jumlah yang dihitung jadi stok, boleh 0; Batch kosong); hanya untuk produk di lembar Produk berkas ini. Pemakaian bahan: Produk, Bahan, dan Jumlah bahan (satuan bahan) yang dipakai produksi di atasnya; tanpa baris ini produksi tidak mengurangi bahan. Jenis untuk bahan (Produk kosong): Bahan masuk, Bahan keluar, atau Hitung ulang bahan (boleh 0), Jumlah dalam satuan bahan; hanya untuk bahan di lembar Stok Barang berkas ini. Belanja bahan di Transaksi menambah stok bahan dengan sendirinya. Pada tanggal yang sama, baris ini dihitung sesudah transaksi hari itu, berurutan seperti di lembar."),
             listOf("Stok Barang", "Stok Awal: jumlah sebelum belanja dan gerakan di berkas ini; stok sekarang dihitung dari stok awal, belanja, dan lembar Produksi & Stok. Barang yang namanya sudah ada di aplikasi dilewati, beserta gerakannya. Diarsipkan: Ya untuk bahan yang sudah tidak dipakai tetapi masih disebut resep atau belanja lama; kosong berarti aktif."),
+            listOf("Nota Penjualan", "Isi satu kode unik untuk setiap nota. Gunakan kode yang sama di Baris Nota dan Pembayaran Nota. Produk boleh kosong untuk barang atau jasa bebas; isi nama, jumlah dan harga. Modal Diketahui diisi Ya hanya bila modal barang tercatat; baris bebas menggunakan Tidak. Pelanggan wajib diisi jika belum lunas. Pembayaran nota ditulis di lembar Pembayaran Nota, bukan Transaksi."),
             listOf("Aturan", "Jangan ubah nama lembar atau judul kolom. Lembar Laporan dan Kelayakan hanya hasil hitungan dan diabaikan saat impor."),
         ),
+    )
+
+    private fun flag(value: Boolean) = if (value) "Ya" else "Tidak"
+
+    private fun noteTable(notes: List<FinanceExportNote>) = WorkbookTable(
+        name = MankeuTemplate.NOTES, headers = MankeuTemplate.NOTE_HEADERS,
+        rows = notes.map { note ->
+            val sale = note.sale
+            val contact = note.contact
+            listOf(sale.id, LocalDate.ofEpochDay(sale.dateEpochDay).toString(), sale.dueDateEpochDay?.let { LocalDate.ofEpochDay(it).toString() },
+                sale.discountRupiah, sale.notes, contact?.name, contact?.phone, contact?.address, contact?.notes,
+                contact?.let { flag(it.isCustomer) }, contact?.let { flag(it.isSupplier) }, contact?.let { flag(it.archived) }, flag(sale.hppEstimated))
+        }, currencyColumns = setOf(3),
+    )
+
+    private fun noteLineTable(notes: List<FinanceExportNote>, productNames: Map<String, String>) = WorkbookTable(
+        name = MankeuTemplate.NOTE_LINES, headers = MankeuTemplate.NOTE_LINE_HEADERS,
+        rows = notes.flatMap { note -> note.lines.sortedBy { it.sortOrder }.map { line ->
+            val product = line.productId?.let { id -> requireNotNull(productNames[id]) { "Produk pada nota '${line.name}' sudah tidak aktif; ekspor belum dapat mempertahankan relasinya." } }
+            listOf(note.sale.id, product, line.name, line.unitName, quantity(line.contentText), quantity(line.quantityText),
+                line.unitPriceRupiah, line.totalRupiah, line.hppRupiah, flag(line.costKnown && line.productId != null))
+        } }, currencyColumns = setOf(6, 7, 8),
+    )
+
+    private fun notePaymentTable(notes: List<FinanceExportNote>) = WorkbookTable(
+        name = MankeuTemplate.NOTE_PAYMENTS, headers = MankeuTemplate.NOTE_PAYMENT_HEADERS,
+        rows = notes.flatMap { note -> note.payments.map { payment ->
+            listOf(note.sale.id, LocalDate.ofEpochDay(payment.dateEpochDay).toString(), payment.amountRupiah, payment.description)
+        } }, currencyColumns = setOf(2),
     )
 
     /** Cash rows: what an owner would write in a cash book. */

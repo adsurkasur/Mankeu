@@ -19,11 +19,12 @@ import java.time.YearMonth
  * Production and stock counts have their own sheet ([MOVEMENTS]) so product stock survives a round trip.
  * U3 (DEC-030 §3, still v5, unreleased): the same sheet carries material moves and production use (column
  * Bahan), and Stok Barang carries the opening stock, so material stock survives a round trip too.
+ * Version 6 adds explicit sale notes, historical lines, contacts and payments.
  * Older files are rejected by their headers.
  */
 object MankeuTemplate {
     const val MARKER = "MANKEU_TEMPLATE"
-    const val VERSION = 5
+    const val VERSION = 6
 
     const val GUIDE = "Petunjuk"
     const val TRANSACTIONS = "Transaksi"
@@ -34,6 +35,9 @@ object MankeuTemplate {
     const val MOVEMENTS = "Produksi & Stok"
     const val STOCK = "Stok Barang"
     const val CATEGORIES = "Kategori"
+    const val NOTES = "Nota Penjualan"
+    const val NOTE_LINES = "Baris Nota"
+    const val NOTE_PAYMENTS = "Pembayaran Nota"
 
     val TRANSACTION_HEADERS = listOf(
         "Tanggal", "Keterangan", "Kategori", "Pemasukan (Rp)", "Pengeluaran (Rp)",
@@ -50,6 +54,9 @@ object MankeuTemplate {
     val STOCK_HEADERS = listOf("Nama", "Satuan", "Harga Beli (Rp)", "Stok Awal", "Batas Minimum", "Diarsipkan")
     val CATEGORY_HEADERS = listOf("Nama", "Peran", "Sifat Biaya")
     val GUIDE_HEADERS = listOf("Kunci", "Nilai")
+    val NOTE_HEADERS = listOf("Kode Nota", "Tanggal", "Jatuh Tempo", "Diskon (Rp)", "Catatan", "Pelanggan", "No. HP", "Alamat", "Catatan Pelanggan", "Sebagai Pelanggan", "Pemasok", "Diarsipkan", "Modal Perkiraan")
+    val NOTE_LINE_HEADERS = listOf("Kode Nota", "Produk", "Nama", "Satuan", "Isi", "Jumlah", "Harga (Rp)", "Total (Rp)", "Modal (Rp)", "Modal Diketahui")
+    val NOTE_PAYMENT_HEADERS = listOf("Kode Nota", "Tanggal", "Jumlah (Rp)", "Keterangan")
 
     const val NATURE_FIXED = "Tetap"
     const val NATURE_VARIABLE = "Variabel"
@@ -79,6 +86,9 @@ object MankeuTemplate {
         RECIPES to RECIPE_HEADERS,
         MOVEMENTS to MOVEMENT_HEADERS,
         STOCK to STOCK_HEADERS,
+        NOTES to NOTE_HEADERS,
+        NOTE_LINES to NOTE_LINE_HEADERS,
+        NOTE_PAYMENTS to NOTE_PAYMENT_HEADERS,
     )
 
     fun natureLabel(nature: CostNature?): String? = when (nature) {
@@ -185,6 +195,25 @@ data class ImportStockItem(
     val movements: List<ImportMaterialMovement> = emptyList(),
 )
 
+data class ImportNoteContact(
+    val name: String, val phone: String?, val address: String?, val notes: String?,
+    val isCustomer: Boolean, val isSupplier: Boolean, val archived: Boolean,
+)
+
+data class ImportNoteLine(
+    val source: String, val productName: String?, val name: String, val unit: String,
+    val content: String, val quantity: String, val priceRupiah: Long, val totalRupiah: Long,
+    val costRupiah: Long, val costKnown: Boolean,
+)
+
+data class ImportNotePayment(val source: String, val date: LocalDate, val amountRupiah: Long, val description: String)
+
+data class ImportNote(
+    val source: String, val key: String, val date: LocalDate, val dueDate: LocalDate?,
+    val discountRupiah: Long, val notes: String, val contact: ImportNoteContact?, val estimated: Boolean,
+    val lines: List<ImportNoteLine>, val payments: List<ImportNotePayment>,
+)
+
 data class WorkbookImportPreview(
     val sourceName: String,
     val sourceSha256: String,
@@ -192,14 +221,15 @@ data class WorkbookImportPreview(
     val budgetLines: List<ImportBudgetLine> = emptyList(),
     val products: List<ImportProduct> = emptyList(),
     val stockItems: List<ImportStockItem> = emptyList(),
+    val notes: List<ImportNote> = emptyList(),
     /** The plan period the file was exported with; applied to a unit that has none yet. */
     val planPeriod: Pair<YearMonth, YearMonth>? = null,
     /** Problems that make the file unusable: not a template, renamed columns, invalid cells. */
     val errors: List<String> = emptyList(),
 ) {
     val canCommit: Boolean get() = errors.isEmpty() &&
-        (transactions.isNotEmpty() || budgetLines.isNotEmpty() || products.isNotEmpty() || stockItems.isNotEmpty())
-    val rowCount: Int get() = transactions.size + budgetLines.size + products.size + stockItems.size
-    val totalIncomeRupiah: Long get() = transactions.filter { it.incoming }.sumOf { it.amountRupiah }
+        (transactions.isNotEmpty() || budgetLines.isNotEmpty() || products.isNotEmpty() || stockItems.isNotEmpty() || notes.isNotEmpty())
+    val rowCount: Int get() = transactions.size + budgetLines.size + products.size + stockItems.size + notes.size
+    val totalIncomeRupiah: Long get() = transactions.filter { it.incoming }.sumOf { it.amountRupiah } + notes.sumOf { note -> note.payments.sumOf { it.amountRupiah } }
     val totalExpenseRupiah: Long get() = transactions.filterNot { it.incoming }.sumOf { it.amountRupiah }
 }

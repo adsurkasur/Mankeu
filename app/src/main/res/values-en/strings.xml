@@ -270,6 +270,7 @@
     <string name="import_pick_other">Choose a different file</string>
     <string name="import_pick_another_workbook">Choose another Excel file</string>
     <string name="import_done">Done: %1$d rows added from Excel to this business.</string>
+    <string name="import_ready_notes">Sales notes</string>
     <string name="import_ready_transactions">Transactions ready to add</string>
     <string name="import_ready_budget">Planned costs</string>
     <string name="import_total_income">Total money in (incl. capital contributions)</string>
@@ -577,6 +578,7 @@
     <string name="import_ready_stock">New stock items</string>
     <string name="import_duplicate_title">This file was imported before</string>
     <string name="import_duplicate_body">The same contents will be added again, so transactions may be recorded twice. Continue only if that is intended.</string>
+    <string name="import_new_contacts">New contacts will be created</string>
     <string name="import_new_categories">New categories will be created</string>
     <string name="import_stock_skipped">Items skipped (name already exists)</string>
     <string name="msg_plan_saved">Business plan saved.</string>

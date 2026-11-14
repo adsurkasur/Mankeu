@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Excel membawa nota penjualan, baris produk atau jasa bebas, pembayaran dan rincian pelanggan; pratinjau menunjukkan kontak baru.
+- Ekspor Excel untuk titip jual atau utang ditolak dengan arahan menggunakan Cadangan sampai format mendukungnya.
+
 ### Changed
 - Pilihan gerakan stok tetap sejajar pada font lebih besar; label dialog pencatatan lebih ringkas.
 - Dialog tambah stok memakai tombol yang jelas untuk mencatat belanja atau menambah stok saja.

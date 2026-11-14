@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 01:24] [Codex (GPT-6) — workbook nota]
+- **Goal**: Membawa nota campuran dan pembayaran melalui ekspor, impor dan pembatalan.
+- **Actions**: Menambah tiga lembar workbook v6, validasi dan pratinjau kontak, transaksi impor atomik dan undo; menolak ekspor titip jual/utang yang belum didukung. Meluruskan pilihan rata-rata harga dagang pada rencana.
+- **Files**: ImportModels, FinanceWorkbookImporter/Exporter, FinanceRepository/DAO, MoreScreen dan resources, TemplateImportTest, ImportCommitTest, FreeLineSaleTest, rencana, DEC-055 dan changelog.
+- **Verification**: [verified] Nota campuran, pelanggan, pembayaran, nilai dan undo lulus satu tes instrumentasi pada emulator-5558; TemplateImportTest 24/24, tes JVM keseluruhan, lint dan build lulus (build penuh sebelum penambahan tes terakhir); diff check bersih. [unknown] Round-trip metadata produk, pengaturan dasar laba, pembayaran lama, utang dan titip jual; format belum lossless.
+
 ### [2026-11-15 01:07] [Codex (GPT-6) — nota bebas]
 - **Goal**: Membuka pencatatan barang atau jasa tanpa produk terdaftar dan mengizinkan edit aman.
 - **Actions**: Menambah baris bebas pada editor, mendukung edit tanpa kehilangan pembayaran, menandai modal bebas unknown termasuk flag lama, dan memperbarui bantuan. Ekspor lossless masih tertunda.

@@ -272,6 +272,7 @@
     <string name="import_pick_other">Pilih file lain</string>
     <string name="import_pick_another_workbook">Pilih file Excel lain</string>
     <string name="import_done">Selesai: %1$d baris ditambahkan dari Excel ke usaha ini.</string>
+    <string name="import_ready_notes">Nota penjualan</string>
     <string name="import_ready_transactions">Transaksi siap ditambahkan</string>
     <string name="import_ready_budget">Rencana biaya</string>
     <string name="import_total_income">Total uang masuk (termasuk setoran modal)</string>
@@ -579,6 +580,7 @@
     <string name="import_ready_stock">Barang stok baru</string>
     <string name="import_duplicate_title">File ini pernah diimpor</string>
     <string name="import_duplicate_body">Isi yang sama akan ditambahkan lagi, sehingga transaksi bisa tercatat dobel. Lanjutkan hanya jika memang disengaja.</string>
+    <string name="import_new_contacts">Kontak baru akan dibuat</string>
     <string name="import_new_categories">Kategori baru akan dibuat</string>
     <string name="import_stock_skipped">Barang dilewati (nama sudah ada)</string>
     <string name="msg_plan_saved">Rencana usaha tersimpan.</string>

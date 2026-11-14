@@ -58,6 +58,39 @@ class ImportCommitTest {
     fun tearDown() = database.close()
 
     @Test
+    fun freeAndProductNoteRoundTripsWithPaymentsAndCanBeUndone() = runBlocking {
+        val productId = repository.saveProduct(projectId, null, ProductDraft("Oli", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 50_000)), listOf(RecipeLineDraft("Modal", amountRupiah = 20_000))))
+        val contact = repository.saveContact(businessId, null, ContactDraft("Bu Sari", phone = "0812345"))
+        val id = repository.saveSale(projectId, null, SaleDraft(contact, DAY, DAY.plusDays(7), 1_000, "Antar", listOf(SaleLineDraft(productId, "botol", "1", 50_000), SaleLineDraft(null, "", "2", 10_000, "Jasa antar")), 20_000))
+        repository.recordSalePayment(id, 5_000, DAY.plusDays(1))
+        val original = repository.sales(projectId).first().single { it.sale.id == id }
+        val workbook = repository.exportProjectWorkbookWithNotice(projectId)
+        assertEquals(0, workbook.omittedFreeSaleLineCount)
+        val preview = FinanceWorkbookImporter().preview("catatan.xlsx", workbook.bytes)
+        assertTrue(preview.errors.toString(), preview.canCommit)
+        val (targetBusiness, targetProject) = repository.createBusinessWithUnit("Tujuan", "Utama")
+        repository.setProfitBasis(targetBusiness, ProfitBasis.ITEM_COST)
+        val review = repository.reviewImport(targetBusiness, targetProject, preview)
+        assertTrue(review.conflicts.toString(), review.conflicts.isEmpty())
+        assertEquals(listOf("Bu Sari"), review.newContactNames)
+        repository.commitImport(targetBusiness, targetProject, preview)
+        val imported = repository.sales(targetProject).first().single()
+        assertEquals(original.total, imported.total)
+        assertEquals(original.paid, imported.paid)
+        assertEquals(original.outstanding, imported.outstanding)
+        assertEquals(original.dueDate, imported.dueDate)
+        assertEquals("Bu Sari", imported.contact?.name)
+        assertEquals("0812345", imported.contact?.phone)
+        assertEquals(original.lines.map { listOf(it.name, it.quantityText, it.unitPriceRupiah, it.hppRupiah, it.costKnown) }, imported.lines.map { listOf(it.name, it.quantityText, it.unitPriceRupiah, it.hppRupiah, it.costKnown) })
+        assertEquals(original.payments.map { it.amountRupiah }.sorted(), imported.payments.map { it.amountRupiah }.sorted())
+        val batch = dao.getImportBatches(targetProject).first()
+        repository.undoImportBatch(batch.id)
+        assertTrue(repository.sales(targetProject).first().isEmpty())
+        val book = repository.books(targetProject).first().single { it.mode == BookMode.REALIZATION.name }.id
+        assertEquals(0L, repository.accountingSummary(book).first().cashBalanceRupiah)
+    }
+
+    @Test
     fun templateRowsLandInTheirBooksWithCategoryDrivenTypesAndUndoCleanly() = runBlocking {
         val review = repository.reviewImport(businessId, projectId, preview())
         assertEquals(listOf("Sewa Gerobak" to CategoryRole.EXPENSE), review.newCategories)

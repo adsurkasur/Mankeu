@@ -188,6 +188,9 @@ class TemplateImportTest {
                 WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTES, MankeuTemplate.NOTE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_LINES, MankeuTemplate.NOTE_LINE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_PAYMENTS, MankeuTemplate.NOTE_PAYMENT_HEADERS, emptyList()),
             ),
         )
 
@@ -290,6 +293,9 @@ class TemplateImportTest {
                 WorkbookTable(MankeuTemplate.PRODUCTS, listOf("Nama", "Satuan", "Harga Jual (Rp)", "Target per Bulan"), emptyList()),
                 WorkbookTable(MankeuTemplate.RECIPES, listOf("Produk", "Komponen", "Biaya (Rp)", "Untuk Berapa Unit"), emptyList()),
                 WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTES, MankeuTemplate.NOTE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_LINES, MankeuTemplate.NOTE_LINE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_PAYMENTS, MankeuTemplate.NOTE_PAYMENT_HEADERS, emptyList()),
             ),
         )
 
@@ -336,6 +342,9 @@ class TemplateImportTest {
                 WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, emptyList()),
                 WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, listOf(listOf("Gula", "kg", 15_000L, "1", "0", "Ya"), listOf("Teh", "kg", 15_000L, "1", "0", "Tidak"))),
+                WorkbookTable(MankeuTemplate.NOTES, MankeuTemplate.NOTE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_LINES, MankeuTemplate.NOTE_LINE_HEADERS, emptyList()),
+                WorkbookTable(MankeuTemplate.NOTE_PAYMENTS, MankeuTemplate.NOTE_PAYMENT_HEADERS, emptyList()),
             ),
         )
 
@@ -478,6 +487,21 @@ class TemplateImportTest {
     // --- fixtures ---------------------------------------------------------------------------
 
     /** A minimal valid template whose Transaksi sheet is [transactions]; products and units default to none. */
+    @Test
+    fun notesRejectMissingReferencesAndInconsistentPayments() {
+        val transactions = WorkbookTable(MankeuTemplate.TRANSACTIONS, MankeuTemplate.TRANSACTION_HEADERS, emptyList())
+        val file = template(transactions,
+            notes = listOf(listOf("N1", "2026-08-15", null, 0, null, "Bu Sari")),
+            noteLines = listOf(listOf("N1", "Kopi", "Kopi", "cup", "1", "1", 10000, 10000, null, "Ya"),
+                listOf("HILANG", null, "Jasa", "", "1", "1", 1000, 1000, 0, "Tidak")),
+            notePayments = listOf(listOf("N1", "2026-08-15", 12000, "Bayar")))
+        val preview = FinanceWorkbookImporter().preview("catatan.xlsx", file)
+        assertFalse(preview.canCommit)
+        assertTrue(preview.errors.toString(), preview.errors.any { it.contains("modal wajib") })
+        assertTrue(preview.errors.toString(), preview.errors.any { it.contains("melebihi total") })
+        assertTrue(preview.errors.toString(), preview.errors.any { it.contains("HILANG") })
+    }
+
     private fun template(
         transactions: WorkbookTable,
         recipes: List<List<Any?>> = emptyList(),
@@ -485,6 +509,9 @@ class TemplateImportTest {
         saleUnits: List<List<Any?>> = emptyList(),
         movements: List<List<Any?>> = emptyList(),
         stock: List<List<Any?>> = emptyList(),
+        notes: List<List<Any?>> = emptyList(),
+        noteLines: List<List<Any?>> = emptyList(),
+        notePayments: List<List<Any?>> = emptyList(),
     ): ByteArray = XlsxWorkbookWriter().write(
         listOf(
             WorkbookTable(MankeuTemplate.GUIDE, MankeuTemplate.GUIDE_HEADERS, listOf(listOf("Format", MankeuTemplate.MARKER))),
@@ -495,6 +522,9 @@ class TemplateImportTest {
             WorkbookTable(MankeuTemplate.RECIPES, MankeuTemplate.RECIPE_HEADERS, recipes),
             WorkbookTable(MankeuTemplate.MOVEMENTS, MankeuTemplate.MOVEMENT_HEADERS, movements),
             WorkbookTable(MankeuTemplate.STOCK, MankeuTemplate.STOCK_HEADERS, stock),
+            WorkbookTable(MankeuTemplate.NOTES, MankeuTemplate.NOTE_HEADERS, notes),
+            WorkbookTable(MankeuTemplate.NOTE_LINES, MankeuTemplate.NOTE_LINE_HEADERS, noteLines),
+            WorkbookTable(MankeuTemplate.NOTE_PAYMENTS, MankeuTemplate.NOTE_PAYMENT_HEADERS, notePayments),
         ),
     )
 

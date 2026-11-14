@@ -5,6 +5,7 @@ import com.mankeu.domain.PlanAnalysis
 import com.mankeu.domain.PlanCalculator
 import com.mankeu.domain.Recurrence
 import com.mankeu.exporter.TemplateCategory
+import com.mankeu.exporter.FinanceExportNote
 import com.mankeu.importer.ImportProduct
 import com.mankeu.importer.ImportStockItem
 import androidx.room.withTransaction
@@ -130,6 +131,7 @@ data class ImportReview(
     val existingStockNames: List<String>,
     val previouslyImported: Boolean,
     val existingProductNames: List<String> = emptyList(),
+    val newContactNames: List<String> = emptyList(),
     /** Rows the commit will actually add: the file's rows minus stock and products skipped by name. */
     val addedRowCount: Int = 0,
 )
@@ -323,6 +325,11 @@ class FinanceRepository(
                     month = if (book.mode == BookMode.REALIZATION.name) MonthlySummary.of(currentMonth(), profitInputsOf(book.id), monthPostingsOf(book.id)) else null,
                 )
             }
+            require(dao.countConsignmentsForProject(project.id) == 0) { "Ekspor Excel belum mendukung titip jual. Gunakan Cadangan untuk menyimpan seluruh data." }
+            require(exportBooks.flatMap { it.events }.none { it.type == FinancialEventType.CREDIT_PURCHASE.name || it.settlesEventId != null }) { "Ekspor Excel belum mendukung utang dan pelunasannya. Gunakan Cadangan untuk menyimpan seluruh data." }
+            val notes = dao.getSalesForProject(project.id).filter { it.consignmentId == null }.map { sale ->
+                FinanceExportNote(sale, dao.getSaleLines(sale.id), dao.getSalePayments(sale.id), sale.contactId?.let { dao.getContact(it) })
+            }
             FinanceExportBundle(
                 business = business,
                 project = project,
@@ -334,8 +341,9 @@ class FinanceRepository(
                 stockItems = exportedStock(business.id, project.id, products, exportBooks),
                 stockMovements = stockDao.getManualMovements(business.id) + stockDao.getConsumptionOfProject(project.id),
                 products = products,
+                notes = notes,
                 plan = plan,
-                omittedFreeSaleLineCount = dao.countFreeSaleLines(project.id),
+                omittedFreeSaleLineCount = dao.countFreeSaleLines(project.id) - notes.sumOf { note -> note.lines.count { it.productId == null } },
             )
         }
 
@@ -1594,10 +1602,12 @@ class FinanceRepository(
         val products = importProductPlan(businessId, projectId, preview)
         ImportReview(
             newCategories = plan.newCategories.map { it.name to it.role },
-            conflicts = plan.conflicts + products.conflicts,
+            conflicts = plan.conflicts + products.conflicts + importNoteConflicts(businessId, projectId, preview),
             existingStockNames = preview.stockItems.filter { normalize(it.name) in existingStock }.map { it.name },
             previouslyImported = dao.hasImported(preview.sourceSha256),
             existingProductNames = products.skipped,
+            newContactNames = preview.notes.mapNotNull { it.contact }.distinctBy { normalize(it.name) }
+                .filter { dao.findContact(businessId, normalize(it.name)) == null }.map { it.name },
             addedRowCount = preview.rowCount - preview.stockItems.size + addableStock(businessId, projectId, preview).size - products.skipped.size,
         )
     }
@@ -1611,7 +1621,7 @@ class FinanceRepository(
         require(preview.canCommit) { "Berkas impor belum bisa disimpan." }
         val plan = planCategories(businessId, preview)
         val productPlan = importProductPlan(businessId, projectId, preview)
-        (plan.conflicts + productPlan.conflicts).let { conflicts -> require(conflicts.isEmpty()) { conflicts.joinToString("\n") } }
+        (plan.conflicts + productPlan.conflicts + importNoteConflicts(businessId, projectId, preview)).let { conflicts -> require(conflicts.isEmpty()) { conflicts.joinToString("\n") } }
         val books = ensureBookPair(projectId)
         val actual = books.getValue(BookMode.REALIZATION)
         val planBook = books.getValue(BookMode.PROJECTION)
@@ -1641,7 +1651,7 @@ class FinanceRepository(
                 bookId = actual.id,
                 mappingVersion = MankeuTemplate.MARKER,
                 recordCount = addedRows,
-                totalAmountRupiah = preview.transactions.sumOf { it.amountRupiah },
+                totalAmountRupiah = preview.transactions.sumOf { it.amountRupiah } + preview.notes.sumOf { note -> note.payments.sumOf { it.amountRupiah } },
                 incomingRupiah = preview.totalIncomeRupiah,
                 appliedStartEpochDay = periodApplied?.first?.atDay(1)?.toEpochDay(),
                 appliedEndEpochDay = periodApplied?.second?.atEndOfMonth()?.toEpochDay(),
@@ -1707,6 +1717,33 @@ class FinanceRepository(
                 },
             )
             productIds[normalize(item.name)] = productId
+        }
+
+        // Notes and payments carry explicit file keys; recreate their historical cost snapshots without recomputing them.
+        val importedContacts = mutableMapOf<String, String>()
+        preview.notes.forEach { note ->
+            val contactId = note.contact?.let { contact ->
+                val key = normalize(contact.name)
+                importedContacts.getOrPut(key) {
+                    dao.findContact(businessId, key)?.id ?: UUID.randomUUID().toString().also { id ->
+                        dao.insertContact(ContactEntity(id, businessId, contact.name.trim(), key, contact.phone, contact.address, contact.notes,
+                            contact.isCustomer, contact.isSupplier, contact.archived, now, importBatchId = batchId))
+                    }
+                }
+            }
+            val saleId = UUID.randomUUID().toString()
+            val sale = SaleEntity(saleId, businessId, projectId, contactId, note.date.toEpochDay(), note.dueDate?.toEpochDay(),
+                note.discountRupiah, note.notes, hppEstimated = note.estimated, importBatchId = batchId, createdAtEpochMillis = now)
+            dao.insertSale(sale)
+            dao.insertSaleLines(note.lines.mapIndexed { index, line ->
+                SaleLineEntity(UUID.randomUUID().toString(), saleId, line.productName?.let { productIds.getValue(normalize(it)) },
+                    line.unit, line.content, line.quantity, line.priceRupiah, line.totalRupiah, line.costRupiah, index, line.name, line.costKnown)
+            })
+            note.payments.forEach { payment ->
+                insertEventWithJournal(MoneyEvent(UUID.randomUUID().toString(), businessId, projectId, FinancialEventType.CASH_INCOME,
+                    payment.amountRupiah, payment.date, payment.description, SALE_PAYMENT_CATEGORY, bookId = actual.id,
+                    importBatchId = batchId, saleId = saleId, contactId = contactId))
+            }
         }
 
         // A sale naming a product becomes a paid note in the batch, so undo removes it (DEC-029 M4). The notes
@@ -1824,7 +1861,7 @@ class FinanceRepository(
                 severity = "IMPORT",
                 title = "Impor ${preview.sourceName} tersimpan",
                 explanation = buildList {
-                    add("${preview.transactions.size} transaksi, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedMovements.size} catatan produksi & hitung stok, ${addedStock.size} barang stok, ${addedMaterialMoves.size} gerakan bahan.")
+                    add("${preview.transactions.size} transaksi, ${preview.notes.size} nota, ${preview.budgetLines.size} baris rencana anggaran, ${productPlan.added.size} produk, ${addedMovements.size} catatan produksi & hitung stok, ${addedStock.size} barang stok, ${addedMaterialMoves.size} gerakan bahan.")
                     if (productPlan.skipped.isNotEmpty()) add("Produk dilewati karena namanya sudah ada, beserta produksi dan hitung stoknya: ${productPlan.skipped.joinToString()}.")
                     preview.planPeriod?.let { (start, end) ->
                         add(
@@ -1836,7 +1873,7 @@ class FinanceRepository(
                     val skipped = preview.stockItems.size - addedStock.size
                     if (skipped > 0) add("$skipped barang dilewati karena namanya sudah ada.")
                 }.joinToString(" "),
-                amountRupiah = preview.transactions.sumOf { it.amountRupiah },
+                amountRupiah = preview.transactions.sumOf { it.amountRupiah } + preview.notes.sumOf { note -> note.payments.sumOf { it.amountRupiah } },
                 sourceEvidence = preview.sourceName,
             ),
         )
@@ -1928,6 +1965,25 @@ class FinanceRepository(
         return CategoryPlan(existing, drafts.values.toList(), conflicts)
     }
 
+    private suspend fun importNoteConflicts(businessId: String, projectId: String, preview: WorkbookImportPreview): List<String> {
+        val products = (dao.getProducts(projectId).map { normalize(it.name) } + preview.products.map { normalize(it.name) }).toSet()
+        val conflicts = mutableListOf<String>()
+        preview.notes.forEach { note ->
+            note.lines.forEach { line ->
+                line.productName?.let { name -> if (normalize(name) !in products) conflicts += "${line.source}: produk \"$name\" tidak ada di unit usaha atau lembar Produk." }
+            }
+            note.contact?.let { contact ->
+                val existing = dao.findContact(businessId, normalize(contact.name))
+                if (existing != null && (existing.phone.orEmpty().trim() != contact.phone.orEmpty().trim() ||
+                    existing.address.orEmpty().trim() != contact.address.orEmpty().trim() || existing.notes.orEmpty().trim() != contact.notes.orEmpty().trim() ||
+                    existing.isCustomer != contact.isCustomer || existing.isSupplier != contact.isSupplier || existing.archived != contact.archived)) {
+                    conflicts += "${note.source}: kontak \"${contact.name}\" sudah ada dengan rincian berbeda; samakan datanya sebelum impor."
+                }
+            }
+        }
+        return conflicts.distinct()
+    }
+
     /**
      * Undoes an import (DEC-019): its transactions are deleted (journals cascade), its plan lines
      * archived, its production rows, stock and products removed. The batch row stays as history, marked undone.
@@ -1940,6 +1996,8 @@ class FinanceRepository(
         // Payments recorded later on the batch's notes go with their notes (review m3).
         val deletedPayments = dao.deletePaymentsOfImportedNotes(batchId)
         val deletedSales = dao.deleteSalesForImportBatch(batchId)
+        val deletedContacts = dao.deleteUnusedImportedContacts(batchId)
+        dao.releaseImportedContacts(batchId)
         val now = System.currentTimeMillis()
         val archivedBudgets = dao.getBudgetItemsForImportBatch(batchId)
         archivedBudgets.forEach { item -> dao.archiveBudgetItem(item.id, now) }
@@ -1960,7 +2018,7 @@ class FinanceRepository(
         check(dao.markImportBatchUndone(batchId, now) == 1) {
             "Impor ini sudah dibatalkan."
         }
-        ImportUndo(deletedEvents + deletedPayments + deletedSales + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
+        ImportUndo(deletedEvents + deletedPayments + deletedSales + deletedContacts + archivedBudgets.size + removedMovements + removedStock + removedProducts, periodCleared, keptProducts.map { it.name } + keptStock.map { it.name })
     }
 
     private suspend fun createProjectInternal(businessId: String, name: String, isGeneral: Boolean): ProjectEntity {

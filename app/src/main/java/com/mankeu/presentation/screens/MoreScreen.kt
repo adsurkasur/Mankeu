@@ -454,6 +454,7 @@ private fun ImportCard(
                     val preview = importState.preview
                     val review = importState.review
                     ReportRow(stringResource(R.string.import_ready_transactions), preview.transactions.size.toLong(), asMoney = false)
+                    ReportRow(stringResource(R.string.import_ready_notes), preview.notes.size.toLong(), asMoney = false)
                     ReportRow(stringResource(R.string.import_ready_budget), preview.budgetLines.size.toLong(), asMoney = false)
                     ReportRow(stringResource(R.string.import_ready_stock), (preview.stockItems.size - review.existingStockNames.size).toLong(), asMoney = false)
                     ReportRow(stringResource(R.string.import_ready_products), (preview.products.size - review.existingProductNames.size).toLong(), asMoney = false)
@@ -462,6 +463,9 @@ private fun ImportCard(
                     ReportRow(stringResource(R.string.import_total_expense), preview.totalExpenseRupiah)
                     if (review.previouslyImported) {
                         NoticeCard(stringResource(R.string.import_duplicate_title), stringResource(R.string.import_duplicate_body), Icons.Default.Info)
+                    }
+                    if (review.newContactNames.isNotEmpty()) {
+                        NoticeCard(stringResource(R.string.import_new_contacts), review.newContactNames.joinToString(), Icons.Default.Info)
                     }
                     if (review.newCategories.isNotEmpty()) {
                         NoticeCard(

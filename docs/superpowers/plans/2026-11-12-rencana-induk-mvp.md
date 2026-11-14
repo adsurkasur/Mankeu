@@ -98,7 +98,7 @@ memakai MADE tanpa stok. Semua jenis lewat nota, tagihan, dan `MonthlySummary` y
 Modal per satuan dasar diputuskan satu fungsi (`ProductCosting.unitCost`), dengan urutan:
 
 1. ada resep: biaya resep dibagi hasil bersih (hasil dikurangi susut);
-2. TRADED yang pernah dibeli: harga beli terakhir per satuan dasar (K-8);
+2. TRADED yang pernah dibeli: harga beli rata-rata per satuan dasar (K-8, keputusan pemilik DEC-053); rumus dan perlakuan koreksi masih perlu dirancang sebelum implementasi;
 3. ada "modal per satuan" yang diketik pengguna: angka itu;
 4. selain itu: belum diketahui.
 
@@ -414,8 +414,8 @@ hasil kalkulator langsung punya modal di "Aku jual"; lembar uji praktisi terisi 
 
 | Paket | Isi | Ukuran | Butuh |
 |---|---|---|---|
-| PK-4.1 | Kontrak template v5 final dan ekspor: Kontak, Nota, Baris Nota, Titip, kolom model baru | S | Tahap 1 selesai |
-| PK-4.2 | Impor lembar baru dengan pesan kesalahan per sel | S | PK-4.1 |
+| PK-4.1 | Kontrak template v6 dan ekspor: nota, kontak, pembayaran, titip dan kolom model baru | S | Tahap 1 selesai; nota biasa sebagian, titip dan metadata belum |
+| PK-4.2 | Impor lembar baru dengan pesan kesalahan per sel | S | Nota biasa sebagian; format lengkap belum |
 | PK-4.3 | Kategori dibaca kembali; pembayaran dan tempo di Transaksi | S | PK-4.2 |
 | PK-4.4 | Round trip golden semua persona | S | PK-4.3 |
 | PK-4.5 | Mode impor "Tambahkan" dan "Ganti" | S | K-13, PK-4.4 |
@@ -506,6 +506,7 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-15 01:24 · Workbook nota PK-4.1/4.2 · checkpoint · [verified] nota campuran dan pembayaran melalui ekspor, impor dan undo pada emulator-5558, TemplateImportTest 24/24; [unknown] metadata produk, dasar laba, pembayaran lama dan titip jual, sehingga belum lossless (DEC-055).
 - 2026-11-15 01:07 · Nota bebas PK-2.4 · checkpoint · [terverifikasi] barang/jasa tanpa produk dapat dicatat dan diedit, modal unknown ditandai; 11 tes terarah, regresi nota produk, JVM 201/201 dan build lulus. [belum] ekspor/impor lossless, saran nama, simpan sebagai produk dan seluruh MVP. `docs/superpowers/reports/2026-11-15-nota-bebas.md`.
 
 - 2026-11-14 15:04 · Validasi form uang · checkpoint · [terverifikasi] blur/fokus jumlah, kuantitas dan harga; MoneyFormsTest 11/11, JVM 196/196 dan lint/build. [belum] form lain dan MVP. `docs/superpowers/reports/2026-11-14-validasi-form-uang.md`.

@@ -72,7 +72,7 @@ class FreeLineSaleTest {
         assertEquals(stockBefore, repo.products(projectId).first().single().stock)
         assertEquals(1_500_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().salesRupiah)
         assertEquals(750_000L, repo.accountingSummary(bookId).first().cashBalanceRupiah)
-        assertEquals(1, repo.exportProjectWorkbookWithNotice(projectId).omittedFreeSaleLineCount)
+        assertEquals(0, repo.exportProjectWorkbookWithNotice(projectId).omittedFreeSaleLineCount)
         assertTrue(repo.exportProjectWorkbook(projectId).isNotEmpty())
     }
 

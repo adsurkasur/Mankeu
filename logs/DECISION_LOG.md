@@ -1,5 +1,12 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-055] Lembar nota pada format Excel versi 6
+- **Tanggal**: 2026-11-15; **status**: diterapkan sebagian.
+- **Konteks**: Nota bebas, pembayaran dan saldo piutang tidak dapat direkonstruksi dari lembar transaksi lama.
+- **Keputusan**: Tambahkan lembar Nota Penjualan, Baris Nota dan Pembayaran Nota dengan kode eksplisit, snapshot modal dan rincian kontak; validasi relasi serta total sebelum impor. Kontak baru ditampilkan pada pratinjau. Ekspor titip jual serta utang dan pelunasannya ditolak sampai format mendukungnya; arahkan ke Cadangan. Format lama ditolak sesuai kontrak header ketat DEC-012.
+- **Alasan dan alternatif**: Menebak nota dari transaksi atau memasukkan pembayaran dua kali akan menghasilkan angka salah.
+- **Komponen**: workbook, importasi, repository, pratinjau dan tes. Metadata produk, dasar laba usaha, pembayaran lama dan titip jual belum terjamin round-trip; format belum dinyatakan lossless.
+
 ### [DEC-054] Nota barang atau jasa tanpa produk terdaftar
 - **Tanggal**: 2026-11-15; **status**: diterapkan sebagian, ekspor lossless belum selesai.
 - **Konteks**: API telah menerima baris bebas tetapi layar mewajibkan produk dan menolak edit nota yang memuatnya. Biaya bebas belum dapat diisi.

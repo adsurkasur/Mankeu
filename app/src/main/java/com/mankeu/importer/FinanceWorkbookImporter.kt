@@ -68,9 +68,76 @@ class FinanceWorkbookImporter(
                 sheets.getValue(MankeuTemplate.RECIPES), productMoves, errors,
             ),
             stockItems = stock.map { item -> item.copy(movements = materialMoves.filter { it.second.equals(item.name.trim(), ignoreCase = true) }.map { it.third }) },
+            notes = readNotes(sheets.getValue(MankeuTemplate.NOTES), sheets.getValue(MankeuTemplate.NOTE_LINES), sheets.getValue(MankeuTemplate.NOTE_PAYMENTS), errors),
             planPeriod = period,
             errors = errors,
         )
+    }
+
+    /** A note, its immutable line-cost snapshots, and each payment are linked only by the explicit file key. */
+    private fun readNotes(notesSheet: WorkbookSheet, linesSheet: WorkbookSheet, paymentsSheet: WorkbookSheet, errors: MutableList<String>): List<ImportNote> {
+        fun Row.flag(column: Int, default: Boolean): Boolean = when (val value = text(column)) {
+            null -> default
+            "Ya" -> true
+            "Tidak" -> false
+            else -> { errors += "${ref(column)}: isi Ya atau Tidak, tertulis \"$value\"."; default }
+        }
+        fun Row.positive(column: Int, label: String): String? {
+            val raw = requiredText(column, label, errors) ?: return null
+            return raw.takeIf { TransactionCalculation.parseQuantity(it) != null }
+                ?: null.also { errors += "${ref(column)}: $label harus lebih dari nol." }
+        }
+        val lines = dataRows(linesSheet).mapNotNull { row ->
+            val key = row.requiredText(0, "Kode Nota", errors) ?: return@mapNotNull null
+            val product = row.text(1)
+            val name = row.text(2).orEmpty()
+            if (product == null && name.isBlank()) return@mapNotNull null.also { errors += "${row.ref(2)}: nama barang atau jasa wajib diisi." }
+            val content = row.positive(4, "Isi") ?: return@mapNotNull null
+            val quantity = row.positive(5, "Jumlah") ?: return@mapNotNull null
+            val price = row.money(6, errors)?.takeIf { it > 0 } ?: return@mapNotNull null.also { errors += "${row.ref(6)}: harga wajib lebih dari nol." }
+            val total = row.money(7, errors)?.takeIf { it > 0 } ?: return@mapNotNull null.also { errors += "${row.ref(7)}: total wajib lebih dari nol." }
+            val expected = runCatching { com.mankeu.domain.SalesMath.lineTotal(TransactionCalculation.parseQuantity(quantity)!!, price) }.getOrNull()
+            if (expected != total) errors += "${row.ref(7)}: total tidak cocok dengan jumlah dan harga."
+            val known = row.flag(9, false)
+            if (known && row.text(8) == null) errors += "${row.ref(8)}: modal wajib diisi jika dinyatakan diketahui."
+            if (product == null && known) errors += "${row.ref(9)}: modal baris bebas belum dapat dinyatakan diketahui."
+            key to ImportNoteLine(row.ref(0), product, name, row.text(3).orEmpty(), content, quantity, price, total, row.money(8, errors) ?: 0L, known)
+        }
+        val payments = dataRows(paymentsSheet).mapNotNull { row ->
+            val key = row.requiredText(0, "Kode Nota", errors) ?: return@mapNotNull null
+            val date = row.date(1, errors) ?: return@mapNotNull null
+            val amount = row.money(2, errors)?.takeIf { it > 0 } ?: return@mapNotNull null.also { errors += "${row.ref(2)}: jumlah wajib lebih dari nol." }
+            val description = row.requiredText(3, "Keterangan", errors) ?: return@mapNotNull null
+            key to ImportNotePayment(row.ref(0), date, amount, description)
+        }
+        val seen = mutableSetOf<String>()
+        val notes = dataRows(notesSheet).mapNotNull { row ->
+            val key = row.requiredText(0, "Kode Nota", errors) ?: return@mapNotNull null
+            if (!seen.add(key)) errors += "${row.ref(0)}: kode nota \"$key\" ganda."
+            val date = row.date(1, errors) ?: return@mapNotNull null
+            val due = if (row.text(2) != null) row.date(2, errors) else null
+            if (due != null && due.isBefore(date)) errors += "${row.ref(2)}: jatuh tempo sebelum tanggal nota."
+            val contactName = row.text(5)
+            val contact = contactName?.let { ImportNoteContact(it, row.text(6), row.text(7), row.text(8), row.flag(9, true), row.flag(10, false), row.flag(11, false)) }
+            if (contactName == null && (6..11).any { row.text(it) != null }) errors += "${row.ref(5)}: nama pelanggan wajib diisi bila rincian pelanggan ada."
+            val noteLines = lines.filter { it.first == key }.map { it.second }
+            val notePayments = payments.filter { it.first == key }.map { it.second }
+            if (noteLines.isEmpty()) errors += "${row.ref(0)}: nota harus memiliki baris."
+            val discount = row.money(3, errors) ?: 0L
+            val subtotal = runCatching { noteLines.fold(0L) { sum, line -> Math.addExact(sum, line.totalRupiah) } }.getOrNull()
+            val paid = runCatching { notePayments.fold(0L) { sum, payment -> Math.addExact(sum, payment.amountRupiah) } }.getOrNull()
+            if (subtotal == null || paid == null) errors += "${row.ref(0)}: total nota atau pembayaran terlalu besar."
+            else {
+                if (discount > subtotal) errors += "${row.ref(3)}: diskon melebihi subtotal."
+                if (paid > subtotal - discount) errors += "${row.ref(0)}: pembayaran melebihi total nota."
+                if (paid < subtotal - discount && contact == null) errors += "${row.ref(5)}: pelanggan wajib diisi untuk nota yang belum lunas."
+            }
+            notePayments.filter { it.date.isBefore(date) }.forEach { errors += "${it.source}: pembayaran sebelum tanggal nota." }
+            ImportNote(row.ref(0), key, date, due, discount, row.text(4).orEmpty(), contact, row.flag(12, false), noteLines, notePayments)
+        }
+        (lines.map { it.first to it.second.source } + payments.map { it.first to it.second.source }).filter { it.first !in seen }.forEach { (key, source) -> errors += "$source: kode nota \"$key\" tidak ada di lembar ${MankeuTemplate.NOTES}." }
+        notes.mapNotNull { it.contact }.groupBy { it.name.trim().lowercase() }.filterValues { it.distinct().size > 1 }.keys.forEach { name -> errors += "Pelanggan \"$name\" memiliki rincian yang berbeda dalam berkas." }
+        return notes
     }
 
     private fun readTransaction(row: Row, errors: MutableList<String>): ImportTransaction? {

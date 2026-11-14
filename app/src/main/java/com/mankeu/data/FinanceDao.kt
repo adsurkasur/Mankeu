@@ -567,6 +567,17 @@ interface FinanceDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertContact(contact: ContactEntity)
 
+    @Query("""
+        DELETE FROM contacts WHERE importBatchId = :batchId
+        AND NOT EXISTS (SELECT 1 FROM sales WHERE contactId = contacts.id)
+        AND NOT EXISTS (SELECT 1 FROM financial_events WHERE contactId = contacts.id)
+        AND NOT EXISTS (SELECT 1 FROM consignments WHERE contactId = contacts.id)
+    """)
+    suspend fun deleteUnusedImportedContacts(batchId: String): Int
+
+    @Query("UPDATE contacts SET importBatchId = NULL WHERE importBatchId = :batchId")
+    suspend fun releaseImportedContacts(batchId: String): Int
+
     @Update
     suspend fun updateContact(contact: ContactEntity)
 
@@ -588,6 +599,9 @@ interface FinanceDao {
 
     @Query("SELECT * FROM sales WHERE projectId = :projectId ORDER BY dateEpochDay DESC, createdAtEpochMillis DESC")
     fun observeSales(projectId: String): Flow<List<SaleEntity>>
+
+    @Query("SELECT * FROM sales WHERE projectId = :projectId ORDER BY dateEpochDay, createdAtEpochMillis")
+    suspend fun getSalesForProject(projectId: String): List<SaleEntity>
 
     @Query("SELECT l.* FROM sale_lines l INNER JOIN sales s ON s.id = l.saleId WHERE s.projectId = :projectId ORDER BY l.saleId, l.sortOrder")
     fun observeSaleLinesOfProject(projectId: String): Flow<List<SaleLineEntity>>

@@ -121,6 +121,21 @@ class FreeLineSaleTest {
         assertEquals(5_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().hppRupiah)
     }
 
+    @Test fun tradedGoodsCanBeSoldWhileCostRemainsUnknown() = runBlocking {
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
+        db.openHelper.writableDatabase.execSQL("UPDATE products SET kind='TRADED', manualCostRupiah=1000 WHERE id=?", arrayOf(productId))
+        db.openHelper.writableDatabase.execSQL("DELETE FROM product_recipe_lines WHERE productId=?", arrayOf(productId))
+        val before = repo.products(projectId).first().single().stock
+        val id = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(productId, "botol", "1", 55_000)), 55_000))
+        val sale = repo.sales(projectId).first().single { it.sale.id == id }
+        assertEquals(false, sale.lines.single().costKnown)
+        assertEquals(0L, sale.hpp)
+        assertEquals(0, before.subtract(BigDecimal.ONE).compareTo(repo.products(projectId).first().single().stock))
+        val month = repo.monthlySummary(bookId, YearMonth.from(day)).first()
+        assertEquals(55_000L, month.salesRupiah)
+        assertTrue(month.profit.profitIncomplete)
+    }
+
     @Test fun legacyFreeLineFlaggedKnownStillMarksProfitIncomplete() = runBlocking {
         repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
         val id = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(null, "", "1", 50_000, name = "Jasa lama")), 50_000))

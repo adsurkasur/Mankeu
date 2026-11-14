@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 05:50] [Codex (GPT-6) — penjualan dagangan dengan modal belum diketahui]
+- **Goal**: Menghilangkan jalan buntu pencatatan dagangan tanpa menampilkan laba semu.
+- **Actions**: Izinkan nota dagangan tanpa resep; harga manual dagangan tidak dianggap rata-rata, modal dicatat unknown dan laporan ITEM_COST tetap tidak lengkap.
+- **Files**: FinanceRepository, SaleNoteScreens, FreeLineSaleTest, SaleNoteFlowTest, rencana dan changelog.
+- **Verification**: [verified] Tes data awal gagal karena penjualan ditolak; setelah perbaikan alur UI dan data lulus 2/2 di emulator-5558, termasuk stok berkurang dan laba incomplete; build aplikasi/test dan diff check lulus. [unknown] UI pencatatan pembelian dan modal rata-rata belum terintegrasi.
+
 ### [2026-11-15 05:46] [Codex (GPT-6) — fondasi modal dagangan]
 - **Goal**: Membuat perhitungan rata-rata tertimbang yang dipilih pemilik tanpa menganggap modal tidak diketahui sebagai nol.
 - **Actions**: Menambah fungsi domain pembelian, penjualan dan hitung ulang stok, pembulatan per baris, penanganan stok unknown serta nol eksplisit; mencatat DEC-056.

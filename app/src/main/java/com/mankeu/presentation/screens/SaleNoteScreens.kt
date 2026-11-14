@@ -259,7 +259,6 @@ fun SaleNoteEditorScreen(
             onClose = onClose,
             snackbarHost = snackbarHost,
             saveBlockedReason = when {
-                lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> stringResource(R.string.sale_trade_cost_unsupported)
                 lines.isEmpty() -> stringResource(R.string.form_need_sale_line)
                 results.any { it == null } -> {
                     val line = lines[results.indexOfFirst { it == null }]
@@ -277,7 +276,6 @@ fun SaleNoteEditorScreen(
             },
             onInvalidSave = {
                 when {
-                    lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } } -> false
                     lines.isEmpty() || results.any { it == null } -> false
                     partTooHigh -> { partTouched = true; partFocus.requestFocus(); true }
                     parsedDate == null -> false

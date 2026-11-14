@@ -1282,9 +1282,8 @@ class FinanceRepository(
         val entities = if (unchangedLines) previousLines else lines.mapIndexed { index, l ->
             val record = l.productId?.let { productRecord(it) }
             require(l.productId == null || record != null && record.product.projectId == project.id) { "Produk tidak ditemukan di unit usaha ini." }
-            require(record == null || record.product.kind != "TRADED" || record.recipe.isNotEmpty()) { "Modal barang dagangan belum dapat dihitung. Data tetap tersimpan." }
             val productCost = record?.let { ProductCosting.cost(it.spec, prices) }
-            val manual = record?.product?.manualCostRupiah?.takeIf { record.recipe.isEmpty() }
+            val manual = record?.product?.manualCostRupiah?.takeIf { record.recipe.isEmpty() && record.product.kind != "TRADED" }
             SaleLineEntity(
                 id = UUID.randomUUID().toString(),
                 saleId = saleId,

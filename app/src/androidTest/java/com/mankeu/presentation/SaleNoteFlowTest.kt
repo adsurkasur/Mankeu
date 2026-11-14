@@ -233,6 +233,21 @@ class SaleNoteFlowTest {
     }
 
     @Test
+    fun tradedProductCanBeSoldWithUnknownCost() {
+        database.openHelper.writableDatabase.execSQL("UPDATE products SET kind='TRADED', manualCostRupiah=1000 WHERE id=?", arrayOf(keripik))
+        database.openHelper.writableDatabase.execSQL("DELETE FROM product_recipe_lines WHERE productId=?", arrayOf(keripik))
+        start()
+        click("Catatan")
+        clickDescription("Catat")
+        click("Nota penjualan")
+        click("Simpan")
+        compose.waitUntil(10_000) { runBlocking { repository.sales(projectId).first().isNotEmpty() } }
+        val line = runBlocking { repository.sales(projectId).first().single().lines.single() }
+        assertEquals(keripik, line.productId)
+        assertEquals(false, line.costKnown)
+    }
+
+    @Test
     fun freeLineCanBeAddedToANoteAndSavedWithoutCreatingStock() {
         val productsBefore = runBlocking { repository.products(projectId).first().size }
         start()

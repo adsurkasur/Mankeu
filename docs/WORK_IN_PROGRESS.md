@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Pemilih bahan dan validasi resep (2026-11-14 16:33 WIB):** [terverifikasi] Dropdown memilih bahan berdasarkan ID dan mempertahankan jumlah; validasi kolom resep mengikuti blur/fokus. Empat tes terarah dan build debug/androidTest lulus pada emulator-5558. [belum] Audit seluruh layar, perangkat dan MVP.
+
+
 **Modal manual pada Produk (2026-11-14 16:29 WIB):** [terverifikasi] Kartu produk non-dagang tanpa resep menampilkan modal manual dan untung menurut isi satuan; enam tes produk/rencana dan satu alur editor lulus pada emulator-5558, build lulus. [belum] Form input modal manual dan kontrak ekspor/impor yang mempertahankannya, harga beli dagangan, serta seluruh MVP.
 
 

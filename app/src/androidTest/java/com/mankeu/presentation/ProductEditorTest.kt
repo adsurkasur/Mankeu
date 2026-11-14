@@ -156,6 +156,47 @@ class ProductEditorTest {
         assertEquals(0, compose.onAllNodesWithText("Modal barang Rp", substring = true).fetchSemanticsNodes().size)
     }
 
+    @Test fun materialRecipeUsesDropdownAndKeepsSelectedMaterial() {
+        open(materials = listOf(oil, cassava))
+        click("+ Bahan")
+        assertEquals(0, compose.onAllNodesWithText("Singkong", useUnmergedTree = true).fetchSemanticsNodes().size)
+        click("Minyak")
+        click("Singkong")
+        box("Jumlah (kg)").performTextInput("2")
+        click("Simpan")
+        exists("Singkong · 2 kg")
+        box("Nama produk").performTextInput("Keripik")
+        box("Satu kali produksi menghasilkan").performTextInput("10")
+        click("bungkus")
+        box("Harga jual").performTextInput("8000")
+        click("Simpan")
+        saveButton().performClick()
+        assertEquals("singkong", saved!!.recipe.single().stockItemId)
+        assertEquals("2", saved!!.recipe.single().quantityText)
+    }
+
+    @Test fun recipeQuantitySaveFocusesInvalidField() {
+        open()
+        click("+ Bahan")
+        click("Simpan")
+        box("Jumlah (liter)").assertIsFocused()
+        exists("Isi jumlah lebih dari 0 dulu.")
+        box("Jumlah (liter)").performTextInput("2")
+        click("Simpan")
+        exists("Minyak · 2 liter")
+    }
+
+    @Test fun otherCostShowsErrorsAtFieldAndFocusesOnSave() {
+        open()
+        click("+ Biaya lain")
+        click("Simpan")
+        box("Biaya (mis. gas, upah)").assertIsFocused().performTextInput("Gas")
+        click("Simpan")
+        box("Biaya untuk sekali produksi").assertIsFocused().performTextInput("10000")
+        click("Simpan")
+        exists("Gas")
+    }
+
     @Test fun recipePerBatchGivesHppPerSaleUnitAndSaves() {
         open()
         // On open: name and yield are the only boxes; recipe and units are rows and buttons.

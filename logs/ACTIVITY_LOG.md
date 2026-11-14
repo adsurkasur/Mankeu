@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:33] [Codex (GPT-6) — pemilih bahan dan validasi resep]
+- **Goal**: Merapikan daftar bahan dan validasi editor resep sesuai DEC-042.
+- **Actions**: Mengganti chip bahan dengan dropdown berbasis ID; menampilkan pesan dan fokus pada jumlah bahan, nama biaya dan jumlah biaya setelah blur/Simpan.
+- **Files**: ProductEditorScreen, ProductEditorTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Tes dropdown dan dua tes fokus gagal sebelum perubahan; empat tes terarah termasuk simpan ID/jumlah bahan dan kontrol resep lengkap lulus pada emulator-5558; build debug/androidTest dan diff check lulus. [belum] Audit semua layar dan perangkat serta gerbang MVP.
+
+
 ### [2026-11-14 16:29] [Codex (GPT-6) — modal manual di kartu produk]
 - **Goal**: Menyelaraskan kartu Produk dengan modal manual yang sudah diketahui.
 - **Actions**: Menampilkan modal dan untung sesuai isi tiap satuan untuk produk non-dagang tanpa resep dan dengan modal manual; mempertahankan penanganan modal belum diketahui untuk dagangan.

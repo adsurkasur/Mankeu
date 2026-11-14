@@ -11,7 +11,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -403,12 +407,21 @@ private fun SectionLabel(text: String) {
     Text(text, style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** One recipe line: a material (chips) and its quantity per batch, or a free cost (name and amount). */
-@OptIn(ExperimentalLayoutApi::class)
+/** One recipe line: a material and its quantity per batch, or a free cost (name and amount). */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecipeLineSheet(line: LineInput, materials: List<StockItem>, onDismiss: () -> Unit, onSave: (LineInput) -> Unit, onDelete: (() -> Unit)?) {
     var draft by remember(line) { mutableStateOf(line) }
     val material = materials.firstOrNull { it.id == draft.materialId }
+    var materialExpanded by remember { mutableStateOf(false) }
+    val primaryFocus = remember { FocusRequester() }
+    val amountFocus = remember { FocusRequester() }
+    var primaryFocused by remember { mutableStateOf(false) }
+    var amountFocused by remember { mutableStateOf(false) }
+    var primaryTouched by rememberSaveable { mutableStateOf(false) }
+    var amountTouched by rememberSaveable { mutableStateOf(false) }
+    val invalidPrimary = if (draft.materialId != null) TransactionCalculation.parseQuantity(draft.quantity) == null else draft.name.isBlank()
+    val invalidAmount = draft.materialId == null && (draft.amount.toLongOrNull() ?: 0) <= 0
     LineEditSheet(
         title = stringResource(if (line.materialId != null) R.string.editor_material else R.string.editor_cost_title),
         onDismiss = onDismiss,
@@ -420,11 +433,28 @@ private fun RecipeLineSheet(line: LineInput, materials: List<StockItem>, onDismi
             else -> null
         },
         onDelete = onDelete,
+        onInvalidSave = {
+            when {
+                invalidPrimary -> { primaryTouched = true; primaryFocus.requestFocus() }
+                invalidAmount -> { amountTouched = true; amountFocus.requestFocus() }
+            }
+        },
     ) {
         if (draft.materialId != null) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-                materials.forEach { m ->
-                    FilterChip(selected = draft.materialId == m.id, onClick = { draft = draft.copy(materialId = m.id, name = m.name) }, label = { Text(m.name) })
+            ExposedDropdownMenuBox(expanded = materialExpanded, onExpandedChange = { materialExpanded = it }) {
+                OutlinedTextField(
+                    value = material?.name ?: draft.name, onValueChange = {}, readOnly = true, singleLine = true,
+                    label = { Text(stringResource(R.string.editor_material)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(materialExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                )
+                ExposedDropdownMenu(expanded = materialExpanded, onDismissRequest = { materialExpanded = false }) {
+                    materials.forEach { m ->
+                        DropdownMenuItem(text = { Text(m.name) }, onClick = {
+                            draft = draft.copy(materialId = m.id, name = m.name)
+                            materialExpanded = false
+                        })
+                    }
                 }
             }
             OutlinedTextField(
@@ -433,20 +463,36 @@ private fun RecipeLineSheet(line: LineInput, materials: List<StockItem>, onDismi
                 label = { Text(stringResource(R.string.editor_quantity_per_batch, material?.unit ?: stringResource(R.string.editor_unit_fallback))) },
                 suffix = { Text(material?.unit.orEmpty()) },
                 singleLine = true,
+                isError = primaryTouched && invalidPrimary,
+                supportingText = if (primaryTouched && invalidPrimary) ({ Text(stringResource(R.string.form_need_quantity)) }) else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(primaryFocus).onFocusChanged { focus ->
+                    if (primaryFocused && !focus.isFocused) primaryTouched = true
+                    primaryFocused = focus.isFocused
+                },
             )
         } else {
             OutlinedTextField(
                 value = draft.name, onValueChange = { draft = draft.copy(name = it) }, singleLine = true,
                 label = { Text(stringResource(R.string.editor_cost_name)) },
+                isError = primaryTouched && invalidPrimary,
+                supportingText = if (primaryTouched && invalidPrimary) ({ Text(stringResource(R.string.form_need_name)) }) else null,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(primaryFocus).onFocusChanged { focus ->
+                    if (primaryFocused && !focus.isFocused) primaryTouched = true
+                    primaryFocused = focus.isFocused
+                },
             )
             MoneyInput(
                 label = stringResource(R.string.editor_cost_amount),
                 value = draft.amount.toLongOrNull(),
                 onValueChange = { draft = draft.copy(amount = it?.toString().orEmpty()) },
+                isError = amountTouched && invalidAmount,
+                supportingText = if (amountTouched && invalidAmount) ({ Text(stringResource(R.string.form_need_amount)) }) else null,
+                fieldModifier = Modifier.focusRequester(amountFocus).onFocusChanged { focus ->
+                    if (amountFocused && !focus.isFocused) amountTouched = true
+                    amountFocused = focus.isFocused
+                },
                 imeAction = ImeAction.Done,
             )
         }

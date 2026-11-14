@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Modal manual rencana (2026-11-14 16:26 WIB):** [terverifikasi] Modal manual non-dagang tanpa resep, termasuk nol, dihitung per isi satuan jual dan ditampilkan pada Rencana. PlanAssemblyTest serta 5/5 PlanProductsTest dan build lulus. [belum] Harga beli terakhir barang dagangan, UI modal manual, sinkron dan seluruh MVP.
+
+
 **Kelayakan dan modal belum lengkap (2026-11-14 16:23 WIB):** [terverifikasi] Status biaya tidak lengkap mencegah kesimpulan rencana dan perbandingan pada layar serta angka turunan Excel/PDF; titik impas aktual ditahan bila biaya standar produk terjual belum lengkap. Lima tes layar/PDF pada emulator-5558, 199/199 JVM dan build lulus; teks PDF sintetis diperiksa. Laporan `docs/superpowers/reports/2026-11-14-kelayakan-modal-belum-lengkap.md`. [belum] Verifikasi visual PDF, dukungan modal manual/harga dagangan di rencana, sinkronisasi dan seluruh MVP.
 
 

@@ -55,6 +55,23 @@ class PlanAssemblyTest {
     }
 
     @Test
+    fun `manual cost including zero is known and scales with the sale unit`() {
+        val manual = kopi.copy(product = kopi.product.copy(manualCostRupiah = 3_000), units = listOf(kopi.units.first().copy(contentText = "2")), recipe = emptyList())
+        val product = PlanAssembly.products(listOf(manual), emptyMap()).single()
+        org.junit.Assert.assertTrue(product.costKnown)
+        assertEquals(BigDecimal("6000.000000"), product.variableCostPerUnit)
+        val free = PlanAssembly.products(listOf(manual.copy(product = manual.product.copy(manualCostRupiah = 0))), emptyMap()).single()
+        org.junit.Assert.assertTrue(free.costKnown)
+        assertEquals(0, free.variableCostPerUnit.signum())
+    }
+
+    @Test
+    fun `traded product without resolved last purchase is not assumed complete`() {
+        val traded = kopi.copy(product = kopi.product.copy(kind = "TRADED", manualCostRupiah = 3_000), recipe = emptyList())
+        org.junit.Assert.assertFalse(PlanAssembly.products(listOf(traded), emptyMap()).single().costKnown)
+    }
+
+    @Test
     fun `stored plan reproduces the lecturer benchmark`() {
         val inputs = PlanAssembly.planInputs(
             project = null,

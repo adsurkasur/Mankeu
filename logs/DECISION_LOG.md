@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-049] Modal manual pada perakitan rencana
+- **Tanggal**: 2026-11-14; **status**: diterapkan terbatas.
+- **Konteks**: DEC-048 menahan semua produk tanpa resep, termasuk modal manual yang sudah diketahui.
+- **Keputusan**: Untuk produk non-dagang tanpa resep, modal manual termasuk nol dipakai per satuan dasar dan dikalikan isi satuan jual. Barang dagangan tetap tidak lengkap sampai harga beli terakhir dapat diakses dalam perakitan. Resep tetap diutamakan.
+- **Alasan dan alternatif**: Nol eksplisit berbeda dari nilai tidak diketahui; modal dagangan tidak boleh dipilih sebelum prioritas harga beli terakhir dipastikan.
+- **Komponen**: PlanAssembly dan daftar produk Rencana.
+
+
 ### [DEC-048] Menahan hasil rencana ketika modal belum lengkap
 - **Tanggal**: 2026-11-14; **status**: diterapkan bertahap.
 - **Konteks**: Resep kosong atau sebagian tanpa harga menghasilkan biaya nol/parsial, tetapi kelayakan, perbandingan dan ekspor menampilkannya sebagai angka final. Titik impas aktual juga memakai biaya standar produk terjual.

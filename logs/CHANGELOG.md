@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Usaha baru memakai hitung untung SIMPLE (semua belanja usaha mengurangi laba); usaha lama tetap ITEM_COST. MonthlySummary dan kartu BEP memakai basis yang sama, dan ringkasan mencatat jumlah/nilai baris penjualan dengan biaya belum diketahui (PK-1.6).
 
 ### Fixed
+- Rencana mengenali modal manual yang sudah tersimpan, termasuk nol, untuk produk non-dagang tanpa resep.
 - Rencana dan ekspor menahan kesimpulan kelayakan saat modal produk belum lengkap; titik impas aktual juga tidak memakai biaya standar yang belum lengkap.
 - Daftar produk di Rencana tidak menampilkan modal parsial sebagai nilai pasti ketika resep belum lengkap.
 - Editor produk tidak lagi menampilkan modal parsial atau harga jual sebagai untung pasti ketika resep belum lengkap.

@@ -33,7 +33,10 @@ object PlanAssembly {
         val spec = row.spec
         val main = spec.saleUnits.firstOrNull() ?: return@mapNotNull null
         val cost = ProductCosting.cost(spec, materialPrices)
-        val hpp = cost.perSaleUnit.first().hppRupiah
+        // Last purchase cost for traded products is not yet available here; never substitute a manual cost for it.
+        val manual = spec.manualCostRupiah?.takeIf { spec.recipe.isEmpty() && spec.kind != com.mankeu.domain.ItemKind.TRADED }
+        val costKnown = cost.complete || manual != null
+        val hpp = if (manual != null) TransactionCalculation.computeTotalRupiah(main.content, manual) else cost.perSaleUnit.first().hppRupiah
         PlanProduct(
             id = spec.id,
             name = spec.name,
@@ -42,7 +45,7 @@ object PlanAssembly {
             targetPerMonth = TransactionCalculation.parseQuantity(row.product.targetPerMonthText),
             components = if (hpp > 0) listOf(CostComponent("HPP", hpp, BigDecimal.ONE)) else emptyList(),
             sellFromMonth = row.product.sellFromMonth,
-            costKnown = cost.complete,
+            costKnown = costKnown,
         )
     }
 

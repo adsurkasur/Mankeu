@@ -153,11 +153,12 @@ fun PlanScreen(
             ) {
                 state.products.forEach { row ->
                     val cost = ProductCosting.cost(row.spec, materialPrices)
+                    val planProduct = PlanAssembly.products(listOf(row), materialPrices).firstOrNull()
                     val economics = stringResource(
                         R.string.plan_product_row,
                         (row.mainUnit?.priceRupiah ?: 0).toRupiah(),
                         row.mainUnit?.name ?: row.product.unit,
-                        cost.perSaleUnit.firstOrNull()?.hppRupiah?.takeIf { cost.complete }?.toRupiah() ?: "—",
+                        planProduct?.takeIf { it.costKnown }?.variableCostPerUnit?.toLong()?.toRupiah() ?: "—",
                         row.product.targetPerMonthText ?: "-",
                     )
                     // An HPP missing a price or a recipe is a floor, not the HPP: say so (Task 2 review M-3).
@@ -165,7 +166,7 @@ fun PlanScreen(
                         economics,
                         stringResource(R.string.plan_product_sell_from_value, row.product.sellFromMonth).takeIf { row.product.sellFromMonth > 1 },
                         // hppLines has one line per sale unit when complete; only an incomplete HPP asks for its single warning line.
-                        if (!cost.complete) hppLines(cost).first() else null,
+                        if (planProduct?.costKnown != true) hppLines(cost).first() else null,
                     )
                     PlanRow(title = row.product.name, subtitle = parts.joinToString(" · "), onClick = { onOpenProduct(row.product.id) })
                 }

@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:26] [Codex (GPT-6) — modal manual dalam rencana]
+- **Goal**: Memakai modal manual yang diketahui tanpa menebak harga beli barang dagangan.
+- **Actions**: Memasukkan modal manual per satuan dasar termasuk nol untuk produk non-dagang tanpa resep; mengalikan isi satuan jual dan menyelaraskan baris Rencana dengan perakitan yang sama.
+- **Files**: PlanAssembly, PlanScreen, PlanAssemblyTest, PlanProductsTest, WIP, changelog dan DEC-049.
+- **Verification**: [terverifikasi] Tes modal manual gagal sebelumnya; suite PlanAssemblyTest dan 5/5 PlanProductsTest pada emulator-5558 lulus, build debug/androidTest dan diff check lulus. [belum] Harga beli terakhir barang dagangan dan UI input modal manual; gerbang MVP.
+
+
 ### [2026-11-14 16:23] [Codex (GPT-6) — rencana dengan modal belum lengkap]
 - **Goal**: Mencegah kelayakan dan titik impas semu ketika modal produk belum lengkap.
 - **Actions**: Menandai kelengkapan biaya pada input/hasil rencana; menahan kesimpulan, perbandingan dan angka turunan dalam layar, Excel dan PDF; titik impas aktual menahan hasil jika produk terjual belum memiliki biaya standar lengkap tanpa menyembunyikan laba aktual yang valid.

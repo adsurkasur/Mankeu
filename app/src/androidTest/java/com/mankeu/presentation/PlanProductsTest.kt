@@ -65,6 +65,16 @@ class PlanProductsTest {
     }
 
     @Test
+    fun knownManualCostAppearsInPlanRow() {
+        val record = ProductRecord(ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "1", manualCostRupiah = 3_000, createdAtEpochMillis = 0), listOf(ProductUnitEntity("ku", "k", "paket", "2", 8_000)), emptyList())
+        val project = ProjectEntity("p", "b", "Utama", isGeneral = true, createdAtEpochMillis = 0)
+        val state = AppUiState(isLoading = false, projects = listOf(project), selectedProjectId = "p", products = listOf(record))
+        compose.setContent { MankeuTheme { PlanScreen(state, {}, { _, _, _, _, _, _, _, _ -> }, {}, { _, _ -> }, {}) } }
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Keripik", substring = true))
+        assertTrue(compose.onAllNodesWithText("Rp6.000", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
     fun productWithTwoSaleUnitsRendersInThePlan() {
         val record = ProductRecord(
             product = ProductEntity("k", "p", "Keripik", "bungkus", batchYieldText = "400", createdAtEpochMillis = 0),

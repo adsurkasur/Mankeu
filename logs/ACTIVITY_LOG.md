@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:58] [Codex (GPT-6) — aksi dialog tambah stok]
+- **Goal**: Membuat pilihan catat belanja dan stok saja terlihat sebagai tombol dengan margin yang nyaman.
+- **Actions**: Menggunakan tombol utama dan tombol berbingkai serta Kembali sebagai aksi sekunder; mengambil bukti visual sebelum/sesudah pada data sintetis. Tidak mengubah callback atau isian.
+- **Files**: StockSection, dua screenshot sintetis, laporan UX, WIP dan changelog.
+- **Verification**: [terverifikasi] Lima tes cabang belanja, stok saja, kembali, jarak dan susunan lulus pada emulator-5558; build debug/androidTest dan diff check lulus. Screenshot 1080×2400, 420 dpi, tema terang, font sistem default. [belum] Tema gelap, font besar, ukuran lain dan HP fisik.
+
+
 ### [2026-11-14 16:52] [Codex (GPT-6) — validasi terima bayar]
 - **Goal**: Menyamakan dialog terima bayar dengan validasi DEC-042.
 - **Actions**: Menunda error jumlah kosong atau berlebih hingga blur/Simpan, memfokuskan jumlah dan mempertahankan batas sisa tagihan.

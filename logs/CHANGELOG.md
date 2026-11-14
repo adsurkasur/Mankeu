@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Dialog tambah stok memakai tombol yang jelas untuk mencatat belanja atau menambah stok saja.
 - Dialog terima bayar menandai jumlah kosong atau berlebih setelah kolom ditinggalkan atau Simpan ditekan.
 - Pembayaran sebagian dan diskon berlebih ditandai setelah kolom ditinggalkan atau Simpan ditekan, tanpa mengubah batas dan total nota.
 - Form produksi dan hitung stok menunjukkan kesalahan jumlah pada kolom; hitungan stok nol tetap diperbolehkan.

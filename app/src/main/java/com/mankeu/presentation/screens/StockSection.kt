@@ -178,8 +178,8 @@ internal fun MaterialSheets(
             text = { Text(stringResource(R.string.stock_money_body, quantity.toQuantityText(), item.unit, item.name)) },
             confirmButton = {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-                    TextButton(onClick = { pendingIn = null; onCloseMovement(); onBuyMaterial(id, quantity) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.stock_money_buy)) }
-                    TextButton(onClick = { pendingIn = null; onCloseMovement(); onRecordStockMovement(id, StockMovementType.IN, quantity, pendingNotes) }, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = { pendingIn = null; onCloseMovement(); onBuyMaterial(id, quantity) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.stock_money_buy)) }
+                    OutlinedButton(onClick = { pendingIn = null; onCloseMovement(); onRecordStockMovement(id, StockMovementType.IN, quantity, pendingNotes) }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.stock_money_no))
                     }
                     TextButton(onClick = { pendingIn = null }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }

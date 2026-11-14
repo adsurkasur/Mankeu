@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Dialog uang saat tambah stok (2026-11-14 16:58 WIB):** [terverifikasi] Dua aksi pencatatan kini tombol berisi/berbingkai, Kembali tetap tersedia; lima tes cabang dan jarak lulus. Bukti visual serta batas ada pada `docs/superpowers/reports/2026-11-14-dialog-stok-aksi.md`. [belum] Font besar, tema gelap, layar lain dan HP fisik.
+
+
 **Terima bayar (2026-11-14 16:52 WIB):** [terverifikasi] Jumlah kosong/berlebih mengikuti blur dan fokus Simpan; dua tes terpisah dan regresi batas lulus pada emulator-5558, build lulus. Satu run gabungan mengalami ComposeNotIdleException. [belum] TalkBack dan seluruh MVP.
 
 

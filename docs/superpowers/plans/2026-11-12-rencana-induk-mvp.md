@@ -506,6 +506,7 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-15 05:46 · PK-1.4 fondasi domain · checkpoint · [verified] rata-rata tertimbang, penjualan, hitung stok dan unknown diuji 6/6; [unknown] penyimpanan, alur pembelian, nota, edit/hapus, backup dan sinkron (DEC-056); belum dapat digunakan.
 - 2026-11-15 04:56 · Workbook dasar laba · checkpoint · [verified] impor menolak basis usaha berbeda dan berhasil setelah disamakan, regresi nota 2/2 pada emulator-5558. Template kosong tanpa metadata tetap didukung.
 - 2026-11-15 04:53 · Impor nota · checkpoint · [verified] konflik produk sama nama dengan rincian dasar berbeda mencegah pratinjau/commit; tes konflik dan round-trip 2/2 di emulator-5558. [unknown] perbedaan resep dan seluruh kelengkapan workbook.
 - 2026-11-15 01:27 · Workbook metadata produk · checkpoint · [verified] jenis, pencatatan stok, modal manual nol dan susut bertahan ekspor–impor pada emulator-5558. [unknown] konflik produk sama nama dan keseluruhan format lossless.

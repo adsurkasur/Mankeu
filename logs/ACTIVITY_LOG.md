@@ -1,5 +1,11 @@
 # Activity Log
 
+### [2026-11-15 05:46] [Codex (GPT-6) — fondasi modal dagangan]
+- **Goal**: Membuat perhitungan rata-rata tertimbang yang dipilih pemilik tanpa menganggap modal tidak diketahui sebagai nol.
+- **Actions**: Menambah fungsi domain pembelian, penjualan dan hitung ulang stok, pembulatan per baris, penanganan stok unknown serta nol eksplisit; mencatat DEC-056.
+- **Files**: TradeInventoryCost, TradeInventoryCostTest, rencana dan decision log.
+- **Verification**: [verified] Enam tes domain dan assembleDebug lulus; tes awal gagal kompilasi karena fungsi belum ada. [unknown] Integrasi penyimpanan, UI, nota, urutan edit/hapus, backup dan sinkron; belum ada fitur pembelian dagangan yang dapat dipakai.
+
 ### [2026-11-15 04:56] [Codex (GPT-6) — dasar laba workbook]
 - **Goal**: Mencegah angka laba berubah diam-diam ketika workbook dimasukkan ke usaha dengan cara hitung berbeda.
 - **Actions**: Ekspor mencatat dasar laba; pratinjau dan commit menolak tujuan yang berbeda, tanpa mengubah pengaturan usaha. Template kosong tanpa metadata tetap dapat digunakan.

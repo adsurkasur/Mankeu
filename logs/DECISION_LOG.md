@@ -1,5 +1,12 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-056] Dasar perhitungan rata-rata persediaan dagangan
+- **Tanggal**: 2026-11-15; **status**: fondasi domain, belum terintegrasi.
+- **Konteks**: Pemilik memilih rata-rata harga beli (DEC-053); stok dan harga dapat berubah setelah setiap pembelian.
+- **Keputusan**: Gunakan rata-rata tertimbang berjalan berdasarkan jumlah satuan dasar dan total pembelian. Penjualan memakai rata-rata saat itu, pembulatan HALF_UP satu kali per baris; hitung ulang stok mempertahankan rata-rata yang diketahui dan stok tanpa modal tetap unknown. Stok nol mengosongkan basis; penjualan melebihi stok ditolak oleh fungsi domain.
+- **Alasan dan alternatif**: Harga beli terakhir dan rata-rata sederhana tidak memperhitungkan kuantitas yang berbeda. Aturan belum dinyatakan lengkap sampai ada alur pembelian, urutan waktu, edit/hapus, nota, migrasi, backup dan sinkron.
+- **Komponen**: TradeInventoryCost, PK-1.4 dan tes domain; belum terhubung ke tampilan atau laporan.
+
 ### [DEC-055] Lembar nota pada format Excel versi 6
 - **Tanggal**: 2026-11-15; **status**: diterapkan sebagian.
 - **Konteks**: Nota bebas, pembayaran dan saldo piutang tidak dapat direkonstruksi dari lembar transaksi lama.

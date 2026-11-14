@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 14:50] [Codex (GPT-6) — kategori lama dan validasi contoh]
+- **Goal**: Melanjutkan checkpoint PK-1.2 dan konsistensi UI tanpa menghilangkan perubahan sebelumnya.
+- **Actions**: Menelusuri dan menguji penanda kategori-null hingga laporan; mencegah pemilihan kategori otomatis pada edit lama dan menyediakan pemilih pada belanja bahan; menyelaraskan kontrol stok/satuan/kategori; menerapkan validasi blur dan fokus pada kuantitas stok serta nama kategori; membatasi pengecualian kosakata Variabel pada dua label pilihan pemilik.
+- **Files**: Data/repository/domain/export, MoneyForms, Home/Reports/PlanCards, StockSection, UnitPicker, MoreScreen, MankeuSheet, resource, tes terkait, laporan checkpoint, WIP, rencana induk dan log.
+- **Verification**: [terverifikasi] JVM 196/196, ScreenLanguageTest 8/8, lint dan assemble berhasil; tujuh tes UI/data gabungan, lima tes stok/sheet, delapan tes MoneyForms dan empat tes koreksi terarah lulus pada AVD sintetis `emulator-5558`; tes beririsan. [belum] seluruh form dan layar, upgrade 13→14 dengan koreksi lewat UI, PDF visual, backup/sync dan HP fisik. Tidak menyentuh superproject atau emulator-5556.
+
+
 ### [2026-11-13 12:22] [Codex (GPT-6) — rencana konsistensi antarmuka]
 - **Goal**: Memperbarui rencana dan aturan proyek berdasarkan keputusan pemilik tentang konsistensi, acuan desain dan validasi.
 - **Actions**: Mencatat keputusan diskusi, menyusun rencana bertahap dengan inventaris layar, validasi, contoh emulator, seluruh kelompok dan bukti; memperbarui rujukan agen, rencana induk, WIP, kualitas dan DEC-042. Tidak mengubah kode atau tes yang sedang dikerjakan.

@@ -287,7 +287,7 @@ class FinanceRepository(
             sales = saleMonths.map { ProfitSale(LocalDate.ofEpochDay(it.dateEpochDay), it.revenueRupiah, it.hppRupiah, it.hppEstimated, it.unknownCostCount, it.unknownCostRupiah) },
             otherIncome = rows.filter { it.type == FinancialEventType.CASH_INCOME.name }.map { date(it) to it.amountRupiah },
             expenses = rows.filter { it.type == FinancialEventType.CASH_EXPENSE.name || it.type == FinancialEventType.CREDIT_PURCHASE.name }
-                .map { ProfitExpense(date(it), it.amountRupiah, it.includedInHpp, it.variable) },
+                .map { ProfitExpense(date(it), it.amountRupiah, it.includedInHpp, it.variable, it.uncertainCategoryCount) },
             assets = rows.filter { it.type == FinancialEventType.ASSET_PURCHASE_CASH.name }
                 .map { ProfitAsset(date(it), it.amountRupiah, it.usefulLifeMonths ?: PlanAssembly.DEFAULT_ASSET_LIFE_MONTHS) },
             basis = basis,

@@ -501,6 +501,9 @@ Di luar rencana dan diputuskan terpisah: impor pintar (V-6), jalur usaha menenga
 
 ## 8. Status
 
+- 2026-11-14 14:50 · Kategori lama dan contoh validasi · checkpoint · lihat commit · [terverifikasi] penanda kategori tidak pasti dan koreksi eksplisit; blur jumlah stok/nama kategori; JVM 196/196, lint/build dan tes terarah. [belum] koreksi Catatan pada upgrade 13→14, validasi semua form, PDF visual dan MVP. `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`.
+
+
 Format: `- YYYY-MM-DD HH:MM · PK-x.y · selesai / berhenti di … · commit · bukti · catatan`.
 
 - 2026-11-13 11:51 · Modal penjualan belum diketahui · checkpoint · lihat commit · [terverifikasi] laba/BEP ITEM_COST ditahan di layar/ekspor, SIMPLE tidak terpengaruh; JVM 194/194, lint, uji UI/xlsx dan PDF smoke lulus. [belum] kategori-null ambigu, koreksi modal historis dan PDF visual; `docs/superpowers/reports/2026-11-13-modal-belum-diketahui.md`.

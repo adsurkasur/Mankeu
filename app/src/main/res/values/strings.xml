@@ -149,8 +149,10 @@
     <string name="profit_variance_under">Belanja produksi lebih kecil %1$s dari modal barang terjual (stok terpakai atau modal barang terlalu tinggi).</string>
     <string name="profit_receivable">Tagihan belum dibayar pelanggan</string>
     <string name="profit_payable">Utang belum dibayar ke pemasok</string>
-    <string name="category_included_in_hpp">Biaya produksi yang dihitung sebagai modal barang</string>
-    <string name="category_included_in_hpp_hint">Centang untuk belanja yang sudah masuk resep, seperti bahan, kemasan, atau gas. Belanja lain langsung mengurangi untung.</string>
+    <string name="category_cost_nature_hint">Tetap tidak mengikuti penjualan; variabel berubah mengikuti penjualan.</string>
+    <string name="category_cost_nature_variable_short">Variabel</string>
+    <string name="category_included_in_hpp">Sudah masuk modal barang</string>
+    <string name="category_included_in_hpp_hint">Centang jika biaya ini sudah termasuk modal barang terjual, agar tidak dihitung dua kali.</string>
     <string name="reports_cash_flow">Laporan Arus Kas</string>
     <string name="reports_cf_operating">Arus Kas Operasi</string>
     <string name="reports_cf_investing">Arus Kas Investasi</string>
@@ -677,6 +679,9 @@
     <string name="form_yield_above_loss">Hasil sekali buat harus lebih besar daripada susut yang tersimpan.</string>
     <string name="sale_edit_unsupported">Nota ini memiliki baris bebas. Perubahan belum dapat disimpan; data tetap aman.</string>
     <string name="sale_trade_cost_unsupported">Modal barang dagangan belum dapat dihitung. Data tetap tersimpan.</string>
+    <string name="profit_incomplete_category">Untung belum dapat dihitung karena ada belanja yang kategorinya belum jelas. Periksa dan pilih kategori belanjanya.</string>
+    <string name="profit_incomplete_both">Untung belum dapat dihitung karena ada modal penjualan dan kategori belanja yang belum jelas.</string>
+    <string name="bep_incomplete_category">Titik impas belum dapat dinilai karena ada belanja yang kategorinya belum jelas.</string>
     <string name="profit_incomplete">Untung belum dapat dihitung karena ada penjualan yang modal barangnya belum diketahui.</string>
     <string name="sale_cost_unknown">Modal barang belum diketahui.</string>
     <string name="sale_detail_title">Nota penjualan</string>

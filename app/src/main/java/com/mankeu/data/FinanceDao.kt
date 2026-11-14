@@ -36,7 +36,7 @@ data class SupplierPaymentTotalRow(val purchaseId: String, val totalRupiah: Long
 data class SaleMonthRow(val dateEpochDay: Long, val revenueRupiah: Long, val hppRupiah: Long, val hppEstimated: Boolean, val unknownCostCount: Int, val unknownCostRupiah: Long)
 
 /** Income, spend and assets that make profit (DEC-029 §4); see [FinanceDao.getProfitEventRows]. */
-data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean, val usefulLifeMonths: Int?)
+data class ProfitEventRow(val type: String, val dateEpochDay: Long, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean, val usefulLifeMonths: Int?, val uncertainCategoryCount: Int)
 
 /** A note line of a product as the stock count reads it; see [FinanceDao.observeProductSaleLines]. */
 data class ProductSaleRow(
@@ -375,7 +375,8 @@ interface FinanceDao {
         SELECT e.type, MIN(e.dateEpochDay) AS dateEpochDay, SUM(e.amountRupiah) AS amountRupiah,
                COALESCE(c.includedInHpp, 0) AS includedInHpp,
                COALESCE(COALESCE(e.costNature, c.costNature) = 'VARIABLE', 0) AS variable,
-               MAX(e.usefulLifeMonths) AS usefulLifeMonths
+               MAX(e.usefulLifeMonths) AS usefulLifeMonths,
+               SUM(CASE WHEN e.type IN ('CASH_EXPENSE', 'CREDIT_PURCHASE') AND e.categoryId IS NULL THEN 1 ELSE 0 END) AS uncertainCategoryCount
         FROM financial_events e
         LEFT JOIN categories c ON c.businessId = e.businessId AND c.id = COALESCE(e.categoryId, (
             SELECT MIN(candidate.id) FROM categories candidate

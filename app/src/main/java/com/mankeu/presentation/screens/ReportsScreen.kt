@@ -76,6 +76,7 @@ import com.mankeu.presentation.components.SkeletonHero
 import com.mankeu.presentation.components.SkeletonListItem
 import com.mankeu.domain.MonthlyCashFlowCalculator
 import com.mankeu.R
+import com.mankeu.presentation.incompleteWarningResource
 import com.mankeu.presentation.AppUiState
 import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.LocalMotion
@@ -246,7 +247,7 @@ private fun FinancialsSection(
         if (!month.profit.profitIncomplete) ReportRow(stringResource(R.string.reports_operating_expense), -(month.hppRupiah + month.otherCostRupiah))
         HorizontalDivider()
         if (month.profit.profitIncomplete) {
-            Text(stringResource(R.string.profit_incomplete), color = MaterialTheme.colorScheme.error)
+            Text(stringResource(month.profit.incompleteWarningResource()), color = MaterialTheme.colorScheme.error)
         } else {
             ReportRow(stringResource(R.string.reports_net_profit), month.profitRupiah, emphasized = true)
         }

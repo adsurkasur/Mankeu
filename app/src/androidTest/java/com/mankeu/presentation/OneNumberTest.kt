@@ -139,6 +139,26 @@ class OneNumberTest {
     }
 
     @Test
+    fun legacyExpenseWithoutCategoryHidesProfitAndExplainsWhy() {
+        val ids = runBlocking { GoldenData.buSri(repository, database) }
+        database.openHelper.writableDatabase.execSQL("UPDATE financial_events SET categoryId = NULL WHERE type = 'CASH_EXPENSE'")
+        val month = runBlocking { repository.monthlySummary(ids.bookId).first() }
+        assertTrue(month.profit.uncertainExpenseCategoryCount > 0)
+        assertTrue(month.profit.profitIncomplete)
+        start(ids)
+        exists("kategorinya belum jelas")
+        click("Laporan")
+        exists("kategorinya belum jelas")
+        assertTrue(compose.onAllNodesWithText("Untung / Rugi bulan ini", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        val workbook = runBlocking { repository.exportProjectWorkbook(ids.projectId) }
+        val sheets = ZipInputStream(ByteArrayInputStream(workbook)).use { zip ->
+            generateSequence { zip.nextEntry }.filter { it.name.startsWith("xl/worksheets/") }.map { zip.readBytes().decodeToString() }.toList()
+        }
+        assertTrue(sheets.any { "kategori" in it && "belum jelas" in it })
+        assertTrue(sheets.none { "Laba / rugi bulan ini" in it })
+    }
+
+    @Test
     fun unknownSaleCostHidesProfitOnHomeReportAndWorkbook() {
         val ids = runBlocking { GoldenData.buSri(repository, database) }
         database.openHelper.writableDatabase.execSQL("UPDATE sale_lines SET costKnown = 0")

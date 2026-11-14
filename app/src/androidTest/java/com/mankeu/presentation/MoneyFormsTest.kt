@@ -67,10 +67,10 @@ class MoneyFormsTest {
     private val saved = mutableListOf<MoneyEntry>()
     private var closed = 0
 
-    private fun open(mode: MoneyFormMode) {
+    private fun open(mode: MoneyFormMode, existing: MoneyEvent? = null) {
         compose.setContent {
             MankeuTheme {
-                MoneyFormScreen(mode = mode, state = state, existing = null, prefill = null, onSave = { saved += it }, onClose = { closed++ }, onCreateCategory = { _, _ -> })
+                MoneyFormScreen(mode = mode, state = state, existing = existing, prefill = null, onSave = { saved += it }, onClose = { closed++ }, onCreateCategory = { _, _ -> })
             }
         }
         compose.waitForIdle()
@@ -104,6 +104,34 @@ class MoneyFormsTest {
         assertEquals(bahan.id, entry.category.id)
         assertEquals(FinancialEventType.CASH_EXPENSE, entry.type)
         assertEquals("Minyak 10 liter", entry.description)
+    }
+
+    @Test
+    fun legacyMaterialPurchaseRequiresExplicitCategoryWithoutChangingAmounts() {
+        open(MoneyFormMode.PURCHASE, lastMinyak.copy(categoryId = null, category = "Kategori lama"))
+        save()
+        compose.waitForIdle()
+        assertTrue(saved.isEmpty())
+        compose.onNodeWithText("Gas").performClick()
+        save()
+        compose.waitForIdle()
+        assertEquals(gas.id, saved.single().category.id)
+        assertEquals(52_000L, saved.single().amountRupiah)
+        assertEquals("2", saved.single().quantityText)
+        assertEquals(minyak.id, saved.single().stockItemId)
+    }
+
+    @Test
+    fun legacyExpenseWithoutMaterialRequiresExplicitCategory() {
+        open(MoneyFormMode.OTHER_OUT, lastMinyak.copy(categoryId = null, category = "Kategori lama", stockItemId = null))
+        save()
+        compose.waitForIdle()
+        assertTrue(saved.isEmpty())
+        compose.onNodeWithText("Gas").performClick()
+        save()
+        compose.waitForIdle()
+        assertEquals(gas.id, saved.single().category.id)
+        assertEquals(52_000L, saved.single().amountRupiah)
     }
 
     @Test

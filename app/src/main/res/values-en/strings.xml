@@ -147,8 +147,10 @@
     <string name="profit_variance_under">Production spend is %1$s less than the cost per item of goods sold (stock used up or cost per item set too high).</string>
     <string name="profit_receivable">Customers still owe</string>
     <string name="profit_payable">Still owed to suppliers</string>
-    <string name="category_included_in_hpp">Production cost already included in item costs</string>
-    <string name="category_included_in_hpp_hint">Tick for spend that is already in the recipe, such as materials, packaging or gas. Other spend reduces profit directly.</string>
+    <string name="category_cost_nature_hint">Fixed costs do not follow sales; variable costs do.</string>
+    <string name="category_cost_nature_variable_short">Variable</string>
+    <string name="category_included_in_hpp">Already included in item cost</string>
+    <string name="category_included_in_hpp_hint">Select this if the cost is already included in items sold, so it is not counted twice.</string>
     <string name="reports_cash_flow">Cash flow</string>
     <string name="reports_cf_operating">Operating cash flow</string>
     <string name="reports_cf_investing">Investing cash flow</string>
@@ -675,6 +677,9 @@
     <string name="form_yield_above_loss">The output must exceed the saved loss.</string>
     <string name="sale_edit_unsupported">This note has a free line. Changes cannot yet be saved; its data is safe.</string>
     <string name="sale_trade_cost_unsupported">The cost of traded goods cannot yet be calculated. Data remains saved.</string>
+    <string name="profit_incomplete_category">Profit cannot yet be calculated because some expenses have an uncertain category. Check and choose their categories.</string>
+    <string name="profit_incomplete_both">Profit cannot yet be calculated because some sale costs and expense categories are uncertain.</string>
+    <string name="bep_incomplete_category">Minimum sales cannot yet be assessed because some expense categories are uncertain.</string>
     <string name="profit_incomplete">Profit cannot yet be calculated because some sales have unknown costs.</string>
     <string name="sale_cost_unknown">Item cost is not known yet.</string>
     <string name="sale_detail_title">Sales note</string>

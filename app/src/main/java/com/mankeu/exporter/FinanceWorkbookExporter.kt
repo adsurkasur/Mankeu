@@ -304,7 +304,7 @@ class FinanceWorkbookExporter(
                     ) + cash
                 } else {
                     month.reportLines().map { (label, value) -> listOf("$mode ${month.monthLabel()}", label, value) } +
-                        (if (month.profit.profitIncomplete) listOf(listOf("$mode ${month.monthLabel()}", "Untung belum dapat dihitung", "Modal barang pada sebagian penjualan belum diketahui")) else emptyList()) + cash
+                        (if (month.profit.profitIncomplete) listOf(listOf("$mode ${month.monthLabel()}", "Untung belum dapat dihitung", month.profit.incompleteWarning())) else emptyList()) + cash
                 }
             }
         },

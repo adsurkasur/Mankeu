@@ -17,7 +17,7 @@ enum class ProfitBasis { SIMPLE, ITEM_COST }
  * (F2-8), so HPP of what is sold stands for it. [variable] (effective cost nature) only splits the
  * other expenses for break-even; both kinds reduce profit.
  */
-data class ProfitExpense(val date: LocalDate, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean = false)
+data class ProfitExpense(val date: LocalDate, val amountRupiah: Long, val includedInHpp: Boolean, val variable: Boolean = false, val uncertainCategoryCount: Int = 0)
 data class ProfitAsset(val date: LocalDate, val amountRupiah: Long, val usefulLifeMonths: Int)
 
 data class MonthProfit(
@@ -35,8 +35,10 @@ data class MonthProfit(
     val salesWithoutCostCount: Int = 0,
     val salesWithoutCostRupiah: Long = 0,
     val basis: ProfitBasis = ProfitBasis.ITEM_COST,
+    val uncertainExpenseCategoryCount: Int = 0,
 ) {
-    val profitIncomplete get() = basis == ProfitBasis.ITEM_COST && salesWithoutCostCount > 0
+    val profitIncomplete get() = basis == ProfitBasis.ITEM_COST && (salesWithoutCostCount > 0 || uncertainExpenseCategoryCount > 0)
+    val bepIncomplete get() = profitIncomplete || uncertainExpenseCategoryCount > 0
     val effectiveHppRupiah get() = if (basis == ProfitBasis.SIMPLE) 0L else hppRupiah
     val grossProfitRupiah get() = salesRupiah - effectiveHppRupiah
     val profitRupiah get() = salesRupiah + otherIncomeRupiah - effectiveHppRupiah - fixedCostRupiah - variableCostRupiah - depreciationRupiah - if (basis == ProfitBasis.SIMPLE) productionSpendRupiah else 0L
@@ -97,6 +99,7 @@ object ProfitCalculator {
             salesWithoutCostCount = s.sumOf { it.unknownCostCount },
             salesWithoutCostRupiah = s.sumOf { it.unknownCostRupiah },
             basis = basis,
+            uncertainExpenseCategoryCount = e.sumOf { it.uncertainCategoryCount },
         )
     }
 }

@@ -1,5 +1,14 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-043] Tahan hasil yang bergantung pada kategori belanja lama yang belum jelas
+- **Tanggal**: 2026-11-14 14:50 WIB
+- **Status**: Diimplementasikan sebagai checkpoint; upgrade dan koreksi UI lengkap belum diverifikasi.
+- **Konteks**: Belanja tanpa ID kategori tidak memiliki identitas historis yang dapat dibuktikan dari nama saat ini. Klasifikasi modal barang dan sifat biaya dapat mengubah laba ITEM_COST atau BEP.
+- **Keputusan**: Tandai belanja tanpa ID kategori yang bukan pelunasan sebagai tidak pasti. Tahan laba ITEM_COST dan BEP yang bergantung padanya serta jelaskan penyebab; laba SIMPLE tetap memakai semua belanja. Saat mengedit belanja lama, minta pengguna memilih kategori secara eksplisit, termasuk bila transaksi menaut bahan.
+- **Alasan dan alternatif**: Menebak dari nama atau memilih kategori otomatis dapat menghasilkan angka yang tampak lengkap tetapi salah. Data asal tetap disimpan; perhitungan dapat dilanjutkan setelah kategori ditetapkan.
+- **Komponen**: FinanceDao, FinanceRepository, ProfitCalculator, Beranda, laporan, BEP, ekspor, form uang dan tes. Tidak menambah migrasi atau menghapus data.
+
+
 ### [DEC-042] Konsistensi antarmuka dan validasi saat meninggalkan kolom
 - **Tanggal**: 2026-11-13 12:22 WIB
 - **Status**: Disetujui pemilik; implementasi dan audit menyeluruh belum selesai.

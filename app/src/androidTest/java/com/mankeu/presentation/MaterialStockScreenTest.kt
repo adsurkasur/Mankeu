@@ -5,12 +5,15 @@ import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
@@ -111,6 +114,20 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun stockQuantityShowsErrorOnBlurAndClearsWhenValid() {
+        start()
+        click("Produk")
+        click("Minyak")
+        val quantity = compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0]
+        quantity.performClick()
+        compose.onAllNodes(hasSetTextAction() and hasText("Catatan (opsional)"))[0].performClick()
+        exists("Isi jumlah lebih dari 0 dulu.")
+        quantity.performTextInput("3")
+        org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi jumlah lebih dari 0 dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertEquals("0", stock())
+    }
+
+    @Test
     fun emptyStockQuantityIsExplainedOnlyAfterSave() {
         start()
         click("Produk")
@@ -118,7 +135,7 @@ class MaterialStockScreenTest {
         org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi jumlah lebih dari 0 dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         click("Simpan")
         exists("Isi jumlah lebih dari 0 dulu.")
-        compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0].performTextInput("10")
+        compose.onAllNodes(hasSetTextAction() and hasText("Jumlah"))[0].assertIsFocused().performTextInput("10")
         org.junit.Assert.assertTrue(compose.onAllNodesWithText("Isi jumlah lebih dari 0 dulu.", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         assertEquals("0", stock())
     }
@@ -208,7 +225,7 @@ class MaterialStockScreenTest {
         click("Produk")
         click("Tambah Barang")
         compose.onAllNodes(hasSetTextAction() and hasText("Nama barang"))[0].performTextInput("Gula")
-        click("Tulis satuan sendiri")
+        compose.onNodeWithContentDescription("Tulis satuan sendiri").performClick()
         compose.onAllNodes(hasSetTextAction() and hasText("Nama satuan"))[0].performTextInput("karung")
         click("Simpan")
         compose.waitUntil(5_000) { runBlocking { repository.stockItems(businessId, projectId).first() }.any { it.name == "Gula" } }

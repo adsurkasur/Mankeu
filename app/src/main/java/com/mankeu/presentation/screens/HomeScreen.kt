@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
+import com.mankeu.presentation.incompleteWarningResource
 import com.mankeu.data.SaleRecord
 import com.mankeu.domain.FinancialEventType
 import com.mankeu.domain.MonthlySummary
@@ -236,7 +237,7 @@ private fun ProfitCard(month: MonthlySummary, lastMonth: MonthlySummary?) {
     if (month.profit.profitIncomplete) {
         MankeuCard {
             Text(stringResource(R.string.home_profit), style = MankeuType.Caption)
-            Text(stringResource(R.string.profit_incomplete), color = semantic.warning)
+            Text(stringResource(month.profit.incompleteWarningResource()), color = semantic.warning)
         }
         return
     }

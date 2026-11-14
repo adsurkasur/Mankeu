@@ -3,12 +3,9 @@ package com.mankeu.presentation.screens
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,11 +22,13 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,14 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -64,7 +62,6 @@ import com.mankeu.domain.StockMovementType
 import com.mankeu.domain.TransactionCalculation
 import com.mankeu.presentation.LocalMankeuSemanticColors
 import com.mankeu.presentation.MankeuType
-import com.mankeu.presentation.Space
 import com.mankeu.presentation.components.form.MoneyInput
 import com.mankeu.presentation.components.MankeuSheet
 import com.mankeu.presentation.components.sanitizeDecimal
@@ -344,6 +341,12 @@ internal fun StockMovementSheet(
     var notes by rememberSaveable(item.id) { mutableStateOf("") }
     val parsed = quantity.replace(',', '.').toBigDecimalOrNull()
     val valid = parsed != null && (parsed.signum() > 0 || (parsed.signum() == 0 && type == StockMovementType.ADJUSTMENT))
+    var quantityFocused by remember { mutableStateOf(false) }
+    var quantityTouched by rememberSaveable(item.id) { mutableStateOf(false) }
+    val quantityFocusRequester = remember { FocusRequester() }
+    val quantityError = if (quantityTouched && !valid) stringResource(
+        if (type == StockMovementType.ADJUSTMENT) R.string.form_need_count else R.string.form_need_quantity,
+    ) else null
     MankeuSheet(
         title = stringResource(R.string.stock_movement_title, item.name),
         onDismiss = onDismiss,
@@ -351,32 +354,36 @@ internal fun StockMovementSheet(
             if (type == StockMovementType.ADJUSTMENT) R.string.form_need_count else R.string.form_need_quantity,
         ),
         onConfirm = { parsed?.let { onSave(type, it, notes.trim()) } },
+        onInvalidConfirm = { quantityTouched = true; quantityFocusRequester.requestFocus() },
     ) {
         Text(stringResource(R.string.stock_current, item.currentStock.toQuantityText(), item.unit), fontWeight = FontWeight.Bold)
         if (item.currentStock.signum() < 0) {
             Text(stringResource(R.string.stock_negative_hint), color = LocalMankeuSemanticColors.current.danger, style = MaterialTheme.typography.bodySmall)
         }
-        Row(modifier = Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            val choices = listOf(
                 StockMovementType.IN to R.string.stock_type_in,
                 StockMovementType.OUT to R.string.stock_type_out,
                 StockMovementType.ADJUSTMENT to R.string.stock_type_adjust,
-            ).forEach { (option, label) ->
-                OutlinedButton(
+            )
+            choices.forEachIndexed { index, (option, label) ->
+                SegmentedButton(
+                    selected = type == option,
                     onClick = { type = option },
-                    modifier = Modifier.weight(1f).heightIn(min = 56.dp).semantics { selected = type == option; role = Role.RadioButton },
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (type == option) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                        contentColor = if (type == option) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                    ),
-                ) { Text(stringResource(label), textAlign = TextAlign.Center, maxLines = 2) }
+                    shape = SegmentedButtonDefaults.itemShape(index, choices.size),
+                    modifier = Modifier.heightIn(min = 56.dp),
+                    label = { Text(stringResource(label), textAlign = TextAlign.Center, maxLines = 2) },
+                )
             }
         }
         QuantityField(
             stringResource(if (type == StockMovementType.ADJUSTMENT) R.string.stock_qty_adjust else R.string.stock_qty),
             quantity,
+            errorText = quantityError,
+            modifier = Modifier.focusRequester(quantityFocusRequester).onFocusChanged { focus ->
+                if (quantityFocused && !focus.isFocused) quantityTouched = true
+                quantityFocused = focus.isFocused
+            },
         ) { quantity = it }
         // Recorded after the fact, so taking more than recorded is allowed; the stock then shows minus.
         if (type == StockMovementType.OUT && parsed != null && parsed > item.currentStock) {
@@ -423,15 +430,16 @@ private fun MaterialHistoryRow(line: StockHistoryLine, unit: String) {
 }
 
 @Composable
-private fun QuantityField(label: String, value: String, hint: String? = null, onValueChange: (String) -> Unit) {
+private fun QuantityField(label: String, value: String, hint: String? = null, modifier: Modifier = Modifier, errorText: String? = null, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = { onValueChange(sanitizeDecimal(it)) },
         label = { Text(label) },
-        supportingText = hint?.let { { Text(it) } },
+        supportingText = (errorText ?: hint)?.let { message -> { Text(message) } },
+        isError = errorText != null,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 

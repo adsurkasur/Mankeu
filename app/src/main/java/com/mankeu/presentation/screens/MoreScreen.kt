@@ -4,6 +4,8 @@ import com.mankeu.presentation.FeedbackEvent
 import com.mankeu.presentation.LocalFeedback
 import com.mankeu.presentation.components.MankeuTooltip
 
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +66,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -589,6 +593,11 @@ private fun MasterDataDialog(
     onSetCategoryIncludedInHpp: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     var categoryName by rememberSaveable { mutableStateOf("") }
+    var attemptedCategory by rememberSaveable { mutableStateOf(false) }
+    var categoryFocused by remember { mutableStateOf(false) }
+    var categoryTouched by rememberSaveable { mutableStateOf(false) }
+    val categoryFocusRequester = remember { FocusRequester() }
+    val categoryInvalid = categoryName.isBlank() && (attemptedCategory || categoryTouched)
     var categoryRole by rememberSaveable { mutableStateOf(CategoryRole.EXPENSE) }
     MankeuSheet(
         title = stringResource(R.string.manage_categories),
@@ -602,30 +611,29 @@ private fun MasterDataDialog(
             { categoryName = it },
             label = { Text(stringResource(R.string.master_category_name)) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            isError = categoryInvalid,
+            supportingText = if (categoryInvalid) ({ Text(stringResource(R.string.form_need_name), modifier = Modifier.testTag("save_blocked_reason")) }) else null,
+            modifier = Modifier.fillMaxWidth().focusRequester(categoryFocusRequester).onFocusChanged { focus ->
+                if (categoryFocused && !focus.isFocused) categoryTouched = true
+                categoryFocused = focus.isFocused
+            },
         )
         ChoiceMenu(
             label = stringResource(BusinessWords.roleLabel(categoryRole)),
             options = CategoryRole.entries.map { it.name to stringResource(BusinessWords.roleLabel(it)) },
             onSelected = { categoryRole = CategoryRole.valueOf(it) },
         )
-        if (categoryName.isBlank()) {
-            Text(stringResource(R.string.form_need_name), modifier = Modifier.testTag("save_blocked_reason"), style = MaterialTheme.typography.bodySmall)
-        }
         Button(
-            onClick = { onCreateCategory(categoryName, categoryRole); categoryName = "" },
-            enabled = categoryName.isNotBlank(),
+            onClick = {
+                if (categoryName.isBlank()) { attemptedCategory = true; categoryFocusRequester.requestFocus() }
+                else { onCreateCategory(categoryName, categoryRole); categoryName = ""; attemptedCategory = false; categoryTouched = false }
+            },
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.master_add_category)) }
         val feedback = LocalFeedback.current
-        // Said once for the whole list (F2-8), not under every expense category.
-        Text(
-            stringResource(R.string.category_included_in_hpp_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Text(stringResource(R.string.category_cost_nature_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         categories.forEach { category ->
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(category.name, fontWeight = FontWeight.Bold)
                     // Was `category.role` — that rendered the raw enum name ("REVENUE",
@@ -638,24 +646,30 @@ private fun MasterDataDialog(
                     )
                     // Expense categories carry the default cost nature for BEP (DEC-014 B-1).
                     if (CategoryRole.parse(category.role) == CategoryRole.EXPENSE) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            CostNature.entries.forEach { nature ->
-                                FilterChip(
+                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                            CostNature.entries.forEachIndexed { index, nature ->
+                                SegmentedButton(
                                     selected = category.costNature == nature.name,
                                     onClick = { onSetCategoryCostNature(category.id, nature) },
-                                    label = {
-                                        Text(stringResource(if (nature == CostNature.FIXED) R.string.cost_nature_fixed else R.string.cost_nature_variable))
-                                    },
+                                    shape = SegmentedButtonDefaults.itemShape(index, CostNature.entries.size),
+                                    label = { Text(stringResource(if (nature == CostNature.FIXED) R.string.cost_nature_fixed else R.string.category_cost_nature_variable_short)) },
                                 )
                             }
                         }
                         // F2-8: spend here is represented by HPP of what is sold.
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = category.includedInHpp,
-                                onCheckedChange = { onSetCategoryIncludedInHpp(category.id, it) },
-                            )
-                            Text(stringResource(R.string.category_included_in_hpp), style = MaterialTheme.typography.bodyMedium)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().toggleable(
+                                value = category.includedInHpp,
+                                role = Role.Checkbox,
+                                onValueChange = { onSetCategoryIncludedInHpp(category.id, it) },
+                            ),
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Checkbox(checked = category.includedInHpp, onCheckedChange = null)
+                            Column {
+                                Text(stringResource(R.string.category_included_in_hpp), style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(R.string.category_included_in_hpp_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }
@@ -666,6 +680,7 @@ private fun MasterDataDialog(
                     }
                 }
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
 }

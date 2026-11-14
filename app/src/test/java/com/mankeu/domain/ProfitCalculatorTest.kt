@@ -21,6 +21,16 @@ class ProfitCalculatorTest {
         assertFalse(unknown.month(YearMonth.of(2026, 11)).profitIncomplete)
     }
 
+    @Test fun unresolvedExpenseCategoryMakesOnlyItemCostProfitUncertain() {
+        val inputs = ProfitInputs(emptyList(), emptyList(),
+            listOf(ProfitExpense(d(3), 50_000, includedInHpp = false, uncertainCategoryCount = 1)), emptyList())
+        assertTrue(inputs.month(oct).profitIncomplete)
+        assertEquals(1, inputs.month(oct).uncertainExpenseCategoryCount)
+        assertFalse(inputs.copy(basis = ProfitBasis.SIMPLE).month(oct).profitIncomplete)
+        assertTrue(inputs.copy(basis = ProfitBasis.SIMPLE).month(oct).bepIncomplete)
+        assertFalse(inputs.month(YearMonth.of(2026, 11)).profitIncomplete)
+    }
+
     @Test fun goldenKeripikOctober() {
         val p = ProfitCalculator.month(
             oct,

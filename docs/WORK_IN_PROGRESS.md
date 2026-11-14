@@ -22,6 +22,9 @@ Merawat panduan penggunaan (`docs/panduan/`):
 
 ## Pekerjaan aktif
 
+**Checkpoint kategori dan validasi (2026-11-14 14:50 WIB):** [terverifikasi] Belanja lama tanpa ID kategori yang bukan pelunasan menahan laba ITEM_COST/BEP sampai dipilih; edit meminta kategori eksplisit, termasuk belanja bahan. Validasi blur baru pada jumlah gerakan stok dan nama kategori; kontrol stok/satuan/kategori diselaraskan. JVM 196/196, lint/build dan tes terarah lulus. Rincian serta batas: `docs/superpowers/reports/2026-11-14-kategori-validasi-checkpoint.md`. [belum] Validasi form lain, seluruh audit layar, koreksi lengkap lewat Catatan setelah upgrade 13→14, PDF visual, sync/backup dan gerbang MVP. Lanjut `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`; jangan merge main atau sentuh superproject.
+
+
 **Rencana konsistensi antarmuka (2026-11-13 12:22 WIB):** [user-confirmed] Pemilik memilih audit seluruh aplikasi dengan Produk, Pengaturan dan Pusat Bantuan sebagai acuan awal; karakter visual dipertahankan, pilihan mengikuti fungsi, rincian penting tetap terlihat, dan pelaksanaan dapat berlanjut tanpa persetujuan contoh tambahan. Validasi: setelah blur atau saat Simpan untuk kolom yang belum disentuh; hilang segera saat valid (DEC-042). Rencana `docs/superpowers/plans/2026-11-13-konsistensi-antarmuka.md`. [terverifikasi] Perubahan kode/tes kategori-null dan UI masih belum di-commit; tes kosakata terakhir gagal karena istilah Variabel yang dipilih pemilik dan `break-even` di resource English. [belum] Implementasi aturan blur, audit seluruh layar dan seluruh gerbang MVP. Pertahankan perubahan tersebut; jangan merge main atau sentuh superproject.
 
 

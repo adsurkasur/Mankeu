@@ -79,6 +79,8 @@ class SalesFlowTest {
         val summary = repo.monthlySummary(bookId, java.time.YearMonth.from(day)).first()
         assertEquals(50_000L, summary.productionSpendRupiah)
         assertEquals(0L, summary.profitRupiah)
+        assertTrue(summary.profit.profitIncomplete)
+        assertEquals(1, summary.profit.uncertainExpenseCategoryCount)
     }
 
     @Test fun legacyExpenseDoesNotDuplicateWhenAnotherRoleSharesItsName() = runBlocking {
@@ -101,6 +103,24 @@ class SalesFlowTest {
         val rows = db.financeDao().getProfitEventRows(bookId)
         assertEquals(50_000L, rows.single().amountRupiah)
         assertFalse(rows.single().includedInHpp)
+    }
+
+    @Test fun assigningLegacyExpenseCategoryClearsUncertaintyWithoutDuplicatingMoney() = runBlocking {
+        val category = db.financeDao().getCategories(businessId).single { it.name == "Bahan Baku & Stok" }
+        val draft = EventDraft(businessId = businessId, projectId = projectId, bookId = bookId,
+            type = FinancialEventType.CASH_EXPENSE, amountRupiah = 50_000, date = day,
+            description = "Belanja lama", category = "Bahan lama", categoryId = null)
+        val id = repo.recordEvent(draft)
+        val month = java.time.YearMonth.from(day)
+        val before = repo.monthlySummary(bookId, month).first()
+        assertTrue(before.profit.profitIncomplete)
+        assertEquals(1, before.profit.uncertainExpenseCategoryCount)
+        repo.updateEvent(id, draft.copy(category = category.name, categoryId = category.id))
+        val after = repo.monthlySummary(bookId, month).first()
+        assertEquals(0, after.profit.uncertainExpenseCategoryCount)
+        assertFalse(after.profit.profitIncomplete)
+        assertEquals(before.totalCashOutRupiah, after.totalCashOutRupiah)
+        assertEquals(50_000L, after.productionSpendRupiah)
     }
 
     private suspend fun product(id: String) = repo.products(projectId).first().single { it.product.id == id }

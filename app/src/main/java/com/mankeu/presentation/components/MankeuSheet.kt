@@ -73,6 +73,8 @@ fun MankeuSheet(
     // Multi-step sheets need the dismiss button to step back while the scrim and back still close it.
     onDismissClick: () -> Unit = onDismiss,
     onConfirm: (() -> Unit)? = null,
+    // Forms with field-level validation can reveal and focus the first invalid field.
+    onInvalidConfirm: (() -> Unit)? = null,
     // Left of the row, apart from Batal/Simpan: e.g. Hapus in LineEditSheet.
     startAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
@@ -114,7 +116,7 @@ fun MankeuSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 content = content,
             )
-            if (confirmLabel != null && onConfirm != null && confirmBlockedReason != null && attempted) {
+            if (confirmLabel != null && onConfirm != null && confirmBlockedReason != null && attempted && onInvalidConfirm == null) {
                 Text(confirmBlockedReason, modifier = Modifier.testTag("save_blocked_reason"), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -123,7 +125,7 @@ fun MankeuSheet(
                 TextButton(onClick = onDismissClick) { Text(dismissLabel) }
                 if (confirmLabel != null && onConfirm != null) {
                     Button(
-                        onClick = { if (confirmBlockedReason == null) onConfirm() else attempted = true },
+                        onClick = { if (confirmBlockedReason == null) onConfirm() else { attempted = true; onInvalidConfirm?.invoke() } },
                         colors = if (destructive) {
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,

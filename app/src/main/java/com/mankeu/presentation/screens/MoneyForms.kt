@@ -119,6 +119,9 @@ fun MoneyFormScreen(
     modifier: Modifier = Modifier,
     snackbarHost: SnackbarHostState? = null,
 ) {
+    // Old expenses without a category ID require an explicit choice; a current name is not historical evidence.
+    val requiresCategoryConfirmation = existing != null && existing.categoryId == null &&
+        existing.type == FinancialEventType.CASH_EXPENSE && existing.settlesEventId == null
     val materials = state.stockItems
     val allowed = state.categories.filter { CategoryRole.parse(it.role) in mode.roles() }
     val lastMaterial = state.events.firstOrNull { e -> e.stockItemId != null && materials.any { it.id == e.stockItemId } }?.stockItemId
@@ -155,12 +158,14 @@ fun MoneyFormScreen(
     val category: CategoryEntity? = when {
         mode == MoneyFormMode.CAPITAL -> allowed.firstOrNull { CategoryRole.parse(it.role) == capitalRole }
         material != null -> allowed.firstOrNull { it.id == categoryId }
-            ?: state.events.firstOrNull { it.stockItemId == material.id }?.categoryId?.let { id -> allowed.firstOrNull { it.id == id } }
-            ?: allowed.firstOrNull { it.id == defaultCategoryId(allowed.filter { c -> CategoryRole.parse(c.role) == CategoryRole.EXPENSE }, state.events) }
+            ?: if (requiresCategoryConfirmation) null else (
+                state.events.firstOrNull { it.stockItemId == material.id }?.categoryId?.let { id -> allowed.firstOrNull { it.id == id } }
+                    ?: allowed.firstOrNull { it.id == defaultCategoryId(allowed.filter { c -> CategoryRole.parse(c.role) == CategoryRole.EXPENSE }, state.events) }
+            )
         else -> allowed.firstOrNull { it.id == categoryId }
     }
     LaunchedEffect(mode, allowed.size, material == null) {
-        if (mode != MoneyFormMode.CAPITAL && material == null && allowed.none { it.id == categoryId }) {
+        if (mode != MoneyFormMode.CAPITAL && material == null && !requiresCategoryConfirmation && allowed.none { it.id == categoryId }) {
             categoryId = if (mode == MoneyFormMode.OTHER_IN && state.products.isNotEmpty()) {
                 // A business with products sells through notes (audit L16): money in here is "other",
                 // so it starts on the last such category used, else the last starting income category.
@@ -281,14 +286,14 @@ fun MoneyFormScreen(
                     onValueChange = { amount = it },
                     modifier = Modifier.focusRequester(amountFocus),
                 )
-                if (mode != MoneyFormMode.CAPITAL) {
-                    Text(stringResource(R.string.money_category), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
-                        allowed.forEach { c ->
-                            FilterChip(selected = categoryId == c.id, onClick = { categoryId = c.id; categoryTouched = true }, label = { Text(c.name) })
-                        }
-                        FilterChip(selected = false, onClick = { newCategory = "" }, label = { Text(stringResource(R.string.money_category_new)) })
+            }
+            if (mode != MoneyFormMode.CAPITAL && (material == null || requiresCategoryConfirmation)) {
+                Text(stringResource(R.string.money_category), style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.Small)) {
+                    allowed.filter { material == null || CategoryRole.parse(it.role) == CategoryRole.EXPENSE }.forEach { c ->
+                        FilterChip(selected = categoryId == c.id, onClick = { categoryId = c.id; categoryTouched = true }, label = { Text(c.name) })
                     }
+                    FilterChip(selected = false, onClick = { newCategory = "" }, label = { Text(stringResource(R.string.money_category_new)) })
                 }
             }
             if (!details) {

@@ -12,6 +12,8 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -19,6 +21,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -68,6 +73,7 @@ class HomeScreenTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: FinanceRepository
     private lateinit var savedPrefs: Map<String, *>
+    private var activeVm: AppViewModel? = null
     private val savedLocale: Locale = Locale.getDefault()
 
     @Before
@@ -88,6 +94,7 @@ class HomeScreenTest {
             @Suppress("DEPRECATION")
             compose.activity.resources.updateConfiguration(config, compose.activity.resources.displayMetrics)
         }
+        runBlocking { activeVm?.viewModelScope?.coroutineContext?.get(Job)?.cancelAndJoin() }
         database.close()
         context.getSharedPreferences("mankeu_ui_prefs", Context.MODE_PRIVATE).edit().clear().apply {
             savedPrefs.forEach { (key, value) ->
@@ -234,6 +241,51 @@ class HomeScreenTest {
         absent("Tambah kategori")
     }
 
+    @Test
+    fun categoryNameErrorAppearsAfterBlurAndClearsWhenValid() {
+        runBlocking { GoldenData.buSri(repository, database) }
+        start()
+        click("Lainnya")
+        click("Kategori")
+        absent("Isi namanya dulu.")
+        val field = compose.onAllNodes(hasSetTextAction() and hasText("Nama kategori"))[0]
+        field.performSemanticsAction(SemanticsActions.RequestFocus)
+        click("Pengeluaran")
+        exists("Isi namanya dulu.")
+        field.performTextInput("Biaya kemasan")
+        absent("Isi namanya dulu.")
+    }
+
+    @Test
+    fun categoryNameErrorAppearsOnlyAfterAttemptAndCategoryCanBeCreated() {
+        runBlocking { GoldenData.buSri(repository, database) }
+        start()
+        click("Lainnya")
+        click("Kategori")
+        absent("Isi namanya dulu.")
+        click("Tambah kategori")
+        exists("Isi namanya dulu.")
+        compose.onAllNodes(hasSetTextAction() and hasText("Nama kategori"))[0].performTextInput("Biaya kemasan")
+        absent("Isi namanya dulu.")
+        click("Tambah kategori")
+        exists("Biaya kemasan")
+    }
+
+    @Test
+    fun categoryCostControlsExplainAndPersistProductionCostSelection() {
+        val ids = runBlocking { GoldenData.buSri(repository, database) }
+        start()
+        click("Lainnya")
+        click("Kategori")
+        exists("Variabel")
+        exists("agar tidak dihitung dua kali")
+        val options = compose.onAllNodes(hasText("Sudah masuk modal barang", substring = true) and hasClickAction())
+        options[0].performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitUntil(5_000) {
+            runBlocking { database.financeDao().getCategories(ids.businessId).single { it.name == "Bahan Baku & Stok" }.includedInHpp.not() }
+        }
+    }
+
     /** Review M-4: Produksi with no product says why the product editor opens. */
     @Test
     fun produksiWithoutAProductSaysToCreateOneFirst() {
@@ -300,6 +352,7 @@ class HomeScreenTest {
             repository, FinanceWorkbookImporter(), EncryptedBackupManager(database, File(context.cacheDir, "home-screen.aabk")),
             GoogleIdentity(context), GoogleDriveBackupClient(),
         )
+        activeVm = vm
         compose.setContent { MankeuApp(vm) }
         settle()
         compose.waitUntil(10_000) { compose.onAllNodesWithText(waitFor, substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }

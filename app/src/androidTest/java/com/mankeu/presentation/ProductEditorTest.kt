@@ -10,6 +10,8 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -133,7 +135,7 @@ class ProductEditorTest {
         open()
         box("Nama produk").performTextInput("Keripik")
         box("Satu kali produksi menghasilkan").performTextInput("10")
-        click("Tulis satuan sendiri")
+        compose.onNodeWithContentDescription("Tulis satuan sendiri").performClick()
         box("Satuan terkecil").performTextInput("karung")
         click("karung")
         box("Harga jual").performTextInput("8000")

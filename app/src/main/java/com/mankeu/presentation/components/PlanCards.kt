@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mankeu.R
+import com.mankeu.presentation.incompleteWarningResource
 import com.mankeu.data.ProductRecord
 import com.mankeu.domain.ActualMonthAnalysis
 import com.mankeu.domain.PlanAnalysis
@@ -328,9 +329,9 @@ fun ActualMonthCard(
     month: com.mankeu.domain.MonthlySummary?,
     modifier: Modifier = Modifier,
 ) {
-    if (month?.profit?.profitIncomplete == true) {
+    if (month?.profit?.bepIncomplete == true) {
         Card(modifier = modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.profit_incomplete), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
+            Text(stringResource(if (month.profit.profitIncomplete) month.profit.incompleteWarningResource() else R.string.bep_incomplete_category), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
         }
         return
     }

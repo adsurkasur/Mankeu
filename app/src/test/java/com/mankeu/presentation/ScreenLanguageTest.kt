@@ -86,6 +86,16 @@ class ScreenLanguageTest {
         assertEquals(emptyList<String>(), baselineProblems(setOf("old_label|hpp"), setOf("old_label|hpp")))
     }
 
+    @Test
+    fun `variabel hanya diperbolehkan pada dua label kategori yang dipilih pemilik`() {
+        val found = violations(listOf(
+            ScreenString("category_cost_nature_hint", "Tetap dan variabel"),
+            ScreenString("category_cost_nature_variable_short", "Variabel"),
+            ScreenString("other_label", "Variabel"),
+        ))
+        assertEquals(setOf("other_label|variabel"), found)
+    }
+
     private data class ScreenString(val name: String, val text: String)
 
     private fun readStrings(xml: String): List<ScreenString> {
@@ -105,7 +115,7 @@ class ScreenLanguageTest {
             bannedWords.filter { word ->
                 val checkedText = if (word == "hpp") modalHpp.replace(text) { it.value.substringBeforeLast('(') } else text
                 wholeWord(word).containsMatchIn(checkedText)
-            }.map { word -> "${string.name}|$word" }
+            }.map { word -> "${string.name}|$word" }.filterNot { it in ownerApprovedWords }
         }
     }.toSortedSet()
 
@@ -125,6 +135,8 @@ class ScreenLanguageTest {
     private fun wholeWord(word: String) = Regex("(?<![\\p{L}\\p{N}_])${Regex.escape(word)}(?![\\p{L}\\p{N}_])", RegexOption.IGNORE_CASE)
 
     companion object {
+        // Owner explicitly chose “Variabel” for the two cost-category labels (DEC-042).
+        private val ownerApprovedWords = setOf("category_cost_nature_hint|variabel", "category_cost_nature_variable_short|variabel")
         // Exact Indonesian and English lists: Lampiran C §1.1 (2026-11-12), canonical lowercase.
         private val bannedWords = setOf(
             "hpp", "batch", "unit usaha", "buku", "rasio", "persediaan", "piutang", "kategori pembukuan",

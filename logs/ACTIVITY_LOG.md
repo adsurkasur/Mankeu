@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-15 00:50] [Codex (GPT-6) — prioritas MVP dan baris kosong]
+- **Goal**: Menerapkan urutan prioritas pemilik dan menutup perubahan baris yang sudah dikerjakan.
+- **Actions**: Mendokumentasikan prioritas fitur → UI/UX → multi-skala; baris dengan nilai kosong tidak lagi menyisihkan separuh lebar untuk nilai tersebut.
+- **Files**: Rows, FormComponentsTest, rencana induk dan konsistensi, WIP, changelog dan DEC-052.
+- **Verification**: [terverifikasi] Tes lebar label awal gagal lalu 3/3 tes komponen terkait lulus pada AVD sintetis emulator-5558. Build debug/androidTest sebelumnya lulus. [belum] Semua fitur dan gerbang MVP.
+
+
 ### [2026-11-14 17:06] [Codex (GPT-6) — stok pada font besar]
 - **Goal**: Menjaga pilihan stok dan dialog rapi pada layar ringkas dengan font besar.
 - **Actions**: Memendekkan label aksi dialog, menghilangkan ikon centang yang memotong teks dan menyesuaikan tinggi segmen dengan skala font; mengambil tiga screenshot sintetis dan mengembalikan AVD ke konfigurasi awal.

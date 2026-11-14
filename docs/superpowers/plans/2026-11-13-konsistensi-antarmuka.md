@@ -1,5 +1,8 @@
 # Rencana konsistensi antarmuka Mankeu
 
+> **Prioritas pemilik 2026-11-15:** (1) fitur MVP lengkap dan fungsional, (2) pemolesan UI/UX seluruh aplikasi, (3) penyempurnaan multi-skala. Lanjutkan verifikasi fungsional yang relevan selama pengembangan; tunda audit visual dan konfigurasi skala tambahan sampai tahapnya, kecuali ada penghalang langsung terhadap fungsi. Keputusan desain dan bukti terdahulu tetap berlaku.
+
+
 **Status:** disepakati pemilik pada 13 November 2026; pelaksanaan dan pemeriksaan seluruh aplikasi belum selesai.
 
 **Tujuan:** membuat seluruh layar mudah dipahami dan konsisten, sambil mempertahankan karakter Mankeu yang sudah ada dan setiap kemampuan yang masih berlaku.

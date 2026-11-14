@@ -63,16 +63,17 @@ fun ListRowField(
             Text(label, style = MankeuType.Body)
             if (supporting != null) Text(supporting, style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text(
-            value,
-            style = MankeuType.Body,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            // Filled and end-aligned, so the value and › sit at the right edge even when the value is short or empty (U4).
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f),
-        )
+        if (value.isNotBlank()) {
+            Text(
+                value,
+                style = MankeuType.Body,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f),
+            )
+        }
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

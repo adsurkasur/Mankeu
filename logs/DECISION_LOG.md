@@ -1,5 +1,13 @@
 # Decision Log (Architecture Decision Records)
 
+### [DEC-052] Urutan prioritas menuju MVP
+- **Tanggal**: 2026-11-15; **status**: dikonfirmasi pemilik.
+- **Konteks**: Pemilik meminta agar pengembangan tidak didominasi pengujian visual dan skala saat fitur inti masih belum lengkap.
+- **Keputusan**: Dahulukan fitur MVP dan alur fungsional; setelah itu poles UI/UX, lalu sempurnakan multi-skala. Verifikasi yang diperlukan untuk kebenaran fitur tetap dilakukan.
+- **Alasan dan alternatif**: Menyelesaikan perjalanan pengguna lebih dulu membuat pekerjaan visual berikutnya berpijak pada fitur yang benar-benar ada. Tidak menghapus gerbang kualitas atau klaim bukti.
+- **Komponen**: Rencana MVP, rencana konsistensi dan WIP.
+
+
 ### [DEC-051] Perpindahan fokus saat memilih tanggal
 - **Tanggal**: 2026-11-14; **status**: diterapkan.
 - **Konteks**: Membuka DateField dari field yang sedang disunting tidak melepas fokus, sehingga validasi blur tidak berjalan.

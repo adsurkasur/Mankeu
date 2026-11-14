@@ -1,5 +1,8 @@
 # Rencana induk menuju MVP Mankeu (2026-11-12)
 
+> **Prioritas pemilik 2026-11-15:** selesaikan fitur dan alur fungsional MVP terlebih dahulu; pemolesan UI/UX menyusul, lalu penyempurnaan multi-skala. Tes penerimaan fungsional tetap dijalankan sesuai perubahan (DEC-052).
+
+
 > **Pembaruan pemilik 2026-11-13 12:22 WIB:** audit konsistensi seluruh aplikasi dan aturan validasi baru mengikuti `2026-11-13-konsistensi-antarmuka.md` dan DEC-042. Keputusan baru menggantikan waktu validasi lama PK-0.7/DEC-034/040; riwayat paket dan hasil tes lama tetap historis. Pekerjaan finansial dan gerbang MVP pada rencana ini tetap berlaku.
 
 

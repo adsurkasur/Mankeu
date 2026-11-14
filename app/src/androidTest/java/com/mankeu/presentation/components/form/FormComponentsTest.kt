@@ -1,6 +1,14 @@
 package com.mankeu.presentation.components.form
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -322,6 +330,20 @@ class FormComponentsTest {
         compose.onNodeWithText(text(R.string.form_discard_confirm)).performClick()
         compose.waitForIdle()
         assertEquals(2, closed)
+    }
+
+    @Test
+    fun emptyValueGivesLabelTheAvailableWidthAtLargeFont() {
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
+                MankeuTheme { Box(Modifier.width(288.dp)) { ListRowField("Rencana usaha", "", {}) } }
+            }
+        }
+        val node = compose.onNodeWithText("Rencana usaha", useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        assertEquals(1, layouts.single().lineCount)
     }
 
     @Test

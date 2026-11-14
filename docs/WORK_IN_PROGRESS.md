@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Modal di editor produk (2026-11-14 16:12 WIB):** [terverifikasi] Pratinjau modal dan untung ditahan bila resep kosong atau belum lengkap; dua tes baru dan kontrol resep lengkap 3/3 pada emulator-5558, build dan JVM 196/196 lulus. [belum] `PlanScreen` masih menyertakan nominal HPP parsial dalam baris meski ada peringatan; perbaiki sebelum menyatakan perhitungan rencana aman. Audit visual dan MVP belum selesai.
+
+
 **Satuan pada nota (2026-11-14 16:08 WIB):** [terverifikasi] Dropdown menampilkan satuan produk dan mempertahankan harga otomatis; dua alur nota dan dua regresi produk/satuan lulus pada emulator-5558, build debug/androidTest berhasil. [belum] Audit visual seluruh layar, perangkat dan gerbang MVP.
 
 

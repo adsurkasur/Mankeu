@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:12] [Codex (GPT-6) — modal belum lengkap di editor]
+- **Goal**: Mencegah editor produk menampilkan biaya parsial atau harga jual sebagai untung pasti.
+- **Actions**: Menahan pratinjau modal dan untung per satuan hingga resep lengkap; menambah tes resep kosong, bahan tanpa harga dan kontrol resep lengkap. Mencatat tampilan Rencana untuk tindak lanjut.
+- **Files**: ProductEditorScreen, ProductEditorTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Dua tes baru gagal sebelum perubahan; kedua kasus dan kontrol resep lengkap lulus 3/3 pada emulator-5558. Satu percobaan instrumentasi sebelumnya terputus oleh input dispatch timeout, ulang berhasil; build debug/androidTest dan JVM 196/196 lulus. Lint lulus. [belum] Tampilan modal parsial pada Rencana dan seluruh gerbang MVP.
+
+
 ### [2026-11-14 16:08] [Codex (GPT-6) — satuan di nota]
 - **Goal**: Menyelaraskan pemilihan satuan nota dengan pilihan daftar yang dapat bertambah.
 - **Actions**: Mengganti chip satuan pada editor baris nota dengan dropdown satuan produk; mempertahankan harga otomatis dan pemilih satuan barang dengan tombol tambah.

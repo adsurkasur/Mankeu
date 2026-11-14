@@ -134,6 +134,28 @@ class ProductEditorTest {
         exists("dus")
     }
 
+    @Test fun missingRecipeDoesNotPresentSellingPriceAsProfit() {
+        open()
+        box("Satu kali produksi menghasilkan").performTextInput("1")
+        click("bungkus")
+        box("Harga jual").performTextInput("8000")
+        click("Simpan")
+        assertEquals(0, compose.onAllNodesWithText("untung Rp", substring = true).fetchSemanticsNodes().size)
+    }
+
+    @Test fun unpricedMaterialDoesNotPresentPartialCostOrProfitAsFinal() {
+        open(materials = listOf(oil.copy(basePriceRupiah = 0)))
+        box("Satu kali produksi menghasilkan").performTextInput("1")
+        click("+ Bahan")
+        box("Jumlah (liter)").performTextInput("1")
+        click("Simpan")
+        click("bungkus")
+        box("Harga jual").performTextInput("8000")
+        click("Simpan")
+        assertEquals(0, compose.onAllNodesWithText("untung Rp", substring = true).fetchSemanticsNodes().size)
+        assertEquals(0, compose.onAllNodesWithText("Modal barang Rp", substring = true).fetchSemanticsNodes().size)
+    }
+
     @Test fun recipePerBatchGivesHppPerSaleUnitAndSaves() {
         open()
         // On open: name and yield are the only boxes; recipe and units are rows and buttons.

@@ -166,7 +166,7 @@ fun ProductEditorScreen(
     val roundedRows = recipe.mapNotNull { ProductCosting.lineCost(it, prices) }
         .fold(java.math.BigDecimal.ZERO) { sum, value -> sum + java.math.BigDecimal.valueOf(value) }
     val roundingDifference = cost?.hasRecipe == true && roundedRows.compareTo(java.math.BigDecimal.valueOf(cost.batchCostRupiah)) != 0
-    val unitCosts = cost?.let { c -> validUnits.map { it.first }.zip(c.perSaleUnit).toMap() }.orEmpty()
+    val unitCosts = cost?.takeIf { it.complete }?.let { c -> validUnits.map { it.first }.zip(c.perSaleUnit).toMap() }.orEmpty()
     val saveBlockedReason = when {
         name.isBlank() -> stringResource(R.string.form_need_name)
         baseUnit.isBlank() -> stringResource(R.string.form_need_unit)
@@ -221,7 +221,7 @@ fun ProductEditorScreen(
                 ),
             )
         },
-        result = cost?.takeIf { it.hasRecipe }?.let { c ->
+        result = cost?.takeIf { it.complete }?.let { c ->
             {
                 ResultBar(
                     text = stringResource(R.string.editor_result_hpp, c.hppPerBaseUnitRupiah.toRupiah(), unitLabel),

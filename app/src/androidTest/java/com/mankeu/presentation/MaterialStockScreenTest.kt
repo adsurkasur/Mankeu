@@ -100,7 +100,7 @@ class MaterialStockScreenTest {
         addTen()
 
         exists("Catat juga uangnya?")
-        click("Ya, catat belanja")
+        click("Catat belanja")
 
         // U5: the Belanja page, filled: Minyak, 10 liter at Rp25.000, the total and the stock it adds.
         exists("Beli apa?")
@@ -157,6 +157,17 @@ class MaterialStockScreenTest {
     }
 
     @Test
+    fun stockChoicesHaveEqualHeightAndFitAtLargeFont() {
+        start()
+        click("Produk")
+        click("Minyak")
+        val choices = listOf("Tambah", "Pakai", "Hitung ulang").map { label ->
+            compose.onAllNodes(hasText(label) and hasClickAction())[0].fetchSemanticsNode().boundsInRoot
+        }
+        org.junit.Assert.assertTrue("Equal heights: $choices", choices.all { kotlin.math.abs(it.height - choices.first().height) < 1f })
+    }
+
+    @Test
     fun stockQuestionKeepsHorizontalMarginOnPhone() {
         start()
         addTen()
@@ -171,8 +182,8 @@ class MaterialStockScreenTest {
     fun stockQuestionPlacesChoicesAndBackInSeparateRows() {
         start()
         addTen()
-        val buy = compose.onAllNodesWithText("Ya, catat belanja")[0].fetchSemanticsNode().boundsInRoot
-        val stock = compose.onAllNodesWithText("Tidak, tambah stok saja")[0].fetchSemanticsNode().boundsInRoot
+        val buy = compose.onAllNodesWithText("Catat belanja")[0].fetchSemanticsNode().boundsInRoot
+        val stock = compose.onAllNodesWithText("Tambah stok saja")[0].fetchSemanticsNode().boundsInRoot
         val back = compose.onAllNodesWithText("Kembali")[0].fetchSemanticsNode().boundsInRoot
         org.junit.Assert.assertTrue(buy.bottom <= stock.top && stock.bottom <= back.top)
     }
@@ -182,7 +193,7 @@ class MaterialStockScreenTest {
         start()
         addTen()
 
-        click("Tidak, tambah stok saja")
+        click("Tambah stok saja")
 
         compose.waitUntil(5_000) { stock() == "10" }
     }

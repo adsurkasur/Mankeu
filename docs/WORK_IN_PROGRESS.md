@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Stok pada font besar (2026-11-14 17:06 WIB):** [terverifikasi] Pada 320 dp/font 130%, pilihan gerakan sama tinggi dan label dialog satu baris; tiga tes segmen/gerakan dan lima tes dialog lulus pada emulator-5558. Screenshot di `docs/superpowers/reports/evidence/2026-11-14-stok-ringkas-sesudah.png` dan `2026-11-14-dialog-ringkas-sesudah.png`. Android 11 menolak font 200%; AVD dikembalikan 1080×2400/420 dpi/font 100%. [belum] 200%, tema gelap dan HP fisik.
+
+
 **Dialog uang saat tambah stok (2026-11-14 16:58 WIB):** [terverifikasi] Dua aksi pencatatan kini tombol berisi/berbingkai, Kembali tetap tersedia; lima tes cabang dan jarak lulus. Bukti visual serta batas ada pada `docs/superpowers/reports/2026-11-14-dialog-stok-aksi.md`. [belum] Font besar, tema gelap, layar lain dan HP fisik.
 
 

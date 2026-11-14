@@ -503,8 +503,8 @@
     <string name="stock_out_over">Lebih dari stok tercatat (%1$s %2$s). Tetap bisa disimpan; stoknya jadi minus.</string>
     <string name="stock_money_title">Catat juga uangnya?</string>
     <string name="stock_money_body">Kalau %1$s %2$s %3$s ini dibeli, catat sebagai belanja: uang keluar dan stok bertambah sekaligus.</string>
-    <string name="stock_money_buy">Ya, catat belanja</string>
-    <string name="stock_money_no">Tidak, tambah stok saja</string>
+    <string name="stock_money_buy">Catat belanja</string>
+    <string name="stock_money_no">Tambah stok saja</string>
     <string name="stock_history_heading">Riwayat</string>
     <string name="stock_history_purchase">Belanja</string>
     <string name="stock_history_use">Dipakai produksi %1$s</string>

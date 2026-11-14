@@ -46,6 +46,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -387,6 +388,7 @@ internal fun StockMovementSheet(
         if (item.currentStock.signum() < 0) {
             Text(stringResource(R.string.stock_negative_hint), color = LocalMankeuSemanticColors.current.danger, style = MaterialTheme.typography.bodySmall)
         }
+        val segmentHeight = (56f * LocalDensity.current.fontScale.coerceAtLeast(1f)).dp
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
             val choices = listOf(
                 StockMovementType.IN to R.string.stock_type_in,
@@ -398,7 +400,8 @@ internal fun StockMovementSheet(
                     selected = type == option,
                     onClick = { type = option },
                     shape = SegmentedButtonDefaults.itemShape(index, choices.size),
-                    modifier = Modifier.heightIn(min = 56.dp),
+                    modifier = Modifier.heightIn(min = segmentHeight),
+                    icon = {},
                     label = { Text(stringResource(label), textAlign = TextAlign.Center, maxLines = 2) },
                 )
             }

@@ -501,8 +501,8 @@
     <string name="stock_out_over">More than the recorded stock (%1$s %2$s). You can still save; the stock goes below zero.</string>
     <string name="stock_money_title">Record the money too?</string>
     <string name="stock_money_body">If these %1$s %2$s of %3$s were bought, record a purchase: the money goes out and the stock goes up in one go.</string>
-    <string name="stock_money_buy">Yes, record purchase</string>
-    <string name="stock_money_no">No, stock only</string>
+    <string name="stock_money_buy">Record purchase</string>
+    <string name="stock_money_no">Add stock only</string>
     <string name="stock_history_heading">History</string>
     <string name="stock_history_purchase">Purchase</string>
     <string name="stock_history_use">Used to make %1$s</string>

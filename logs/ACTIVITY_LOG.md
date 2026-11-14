@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 17:06] [Codex (GPT-6) — stok pada font besar]
+- **Goal**: Menjaga pilihan stok dan dialog rapi pada layar ringkas dengan font besar.
+- **Actions**: Memendekkan label aksi dialog, menghilangkan ikon centang yang memotong teks dan menyesuaikan tinggi segmen dengan skala font; mengambil tiga screenshot sintetis dan mengembalikan AVD ke konfigurasi awal.
+- **Files**: StockSection, resource, MaterialStockScreenTest, tiga screenshot, laporan UX, WIP dan changelog.
+- **Verification**: [terverifikasi] Pada 720×1600/360 dpi (320 dp) dan font 130%, uji tinggi segmen gagal sebelum perubahan lalu lulus; tiga tes tinggi, gerakan dan susunan lulus; lima tes cabang/spacing dialog lulus. Screenshot sesudah menunjukkan label utuh, tinggi sejajar dan margin. Build debug/androidTest dan diff check lulus. Android 11 menolak font 200%. AVD kembali 1080×2400/420 dpi/font 100%. [belum] Font 200%, tema gelap dan HP fisik.
+
+
 ### [2026-11-14 16:58] [Codex (GPT-6) — aksi dialog tambah stok]
 - **Goal**: Membuat pilihan catat belanja dan stok saja terlihat sebagai tombol dengan margin yang nyaman.
 - **Actions**: Menggunakan tombol utama dan tombol berbingkai serta Kembali sebagai aksi sekunder; mengambil bukti visual sebelum/sesudah pada data sintetis. Tidak mengubah callback atau isian.

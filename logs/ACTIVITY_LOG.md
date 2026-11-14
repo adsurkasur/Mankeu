@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-14 16:52] [Codex (GPT-6) — validasi terima bayar]
+- **Goal**: Menyamakan dialog terima bayar dengan validasi DEC-042.
+- **Actions**: Menunda error jumlah kosong atau berlebih hingga blur/Simpan, memfokuskan jumlah dan mempertahankan batas sisa tagihan.
+- **Files**: SaleNoteScreens, PaySheetValidationTest, WIP dan changelog.
+- **Verification**: [terverifikasi] Tes jumlah berlebih gagal sebelum perubahan; kedua tes kosong dan berlebih lulus masing-masing secara terpisah di emulator-5558, tes alur penolakan berlebih lulus, build debug/androidTest dan diff check lulus. Satu run gabungan mengalami ComposeNotIdleException; ulang terpisah berhasil. [belum] TalkBack dan MVP.
+
+
 ### [2026-11-14 16:48] [Codex (GPT-6) — pembayaran dan diskon nota]
 - **Goal**: Menghindari peringatan merah saat pengguna masih mengetik pembayaran atau diskon.
 - **Actions**: Menampilkan kesalahan pembayaran berlebih dan diskon berlebih setelah blur atau Simpan; fokus berpindah ke kolom invalid dan penyimpanan invalid tetap ditolak.

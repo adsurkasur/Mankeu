@@ -848,6 +848,9 @@ fun PaySheet(
     val parsed = runCatching { LocalDate.parse(date) }.getOrNull()
     val amountOk = value in 1..outstanding
     val dateOk = parsed != null && !parsed.isBefore(earliest)
+    val amountFocus = remember { FocusRequester() }
+    var amountFocused by remember { mutableStateOf(false) }
+    var amountTouched by rememberSaveable { mutableStateOf(false) }
     MankeuSheet(
         title = title,
         onDismiss = onDismiss,
@@ -858,14 +861,19 @@ fun PaySheet(
             !dateOk -> stringResource(R.string.sale_pay_date_early)
             else -> null
         },
+        onInvalidConfirm = { if (!amountOk) { amountTouched = true; amountFocus.requestFocus() } },
         onConfirm = { error = null; onPay(value, parsed!!, onDismiss, { error = it }) },
     ) {
         MoneyInput(
             label = stringResource(R.string.sale_pay_amount),
             value = amount,
             onValueChange = { amount = it },
-            isError = value > outstanding,
-            supportingText = { Text(stringResource(R.string.sale_max_amount, outstanding.toRupiah())) },
+            isError = amountTouched && !amountOk,
+            supportingText = { Text(if (amountTouched && value <= 0) stringResource(R.string.form_need_amount) else stringResource(R.string.sale_max_amount, outstanding.toRupiah())) },
+            fieldModifier = Modifier.focusRequester(amountFocus).onFocusChanged { focus ->
+                if (amountFocused && !focus.isFocused) amountTouched = true
+                amountFocused = focus.isFocused
+            },
             // Only when the amount was changed: it starts on what is left.
             chips = listOfNotNull(MoneyChip(stringResource(R.string.sale_paid_full), outstanding).takeIf { amount != outstanding }),
             imeAction = ImeAction.Done,

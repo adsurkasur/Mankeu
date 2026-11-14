@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Dialog terima bayar menandai jumlah kosong atau berlebih setelah kolom ditinggalkan atau Simpan ditekan.
 - Pembayaran sebagian dan diskon berlebih ditandai setelah kolom ditinggalkan atau Simpan ditekan, tanpa mengubah batas dan total nota.
 - Form produksi dan hitung stok menunjukkan kesalahan jumlah pada kolom; hitungan stok nol tetap diperbolehkan.
 - Editor baris nota menandai jumlah dan harga yang tidak valid setelah kolom ditinggalkan dan memfokuskan kolom terkait saat Simpan.

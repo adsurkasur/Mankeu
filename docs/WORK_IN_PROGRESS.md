@@ -1,5 +1,8 @@
 # Work in Progress (living document)
 
+**Terima bayar (2026-11-14 16:52 WIB):** [terverifikasi] Jumlah kosong/berlebih mengikuti blur dan fokus Simpan; dua tes terpisah dan regresi batas lulus pada emulator-5558, build lulus. Satu run gabungan mengalami ComposeNotIdleException. [belum] TalkBack dan seluruh MVP.
+
+
 **Pembayaran dan diskon nota (2026-11-14 16:48 WIB):** [terverifikasi] Error berlebih muncul setelah blur/Simpan dan fokus menuju kolom; tes pembayaran, diskon dan alur dua produk lulus pada emulator-5558, build lulus. [belum] Semua form, TalkBack dan MVP.
 
 

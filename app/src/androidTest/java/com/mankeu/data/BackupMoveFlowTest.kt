@@ -69,6 +69,20 @@ class BackupMoveFlowTest {
     private lateinit var expectedSummary: MonthlySummary
     private lateinit var expectedBuyers: List<ContactEntity>
 
+    @Test fun restoreWhileSyncIsEnabledDoesNotPresentLocalTradeCostAsCertain() = runBlocking {
+        val business = database.financeDao().getBusinesses().single()
+        val project = database.financeDao().getProjects(business.id).single()
+        val traded = repository.products(project.id).first().single { it.product.name == "Air" }
+        val sale = repository.saveSale(project.id, null, SaleDraft(null, LocalDate.of(2026, 10, 13), null, 0, "", listOf(SaleLineDraft(traded.product.id, "botol", "1", 8_000)), 8_000))
+        assertTrue(repository.sales(project.id).first().single { it.sale.id == sale }.lines.single().costKnown)
+        val password = "pindah-hp-uji".toCharArray()
+        val manager = EncryptedBackupManager(database, backupFile)
+        val bytes = manager.create(password)
+        com.mankeu.sync.SyncEngine(database).enable()
+        manager.restore(manager.prepareRestore(bytes, password), password)
+        assertEquals(false, repository.sales(project.id).first().single { it.sale.id == sale }.lines.single().costKnown)
+    }
+
     @Test fun savedFileRestoresTheSameMonthlySummaryAndBuyerListAfterErase() = runBlocking {
         val password = "pindah-hp-uji".toCharArray()
         val manager = EncryptedBackupManager(database, backupFile)

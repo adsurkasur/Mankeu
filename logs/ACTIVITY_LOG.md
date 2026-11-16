@@ -1410,3 +1410,11 @@
   - Memperbarui docs/WORK_IN_PROGRESS.md dan logs/DECISION_LOG.md.
 - **Files Modified**: `app/src/main/java/com/mankeu/presentation/screens/ProductEditorScreen.kt`, `app/src/main/java/com/mankeu/presentation/screens/MoneyForms.kt`, `app/src/main/java/com/mankeu/presentation/screens/SaleNoteScreens.kt`, `app/src/main/java/com/mankeu/presentation/MankeuApp.kt`, `app/src/androidTest/java/com/mankeu/presentation/ProductEditorTest.kt`, `app/src/main/res/values/strings.xml`, `app/src/main/res/values-en/strings.xml`, `docs/WORK_IN_PROGRESS.md`, `logs/DECISION_LOG.md`, `logs/ACTIVITY_LOG.md`.
 - **Verification**: `./gradlew testDebugUnitTest` passed cleanly (`BUILD SUCCESSFUL`).
+
+### [2026-11-16 20:39] [Antigravity]
+- **Goal**: Integrasi aritmetika rasional eksak pada TradeInventoryCost dan penguatan test suite.
+- **Actions**:
+  - Mengganti pembagian floating BigDecimal dengan `ExactRatio` (BigInteger rasional) untuk presisi pembulatan rupiah setengah-ke-atas tanpa drift.
+  - Menyelaraskan FinanceRepository, SyncSchema, dan unit test terkait.
+- **Files Modified**: `app/src/main/java/com/mankeu/domain/TradeInventoryCost.kt`, `app/src/main/java/com/mankeu/data/FinanceRepository.kt`, `app/src/androidTest/...`, `logs/ACTIVITY_LOG.md`.
+- **Verification**: `./gradlew testDebugUnitTest` passed cleanly (`BUILD SUCCESSFUL in 26s`).

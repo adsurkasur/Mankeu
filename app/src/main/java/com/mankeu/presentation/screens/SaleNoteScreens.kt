@@ -226,6 +226,7 @@ fun SaleNoteEditorScreen(
     val unknownCost = lines.any { line -> line.productId.isBlank() || (products.firstOrNull { it.product.id == line.productId }?.let { record ->
         !costs.getValue(record.product.id).complete && (record.recipe.isNotEmpty() || record.product.manualCostRupiah == null || record.product.kind == "TRADED")
     } ?: true) }
+    val hasTradedLine = lines.any { line -> products.any { it.product.id == line.productId && it.product.kind == "TRADED" && it.recipe.isEmpty() } }
     val subtotal = results.sumOf { it?.first ?: 0 }
     val hpp = results.sumOf { it?.second ?: 0 }
     val discountRupiah = discount ?: 0
@@ -300,7 +301,7 @@ fun SaleNoteEditorScreen(
                 {
                     ResultBar(
                         text = stringResource(R.string.sale_result_total, total.toRupiah()),
-                        detail = if (unknownCost) stringResource(R.string.sale_cost_unknown) else stringResource(if (total - hpp < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(total - hpp).toRupiah()),
+                        detail = if (unknownCost) stringResource(if (hasTradedLine) R.string.sale_trade_cost_on_save else R.string.sale_cost_unknown) else stringResource(if (total - hpp < 0) R.string.sale_result_loss else R.string.sale_result_profit, kotlin.math.abs(total - hpp).toRupiah()),
                     )
                 }
             } else {
@@ -799,7 +800,7 @@ fun SaleNoteDetailScreen(
                         Text(line.totalRupiah.toRupiah(), fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        stringResource(R.string.sale_line_result, line.totalRupiah.toRupiah(), line.hppRupiah.toRupiah(), (line.totalRupiah - line.hppRupiah).toRupiah()),
+                        if (!line.costKnown || line.productId == null) stringResource(R.string.sale_cost_unknown) else stringResource(R.string.sale_line_result, line.totalRupiah.toRupiah(), line.hppRupiah.toRupiah(), (line.totalRupiah - line.hppRupiah).toRupiah()),
                         style = MankeuType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

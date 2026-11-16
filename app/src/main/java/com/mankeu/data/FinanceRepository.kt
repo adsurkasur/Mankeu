@@ -518,6 +518,7 @@ class FinanceRepository(
     suspend fun recordProduction(productId: String, batches: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
         require(batches.signum() > 0) { "Jumlah batch harus lebih dari nol." }
         val product = dao.getProduct(productId) ?: error("Produk tidak ditemukan.")
+        require(product.kind == "MADE") { "Produksi hanya untuk barang yang dibuat sendiri." }
         val yield = (TransactionCalculation.parseQuantity(product.batchYieldText) ?: BigDecimal.ONE) - product.batchLossText.replace(',', '.').toBigDecimal()
         require(yield > BigDecimal.ZERO) { "Hasil produksi harus lebih besar daripada susut." }
         val now = System.currentTimeMillis()
@@ -560,7 +561,8 @@ class FinanceRepository(
     /** Hitung stok: the counted base units become the stock from [date] on; zero ("habis") is allowed. */
     suspend fun countProductStock(productId: String, counted: BigDecimal, date: LocalDate, notes: String) = database.withTransaction {
         require(counted.signum() >= 0) { "Jumlah stok tidak boleh negatif." }
-        requireNotNull(dao.getProduct(productId)) { "Produk tidak ditemukan." }
+        val product = requireNotNull(dao.getProduct(productId)) { "Produk tidak ditemukan." }
+        if (product.kind == "TRADED") require(dao.countKnownTradeSalesFrom(productId, date.toEpochDay() + 1) == 0) { "Tanggal hitung stok lebih awal dari penjualan yang modalnya sudah dicatat." }
         dao.insertProductMovement(
             ProductMovementEntity(
                 id = UUID.randomUUID().toString(),
@@ -580,6 +582,9 @@ class FinanceRepository(
      * consignment sends and returns in the consignment (they also move what is at the store).
      */
     suspend fun deleteProductMovement(id: String) = database.withTransaction {
+        dao.getProductMovement(id)?.let { movement ->
+            if (dao.getProduct(movement.productId)?.kind == "TRADED") require(dao.countKnownTradeSalesFrom(movement.productId, movement.dateEpochDay) == 0) { "Catatan ini dipakai untuk modal penjualan berikutnya." }
+        }
         require(dao.deleteProductionOrCount(id) == 1) { "Catatan produksi atau hitung stok tidak ditemukan." }
         stockDao.deleteOrphanConsumption()
     }
@@ -871,6 +876,7 @@ class FinanceRepository(
     suspend fun recordTradePurchase(productId: String, quantity: BigDecimal, amountRupiah: Long, date: LocalDate): String = database.withTransaction {
         require(quantity.signum() > 0 && amountRupiah > 0) { "Jumlah dan total belanja harus lebih dari nol." }
         val product = requireNotNull(dao.getProduct(productId)) { "Barang tidak ditemukan." }
+        require(dao.countKnownTradeSalesFrom(productId, date.toEpochDay() + 1) == 0) { "Tanggal belanja lebih awal dari penjualan yang modalnya sudah dicatat." }
         require(product.kind == "TRADED" && !product.archived) { "Pilih barang dagangan aktif." }
         val project = requireNotNull(dao.getProject(product.projectId))
         val category = dao.getCategories(project.businessId).firstOrNull { it.active && it.includedInHpp && CategoryRole.parse(it.role) == CategoryRole.EXPENSE }
@@ -886,6 +892,9 @@ class FinanceRepository(
 
     suspend fun recordEvent(draft: EventDraft): String = database.withTransaction {
         requireValid(draft)
+        if (draft.type == FinancialEventType.CASH_INCOME && draft.productId != null && dao.getProduct(draft.productId)?.kind == "TRADED") {
+            require(dao.countKnownTradeSalesFrom(draft.productId, draft.date.toEpochDay() + 1) == 0) { "Tanggal penjualan lebih awal dari penjualan yang modalnya sudah dicatat." }
+        }
         val event = draft.toEvent().withPurchasePrice()
         insertEventWithAutoNote(event)
         event.id
@@ -928,6 +937,11 @@ class FinanceRepository(
         }
         val sale = old.saleId?.let { dao.getSale(it) }
         val autoNote = sale?.takeIf { isAutoPayment(old, it) }
+        if (autoNote != null) {
+            listOfNotNull(old.productId, event.productId).distinct().forEach { productId ->
+                if (dao.getProduct(productId)?.kind == "TRADED") require(dao.countKnownTradeSalesFrom(productId, minOf(old.dateEpochDay, event.date.toEpochDay()), autoNote.id) == 0) { "Transaksi ini memengaruhi modal penjualan berikutnya." }
+            }
+        }
         if (sale != null && autoNote == null) {
             // DEC-029 M3: a payment of a note stays a payment of that note, within what is owed.
             require(event.type == FinancialEventType.CASH_INCOME) { "Ini pembayaran nota; jenisnya tetap uang masuk." }
@@ -1221,6 +1235,10 @@ class FinanceRepository(
 
     /** Deletes a note with its payments; returns how many payments went with it (the UI names them before). */
     suspend fun deleteSale(id: String): Int = database.withTransaction {
+        val sale = dao.getSale(id) ?: error("Nota tidak ditemukan.")
+        dao.getSaleLines(id).mapNotNull { it.productId }.distinct().forEach { productId ->
+            if (dao.getProduct(productId)?.kind == "TRADED") require(dao.countKnownTradeSalesFrom(productId, sale.dateEpochDay, id) == 0) { "Nota ini memengaruhi modal penjualan berikutnya." }
+        }
         val payments = dao.getSalePayments(id)
         payments.forEach { dao.deleteEvent(it.id) }
         require(dao.deleteSale(id) == 1) { "Nota tidak ditemukan." }
@@ -1255,6 +1273,33 @@ class FinanceRepository(
         return NoteLine(product.id, product.name, unit, record.contentOf(unit), quantity, line.unitPriceRupiah)
     }
 
+    private data class TradeStep(val date: Long, val time: Long, val kind: String, val quantity: BigDecimal, val amount: Long = 0)
+
+    /** Returns null if historical stock cannot be priced safely. */
+    private suspend fun tradeInventory(productId: String, date: LocalDate, cutoffTime: Long, excludeSaleId: String?): com.mankeu.domain.TradeInventoryCost? {
+        if (dao.tradeSyncEnabled() || dao.countTradeConsignmentLines(productId) > 0) return null
+        val purchases = dao.getTradePurchaseHistory(productId).map { TradeStep(it.dateEpochDay, it.createdAtEpochMillis, "BUY", it.quantityText.toBigDecimal(), it.amountRupiah) }
+        val movements = dao.getProductMovements(productId).map { TradeStep(it.dateEpochDay, it.createdAtEpochMillis, it.movementType, it.quantityText.toBigDecimal()) }
+        val sales = dao.getTradeSaleHistory(productId).filter { it.saleId != excludeSaleId }.map {
+            if (it.consignmentId != null) return null
+            TradeStep(it.dateEpochDay, it.createdAtEpochMillis, "SALE", it.quantityText.toBigDecimal() * it.contentText.toBigDecimal())
+        }
+        val allSteps = purchases + movements + sales
+        if (allSteps.any { it.date == date.toEpochDay() && it.time == cutoffTime }) return null
+        val steps = allSteps.filter { it.date < date.toEpochDay() || (it.date == date.toEpochDay() && it.time < cutoffTime) }.sortedWith(compareBy({ it.date }, { it.time }))
+        if (steps.zipWithNext().any { (a, b) -> a.date == b.date && a.time == b.time }) return null
+        var state: com.mankeu.domain.TradeInventoryCost? = com.mankeu.domain.TradeInventoryCost.empty()
+        for (step in steps) {
+            state = when (step.kind) {
+                "BUY" -> state?.purchase(step.quantity, step.amount)
+                "SALE" -> state?.let { if (step.quantity > it.quantity) null else it.sell(step.quantity).remaining }
+                "ADJUSTMENT" -> if (step.quantity.signum() == 0) com.mankeu.domain.TradeInventoryCost.empty() else state?.count(step.quantity) ?: com.mankeu.domain.TradeInventoryCost.empty().count(step.quantity)
+                else -> null
+            }
+        }
+        return state
+    }
+
     private suspend fun productRecord(productId: String): ProductRecord? =
         dao.getProduct(productId)?.let { ProductRecord(it, dao.getProductUnits(it.id), dao.getRecipeLines(it.id)) }
 
@@ -1283,6 +1328,14 @@ class FinanceRepository(
             before.productId == after.productId && (after.productId != null || before.name == after.name) && before.unitName.equals(after.unitName, ignoreCase = true) &&
                 TransactionCalculation.parseQuantity(before.quantityText)?.compareTo(after.quantity) == 0 && before.unitPriceRupiah == after.unitPriceRupiah
         }
+        val tradeIds = (lines.mapNotNull { it.productId } + previousLines.mapNotNull { it.productId }).distinct().filter { dao.getProduct(it)?.kind == "TRADED" }
+        if (existing != null && (draft.date.toEpochDay() != existing.dateEpochDay || !unchangedLines)) {
+            tradeIds.forEach { id -> require(dao.countKnownTradeSalesFrom(id, minOf(existing.dateEpochDay, draft.date.toEpochDay()), existing.id) == 0) { "Nota ini memengaruhi modal penjualan berikutnya." } }
+        } else if (existing == null) {
+            tradeIds.forEach { id -> require(dao.countKnownTradeSalesFrom(id, draft.date.toEpochDay() + 1) == 0) { "Tanggal nota lebih awal dari penjualan yang modalnya sudah dicatat." } }
+        }
+        val reuseSnapshots = unchangedLines && (tradeIds.isEmpty() || existing?.dateEpochDay == draft.date.toEpochDay())
+        val tradeStates = mutableMapOf<String, com.mankeu.domain.TradeInventoryCost?>()
         val now = System.currentTimeMillis()
         val saleId = existing?.id ?: UUID.randomUUID().toString()
         val sale = SaleEntity(
@@ -1296,16 +1349,24 @@ class FinanceRepository(
             notes = draft.notes.trim(),
             consignmentId = consignmentId,
             // An edit recomputes HPP at today's cost, so it is no longer the migration's estimate (§7).
-            hppEstimated = if (unchangedLines) existing?.hppEstimated ?: false else false,
+            hppEstimated = if (reuseSnapshots) existing?.hppEstimated ?: false else false,
             importBatchId = existing?.importBatchId,
             createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
             updatedAtEpochMillis = now,
         )
-        val entities = if (unchangedLines) previousLines else lines.mapIndexed { index, l ->
+        val entities = if (reuseSnapshots) previousLines else lines.mapIndexed { index, l ->
             val record = l.productId?.let { productRecord(it) }
             require(l.productId == null || record != null && record.product.projectId == project.id) { "Produk tidak ditemukan di unit usaha ini." }
             val productCost = record?.let { ProductCosting.cost(it.spec, prices) }
             val manual = record?.product?.manualCostRupiah?.takeIf { record.recipe.isEmpty() && record.product.kind != "TRADED" }
+            val traded = record?.product?.kind == "TRADED" && record.recipe.isEmpty()
+            val tradeCost = if (traded && consignmentId == null) {
+                val id = requireNotNull(l.productId)
+                if (!tradeStates.containsKey(id)) tradeStates[id] = tradeInventory(id, draft.date, existing?.createdAtEpochMillis ?: now, existing?.id)
+                val result = tradeStates[id]?.let { state -> if (l.content * l.quantity > state.quantity) null else state.sell(l.content * l.quantity) }
+                tradeStates[id] = result?.remaining
+                result?.costRupiah
+            } else null
             SaleLineEntity(
                 id = UUID.randomUUID().toString(),
                 saleId = saleId,
@@ -1315,22 +1376,22 @@ class FinanceRepository(
                 quantityText = l.quantity.stripTrailingZeros().toPlainString(),
                 unitPriceRupiah = l.unitPriceRupiah,
                 totalRupiah = SalesMath.lineTotal(l.quantity, l.unitPriceRupiah),
-                hppRupiah = if (record == null) 0 else if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
+                hppRupiah = if (traded) tradeCost ?: 0 else if (record == null) 0 else if (manual != null) TransactionCalculation.computeTotalRupiah(l.content * l.quantity, manual) else ProductCosting.hpp(record.spec, prices, l.content * l.quantity),
                 sortOrder = index,
                 name = record?.product?.name ?: l.name,
-                costKnown = record != null && (manual != null || productCost?.complete == true),
+                costKnown = if (traded) tradeCost != null else record != null && (manual != null || productCost?.complete == true),
             )
         }
         if (existing == null) {
             dao.insertSale(sale)
         } else {
             dao.updateSale(sale)
-            if (!unchangedLines) dao.deleteSaleLines(saleId)
+            if (!reuseSnapshots) dao.deleteSaleLines(saleId)
             // Edited here, its payments are plain payments: an old-form product sale (DEC-029 M4) stops
             // following its payment, and the payment no longer claims one product and quantity.
-            if (!unchangedLines) dao.clearSaleFieldsOfPayments(saleId)
+            if (!reuseSnapshots) dao.clearSaleFieldsOfPayments(saleId)
         }
-        if (!unchangedLines) dao.insertSaleLines(entities)
+        if (!reuseSnapshots) dao.insertSaleLines(entities)
         if (existing == null && draft.paidNowRupiah > 0) insertSalePayment(sale, draft.paidNowRupiah, draft.date)
         return saleId
     }
@@ -1491,6 +1552,10 @@ class FinanceRepository(
             require(l.priceRupiah > 0) { "Harga setor ${productName(l.productId)} per ${l.unitName.trim()} harus lebih dari nol." }
             noteLine(project, SaleLineDraft(l.productId, l.unitName, l.quantityText, l.priceRupiah))
         }
+        checked.forEach { line ->
+            val productId = requireNotNull(line.productId)
+            if (dao.getProduct(productId)?.kind == "TRADED") require(dao.countKnownTradeSalesFrom(productId, date.toEpochDay() + 1) == 0) { "Tanggal titip lebih awal dari penjualan yang modalnya sudah dicatat." }
+        }
         val now = System.currentTimeMillis()
         val id = UUID.randomUUID().toString()
         dao.insertConsignment(ConsignmentEntity(id = id, businessId = project.businessId, projectId = projectId, contactId = store.id, dateEpochDay = date.toEpochDay(), createdAtEpochMillis = now))
@@ -1535,6 +1600,7 @@ class FinanceRepository(
     suspend fun returnConsignment(consignmentId: String, lineId: String, quantityText: String, date: LocalDate): String = database.withTransaction {
         val consignment = dao.getConsignment(consignmentId) ?: error("Titipan tidak ditemukan.")
         val line = dao.getConsignmentLines(consignmentId).firstOrNull { it.id == lineId } ?: error("Baris titipan tidak ditemukan.")
+        if (dao.getProduct(line.productId)?.kind == "TRADED") require(dao.countKnownTradeSalesFrom(line.productId, date.toEpochDay() + 1) == 0) { "Tanggal pengembalian lebih awal dari penjualan yang modalnya sudah dicatat." }
         val quantity = requireNotNull(TransactionCalculation.parseQuantity(quantityText)) { "Jumlah tarik ${productName(line.productId)} harus angka lebih dari nol." }
         val back = quantity * contentOf(line.contentText)
         val left = consignmentLeft(consignment, exceptSaleId = "").getValue(line.productId)
@@ -1602,6 +1668,7 @@ class FinanceRepository(
      */
     suspend fun deleteEvent(eventId: String) = database.withTransaction {
         val event = dao.getEvent(eventId) ?: return@withTransaction
+        dao.getTradePurchase(eventId)?.let { purchase -> require(dao.countKnownTradeSalesFrom(purchase.productId, event.dateEpochDay) == 0) { "Belanja ini dipakai untuk modal penjualan berikutnya." } }
         if (event.type == FinancialEventType.CREDIT_PURCHASE.name) {
             val payments = dao.getSupplierPayments(event.id).size
             require(payments == 0) { "Belanja tempo ini punya $payments pembayaran. Hapus pembayarannya dulu." }

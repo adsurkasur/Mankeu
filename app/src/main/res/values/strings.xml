@@ -75,7 +75,7 @@
     <string name="home_search_hint">Cari keterangan atau kategori</string>
     <string name="account_drive_active">Google Drive aktif</string>
     <string name="sync_title">Sinkronisasi antar-HP</string>
-    <string name="sync_off_body">Pakai Mankeu di beberapa HP untuk usaha yang sama, misalnya HP pemilik dan HP kasir. Semua HP masuk dengan akun Google yang sama (akun usaha, bukan akun pribadi kasir). Data dikunci kata sandi sync sebelum dikirim ke Google Drive.</string>
+    <string name="sync_off_body">Pakai Mankeu di beberapa HP untuk usaha yang sama, misalnya HP pemilik dan HP kasir. Semua HP masuk dengan akun Google yang sama (akun usaha, bukan akun pribadi kasir). Data dikunci kata sandi sync sebelum dikirim ke Google Drive. Saat sync aktif, modal penjualan barang dagangan ditandai belum diketahui agar perubahan dari HP lain tidak menghasilkan untung yang keliru.</string>
     <string name="sync_sign_in_first">Masuk dengan Google dulu</string>
     <string name="sync_turn_on">Nyalakan sync</string>
     <string name="sync_running">Menyinkronkan…</string>
@@ -697,6 +697,7 @@
     <string name="profit_incomplete_both">Untung belum dapat dihitung karena ada modal penjualan dan kategori belanja yang belum jelas.</string>
     <string name="bep_incomplete_category">Titik impas belum dapat dinilai karena ada belanja yang kategorinya belum jelas.</string>
     <string name="profit_incomplete">Untung belum dapat dihitung karena ada penjualan yang modal barangnya belum diketahui.</string>
+    <string name="sale_trade_cost_on_save">Modal dagangan diperiksa saat nota disimpan.</string>
     <string name="sale_cost_unknown">Modal barang belum diketahui.</string>
     <string name="sale_detail_title">Nota penjualan</string>
     <string name="sale_customer">Pelanggan</string>

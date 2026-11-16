@@ -280,6 +280,7 @@ class EncryptedBackupManager(
                     }
                 }
             }
+            if (writable.query("SELECT 1 FROM sync_meta WHERE `key` = ?", arrayOf(SyncSchema.SYNC_ENABLED)).use { it.moveToFirst() }) SyncSchema.invalidateTradeSaleCosts(writable)
             writable.execSQL("DELETE FROM sync_outbox")
             writable.execSQL("INSERT OR REPLACE INTO sync_meta(`key`, value) VALUES ('${SyncSchema.REQUIRES_FULL_SNAPSHOT}', '1')")
             RestoreResult(TABLES.size, rowCount, recoveryCreated = true)

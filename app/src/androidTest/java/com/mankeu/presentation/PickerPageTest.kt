@@ -28,6 +28,15 @@ class PickerPageTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private data class Choice(val id: String, val name: String)
 
+    @Test fun noteDetailDoesNotShowProfitForAnUnknownCostLine() {
+        val record = SaleRecord(SaleEntity("s", "b", "p", null, 20000, createdAtEpochMillis = 0),
+            listOf(SaleLineEntity("l", "s", null, "", "1", "1", 1000, 1000, 0, name = "Jasa", costKnown = false)), emptyList(), null)
+        compose.setContent { MankeuTheme { com.mankeu.presentation.screens.SaleNoteDetailScreen(record, emptyList(), { _, _, _, _ -> }, {}, {}) } }
+        compose.onAllNodesWithText(compose.activity.getString(R.string.sale_cost_unknown)).assertCountEquals(2)
+        val misleading = compose.activity.getString(R.string.sale_line_result, "Rp1.000", "Rp0", "Rp1.000")
+        compose.onAllNodesWithText(misleading).assertCountEquals(0)
+    }
+
     @Test fun existingFreeLineCanBeSavedWithoutLosingItsName() {
         val record = SaleRecord(SaleEntity("s", "b", "p", null, 20000, createdAtEpochMillis = 0),
             listOf(SaleLineEntity("l", "s", null, "", "1", "1", 1000, 1000, 0, name = "Jasa", costKnown = false)),

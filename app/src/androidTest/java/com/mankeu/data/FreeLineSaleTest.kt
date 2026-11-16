@@ -121,6 +121,49 @@ class FreeLineSaleTest {
         assertEquals(5_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().hppRupiah)
     }
 
+    @Test fun tradedSaleSnapshotsWeightedAverageAndProfit() = runBlocking {
+        repo.setProfitBasis(businessId, ProfitBasis.ITEM_COST)
+        val id = repo.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 20_000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        val firstPurchase = repo.recordTradePurchase(id, BigDecimal("10"), 100_000, day.minusDays(2))
+        repo.recordTradePurchase(id, BigDecimal("10"), 200_000, day.minusDays(1))
+        val saleId = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(id, "botol", "5", 20_000)), 100_000))
+        val sale = repo.sales(projectId).first().single { it.sale.id == saleId }
+        assertEquals(75_000L, sale.hpp)
+        assertEquals(true, sale.lines.single().costKnown)
+        assertEquals(25_000L, repo.monthlySummary(bookId, YearMonth.from(day)).first().profit.profitRupiah)
+        assertEquals(0, BigDecimal("15").compareTo(repo.products(projectId).first().single { it.product.id == id }.stock))
+        assertTrue(runCatching { repo.recordTradePurchase(id, BigDecimal.ONE, 10_000, day.minusDays(1)) }.isFailure)
+        assertTrue(runCatching { repo.countProductStock(id, BigDecimal.TEN, day.minusDays(1), "") }.isFailure)
+        assertTrue(runCatching { repo.recordProduction(id, BigDecimal.ONE, day, "") }.isFailure)
+        assertTrue(runCatching { repo.recordEvent(EventDraft(businessId, projectId, bookId, com.mankeu.domain.FinancialEventType.CASH_INCOME, 20_000, day.minusDays(1), "Jual", "Penjualan", productId = id, quantityText = "1", unit = "botol")) }.isFailure)
+        assertTrue(runCatching { repo.deleteEvent(firstPurchase) }.isFailure)
+        com.mankeu.sync.SyncEngine(db).enable()
+        val afterSyncEnabled = repo.sales(projectId).first().single { it.sale.id == saleId }
+        assertEquals(false, afterSyncEnabled.lines.single().costKnown)
+        assertEquals(75_000L, afterSyncEnabled.hpp)
+        assertTrue(repo.monthlySummary(bookId, YearMonth.from(day)).first().profit.profitIncomplete)
+    }
+
+    @Test fun fractionalTradedSaleRoundsExactHalfUpOnAndroid() = runBlocking {
+        val id = repo.saveProduct(projectId, null, ProductDraft("Biji", "kg", "1", listOf(SaleUnitDraft(name = "kg", contentText = "1", priceRupiah = 1_000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        repo.recordTradePurchase(id, BigDecimal("47"), 1, day.minusDays(1))
+        val saleId = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(id, "kg", "23.5", 1_000)), 23_500))
+        assertEquals(1L, repo.sales(projectId).first().single { it.sale.id == saleId }.hpp)
+    }
+
+    @Test fun laterPurchaseChangesMovingAverageAndProtectsEarlierSnapshots() = runBlocking {
+        val id = repo.saveProduct(projectId, null, ProductDraft("Gula", "kg", "1", listOf(SaleUnitDraft(name = "kg", contentText = "1", priceRupiah = 30_000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
+        repo.recordTradePurchase(id, BigDecimal("10"), 100_000, day.minusDays(3))
+        val first = repo.saveSale(projectId, null, SaleDraft(null, day.minusDays(2), null, 0, "", listOf(SaleLineDraft(id, "kg", "5", 30_000)), 150_000))
+        repo.recordTradePurchase(id, BigDecimal("5"), 100_000, day.minusDays(1))
+        val second = repo.saveSale(projectId, null, SaleDraft(null, day, null, 0, "", listOf(SaleLineDraft(id, "kg", "5", 30_000)), 150_000))
+        val notes = repo.sales(projectId).first().associateBy { it.sale.id }
+        assertEquals(50_000L, notes.getValue(first).hpp)
+        assertEquals(75_000L, notes.getValue(second).hpp)
+        assertTrue(runCatching { repo.deleteSale(first) }.isFailure)
+        assertTrue(runCatching { repo.saveSale(projectId, null, SaleDraft(null, day.minusDays(1), null, 0, "", listOf(SaleLineDraft(id, "kg", "1", 30_000)), 30_000)) }.isFailure)
+    }
+
     @Test fun tradedPurchaseAddsStockAndRecordsCashExpense() = runBlocking {
         val id = repo.saveProduct(projectId, null, ProductDraft("Air", "botol", "1", listOf(SaleUnitDraft(name = "botol", contentText = "1", priceRupiah = 7000)), emptyList(), kind = com.mankeu.domain.ItemKind.TRADED))
         val eventId = repo.recordTradePurchase(id, BigDecimal("10"), 50_000, day)

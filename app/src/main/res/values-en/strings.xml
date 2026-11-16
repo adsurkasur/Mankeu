@@ -73,7 +73,7 @@
     <string name="home_search_hint">Search notes or category</string>
     <string name="account_drive_active">Google Drive active</string>
     <string name="sync_title">Sync between phones</string>
-    <string name="sync_off_body">Use Mankeu on several phones for the same business, for example the owner\'s and the cashier\'s. Every phone signs in with the same Google account (the business account, not the cashier\'s own). Data is locked with a sync passphrase before it goes to Google Drive.</string>
+    <string name="sync_off_body">Use Mankeu on several phones for the same business, for example the owner\'s and the cashier\'s. Every phone signs in with the same Google account (the business account, not the cashier\'s own). Data is locked with a sync passphrase before it goes to Google Drive. While sync is on, traded-goods sale costs are marked unknown to avoid incorrect profit after changes on another phone.</string>
     <string name="sync_sign_in_first">Sign in with Google first</string>
     <string name="sync_turn_on">Turn on sync</string>
     <string name="sync_running">Syncing…</string>
@@ -695,6 +695,7 @@
     <string name="profit_incomplete_both">Profit cannot yet be calculated because some sale costs and expense categories are uncertain.</string>
     <string name="bep_incomplete_category">Minimum sales cannot yet be assessed because some expense categories are uncertain.</string>
     <string name="profit_incomplete">Profit cannot yet be calculated because some sales have unknown costs.</string>
+    <string name="sale_trade_cost_on_save">Traded goods cost is checked when the note is saved.</string>
     <string name="sale_cost_unknown">Item cost is not known yet.</string>
     <string name="sale_detail_title">Sales note</string>
     <string name="sale_customer">Customer</string>

@@ -62,6 +62,8 @@ data class ConsignmentSoldLine(
 /** A trade purchase and its cash event, in base product units. */
 data class TradePurchaseRow(val id: String, val productId: String, val quantityText: String, val amountRupiah: Long, val dateEpochDay: Long, val createdAtEpochMillis: Long)
 
+data class TradeSaleHistoryRow(val saleId: String, val quantityText: String, val contentText: String, val dateEpochDay: Long, val createdAtEpochMillis: Long, val consignmentId: String?)
+
 /** A purchase that names a material; the newest one prices it (DEC-028 §2). */
 data class MaterialPurchaseRow(val stockItemId: String, val unitPriceRupiah: Long)
 
@@ -519,6 +521,24 @@ interface FinanceDao {
 
     @Query("SELECT COUNT(*) FROM trade_purchases t JOIN financial_events e ON e.id = t.id WHERE e.projectId = :projectId")
     suspend fun countTradePurchases(projectId: String): Int
+
+    @Query("SELECT t.id, t.productId, t.quantityText, e.amountRupiah, e.dateEpochDay, e.createdAtEpochMillis FROM trade_purchases t JOIN financial_events e ON e.id=t.id WHERE t.productId=:productId")
+    suspend fun getTradePurchaseHistory(productId: String): List<TradePurchaseRow>
+
+    @Query("SELECT s.id AS saleId, l.quantityText, l.contentText, s.dateEpochDay, s.createdAtEpochMillis, s.consignmentId FROM sale_lines l JOIN sales s ON s.id=l.saleId WHERE l.productId=:productId")
+    suspend fun getTradeSaleHistory(productId: String): List<TradeSaleHistoryRow>
+
+    @Query("SELECT COUNT(*) FROM sale_lines l JOIN sales s ON s.id=l.saleId WHERE l.productId=:productId AND l.costKnown=1 AND s.dateEpochDay>=:fromDate AND (:excludeSaleId IS NULL OR s.id != :excludeSaleId)")
+    suspend fun countKnownTradeSalesFrom(productId: String, fromDate: Long, excludeSaleId: String? = null): Int
+
+    @Query("SELECT COUNT(*) FROM consignment_lines WHERE productId=:productId")
+    suspend fun countTradeConsignmentLines(productId: String): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM sync_meta WHERE `key`='sync_enabled')")
+    suspend fun tradeSyncEnabled(): Boolean
+
+    @Query("SELECT * FROM product_movements WHERE id=:id")
+    suspend fun getProductMovement(id: String): ProductMovementEntity?
 
     @Query("SELECT * FROM trade_purchases WHERE id = :id")
     suspend fun getTradePurchase(id: String): TradePurchaseEntity?

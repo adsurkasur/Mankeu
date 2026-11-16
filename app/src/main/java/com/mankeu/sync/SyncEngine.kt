@@ -42,6 +42,8 @@ class SyncEngine(private val database: AppDatabase) {
     /** Starts change capture; the first push after this carries every row (a full snapshot). */
     suspend fun enable() = database.withTransaction {
         dao.setMeta(SyncSchema.SYNC_ENABLED, "1")
+        // Concurrent devices can introduce older trade movements; avoid presenting a local-only average as certain.
+        SyncSchema.invalidateTradeSaleCosts(database.openHelper.writableDatabase)
         dao.setMeta(SyncSchema.REQUIRES_FULL_SNAPSHOT, "1")
     }
 

@@ -41,6 +41,11 @@ class TradeInventoryCostTest {
         assertEquals(33L, state.unitCostRupiah())
     }
 
+    @Test fun repeatingAverageRoundsAnExactHalfUp() {
+        val state = TradeInventoryCost.empty().purchase(q("47"), 1)
+        assertEquals(1L, state.sell(q("23.5")).costRupiah)
+    }
+
     @Test fun knownZeroCostRemainsKnown() {
         val sale = TradeInventoryCost.empty().purchase(q("2"), 0).sell(q("1"))
         assertTrue(sale.known)

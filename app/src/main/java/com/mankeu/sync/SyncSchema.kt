@@ -28,6 +28,11 @@ object SyncSchema {
     /** Set after a restore replaced the whole database; the next sync must push a full snapshot. */
     const val REQUIRES_FULL_SNAPSHOT = "requires_full_snapshot"
 
+    /** A multi-device history can receive older purchases, so local-only trade cost snapshots are uncertain. */
+    fun invalidateTradeSaleCosts(db: SupportSQLiteDatabase) {
+        db.execSQL("UPDATE sale_lines SET costKnown=0 WHERE costKnown=1 AND productId IN (SELECT p.id FROM products p WHERE p.kind='TRADED' AND NOT EXISTS (SELECT 1 FROM product_recipe_lines r WHERE r.productId=p.id))")
+    }
+
     fun createTriggers(db: SupportSQLiteDatabase) {
         val quiet = "WHEN EXISTS (SELECT 1 FROM sync_meta WHERE `key` = '$SYNC_ENABLED') " +
             "AND NOT EXISTS (SELECT 1 FROM sync_meta WHERE `key` = '$APPLYING_REMOTE')"
